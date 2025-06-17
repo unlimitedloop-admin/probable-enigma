@@ -1,6 +1,9 @@
 #include "bootstrap.h"
 
 #include <crtdbg.h>
+#include <cstdlib>
+#include <d3d9.h>
+#include <VersionHelpers.h>
 #include <Windows.h>
 
 namespace mm2hack::core
@@ -9,6 +12,50 @@ namespace mm2hack::core
     {
         bool isDebugMode = !lstrcmp(lpCmdLine, L"debug");
         bool passSystemCheck = true;
+
+        // Load the environment configurations
+        //config::EnvironmentConfig::LoadFromFile(L"mm2hack.env");
+
+        // Perform system checks (e.g., OS version, memory, Direct3D capabilities)
+        SYSTEM_INFO sysInfo;
+        GetSystemInfo(&sysInfo);
+        if (sysInfo.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_UNKNOWN)
+        {
+            passSystemCheck = false;
+        }
+
+        if (!IsWindows10OrGreater())
+        {
+            passSystemCheck = false;
+        }
+
+        MEMORYSTATUSEX memStatus{};
+        memStatus.dwLength = sizeof(MEMORYSTATUSEX);
+        GlobalMemoryStatusEx(&memStatus);
+        if (memStatus.ullTotalPhys < static_cast<unsigned long long>(512 * 1024) * 1024)
+        {
+            passSystemCheck = false;
+        }
+
+        IDirect3D9* pD3D = Direct3DCreate9(D3D_SDK_VERSION);
+        if (!pD3D)
+        {
+            exit(EXIT_FAILURE);
+        }
+
+        D3DCAPS9 d3dCaps;
+        if (FAILED(pD3D->GetDeviceCaps(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, &d3dCaps)))
+        {
+            pD3D->Release();
+            exit(EXIT_FAILURE);
+        }
+        if (d3dCaps.VertexShaderVersion < D3DVS_VERSION(2, 0) || d3dCaps.PixelShaderVersion < D3DPS_VERSION(2, 0))
+        {
+            pD3D->Release();
+            exit(EXIT_FAILURE);
+        }
+
+        pD3D->Release();
 
         if (isDebugMode)
         {

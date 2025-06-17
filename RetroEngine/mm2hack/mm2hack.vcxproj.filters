@@ -14,4 +14,7 @@
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />
   </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="app.manifest" />
+  </ItemGroup>
 </Project>
