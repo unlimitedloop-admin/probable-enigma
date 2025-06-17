@@ -3,6 +3,7 @@
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\core\bootstrap.cpp" />
+    <ClCompile Include="src\core\winapi\WindowManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
@@ -10,6 +11,7 @@
   <ItemGroup>
     <ClInclude Include="resource.h" />
     <ClInclude Include="src\core\bootstrap.h" />
+    <ClInclude Include="src\core\winapi\WindowManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

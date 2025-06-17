@@ -5,6 +5,7 @@
 #include <d3d9.h>
 #include <VersionHelpers.h>
 #include <Windows.h>
+#include "winapi/WindowManager.h"
 
 namespace mm2hack::core
 {
@@ -78,7 +79,14 @@ namespace mm2hack::core
 
     void RunMainProcess(HINSTANCE hInstance, LPWSTR lpCmdLine, int nCmdShow)
     {
-
+        winapi::WindowManager& windowManager = winapi::WindowManager::GetInstance();
+        if (!windowManager.Initialize(hInstance, lpCmdLine, nCmdShow, L"mm2hack.demo"))
+        {
+            MessageBoxW(nullptr, L"Failed to initialize window manager.", L"Error", MB_OK | MB_ICONERROR);
+            exit(EXIT_FAILURE);
+        }
+        windowManager.RunMainLoop();
+        windowManager.Shutdown();
     }
 
     void CleanUp()
