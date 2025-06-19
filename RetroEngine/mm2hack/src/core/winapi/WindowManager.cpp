@@ -37,7 +37,7 @@ namespace mm2hack::core::winapi
         }
 
         DxLib::SetDrawScreen(DX_SCREEN_BACK);
-        
+
         return true;
     }
 

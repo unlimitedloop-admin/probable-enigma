@@ -3,8 +3,11 @@
 #include <crtdbg.h>
 #include <cstdlib>
 #include <d3d9.h>
+#include <string>
 #include <VersionHelpers.h>
 #include <Windows.h>
+#include "exceptions/ErrorHandler.h"
+#include "exceptions/ErrorLevel.h"
 #include "winapi/WindowManager.h"
 
 namespace mm2hack::core
@@ -22,11 +25,29 @@ namespace mm2hack::core
         GetSystemInfo(&sysInfo);
         if (sysInfo.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_UNKNOWN)
         {
+            if (isDebugMode)
+            {
+                exceptions::ErrorHandler::Handle(
+                    L"Unsupported processor architecture.",
+                    L"-",
+                    L"Bootstrapper",
+                    exceptions::ErrorLevel::Info
+                );
+            }
             passSystemCheck = false;
         }
 
         if (!IsWindows10OrGreater())
         {
+            if (isDebugMode)
+            {
+                exceptions::ErrorHandler::Handle(
+                    L"Unsupported Windows version(requires Windows 10 or later).",
+                    L"-",
+                    L"Bootstrapper",
+                    exceptions::ErrorLevel::Info
+                );
+            }
             passSystemCheck = false;
         }
 
@@ -35,25 +56,58 @@ namespace mm2hack::core
         GlobalMemoryStatusEx(&memStatus);
         if (memStatus.ullTotalPhys < static_cast<unsigned long long>(512 * 1024) * 1024)
         {
+            if (isDebugMode)
+            {
+                exceptions::ErrorHandler::Handle(
+                    L"Insufficient physical memory(< 512MB).",
+                    L"-",
+                    L"Bootstrapper",
+                    exceptions::ErrorLevel::Warning
+                );
+            }
             passSystemCheck = false;
         }
 
         IDirect3D9* pD3D = Direct3DCreate9(D3D_SDK_VERSION);
         if (!pD3D)
         {
-            exit(EXIT_FAILURE);
+            if (isDebugMode)
+            {
+                exceptions::ErrorHandler::Handle(
+                    L"Direct3D 9 initialization failed (DirectX 9 not available)",
+                    L"-",
+                    L"Bootstrapper",
+                    exceptions::ErrorLevel::FatalError
+                );
+            }
         }
 
         D3DCAPS9 d3dCaps;
         if (FAILED(pD3D->GetDeviceCaps(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, &d3dCaps)))
         {
             pD3D->Release();
-            exit(EXIT_FAILURE);
+            if (isDebugMode)
+            {
+                exceptions::ErrorHandler::Handle(
+                    L"Failed to retrieve Direct3D device capabilities",
+                    L"-",
+                    L"Bootstrapper",
+                    exceptions::ErrorLevel::FatalError
+                );
+            }
         }
         if (d3dCaps.VertexShaderVersion < D3DVS_VERSION(2, 0) || d3dCaps.PixelShaderVersion < D3DPS_VERSION(2, 0))
         {
             pD3D->Release();
-            exit(EXIT_FAILURE);
+            if (isDebugMode)
+            {
+                exceptions::ErrorHandler::Handle(
+                    L"Shader Model < 2.0 is not supported",
+                    L"-",
+                    L"Bootstrapper",
+                    exceptions::ErrorLevel::FatalError
+                );
+            }
         }
 
         pD3D->Release();
@@ -79,8 +133,10 @@ namespace mm2hack::core
 
     void RunMainProcess(HINSTANCE hInstance, LPWSTR lpCmdLine, int nCmdShow)
     {
+        std::wstring windowTitle = L"mm2hack.demo";
+
         winapi::WindowManager& windowManager = winapi::WindowManager::GetInstance();
-        if (!windowManager.Initialize(hInstance, lpCmdLine, nCmdShow, L"mm2hack.demo"))
+        if (!windowManager.Initialize(hInstance, lpCmdLine, nCmdShow, windowTitle))
         {
             MessageBoxW(nullptr, L"Failed to initialize window manager.", L"Error", MB_OK | MB_ICONERROR);
             exit(EXIT_FAILURE);
