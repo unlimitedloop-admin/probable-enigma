@@ -3,6 +3,7 @@
 #include <DxLib.h>
 #include <string>
 #include <Windows.h>
+#include "config/EnvironmentConfig.h"
 
 namespace mm2hack::core::winapi
 {
@@ -15,11 +16,15 @@ namespace mm2hack::core::winapi
         _hInstance = hInstance;
         _windowTitle = windowTitle;
 
+        const BOOL isLogEnabled = config::EnvironmentConfig::GetBool(L"OUTPUT_LOG_ENABLE") ? TRUE : FALSE;
+        DxLib::SetOutApplicationLogValidFlag(isLogEnabled);
+
+        const BOOL isAlwaysRun = config::EnvironmentConfig::GetBool(L"WINDOW_ALWAYS_RUN_ENABLE") ? TRUE : FALSE;
+        DxLib::SetAlwaysRunFlag(isAlwaysRun);
+
         // Configure the window
-        if (
-            DxLib::ChangeWindowMode(TRUE) != DX_CHANGESCREEN_OK ||
-            DxLib::SetMainWindowText(_windowTitle.c_str()) != 0
-            )
+        if (DxLib::ChangeWindowMode(TRUE) != DX_CHANGESCREEN_OK ||
+            DxLib::SetMainWindowText(_windowTitle.c_str()) != 0)
         {
             return false;
         }
@@ -36,7 +41,11 @@ namespace mm2hack::core::winapi
             return false;
         }
 
-        DxLib::SetDrawScreen(DX_SCREEN_BACK);
+        if (DxLib::SetDrawScreen(DX_SCREEN_BACK) == -1)
+        {
+            DxLib::DxLib_End();
+            return false;
+        }
 
         return true;
     }

@@ -6,9 +6,11 @@
     <ClCompile Include="src\core\winapi\WindowManager.cpp" />
     <ClCompile Include="src\utils\LogWriter.cpp" />
     <ClCompile Include="src\utils\string_converter.cpp" />
+    <ClCompile Include="src\config\EnvironmentConfig.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
+    <None Include="mm2hack.env" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -18,6 +20,7 @@
     <ClInclude Include="src\exceptions\ErrorHandler.h" />
     <ClInclude Include="src\utils\LogWriter.h" />
     <ClInclude Include="src\utils\string_converter.h" />
+    <ClInclude Include="src\config\EnvironmentConfig.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

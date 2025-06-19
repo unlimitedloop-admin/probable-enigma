@@ -6,6 +6,7 @@
 #include <string>
 #include <VersionHelpers.h>
 #include <Windows.h>
+#include "config/EnvironmentConfig.h"
 #include "exceptions/ErrorHandler.h"
 #include "exceptions/ErrorLevel.h"
 #include "winapi/WindowManager.h"
@@ -14,11 +15,14 @@ namespace mm2hack::core
 {
     void Bootstrapper(LPWSTR lpCmdLine)
     {
-        bool isDebugMode = !lstrcmp(lpCmdLine, L"debug");
-        bool passSystemCheck = true;
-
         // Load the environment configurations
-        //config::EnvironmentConfig::LoadFromFile(L"mm2hack.env");
+        config::EnvironmentConfig::LoadFromFile(L"mm2hack.env");
+
+        // Check if the application is in debug mode (via command-line or environment variable)
+        const bool isDebugMode =
+            (lstrcmp(lpCmdLine, L"debug") == 0) ||
+            config::EnvironmentConfig::GetBool(L"MM2HACK_DEBUG", false);
+        bool passSystemCheck = true;
 
         // Perform system checks (e.g., OS version, memory, Direct3D capabilities)
         SYSTEM_INFO sysInfo;
@@ -54,7 +58,8 @@ namespace mm2hack::core
         MEMORYSTATUSEX memStatus{};
         memStatus.dwLength = sizeof(MEMORYSTATUSEX);
         GlobalMemoryStatusEx(&memStatus);
-        if (memStatus.ullTotalPhys < static_cast<unsigned long long>(512 * 1024) * 1024)
+        constexpr ULONGLONG kMinPhysMemory = 512ULL * 1024 * 1024;
+        if (memStatus.ullTotalPhys < kMinPhysMemory)
         {
             if (isDebugMode)
             {
@@ -133,7 +138,8 @@ namespace mm2hack::core
 
     void RunMainProcess(HINSTANCE hInstance, LPWSTR lpCmdLine, int nCmdShow)
     {
-        std::wstring windowTitle = L"mm2hack.demo";
+        std::wstring windowTitle = config::EnvironmentConfig::Get(L"WINDOW_TEXT", L"mm2hack.demo") + L" " +
+            config::EnvironmentConfig::Get(L"MM2HACK_VERSION");
 
         winapi::WindowManager& windowManager = winapi::WindowManager::GetInstance();
         if (!windowManager.Initialize(hInstance, lpCmdLine, nCmdShow, windowTitle))
