@@ -54,10 +54,8 @@ namespace mm2hack::core::winapi
     {
         while (DxLib::ProcessMessage() == 0)
         {
-            // Handle other game logic here
-            // ...
-            // Render the frame
             DxLib::ClearDrawScreen();
+            // _sequence->OnExecute();
             DxLib::ScreenFlip();
         }
     }
