@@ -39,7 +39,8 @@ namespace mm2hack::core::winapi
         if (DxLib::SetDoubleStartValidFlag(FALSE) ||
             DxLib::ChangeWindowMode(TRUE) != DX_CHANGESCREEN_OK ||
             DxLib::SetMainWindowText(_windowTitle.c_str()) != 0 ||
-            DxLib::LoadMenuResource(IDR_MAINMENU))
+            DxLib::SetWindowIconID(IDI_WNDICON) != 0 ||
+            DxLib::LoadMenuResource(IDR_MAINMENU) != 0)
         {
             return false;
         }
