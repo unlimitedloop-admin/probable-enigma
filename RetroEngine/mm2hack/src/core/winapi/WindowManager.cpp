@@ -23,7 +23,8 @@ namespace mm2hack::core::winapi
         DxLib::SetAlwaysRunFlag(isAlwaysRun);
 
         // Configure the window
-        if (DxLib::ChangeWindowMode(TRUE) != DX_CHANGESCREEN_OK ||
+        if (DxLib::SetDoubleStartValidFlag(FALSE) ||
+            DxLib::ChangeWindowMode(TRUE) != DX_CHANGESCREEN_OK ||
             DxLib::SetMainWindowText(_windowTitle.c_str()) != 0)
         {
             return false;
@@ -40,6 +41,9 @@ namespace mm2hack::core::winapi
             DxLib::DxLib_End();
             return false;
         }
+
+        _dxLibWnd = reinterpret_cast<WNDPROC>(GetWindowLongPtr(_mainWindowHandle, GWLP_WNDPROC));
+        SetWindowLongPtr(_mainWindowHandle, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WindowProc));
 
         if (DxLib::SetDrawScreen(DX_SCREEN_BACK) == -1)
         {
@@ -66,5 +70,35 @@ namespace mm2hack::core::winapi
         _hInstance = nullptr;
         _mainWindowHandle = nullptr;
         _windowTitle.clear();
+    }
+
+    HWND WindowManager::GetMainWindowHandle() const
+    {
+        return _mainWindowHandle;
+    }
+
+    bool WindowManager::IsMainWindowActive()
+    {
+        return static_cast<bool>(DxLib::GetWindowActiveFlag());
+    }
+
+    LRESULT WindowManager::WindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+    {
+        switch (message)
+        {
+        case WM_DESTROY:
+            PostQuitMessage(0);
+            return 0;
+        case WM_KEYDOWN:
+            switch (wParam)
+            {
+            case VK_ESCAPE:
+                PostQuitMessage(0);
+                return 0;
+            }
+            return 0;
+        default:
+            return DefWindowProc(hwnd, message, wParam, lParam);
+        }
     }
 }

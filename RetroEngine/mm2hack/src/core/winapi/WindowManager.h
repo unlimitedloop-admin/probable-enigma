@@ -32,15 +32,17 @@ namespace mm2hack::core::winapi
         bool Initialize(HINSTANCE hInstance, LPWSTR lpCmdLine, int nCmdShow, const std::wstring& windowTitle);
         void RunMainLoop();
         void Shutdown();
-        HWND GetMainWindowHandle();
+        HWND GetMainWindowHandle() const;
         bool IsMainWindowActive();
+        static LRESULT CALLBACK WindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
     private:
         WindowManager() = default;
         ~WindowManager() = default;
 
-        HWND _mainWindowHandle;
+        HWND _mainWindowHandle = nullptr;
         HINSTANCE _hInstance = nullptr;
+        WNDPROC _dxLibWnd = nullptr;
         std::wstring _windowTitle;
     };
 }
