@@ -3,9 +3,11 @@
 #include <DxLib.h>
 #include <string>
 #include <Windows.h>
+#include "../resource.h"
 #include "config/EnvironmentConfig.h"
 #include "config/SystemConfig.h"
 #include "utils/LogWriter.h"
+#include "WindowMessageHandlers.h"
 
 namespace mm2hack::core::winapi
 {
@@ -36,7 +38,8 @@ namespace mm2hack::core::winapi
         // Configure the window
         if (DxLib::SetDoubleStartValidFlag(FALSE) ||
             DxLib::ChangeWindowMode(TRUE) != DX_CHANGESCREEN_OK ||
-            DxLib::SetMainWindowText(_windowTitle.c_str()) != 0)
+            DxLib::SetMainWindowText(_windowTitle.c_str()) != 0 ||
+            DxLib::LoadMenuResource(IDR_MAINMENU))
         {
             return false;
         }
@@ -70,7 +73,7 @@ namespace mm2hack::core::winapi
         while (DxLib::ProcessMessage() == 0)
         {
             DxLib::ClearDrawScreen();
-            // _sequence->OnExecute();
+            // TODO: _sequence->OnExecute();
             DxLib::ScreenFlip();
         }
     }
@@ -93,23 +96,40 @@ namespace mm2hack::core::winapi
         return static_cast<bool>(DxLib::GetWindowActiveFlag());
     }
 
-    LRESULT WindowManager::WindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+    WNDPROC WindowManager::GetDxLibWnd() const
+    {
+        return _dxLibWnd;
+    }
+
+    LRESULT WindowManager::WindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)  
     {
         switch (message)
         {
+        case WM_CREATE:
+            HandleCreate(hwnd, lParam);
+            return 0;
         case WM_DESTROY:
-            PostQuitMessage(0);
+            HandleDestroy(hwnd);
+            return 0;
+        case WM_COMMAND:
+            HandleCommand(hwnd, wParam);
+            return 0;
+        case WM_PAINT:
+            HandlePaint(hwnd);
+            return 0;
+        case WM_SIZE:
+            HandleSize(hwnd, wParam, lParam);
             return 0;
         case WM_KEYDOWN:
-            switch (wParam)
-            {
-            case VK_ESCAPE:
-                PostQuitMessage(0);
-                return 0;
-            }
+            HandleKeyDown(hwnd, wParam, lParam);
+            return 0;
+        case WM_KEYUP:
+            HandleKeyUp(hwnd, wParam);
             return 0;
         default:
-            return DefWindowProc(hwnd, message, wParam, lParam);
+            return WindowManager::GetInstance().GetDxLibWnd() != nullptr
+                ? CallWindowProc(WindowManager::GetInstance().GetDxLibWnd(), hwnd, message, wParam, lParam)
+                : DefWindowProc(hwnd, message, wParam, lParam);
         }
     }
 }

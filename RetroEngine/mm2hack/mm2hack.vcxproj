@@ -151,6 +151,7 @@
     <ClCompile Include="src\config\SystemConfig.cpp" />
     <ClCompile Include="src\core\bootstrap.cpp" />
     <ClCompile Include="src\core\winapi\WindowManager.cpp" />
+    <ClCompile Include="src\core\winapi\WindowMessageHandlers.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\utils\LogWriter.cpp" />
     <ClCompile Include="src\utils\string_converter.cpp" />
@@ -165,6 +166,7 @@
     <ClInclude Include="src\config\SystemConfig.h" />
     <ClInclude Include="src\core\bootstrap.h" />
     <ClInclude Include="src\core\winapi\WindowManager.h" />
+    <ClInclude Include="src\core\winapi\WindowMessageHandlers.h" />
     <ClInclude Include="src\exceptions\ErrorHandler.h" />
     <ClInclude Include="src\exceptions\ErrorLevel.h" />
     <ClInclude Include="src\utils\LogWriter.h" />

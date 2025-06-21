@@ -8,6 +8,7 @@
     <ClCompile Include="src\utils\string_converter.cpp" />
     <ClCompile Include="src\config\EnvironmentConfig.cpp" />
     <ClCompile Include="src\config\SystemConfig.cpp" />
+    <ClCompile Include="src\core\winapi\WindowMessageHandlers.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
@@ -23,6 +24,7 @@
     <ClInclude Include="src\utils\string_converter.h" />
     <ClInclude Include="src\config\EnvironmentConfig.h" />
     <ClInclude Include="src\config\SystemConfig.h" />
+    <ClInclude Include="src\core\winapi\WindowMessageHandlers.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

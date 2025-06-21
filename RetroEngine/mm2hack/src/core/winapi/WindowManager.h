@@ -34,6 +34,8 @@ namespace mm2hack::core::winapi
         void Shutdown();
         HWND GetMainWindowHandle() const;
         bool IsMainWindowActive();
+        WNDPROC GetDxLibWnd() const;
+
         static LRESULT CALLBACK WindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
     private:
