@@ -4,6 +4,8 @@
 #include <string>
 #include <Windows.h>
 #include "config/EnvironmentConfig.h"
+#include "config/SystemConfig.h"
+#include "utils/LogWriter.h"
 
 namespace mm2hack::core::winapi
 {
@@ -16,8 +18,17 @@ namespace mm2hack::core::winapi
         _hInstance = hInstance;
         _windowTitle = windowTitle;
 
-        const BOOL isLogEnabled = config::EnvironmentConfig::GetBool(L"OUTPUT_LOG_ENABLE") ? TRUE : FALSE;
-        DxLib::SetOutApplicationLogValidFlag(isLogEnabled);
+        if (config::EnvironmentConfig::GetBool(L"OUTPUT_LOG_ENABLE"))
+        {
+            DxLib::SetApplicationLogSaveDirectory(config::SystemConfig::kLogFilePath.c_str());
+            DxLib::SetApplicationLogFileName(config::SystemConfig::kDxLibLogFileName.c_str());
+            DxLib::SetOutApplicationLogValidFlag(TRUE);
+            utils::LogWriter::Initialize(config::SystemConfig::kLogFilePath);
+        }
+        else
+        {
+            DxLib::SetOutApplicationLogValidFlag(FALSE);
+        }
 
         const BOOL isAlwaysRun = config::EnvironmentConfig::GetBool(L"WINDOW_ALWAYS_RUN_ENABLE") ? TRUE : FALSE;
         DxLib::SetAlwaysRunFlag(isAlwaysRun);

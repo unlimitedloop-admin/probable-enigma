@@ -7,6 +7,7 @@
 #include <fstream>
 #include <ios>
 #include <string>
+#include "config/SystemConfig.h"
 #include "string_converter.h"
 
 namespace fs = std::filesystem;
@@ -21,7 +22,7 @@ namespace mm2hack::utils
         if (!_initialized)
         {
             fs::create_directories(logDirectory);
-            _logFilePath = logDirectory + L"\\" + L"mm2hack.log";
+            _logFilePath = logDirectory + L"\\" + config::SystemConfig::kLogFileName;
             _initialized = true;
         }
     }
@@ -30,7 +31,7 @@ namespace mm2hack::utils
     {
         if (!_initialized)
         {
-            Initialize();
+            Initialize(config::SystemConfig::kLogFilePath);
         }
 
         const std::string utf8Message = wstring_to_utf8(message);

@@ -24,7 +24,8 @@ namespace mm2hack::utils
         LogWriter& operator=(LogWriter&&) = delete;
         // This class is not copyable or movable (static class).
 
-        static void Initialize(const std::wstring& logDirectory = L"log");
+        // Create a directory to store the log files
+        static void Initialize(const std::wstring& logDirectory);
         static void Write(const std::wstring& message, const std::wstring& level = L"INFO");
         static void Shutdown();
 

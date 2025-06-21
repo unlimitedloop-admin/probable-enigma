@@ -7,6 +7,7 @@
     <ClCompile Include="src\utils\LogWriter.cpp" />
     <ClCompile Include="src\utils\string_converter.cpp" />
     <ClCompile Include="src\config\EnvironmentConfig.cpp" />
+    <ClCompile Include="src\config\SystemConfig.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
@@ -21,6 +22,7 @@
     <ClInclude Include="src\utils\LogWriter.h" />
     <ClInclude Include="src\utils\string_converter.h" />
     <ClInclude Include="src\config\EnvironmentConfig.h" />
+    <ClInclude Include="src\config\SystemConfig.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

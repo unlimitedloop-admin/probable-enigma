@@ -148,6 +148,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\config\EnvironmentConfig.cpp" />
+    <ClCompile Include="src\config\SystemConfig.cpp" />
     <ClCompile Include="src\core\bootstrap.cpp" />
     <ClCompile Include="src\core\winapi\WindowManager.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -161,6 +162,7 @@
   <ItemGroup>
     <ClInclude Include="resource.h" />
     <ClInclude Include="src\config\EnvironmentConfig.h" />
+    <ClInclude Include="src\config\SystemConfig.h" />
     <ClInclude Include="src\core\bootstrap.h" />
     <ClInclude Include="src\core\winapi\WindowManager.h" />
     <ClInclude Include="src\exceptions\ErrorHandler.h" />
