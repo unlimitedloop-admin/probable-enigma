@@ -2,6 +2,7 @@
 
 #include <Windows.h>
 #include "../resource.h"
+#include "apps/sequence/SequenceManager.h"
 #include "WindowManager.h"
 
 namespace mm2hack::core::winapi
@@ -24,16 +25,16 @@ namespace mm2hack::core::winapi
             PostQuitMessage(0);
             break;
         case ID_FILE_RESET:
-            MessageBox(hWnd, L"ID_FILE_RESET", L"mm2hack", MB_OK);
+            apps::sequence::SequenceManager::GetInstance().RebootCurrentSequence();
             break;
         case ID_FILE_START:
-            MessageBox(hWnd, L"ID_FILE_START", L"mm2hack", MB_OK);
+            apps::sequence::SequenceManager::GetInstance().StartStandardSequence();
             break;
         case ID_FILE_START_DEBUG:
-            MessageBox(hWnd, L"ID_FILE_START_DEBUG", L"mm2hack", MB_OK);
+            apps::sequence::SequenceManager::GetInstance().StartDebugSequence();
             break;
         case ID_FILE_STOP:
-            MessageBox(hWnd, L"ID_FILE_STOP", L"mm2hack", MB_OK);
+            apps::sequence::SequenceManager::GetInstance().StopCurrentSequence();
             break;
         default:
             break;

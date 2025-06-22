@@ -147,13 +147,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\apps\sequence\SequenceManager.cpp" />
     <ClCompile Include="src\config\EnvironmentConfig.cpp" />
     <ClCompile Include="src\config\SystemConfig.cpp" />
     <ClCompile Include="src\core\bootstrap.cpp" />
+    <ClCompile Include="src\core\GameLoopManager.cpp" />
     <ClCompile Include="src\core\winapi\WindowManager.cpp" />
     <ClCompile Include="src\core\winapi\WindowMessageHandlers.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\utils\LogWriter.cpp" />
+    <ClCompile Include="src\utils\output_debug.cpp" />
     <ClCompile Include="src\utils\string_converter.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -162,14 +165,17 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
+    <ClInclude Include="src\apps\sequence\SequenceManager.h" />
     <ClInclude Include="src\config\EnvironmentConfig.h" />
     <ClInclude Include="src\config\SystemConfig.h" />
     <ClInclude Include="src\core\bootstrap.h" />
+    <ClInclude Include="src\core\GameLoopManager.h" />
     <ClInclude Include="src\core\winapi\WindowManager.h" />
     <ClInclude Include="src\core\winapi\WindowMessageHandlers.h" />
     <ClInclude Include="src\exceptions\ErrorHandler.h" />
     <ClInclude Include="src\exceptions\ErrorLevel.h" />
     <ClInclude Include="src\utils\LogWriter.h" />
+    <ClInclude Include="src\utils\output_debug.h" />
     <ClInclude Include="src\utils\string_converter.h" />
   </ItemGroup>
   <ItemGroup>

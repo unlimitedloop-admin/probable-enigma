@@ -6,6 +6,7 @@
 #include "../resource.h"
 #include "config/EnvironmentConfig.h"
 #include "config/SystemConfig.h"
+#include "core/GameLoopManager.h"
 #include "utils/LogWriter.h"
 #include "WindowMessageHandlers.h"
 
@@ -22,10 +23,11 @@ namespace mm2hack::core::winapi
 
         if (config::EnvironmentConfig::GetBool(L"OUTPUT_LOG_ENABLE"))
         {
-            DxLib::SetApplicationLogSaveDirectory(config::SystemConfig::kLogFilePath.c_str());
-            DxLib::SetApplicationLogFileName(config::SystemConfig::kDxLibLogFileName.c_str());
+            using conf = config::SystemConfig;
+            DxLib::SetApplicationLogSaveDirectory(conf::kLogFilePath.c_str());
+            DxLib::SetApplicationLogFileName(conf::kDxLibLogFileName.c_str());
             DxLib::SetOutApplicationLogValidFlag(TRUE);
-            utils::LogWriter::Initialize(config::SystemConfig::kLogFilePath);
+            utils::LogWriter::Initialize(conf::kLogFilePath);
         }
         else
         {
@@ -71,12 +73,8 @@ namespace mm2hack::core::winapi
 
     void WindowManager::RunMainLoop()
     {
-        while (DxLib::ProcessMessage() == 0)
-        {
-            DxLib::ClearDrawScreen();
-            // TODO: _sequence->OnExecute();
-            DxLib::ScreenFlip();
-        }
+        GameLoopManager gameLoop(_mainWindowHandle, _viewerRate);
+        gameLoop.Run();
     }
 
     void WindowManager::Shutdown()

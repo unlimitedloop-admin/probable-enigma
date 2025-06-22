@@ -46,5 +46,6 @@ namespace mm2hack::core::winapi
         HINSTANCE _hInstance = nullptr;
         WNDPROC _dxLibWnd = nullptr;
         std::wstring _windowTitle;
+        float _viewerRate = 0.0f;
     };
 }
