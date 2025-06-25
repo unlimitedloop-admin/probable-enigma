@@ -31,6 +31,8 @@
     <ClInclude Include="src\core\GameLoopManager.h" />
     <ClInclude Include="src\apps\sequence\SequenceManager.h" />
     <ClInclude Include="src\utils\output_debug.h" />
+    <ClInclude Include="src\exceptions\CoreException.h" />
+    <ClInclude Include="src\utils\ScopeGuard.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

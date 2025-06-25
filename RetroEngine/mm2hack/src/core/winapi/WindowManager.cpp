@@ -1,25 +1,39 @@
 #include "WindowManager.h"
 
 #include <DxLib.h>
+#include <exception>
 #include <string>
 #include <Windows.h>
 #include "../resource.h"
 #include "config/EnvironmentConfig.h"
 #include "config/SystemConfig.h"
 #include "core/GameLoopManager.h"
+#include "exceptions/CoreException.h"
+#include "exceptions/ErrorHandler.h"
+#include "exceptions/ErrorLevel.h"
 #include "utils/LogWriter.h"
+#include "utils/string_converter.h"
 #include "WindowMessageHandlers.h"
 
 namespace mm2hack::core::winapi
 {
     bool WindowManager::Initialize(HINSTANCE hInstance, LPWSTR lpCmdLine, int nCmdShow, const std::wstring& windowTitle)
     {
-        if (hInstance == nullptr || lpCmdLine == nullptr || windowTitle.empty())
+        _hInstance = hInstance;
+        if (windowTitle.empty())
         {
+            exceptions::ErrorHandler::Handle(
+                L"Window title is empty.",
+                L"WindowManager",
+                L"Initialize",
+                exceptions::ErrorLevel::Error
+            );
             return false;
         }
-        _hInstance = hInstance;
         _windowTitle = windowTitle;
+        const bool isDebugMode =
+            (lstrcmp(lpCmdLine, L"debug") == 0) ||
+            config::EnvironmentConfig::GetBool(L"MM2HACK_DEBUG", false);
 
         if (config::EnvironmentConfig::GetBool(L"OUTPUT_LOG_ENABLE"))
         {
@@ -44,17 +58,35 @@ namespace mm2hack::core::winapi
             DxLib::SetWindowIconID(IDI_WNDICON) != 0 ||
             DxLib::LoadMenuResource(IDR_MAINMENU) != 0)
         {
+            exceptions::ErrorHandler::Handle(
+                L"Failed to initialize the window.",
+                L"WindowManager",
+                L"Initialize",
+                exceptions::ErrorLevel::Error
+            );
             return false;
         }
 
         if (DxLib::DxLib_Init() == -1)
         {
+            exceptions::ErrorHandler::Handle(
+                L"Failed to initialize DxLib.",
+                L"WindowManager",
+                L"Initialize",
+                exceptions::ErrorLevel::Error
+            );
             return false;
         }
 
         _mainWindowHandle = DxLib::GetMainWindowHandle();
         if (_mainWindowHandle == nullptr)
         {
+            exceptions::ErrorHandler::Handle(
+                L"Unable to obtain window handle.",
+                L"WindowManager",
+                L"Initialize",
+                exceptions::ErrorLevel::Error
+            );
             DxLib::DxLib_End();
             return false;
         }
@@ -64,8 +96,21 @@ namespace mm2hack::core::winapi
 
         if (DxLib::SetDrawScreen(DX_SCREEN_BACK) == -1)
         {
+            exceptions::ErrorHandler::Handle(
+                L"The SetDrawScreen(DX_SCREEN_BACK) function failed.",
+                L"WindowManager",
+                L"Initialize",
+                exceptions::ErrorLevel::Error
+            );
             DxLib::DxLib_End();
             return false;
+        }
+
+        if (!isDebugMode)
+        {
+            HMENU hMenu = GetMenu(_mainWindowHandle);
+            EnableMenuItem(hMenu, ID_FILE_START_DEBUG, MF_BYCOMMAND | MF_GRAYED);
+            DrawMenuBar(_mainWindowHandle);
         }
 
         return true;
@@ -100,35 +145,56 @@ namespace mm2hack::core::winapi
         return _dxLibWnd;
     }
 
-    LRESULT WindowManager::WindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)  
+    LRESULT WindowManager::WindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
-        switch (message)
+        using namespace exceptions;
+
+        auto ForwardToDefaultProc = [&]() -> LRESULT
+            {
+                auto dxWndProc = WindowManager::GetInstance().GetDxLibWnd();
+                return dxWndProc != nullptr
+                    ? CallWindowProc(dxWndProc, hwnd, message, wParam, lParam)
+                    : DefWindowProc(hwnd, message, wParam, lParam);
+            };
+
+        try
         {
-        case WM_CREATE:
-            HandleCreate(hwnd, lParam);
-            return 0;
-        case WM_DESTROY:
-            HandleDestroy(hwnd);
-            return 0;
-        case WM_COMMAND:
-            HandleCommand(hwnd, wParam);
-            return 0;
-        case WM_PAINT:
-            HandlePaint(hwnd);
-            return 0;
-        case WM_SIZE:
-            HandleSize(hwnd, wParam, lParam);
-            return 0;
-        case WM_KEYDOWN:
-            HandleKeyDown(hwnd, wParam, lParam);
-            return 0;
-        case WM_KEYUP:
-            HandleKeyUp(hwnd, wParam);
-            return 0;
-        default:
-            return WindowManager::GetInstance().GetDxLibWnd() != nullptr
-                ? CallWindowProc(WindowManager::GetInstance().GetDxLibWnd(), hwnd, message, wParam, lParam)
-                : DefWindowProc(hwnd, message, wParam, lParam);
+            switch (message)
+            {
+            case WM_CREATE:
+                HandleCreate(hwnd, lParam);
+                return 0;
+            case WM_DESTROY:
+                HandleDestroy(hwnd);
+                return 0;
+            case WM_COMMAND:
+                HandleCommand(hwnd, wParam);
+                return 0;
+            case WM_PAINT:
+                HandlePaint(hwnd);
+                return 0;
+            case WM_SIZE:
+                HandleSize(hwnd, wParam, lParam);
+                return 0;
+            case WM_KEYDOWN:
+                HandleKeyDown(hwnd, wParam, lParam);
+                return 0;
+            case WM_KEYUP:
+                HandleKeyUp(hwnd, wParam);
+                return 0;
+            default:
+                return ForwardToDefaultProc();
+            }
+        }
+        catch (const CoreException& ex)
+        {
+            ErrorHandler::HandleEx(ex);
+            return ForwardToDefaultProc();
+        }
+        catch (const std::exception& e)
+        {
+            ErrorHandler::Handle(utils::utf8_to_wstring(e.what()), L"WindowManager", L"WindowProc", ErrorLevel::FatalError);
+            return ForwardToDefaultProc();
         }
     }
 }
