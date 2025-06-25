@@ -3,7 +3,7 @@
 #include <Windows.h>
 #include "../resource.h"
 #include "apps/sequence/SequenceManager.h"
-#include "WindowManager.h"
+#include "apps/sequence/SequenceType.h"
 
 namespace mm2hack::core::winapi
 {
@@ -19,23 +19,56 @@ namespace mm2hack::core::winapi
 
     void HandleCommand(HWND hWnd, WPARAM wParam)
     {
+        using namespace apps::sequence;
+        auto& seq = SequenceManager::GetInstance();
+
+        auto shouldConfirmReboot = [&](SequenceType type) -> bool
+            {
+                int result = MessageBox(
+                    hWnd,
+                    L"Reboot sequence?",
+                    L"mm2hack",
+                    MB_OKCANCEL | MB_ICONQUESTION | MB_DEFBUTTON2
+                );
+                return result == IDCANCEL;
+            };
+
         switch (LOWORD(wParam))
         {
         case ID_APP_EXIT:
             PostQuitMessage(0);
             break;
+
         case ID_FILE_RESET:
-            apps::sequence::SequenceManager::GetInstance().RebootCurrentSequence();
+            seq.RebootCurrentSequence();
             break;
+
         case ID_FILE_START:
-            apps::sequence::SequenceManager::GetInstance().StartStandardSequence();
+            if (seq.GetCurrentSequenceType() == SequenceType::Standard)
+            {
+                if (shouldConfirmReboot(SequenceType::Standard))
+                {
+                    break;
+                }
+            }
+            seq.StartStandardSequence();
             break;
+
         case ID_FILE_START_DEBUG:
-            apps::sequence::SequenceManager::GetInstance().StartDebugSequence();
+            if (seq.GetCurrentSequenceType() == SequenceType::Debug)
+            {
+                if (shouldConfirmReboot(SequenceType::Debug))
+                {
+                    break;
+                }
+            }
+            seq.StartDebugSequence();
             break;
+
         case ID_FILE_STOP:
-            apps::sequence::SequenceManager::GetInstance().StopCurrentSequence();
+            seq.StopCurrentSequence();
             break;
+
         default:
             break;
         }

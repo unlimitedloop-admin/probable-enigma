@@ -12,6 +12,9 @@
     <ClCompile Include="src\core\GameLoopManager.cpp" />
     <ClCompile Include="src\apps\sequence\SequenceManager.cpp" />
     <ClCompile Include="src\utils\output_debug.cpp" />
+    <ClCompile Include="src\apps\sequence\StandardSequence.cpp" />
+    <ClCompile Include="src\apps\sequence\DebugSequence.cpp" />
+    <ClCompile Include="src\apps\scenes\SceneManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
@@ -33,6 +36,11 @@
     <ClInclude Include="src\utils\output_debug.h" />
     <ClInclude Include="src\exceptions\CoreException.h" />
     <ClInclude Include="src\utils\ScopeGuard.h" />
+    <ClInclude Include="src\apps\sequence\ISequence.h" />
+    <ClInclude Include="src\apps\scenes\SceneManager.h" />
+    <ClInclude Include="src\apps\sequence\StandardSequence.h" />
+    <ClInclude Include="src\apps\sequence\DebugSequence.h" />
+    <ClInclude Include="src\apps\sequence\SequenceType.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

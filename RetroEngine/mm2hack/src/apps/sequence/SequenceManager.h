@@ -9,7 +9,8 @@
 #pragma once
 
 #include <memory>
-#include <string>
+#include "ISequence.h"
+#include "SequenceType.h"
 
 namespace mm2hack::apps::sequence
 {
@@ -36,17 +37,23 @@ namespace mm2hack::apps::sequence
         void Update();
         void Release();
 
-        // TODO: Get the current sequence
-        //ISequence* GetCurrentSequence() const
-        //{
-        //    return _currentSequence.get();
-        //}
+        // Get the current sequence
+        ISequence* GetCurrentSequence() const
+        {
+            return _currentSequence.get();
+        }
+
+        SequenceType GetCurrentSequenceType() const
+        {
+            return _sequenceType;
+        }
 
     private:
         SequenceManager() = default;
         ~SequenceManager() = default;
 
-        // TODO: std::unique_ptr<ISequence> _currentSequence = nullptr;
+        std::unique_ptr<ISequence> _currentSequence = nullptr;
+        SequenceType _sequenceType = SequenceType::None;
         // HACK: core::overlay::FeedbackOverlay _feedbackOverlay;
     };
 }
