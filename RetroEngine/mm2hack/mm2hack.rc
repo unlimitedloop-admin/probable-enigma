@@ -51,8 +51,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,0,0,1
- PRODUCTVERSION 0,0,0,1
+ FILEVERSION 0,0,0,15
+ PRODUCTVERSION 0,0,0,15
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -69,12 +69,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Sirius X"
             VALUE "FileDescription", "mm2hack"
-            VALUE "FileVersion", "0.0.0.1"
+            VALUE "FileVersion", "0.0.0.15"
             VALUE "InternalName", "mm2hack.exe"
             VALUE "LegalCopyright", "Copyright (C) 2025"
             VALUE "OriginalFilename", "mm2hack.exe"
             VALUE "ProductName", "mm2hack project"
-            VALUE "ProductVersion", "0.0.0.1"
+            VALUE "ProductVersion", "0.0.0.15"
         END
     END
     BLOCK "VarFileInfo"
@@ -82,6 +82,35 @@ BEGIN
         VALUE "Translation", 0x411, 1200
     END
 END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MAINMENU MENU
+BEGIN
+    POPUP "ファイル (&F)"
+    BEGIN
+        MENUITEM "ゲーム起動 (&A)\tF1",              ID_FILE_START
+        MENUITEM "リセット (&R)\tCtrl+R",           ID_FILE_RESET
+        MENUITEM "ゲーム停止 (&C)",                  ID_FILE_STOP
+        MENUITEM "デバッグモードで起動 (&D)\tShift+F1",   ID_FILE_START_DEBUG
+        MENUITEM SEPARATOR
+        MENUITEM "終了 (&X)\tAlt+F4",             ID_APP_EXIT
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_WNDICON             ICON                    "mm2hack.ico"
 
 #endif    // 日本語 (日本) resources
 /////////////////////////////////////////////////////////////////////////////

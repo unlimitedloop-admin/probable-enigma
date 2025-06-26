@@ -81,13 +81,14 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir);D:\Lib\DxLib_VC\Include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)src\;D:\Lib\DxLib_VC\Include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>D:\Lib\DxLib_VC\Include\</AdditionalLibraryDirectories>
+      <AdditionalDependencies>d3d9.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -99,13 +100,14 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir);D:\Lib\DxLib_VC\Include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)src\;D:\Lib\DxLib_VC\Include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>D:\Lib\DxLib_VC\Include\</AdditionalLibraryDirectories>
+      <AdditionalDependencies>d3d9.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -115,13 +117,14 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir);D:\Lib\DxLib_VC\Include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)src\;D:\Lib\DxLib_VC\Include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>D:\Lib\DxLib_VC\Include\</AdditionalLibraryDirectories>
+      <AdditionalDependencies>d3d9.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -133,26 +136,68 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir);D:\Lib\DxLib_VC\Include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)src\;D:\Lib\DxLib_VC\Include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>D:\Lib\DxLib_VC\Include\</AdditionalLibraryDirectories>
+      <AdditionalDependencies>d3d9.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\apps\main.cpp" />
+    <ClCompile Include="src\apps\scenes\SceneManager.cpp" />
+    <ClCompile Include="src\apps\sequence\DebugSequence.cpp" />
+    <ClCompile Include="src\apps\sequence\SequenceManager.cpp" />
+    <ClCompile Include="src\apps\sequence\StandardSequence.cpp" />
+    <ClCompile Include="src\config\EnvironmentConfig.cpp" />
+    <ClCompile Include="src\config\SystemConfig.cpp" />
+    <ClCompile Include="src\core\bootstrap.cpp" />
+    <ClCompile Include="src\core\GameLoopManager.cpp" />
+    <ClCompile Include="src\core\winapi\WindowManager.cpp" />
+    <ClCompile Include="src\core\winapi\WindowMessageHandlers.cpp" />
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\utils\Fps.cpp" />
+    <ClCompile Include="src\utils\LogWriter.cpp" />
+    <ClCompile Include="src\utils\output_debug.cpp" />
+    <ClCompile Include="src\utils\string_converter.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
+    <None Include="mm2hack.env" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
+    <ClInclude Include="src\apps\scenes\SceneManager.h" />
+    <ClInclude Include="src\apps\sequence\DebugSequence.h" />
+    <ClInclude Include="src\apps\sequence\ISequence.h" />
+    <ClInclude Include="src\apps\sequence\SequenceManager.h" />
+    <ClInclude Include="src\apps\sequence\SequenceType.h" />
+    <ClInclude Include="src\apps\sequence\StandardSequence.h" />
+    <ClInclude Include="src\config\EnvironmentConfig.h" />
+    <ClInclude Include="src\config\SystemConfig.h" />
+    <ClInclude Include="src\core\bootstrap.h" />
+    <ClInclude Include="src\core\GameLoopManager.h" />
+    <ClInclude Include="src\core\winapi\WindowManager.h" />
+    <ClInclude Include="src\core\winapi\WindowMessageHandlers.h" />
+    <ClInclude Include="src\exceptions\CoreException.h" />
+    <ClInclude Include="src\exceptions\ErrorHandler.h" />
+    <ClInclude Include="src\exceptions\ErrorLevel.h" />
+    <ClInclude Include="src\utils\Fps.h" />
+    <ClInclude Include="src\utils\LogWriter.h" />
+    <ClInclude Include="src\utils\output_debug.h" />
+    <ClInclude Include="src\utils\ScopeGuard.h" />
+    <ClInclude Include="src\utils\string_converter.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="app.manifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="mm2hack.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
