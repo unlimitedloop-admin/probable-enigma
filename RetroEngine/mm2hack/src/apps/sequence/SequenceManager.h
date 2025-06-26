@@ -37,7 +37,6 @@ namespace mm2hack::apps::sequence
         void Update();
         void Release();
 
-        // Get the current sequence
         ISequence* GetCurrentSequence() const
         {
             return _currentSequence.get();

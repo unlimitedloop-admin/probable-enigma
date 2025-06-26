@@ -21,6 +21,6 @@ namespace mm2hack::core
 
     private:
         HWND _hWnd;
-        const float& _viewerRate;
+        const float& _viewerRate;   // Viewer rate for the game loop, used for frame rate control
     };
 }

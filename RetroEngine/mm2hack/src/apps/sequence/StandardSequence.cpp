@@ -7,14 +7,13 @@ namespace mm2hack::apps::sequence
     StandardSequence::StandardSequence()
     {
         // Initialize the sequence, load resources, etc.
-        // TODO: mediator->RegisterListener(&_sceneManager);
+        // HACK: mediator->RegisterListener(&_sceneManager);
         // RequestChange(scenes::SceneID::<SceneClass>);
         // state pattern...
     }
 
     StandardSequence::~StandardSequence()
     {
-        // Clean up resources, finalize the sequence, etc.
         _sceneManager.Release();
     }
 

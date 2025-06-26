@@ -13,6 +13,7 @@
 
 namespace mm2hack::config
 {
+    // A class to manage external environment configuration settings
     class EnvironmentConfig final
     {
     public:
@@ -28,13 +29,11 @@ namespace mm2hack::config
         static void LoadFromFile(const std::wstring& filePath);
         // Get configuration values
         static std::wstring Get(const std::wstring& key, const std::wstring& defaultValue = L"");
-        // Get configuration values as int or bool
         static int GetInt(const std::wstring& key, int defaultValue = 0);
-        // Get configuration values as bool
         static bool GetBool(const std::wstring& key, bool defaultValue = false);
 
     private:
-        static std::unordered_map<std::wstring, std::wstring> _values;
+        static std::unordered_map<std::wstring, std::wstring> _values;      // Stores key-value pairs from the configuration file
         static std::wstring Trim(const std::wstring& str);
     };
 }

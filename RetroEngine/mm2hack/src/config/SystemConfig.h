@@ -23,8 +23,12 @@ namespace mm2hack::config
         ~SystemConfig() = delete;
         // This struct is not copyable or movable (static member defined only)
 
+        // The log file output destination
         static const std::wstring kLogFilePath;                     // Location of the log file
         static const std::wstring kLogFileName;                     // Name of the log file
         static const std::wstring kDxLibLogFileName;                // Name of the DxLib log file
+        
+        // Frame rate settings
+        static constexpr int kTargetFps = 60;                       // Frame rate (frames per second)
     };
 }

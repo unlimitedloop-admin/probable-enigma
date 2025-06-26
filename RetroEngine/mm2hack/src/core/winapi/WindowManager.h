@@ -34,6 +34,8 @@ namespace mm2hack::core::winapi
         void Shutdown();
         HWND GetMainWindowHandle() const;
         bool IsMainWindowActive();
+
+        // Get the window procedure handle for DxLib
         WNDPROC GetDxLibWnd() const;
 
         static LRESULT CALLBACK WindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
@@ -45,7 +47,7 @@ namespace mm2hack::core::winapi
         HWND _mainWindowHandle = nullptr;
         HINSTANCE _hInstance = nullptr;
         WNDPROC _dxLibWnd = nullptr;
-        std::wstring _windowTitle;
-        float _viewerRate = 0.0f;
+        std::wstring _windowTitle;          // Title of the main window
+        float _viewerRate = 0.0f;           // Viewer rate for the main window, used for scaling
     };
 }

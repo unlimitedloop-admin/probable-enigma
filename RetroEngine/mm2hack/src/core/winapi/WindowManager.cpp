@@ -19,76 +19,70 @@ namespace mm2hack::core::winapi
 {
     bool WindowManager::Initialize(HINSTANCE hInstance, LPWSTR lpCmdLine, int nCmdShow, const std::wstring& windowTitle)
     {
+        using namespace config;
+        using namespace exceptions;
+        using namespace utils;
+
+        // Error reporting lambda function
+        auto reportInitError = [](const std::wstring& message) -> bool
+            {
+                ErrorHandler::Handle(
+                    message,
+                    L"WindowManager",
+                    L"Initialize",
+                    ErrorLevel::Error
+                );
+                return false;
+            };
+
         _hInstance = hInstance;
         if (windowTitle.empty())
         {
-            exceptions::ErrorHandler::Handle(
-                L"Window title is empty.",
-                L"WindowManager",
-                L"Initialize",
-                exceptions::ErrorLevel::Error
-            );
-            return false;
+            return reportInitError(L"Window title is empty.");
         }
         _windowTitle = windowTitle;
+
         const bool isDebugMode =
             (lstrcmp(lpCmdLine, L"debug") == 0) ||
-            config::EnvironmentConfig::GetBool(L"MM2HACK_DEBUG", false);
+            EnvironmentConfig::GetBool(L"MM2HACK_DEBUG", false);
 
-        if (config::EnvironmentConfig::GetBool(L"OUTPUT_LOG_ENABLE"))
+        if (EnvironmentConfig::GetBool(L"OUTPUT_LOG_ENABLE"))
         {
             using conf = config::SystemConfig;
             DxLib::SetApplicationLogSaveDirectory(conf::kLogFilePath.c_str());
             DxLib::SetApplicationLogFileName(conf::kDxLibLogFileName.c_str());
             DxLib::SetOutApplicationLogValidFlag(TRUE);
-            utils::LogWriter::Initialize(conf::kLogFilePath);
+            LogWriter::Initialize(conf::kLogFilePath);
         }
         else
         {
             DxLib::SetOutApplicationLogValidFlag(FALSE);
         }
 
-        const BOOL isAlwaysRun = config::EnvironmentConfig::GetBool(L"WINDOW_ALWAYS_RUN_ENABLE") ? TRUE : FALSE;
+        const BOOL isAlwaysRun = EnvironmentConfig::GetBool(L"WINDOW_ALWAYS_RUN_ENABLE") ? TRUE : FALSE;
         DxLib::SetAlwaysRunFlag(isAlwaysRun);
 
-        // Configure the window
+        // Create the main window.
         if (DxLib::SetDoubleStartValidFlag(FALSE) ||
             DxLib::ChangeWindowMode(TRUE) != DX_CHANGESCREEN_OK ||
             DxLib::SetMainWindowText(_windowTitle.c_str()) != 0 ||
             DxLib::SetWindowIconID(IDI_WNDICON) != 0 ||
             DxLib::LoadMenuResource(IDR_MAINMENU) != 0)
         {
-            exceptions::ErrorHandler::Handle(
-                L"Failed to initialize the window.",
-                L"WindowManager",
-                L"Initialize",
-                exceptions::ErrorLevel::Error
-            );
-            return false;
+            return reportInitError(L"Failed to initialize the window.");
         }
 
+        // DxLib initialization.
         if (DxLib::DxLib_Init() == -1)
         {
-            exceptions::ErrorHandler::Handle(
-                L"Failed to initialize DxLib.",
-                L"WindowManager",
-                L"Initialize",
-                exceptions::ErrorLevel::Error
-            );
-            return false;
+            return reportInitError(L"Failed to initialize DxLib.");
         }
 
         _mainWindowHandle = DxLib::GetMainWindowHandle();
         if (_mainWindowHandle == nullptr)
         {
-            exceptions::ErrorHandler::Handle(
-                L"Unable to obtain window handle.",
-                L"WindowManager",
-                L"Initialize",
-                exceptions::ErrorLevel::Error
-            );
             DxLib::DxLib_End();
-            return false;
+            return reportInitError(L"Unable to obtain window handle.");
         }
 
         _dxLibWnd = reinterpret_cast<WNDPROC>(GetWindowLongPtr(_mainWindowHandle, GWLP_WNDPROC));
@@ -96,14 +90,8 @@ namespace mm2hack::core::winapi
 
         if (DxLib::SetDrawScreen(DX_SCREEN_BACK) == -1)
         {
-            exceptions::ErrorHandler::Handle(
-                L"The SetDrawScreen(DX_SCREEN_BACK) function failed.",
-                L"WindowManager",
-                L"Initialize",
-                exceptions::ErrorLevel::Error
-            );
             DxLib::DxLib_End();
-            return false;
+            return reportInitError(L"The SetDrawScreen(DX_SCREEN_BACK) function failed.");
         }
 
         if (!isDebugMode)

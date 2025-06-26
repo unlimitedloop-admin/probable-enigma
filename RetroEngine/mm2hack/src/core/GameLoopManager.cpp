@@ -4,9 +4,11 @@
 #include <exception>
 #include <Windows.h>
 #include "apps/sequence/SequenceManager.h"
+#include "config/SystemConfig.h"
 #include "exceptions/CoreException.h"
 #include "exceptions/ErrorHandler.h"
 #include "exceptions/ErrorLevel.h"
+#include "utils/Fps.h"
 #include "utils/ScopeGuard.h"
 #include "utils/string_converter.h"
 
@@ -20,11 +22,15 @@ namespace mm2hack::core
     void GameLoopManager::Run()
     {
         using namespace exceptions;
+        using namespace utils;
+        using conf = config::SystemConfig;
 
         utils::ScopeGuard finally([]
             {
                 apps::sequence::SequenceManager::GetInstance().Release();
             });
+
+        utils::Fps fps(conf::kTargetFps);
 
         try
         {
@@ -33,6 +39,7 @@ namespace mm2hack::core
                 DxLib::ClearDrawScreen();
                 apps::sequence::SequenceManager::GetInstance().Update();
                 DxLib::ScreenFlip();
+                fps.Wait();
             }
         }
         catch (const CoreException& ex)

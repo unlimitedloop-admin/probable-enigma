@@ -15,6 +15,7 @@
     <ClCompile Include="src\apps\sequence\StandardSequence.cpp" />
     <ClCompile Include="src\apps\sequence\DebugSequence.cpp" />
     <ClCompile Include="src\apps\scenes\SceneManager.cpp" />
+    <ClCompile Include="src\utils\Fps.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
@@ -41,6 +42,7 @@
     <ClInclude Include="src\apps\sequence\StandardSequence.h" />
     <ClInclude Include="src\apps\sequence\DebugSequence.h" />
     <ClInclude Include="src\apps\sequence\SequenceType.h" />
+    <ClInclude Include="src\utils\Fps.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

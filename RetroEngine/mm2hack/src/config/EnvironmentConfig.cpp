@@ -14,14 +14,17 @@ namespace mm2hack::config
         if (!file.is_open()) return;
 
         std::wstring line;
+        // Retrieves lines, omitting those starting with '#' or blank lines.
         while (std::getline(file, line))
         {
             if (line.empty() || line[0] == L'#')
                 continue;
 
+            // Find the start of the key, which is expected to be a '$' character.
             size_t keyStart = line.find(L'$');
             if (keyStart != 0) continue;
 
+            // Find the first space after the key, which is expected to be the separator.
             size_t spacePos = line.find(L' ');
             if (spacePos == std::wstring::npos) continue;
 

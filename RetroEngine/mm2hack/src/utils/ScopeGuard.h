@@ -9,6 +9,7 @@
 #pragma once
 
 #include <functional>
+#include <utility>
 
 namespace mm2hack::utils
 {

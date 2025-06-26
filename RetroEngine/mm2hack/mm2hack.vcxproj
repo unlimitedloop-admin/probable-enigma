@@ -158,6 +158,7 @@
     <ClCompile Include="src\core\winapi\WindowManager.cpp" />
     <ClCompile Include="src\core\winapi\WindowMessageHandlers.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\utils\Fps.cpp" />
     <ClCompile Include="src\utils\LogWriter.cpp" />
     <ClCompile Include="src\utils\output_debug.cpp" />
     <ClCompile Include="src\utils\string_converter.cpp" />
@@ -183,6 +184,7 @@
     <ClInclude Include="src\exceptions\CoreException.h" />
     <ClInclude Include="src\exceptions\ErrorHandler.h" />
     <ClInclude Include="src\exceptions\ErrorLevel.h" />
+    <ClInclude Include="src\utils\Fps.h" />
     <ClInclude Include="src\utils\LogWriter.h" />
     <ClInclude Include="src\utils\output_debug.h" />
     <ClInclude Include="src\utils\ScopeGuard.h" />
