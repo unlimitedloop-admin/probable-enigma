@@ -22,7 +22,7 @@ namespace mm2hack::core::winapi
         using namespace apps::sequence;
         auto& seq = SequenceManager::GetInstance();
 
-        auto shouldConfirmReboot = [&](SequenceType type) -> bool
+        auto shouldConfirmReboot = [&]() -> bool
             {
                 int result = MessageBox(
                     hWnd,
@@ -46,7 +46,7 @@ namespace mm2hack::core::winapi
         case ID_FILE_START:
             if (seq.GetCurrentSequenceType() == SequenceType::Standard)
             {
-                if (shouldConfirmReboot(SequenceType::Standard))
+                if (shouldConfirmReboot())
                 {
                     break;
                 }
@@ -57,7 +57,7 @@ namespace mm2hack::core::winapi
         case ID_FILE_START_DEBUG:
             if (seq.GetCurrentSequenceType() == SequenceType::Debug)
             {
-                if (shouldConfirmReboot(SequenceType::Debug))
+                if (shouldConfirmReboot())
                 {
                     break;
                 }
