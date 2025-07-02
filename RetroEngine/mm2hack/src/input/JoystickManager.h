@@ -1,0 +1,44 @@
+//==============================================================================
+// 
+//  Project: mm2hack
+//  JoystickManager.h
+// 
+//  JoystickManager is a class that manages the joystick input.
+// 
+//==============================================================================
+#pragma once
+
+#include <memory>
+#include "C16ButtonState.h"
+#include "IInputProvider.h"
+#include "InputFrame.h"
+#include "KeyBinding.h"
+
+namespace mm2hack::input
+{
+    // JoystickManager is a class that manages the joystick input
+    class JoystickManager final
+    {
+    public:
+        explicit JoystickManager();
+
+        // Update the joystick state and return true if the state has changed
+        bool Update();
+        // Get the state of a specific button by its index
+        const InputFrame& GetButtonState(size_t index) const;
+        // Get the state of all buttons
+        const C16ButtonState& GetAllStates() const;
+        // Check if the input device is enabled
+        bool IsEnableInputDevice() const;
+
+    private:
+        std::unique_ptr<IInputProvider> _provider;      // Pointer to the input provider
+        C16ButtonState _button_state;
+        KeyBinding _binding;
+
+        // Check if XInput is available
+        bool CheckXInputAvailable();
+        // Check if DirectInput is available
+        bool CheckDirectInputAvailable();
+    };
+}
