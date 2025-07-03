@@ -4,6 +4,7 @@
 #include "DebugSequence.h"
 #include "SequenceType.h"
 #include "StandardSequence.h"
+#include "test/TestSequence.h"
 #include "utils/output_debug.h"
 
 namespace mm2hack::apps::sequence
@@ -30,6 +31,16 @@ namespace mm2hack::apps::sequence
         _currentSequence = std::make_unique<DebugSequence>();
         _sequenceType = SequenceType::Debug;
         utils::debug_log(L"Start debug sequence.");
+    }
+
+    void SequenceManager::StartTestSequence(const int no)
+    {
+        if (_currentSequence)
+        {
+            StopCurrentSequence();
+        }
+        _currentSequence = std::make_unique<TestSequence>(no);
+        utils::debug_log(L"Start test sequence.");
     }
 
     void SequenceManager::StopCurrentSequence()

@@ -16,6 +16,16 @@
     <ClCompile Include="src\apps\sequence\DebugSequence.cpp" />
     <ClCompile Include="src\apps\scenes\SceneManager.cpp" />
     <ClCompile Include="src\utils\Fps.cpp" />
+    <ClCompile Include="src\input\C16ButtonState.cpp" />
+    <ClCompile Include="src\input\KeyboardsIn.cpp" />
+    <ClCompile Include="src\input\XInputProvider.cpp" />
+    <ClCompile Include="src\input\KeyboardInputProvider.cpp" />
+    <ClCompile Include="src\input\KeyBinding.cpp" />
+    <ClCompile Include="src\input\JoystickManager.cpp" />
+    <ClCompile Include="src\input\JoystickSingleton.cpp" />
+    <ClCompile Include="src\test\TestSequence.cpp" />
+    <ClCompile Include="src\test\driver\001\PressKeyCommand.cpp" />
+    <ClCompile Include="src\input\DirectInputProvider.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
@@ -43,6 +53,21 @@
     <ClInclude Include="src\apps\sequence\DebugSequence.h" />
     <ClInclude Include="src\apps\sequence\SequenceType.h" />
     <ClInclude Include="src\utils\Fps.h" />
+    <ClInclude Include="src\input\Jpbtn.h" />
+    <ClInclude Include="src\input\InputFrame.h" />
+    <ClInclude Include="src\input\C16ButtonState.h" />
+    <ClInclude Include="src\input\KeyboardsIn.h" />
+    <ClInclude Include="src\input\IInputProvider.h" />
+    <ClInclude Include="src\input\DefaultKeyArray.h" />
+    <ClInclude Include="src\input\XInputProvider.h" />
+    <ClInclude Include="src\input\KeyboardInputProvider.h" />
+    <ClInclude Include="src\input\KeyBinding.h" />
+    <ClInclude Include="src\input\JoystickManager.h" />
+    <ClInclude Include="src\input\JoystickSingleton.h" />
+    <ClInclude Include="src\test\TestSequence.h" />
+    <ClInclude Include="src\test\driver\001\PressKeyCommand.h" />
+    <ClInclude Include="src\test\driver\ITestDriver.h" />
+    <ClInclude Include="src\input\DirectInputProvider.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

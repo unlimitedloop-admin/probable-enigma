@@ -32,6 +32,7 @@ namespace mm2hack::apps::sequence
 
         void StartStandardSequence();
         void StartDebugSequence();
+        void StartTestSequence(const int no);
         void StopCurrentSequence();
         void RebootCurrentSequence();
         void Update();
