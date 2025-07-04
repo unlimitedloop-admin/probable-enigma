@@ -26,6 +26,7 @@
     <ClCompile Include="src\test\TestSequence.cpp" />
     <ClCompile Include="src\test\driver\001\PressKeyCommand.cpp" />
     <ClCompile Include="src\input\DirectInputProvider.cpp" />
+    <ClCompile Include="src\core\GameStateManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
@@ -68,6 +69,8 @@
     <ClInclude Include="src\test\driver\001\PressKeyCommand.h" />
     <ClInclude Include="src\test\driver\ITestDriver.h" />
     <ClInclude Include="src\input\DirectInputProvider.h" />
+    <ClInclude Include="src\core\GameState.h" />
+    <ClInclude Include="src\core\GameStateManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />
