@@ -51,8 +51,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,0,0,21
- PRODUCTVERSION 0,0,0,21
+ FILEVERSION 0,0,0,22
+ PRODUCTVERSION 0,0,0,22
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -69,12 +69,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Sirius X"
             VALUE "FileDescription", "mm2hack"
-            VALUE "FileVersion", "0.0.0.21"
+            VALUE "FileVersion", "0.0.0.22"
             VALUE "InternalName", "mm2hack.exe"
             VALUE "LegalCopyright", "Copyright (C) 2025"
             VALUE "OriginalFilename", "mm2hack.exe"
             VALUE "ProductName", "mm2hack project"
-            VALUE "ProductVersion", "0.0.0.21"
+            VALUE "ProductVersion", "0.0.0.22"
         END
     END
     BLOCK "VarFileInfo"
@@ -97,6 +97,26 @@ BEGIN
         MENUITEM "リセット (&R)\tCtrl+R",           ID_FILE_RESET
         MENUITEM "ゲーム停止 (&C)",                  ID_FILE_STOP
         MENUITEM "デバッグモードで起動 (&D)\tShift+F1",   ID_FILE_START_DEBUG
+        MENUITEM SEPARATOR
+        MENUITEM "ステートセーブ (&S)\tCtrl+S",        ID_FILE_SAVE
+        MENUITEM "ステートロード (&L)\tCtrl+L",        ID_FILE_LOAD
+        POPUP "ステートセーブスロット (&F)"
+        BEGIN
+            MENUITEM "次のスロット (&N)",                 ID_SLOT_NEXT
+            MENUITEM "前のスロット (&P)",                 ID_SLOT_PREVIOUS
+            MENUITEM SEPARATOR
+            MENUITEM "スロット 0 (&0)",                 ID_SLOT_0
+            MENUITEM "スロット 1 (&1)",                 ID_SLOT_1
+            MENUITEM "スロット 2 (&2)",                 ID_SLOT_2
+            MENUITEM "スロット 3 (&3)",                 ID_SLOT_3
+            MENUITEM "スロット 4 (&4)",                 ID_SLOT_4
+            MENUITEM "スロット 5 (&5)",                 ID_SLOT_5
+            MENUITEM "スロット 6 (&6)",                 ID_SLOT_6
+            MENUITEM "スロット 7 (&7)",                 ID_SLOT_7
+            MENUITEM "スロット 8 (&8)",                 ID_SLOT_8
+            MENUITEM "スロット 9 (&9)",                 ID_SLOT_9
+            MENUITEM "空きスロットを選択 (&E)",              ID_SLOT_EMPTY
+        END
         MENUITEM SEPARATOR
         MENUITEM "終了 (&X)\tAlt+F4",             ID_APP_EXIT
     END
