@@ -1,15 +1,15 @@
 #include "StandardSequence.h"
 
+#include <memory>
 #include "apps/scenes/SceneManager.h"
+#include "apps/scenes/sub-scenes/LaunchingGame.h"
 
 namespace mm2hack::apps::sequence
 {
     StandardSequence::StandardSequence()
     {
-        // Initialize the sequence, load resources, etc.
-        // HACK: mediator->RegisterListener(&_sceneManager);
-        // RequestChange(scenes::SceneID::<SceneClass>);
-        // state pattern...
+        // NOTE: This defines the first scene to be executed.
+        _sceneManager.ChangeScene(std::make_unique<scenes::LaunchingGame>());
     }
 
     StandardSequence::~StandardSequence()
