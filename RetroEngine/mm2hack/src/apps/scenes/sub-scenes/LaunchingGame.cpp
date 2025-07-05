@@ -1,6 +1,7 @@
 #include "LaunchingGame.h"
 
 #include <string>
+#include "apps/parameters/Parameters.h"
 #include "apps/scenes/SceneID.h"
 #include "utils/output_debug.h"
 
@@ -9,7 +10,6 @@ namespace mm2hack::apps::scenes
     LaunchingGame::LaunchingGame()
     {
         utils::debug_log(L"LaunchingGame constructor called.");
-        Initialize();
     }
 
     LaunchingGame::~LaunchingGame()
@@ -18,7 +18,7 @@ namespace mm2hack::apps::scenes
         Finalize();
     }
 
-    void LaunchingGame::Initialize()
+    void LaunchingGame::Initialize(const parameters::Parameters& params)
     {
         utils::debug_log(L"LaunchingGame initialized.");
     }

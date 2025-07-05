@@ -9,6 +9,7 @@
 #pragma once
 
 #include <string>
+#include "apps/parameters/Parameters.h"
 #include "apps/scenes/IBaseScene.h"
 #include "apps/scenes/SceneID.h"
 
@@ -20,7 +21,7 @@ namespace mm2hack::apps::scenes
         LaunchingGame();
         ~LaunchingGame() override;
 
-        void Initialize() override;
+        void Initialize(const parameters::Parameters& params) override;
         void Finalize() override;
         void Update() override;
 

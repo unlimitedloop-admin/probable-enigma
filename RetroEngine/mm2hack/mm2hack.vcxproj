@@ -147,6 +147,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\apps\scenes\SceneChangeMediator.cpp" />
+    <ClCompile Include="src\apps\scenes\SceneFactory.cpp" />
     <ClCompile Include="src\apps\scenes\SceneManager.cpp" />
     <ClCompile Include="src\apps\scenes\sub-scenes\LaunchingGame.cpp" />
     <ClCompile Include="src\apps\sequence\DebugSequence.cpp" />
@@ -181,7 +183,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
+    <ClInclude Include="src\apps\parameters\Parameters.h" />
     <ClInclude Include="src\apps\scenes\IBaseScene.h" />
+    <ClInclude Include="src\apps\scenes\ISceneChangedListener.h" />
+    <ClInclude Include="src\apps\scenes\SceneChangeMediator.h" />
+    <ClInclude Include="src\apps\scenes\SceneFactory.h" />
     <ClInclude Include="src\apps\scenes\SceneID.h" />
     <ClInclude Include="src\apps\scenes\SceneManager.h" />
     <ClInclude Include="src\apps\scenes\sub-scenes\LaunchingGame.h" />

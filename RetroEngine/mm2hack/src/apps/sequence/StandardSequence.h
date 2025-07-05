@@ -10,6 +10,7 @@
 
 #include "ISequence.h"
 
+#include "apps/scenes/SceneChangeMediator.h"
 #include "apps/scenes/SceneManager.h"
 
 namespace mm2hack::apps::sequence
@@ -25,6 +26,7 @@ namespace mm2hack::apps::sequence
         scenes::SceneManager* GetSceneManager() override;
 
     private:
-        scenes::SceneManager _sceneManager;     // Scene manager instance
+        scenes::SceneManager _sceneManager;         // Scene manager instance
+        scenes::SceneChangeMediator _sceneChanger;  // Scene change mediator instance
     };
 }
