@@ -30,6 +30,7 @@
     <ClCompile Include="src\apps\scenes\sub-scenes\LaunchingGame.cpp" />
     <ClCompile Include="src\apps\scenes\SceneFactory.cpp" />
     <ClCompile Include="src\apps\scenes\SceneChangeMediator.cpp" />
+    <ClCompile Include="src\core\save\SaveSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
@@ -81,6 +82,8 @@
     <ClInclude Include="src\apps\parameters\Parameters.h" />
     <ClInclude Include="src\apps\scenes\ISceneChangedListener.h" />
     <ClInclude Include="src\apps\scenes\SceneChangeMediator.h" />
+    <ClInclude Include="src\core\save\SaveData.h" />
+    <ClInclude Include="src\core\save\SaveSystem.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

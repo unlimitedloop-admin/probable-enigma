@@ -24,4 +24,11 @@ namespace mm2hack::core
     {
         return _currentState == state;
     }
+
+    bool GameStateManager::CanActiveMenuBar() const
+    {
+        return _currentState == GameState::Paused ||
+            _currentState == GameState::MenuActive ||
+            _currentState == GameState::Standby;
+    }
 }

@@ -32,6 +32,8 @@ namespace mm2hack::core::winapi
         bool Initialize(HINSTANCE hInstance, LPWSTR lpCmdLine, int nCmdShow, const std::wstring& windowTitle);
         void RunMainLoop();
         void Shutdown();
+
+        void UpdateMenuBarActivate() const;
         HWND GetMainWindowHandle() const;
         bool IsMainWindowActive();
 

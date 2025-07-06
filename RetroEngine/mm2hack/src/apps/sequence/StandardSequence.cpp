@@ -1,9 +1,10 @@
 #include "StandardSequence.h"
 
-#include <memory>
 #include "apps/scenes/SceneChangeMediator.h"
 #include "apps/scenes/SceneID.h"
 #include "apps/scenes/SceneManager.h"
+#include "core/save/SaveData.h"
+#include "SequenceType.h"
 
 namespace mm2hack::apps::sequence
 {
@@ -28,5 +29,17 @@ namespace mm2hack::apps::sequence
     scenes::SceneManager* StandardSequence::GetSceneManager()
     {
         return &_sceneManager;
+    }
+
+    bool StandardSequence::Save(core::save::SaveData& out) const
+    {
+        // Add more data to SaveData if needed. (Other managers, etc.)
+        out.sequenceID = static_cast<int>(SequenceType::Standard);
+        return true;
+    }
+
+    bool StandardSequence::Load(const core::save::SaveData& in)
+    {
+        return true;
     }
 }

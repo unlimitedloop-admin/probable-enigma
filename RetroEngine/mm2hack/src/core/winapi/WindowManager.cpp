@@ -8,6 +8,7 @@
 #include "config/EnvironmentConfig.h"
 #include "config/SystemConfig.h"
 #include "core/GameLoopManager.h"
+#include "core/GameStateManager.h"
 #include "exceptions/CoreException.h"
 #include "exceptions/ErrorHandler.h"
 #include "exceptions/ErrorLevel.h"
@@ -116,6 +117,26 @@ namespace mm2hack::core::winapi
         _hInstance = nullptr;
         _mainWindowHandle = nullptr;
         _windowTitle.clear();
+    }
+
+    void WindowManager::UpdateMenuBarActivate() const
+    {
+        HMENU hMenu = GetMenu(_mainWindowHandle);
+        if (hMenu == nullptr)
+        {
+            return;
+        }
+
+        UINT state = GameStateManager::GetInstance().CanActiveMenuBar()
+            ? MF_ENABLED
+            : MF_GRAYED;
+
+        for (int i = 0; i <= 4; ++i)
+        {
+            EnableMenuItem(hMenu, i, MF_BYPOSITION | state);
+        }
+
+        DrawMenuBar(_mainWindowHandle);
     }
 
     HWND WindowManager::GetMainWindowHandle() const

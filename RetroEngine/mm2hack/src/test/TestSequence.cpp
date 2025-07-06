@@ -3,6 +3,7 @@
 #include <memory>
 #include <stdexcept>
 #include "apps/scenes/SceneManager.h"
+#include "core/save/SaveData.h"
 #include "driver/001/PressKeyCommand.h"
 
 namespace mm2hack::apps::sequence
@@ -36,5 +37,15 @@ namespace mm2hack::apps::sequence
     scenes::SceneManager* TestSequence::GetSceneManager()
     {
         return nullptr;
+    }
+
+    bool TestSequence::Save(core::save::SaveData& out) const
+    {
+        return true;
+    }
+
+    bool TestSequence::Load(const core::save::SaveData& in)
+    {
+        return true;
     }
 }

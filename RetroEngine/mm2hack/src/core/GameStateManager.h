@@ -29,6 +29,8 @@ namespace mm2hack::core
         GameState GetState() const;
         // Check if the current game state matches the specified state
         bool Is(GameState state) const;
+        // Gets whether the menu bar can be operated
+        bool CanActiveMenuBar() const;
 
     private:
         GameStateManager() = default;

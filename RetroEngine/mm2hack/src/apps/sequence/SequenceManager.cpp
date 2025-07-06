@@ -65,6 +65,23 @@ namespace mm2hack::apps::sequence
         }
     }
 
+    void SequenceManager::LoadSequence(const SequenceType type)
+    {
+        utils::debug_log(L"Load sequence from sav file.");
+
+        switch (type)
+        {
+        case SequenceType::Standard:
+            StartStandardSequence();
+            break;
+        case SequenceType::Debug:
+            StartDebugSequence();
+            break;
+        default:
+            break;
+        }
+    }
+
     void SequenceManager::Update()
     {
         if (_currentSequence)
