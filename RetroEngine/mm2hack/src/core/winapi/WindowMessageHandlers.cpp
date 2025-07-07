@@ -51,7 +51,7 @@ namespace mm2hack::core::winapi
             {
                 // NOTE: Even if a reset command is issued while paused, the system is designed to resume operation.
                 GameStateManager::GetInstance().SetState(GameState::Running);
-                WindowManager::GetInstance().UpdateMenuBarActivate();
+                WindowManager::GetInstance().UpdateMenuBarState();
             }
             break;
 
@@ -65,7 +65,7 @@ namespace mm2hack::core::winapi
             }
             seq.StartStandardSequence();
             GameStateManager::GetInstance().SetState(GameState::Running);
-            WindowManager::GetInstance().UpdateMenuBarActivate();
+            WindowManager::GetInstance().UpdateMenuBarState();
             break;
 
         case ID_FILE_START_DEBUG:
@@ -78,13 +78,13 @@ namespace mm2hack::core::winapi
             }
             seq.StartDebugSequence();
             GameStateManager::GetInstance().SetState(GameState::Running);
-            WindowManager::GetInstance().UpdateMenuBarActivate();
+            WindowManager::GetInstance().UpdateMenuBarState();
             break;
 
         case ID_FILE_STOP:
             seq.StopCurrentSequence();
             GameStateManager::GetInstance().SetState(GameState::Standby);
-            WindowManager::GetInstance().UpdateMenuBarActivate();
+            WindowManager::GetInstance().UpdateMenuBarState();
             break;
 
         case ID_FILE_SAVE:
@@ -162,7 +162,7 @@ namespace mm2hack::core::winapi
             if (isFirstPress && wParam == VK_ESCAPE)
             {
                 GameStateManager::GetInstance().SetState(GameState::Paused);
-                WindowManager::GetInstance().UpdateMenuBarActivate();
+                WindowManager::GetInstance().UpdateMenuBarState();
                 return;
             }
         }

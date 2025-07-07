@@ -33,7 +33,9 @@ namespace mm2hack::core::winapi
         void RunMainLoop();
         void Shutdown();
 
-        void UpdateMenuBarActivate() const;
+        void InitializeMenuOnStartup();
+        void UpdateMenuBarState() const;
+
         HWND GetMainWindowHandle() const;
         bool IsMainWindowActive();
 
@@ -49,7 +51,9 @@ namespace mm2hack::core::winapi
         HWND _mainWindowHandle = nullptr;
         HINSTANCE _hInstance = nullptr;
         WNDPROC _dxLibWnd = nullptr;
-        std::wstring _windowTitle;          // Title of the main window
-        float _viewerRate = 0.0f;           // Viewer rate for the main window, used for scaling
+        std::wstring _windowTitle;                  // Title of the main window
+        float _viewerRate = 0.0f;                   // Viewer rate for the main window, used for scaling
+
+        bool IsDebugMode() const;                   // Check if the application is running in debug mode
     };
 }

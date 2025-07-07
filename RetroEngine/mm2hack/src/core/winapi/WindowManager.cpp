@@ -43,10 +43,6 @@ namespace mm2hack::core::winapi
         }
         _windowTitle = windowTitle;
 
-        const bool isDebugMode =
-            (lstrcmp(lpCmdLine, L"debug") == 0) ||
-            EnvironmentConfig::GetBool(L"MM2HACK_DEBUG", false);
-
         if (EnvironmentConfig::GetBool(L"OUTPUT_LOG_ENABLE"))
         {
             using conf = config::SystemConfig;
@@ -89,17 +85,13 @@ namespace mm2hack::core::winapi
         _dxLibWnd = reinterpret_cast<WNDPROC>(GetWindowLongPtr(_mainWindowHandle, GWLP_WNDPROC));
         SetWindowLongPtr(_mainWindowHandle, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WindowProc));
 
+        InitializeMenuOnStartup();
+        UpdateMenuBarState();
+
         if (DxLib::SetDrawScreen(DX_SCREEN_BACK) == -1)
         {
             DxLib::DxLib_End();
             return reportInitError(L"The SetDrawScreen(DX_SCREEN_BACK) function failed.");
-        }
-
-        if (!isDebugMode)
-        {
-            HMENU hMenu = GetMenu(_mainWindowHandle);
-            EnableMenuItem(hMenu, ID_FILE_START_DEBUG, MF_BYCOMMAND | MF_GRAYED);
-            DrawMenuBar(_mainWindowHandle);
         }
 
         return true;
@@ -119,21 +111,36 @@ namespace mm2hack::core::winapi
         _windowTitle.clear();
     }
 
-    void WindowManager::UpdateMenuBarActivate() const
+    void WindowManager::InitializeMenuOnStartup()
     {
         HMENU hMenu = GetMenu(_mainWindowHandle);
-        if (hMenu == nullptr)
+        if (!hMenu) return;
+
+        if (!IsDebugMode())
         {
-            return;
+            // Debug(&D) is the 3rd command on the menu.
+            RemoveMenu(hMenu, 3, MF_BYPOSITION);
+            HMENU hFileMenu = GetSubMenu(hMenu, 0); // File menu is the first submenu
+            if (hFileMenu)
+            {
+                // Remove the Debug Start command from the File menu.
+                RemoveMenu(hFileMenu, ID_FILE_START_DEBUG, MF_BYCOMMAND);
+            }
+            DrawMenuBar(_mainWindowHandle);     // Update the menu
         }
+    }
 
-        UINT state = GameStateManager::GetInstance().CanActiveMenuBar()
-            ? MF_ENABLED
-            : MF_GRAYED;
+    void WindowManager::UpdateMenuBarState() const
+    {
+        HMENU hMenu = GetMenu(_mainWindowHandle);
+        if (!hMenu) return;
 
-        for (int i = 0; i <= 4; ++i)
+        const bool canActivate = GameStateManager::GetInstance().CanActiveMenuBar();
+        const int topCount = GetMenuItemCount(hMenu);
+
+        for (int i = 0; i < topCount; ++i)
         {
-            EnableMenuItem(hMenu, i, MF_BYPOSITION | state);
+            EnableMenuItem(hMenu, i, MF_BYPOSITION | (canActivate ? MF_ENABLED : MF_GRAYED));
         }
 
         DrawMenuBar(_mainWindowHandle);
@@ -205,5 +212,11 @@ namespace mm2hack::core::winapi
             ErrorHandler::Handle(utils::utf8_to_wstring(e.what()), L"WindowManager", L"WindowProc", ErrorLevel::FatalError);
             return ForwardToDefaultProc();
         }
+    }
+
+    bool WindowManager::IsDebugMode() const
+    {
+        return (lstrcmp(GetCommandLine(), L"debug") == 0) ||
+            config::EnvironmentConfig::GetBool(L"MM2HACK_DEBUG", false);
     }
 }
