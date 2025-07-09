@@ -1,5 +1,7 @@
 #include "WindowMessageHandlers.h"
 
+#include <cstdio>
+#include <filesystem>
 #include <Windows.h>
 #include "../resource.h"
 #include "apps/sequence/SequenceManager.h"
@@ -12,9 +14,24 @@
 
 namespace mm2hack::core::winapi
 {
+    // Update the state of the save/load slot menu items based on the current save slot.
+    // Use only when the save slot is changed on the main window.
+    static void UpdateSlotMenuState(HWND hWnd)
+    {
+        HMENU hMenu = GetMenu(hWnd);
+        int selectedSlot = save::SaveSystem::GetCurrentSlot();
+        for (int i = 0; i <= 9; ++i)
+        {
+            CheckMenuItem(hMenu, ID_SLOT_0 + i,
+                MF_BYCOMMAND | ((i == selectedSlot) ? MF_CHECKED : MF_UNCHECKED));
+        }
+    }
+
+
     void HandleCreate(HWND hWnd, LPARAM lParam)
     {
-
+        HMENU hMenu = GetMenu(hWnd);
+        CheckMenuItem(hMenu, ID_SLOT_0, MF_BYCOMMAND | MF_CHECKED); // Set the first slot as checked by default.
     }
 
     void HandleDestroy(HWND hWnd)
@@ -102,10 +119,6 @@ namespace mm2hack::core::winapi
                 }
                 MessageBox(hWnd, L"Failed to save game.", L"Error", MB_ICONERROR);
             }
-            else
-            {
-                MessageBox(hWnd, L"Saving is only allowed when the game is running and paused.", L"Warning", MB_ICONWARNING);
-            }
             break;
 
         case ID_FILE_LOAD:
@@ -125,13 +138,59 @@ namespace mm2hack::core::winapi
                         }
                     }
                 }
-                MessageBox(hWnd, L"Failed to load game.", L"Error", MB_ICONERROR);
-            }
-            else
-            {
-                MessageBox(hWnd, L"Load is only allowed during pause.", L"Warning", MB_ICONWARNING);
+                MessageBox(hWnd, L"Failed to load game.", L"Error", MB_OK | MB_ICONERROR);
             }
             break;
+
+        case ID_SLOT_NEXT:
+        {
+            int nextSlot = (SaveSystem::GetCurrentSlot() + 1) % 10;
+            SaveSystem::SetCurrentSlot(nextSlot);
+            UpdateSlotMenuState(hWnd);
+            break;
+        }
+
+        case ID_SLOT_PREVIOUS:
+        {
+            int prevSlot = (SaveSystem::GetCurrentSlot() + 9) % 10;
+            SaveSystem::SetCurrentSlot(prevSlot);
+            UpdateSlotMenuState(hWnd);
+            break;
+        }
+
+        case ID_SLOT_EMPTY:
+        {
+            bool found = false;
+
+            // Find the first empty save slot.
+            for (int i = 0; i < 10; ++i)
+            {
+                wchar_t buffer[32];
+                swprintf_s(buffer, L"sav/slot%02d.sav", i);
+
+                if (!std::filesystem::exists(buffer))
+                {
+                    SaveSystem::SetCurrentSlot(i);
+                    UpdateSlotMenuState(hWnd);
+                    found = true;
+                    break;
+                }
+            }
+            if (!found)
+                MessageBox(hWnd, L"There's no free save slots.\nAll 10 slots are already used.", L"Save Slot Warning", MB_OK | MB_ICONWARNING);
+
+            break;
+        }
+
+        case ID_SLOT_0: case ID_SLOT_1: case ID_SLOT_2:
+        case ID_SLOT_3: case ID_SLOT_4: case ID_SLOT_5:
+        case ID_SLOT_6: case ID_SLOT_7: case ID_SLOT_8: case ID_SLOT_9:
+        {
+            int selectedSlot = LOWORD(wParam) - ID_SLOT_0;
+            SaveSystem::SetCurrentSlot(selectedSlot);
+            UpdateSlotMenuState(hWnd);
+            break;
+        }
 
         case ID_SCRIPT_001:
             seq.StartTestSequence(1);

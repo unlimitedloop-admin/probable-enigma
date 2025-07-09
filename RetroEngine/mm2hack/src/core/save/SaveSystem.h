@@ -17,6 +17,14 @@ namespace mm2hack::core::save
     class SaveSystem
     {
     public:
+        SaveSystem() = delete;
+        ~SaveSystem() = delete;
+        SaveSystem(const SaveSystem&) = delete;
+        SaveSystem& operator=(const SaveSystem&) = delete;
+        SaveSystem(SaveSystem&&) = delete;
+        SaveSystem& operator=(SaveSystem&&) = delete;
+        // This class is not copyable or movable (static class)
+
         // Saves the game data to the specified path
         static bool Save(const std::wstring& path, const SaveData& data);
         // Loads the game data from the specified path

@@ -18,6 +18,8 @@
 
 namespace mm2hack::core::winapi
 {
+    constexpr UINT WM_USER_CREATE = WM_USER + 100;
+
     bool WindowManager::Initialize(HINSTANCE hInstance, LPWSTR lpCmdLine, int nCmdShow, const std::wstring& windowTitle)
     {
         using namespace config;
@@ -69,6 +71,9 @@ namespace mm2hack::core::winapi
             return reportInitError(L"Failed to initialize the window.");
         }
 
+        InitializeMenuOnStartup();
+        UpdateMenuBarState();
+
         // DxLib initialization.
         if (DxLib::DxLib_Init() == -1)
         {
@@ -84,9 +89,7 @@ namespace mm2hack::core::winapi
 
         _dxLibWnd = reinterpret_cast<WNDPROC>(GetWindowLongPtr(_mainWindowHandle, GWLP_WNDPROC));
         SetWindowLongPtr(_mainWindowHandle, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WindowProc));
-
-        InitializeMenuOnStartup();
-        UpdateMenuBarState();
+        PostMessage(_mainWindowHandle, WM_USER_CREATE, 0, 0);
 
         if (DxLib::SetDrawScreen(DX_SCREEN_BACK) == -1)
         {
@@ -177,7 +180,7 @@ namespace mm2hack::core::winapi
         {
             switch (message)
             {
-            case WM_CREATE:
+            case WM_USER_CREATE:
                 HandleCreate(hwnd, lParam);
                 return 0;
             case WM_DESTROY:
