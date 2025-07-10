@@ -12,10 +12,11 @@
 #include "core/save/SaveSystem.h"
 #include "WindowManager.h"
 
-namespace mm2hack::core::winapi
+namespace
 {
+    using namespace mm2hack::core;
+
     // Update the state of the save/load slot menu items based on the current save slot.
-    // Use only when the save slot is changed on the main window.
     static void UpdateSlotMenuState(HWND hWnd)
     {
         HMENU hMenu = GetMenu(hWnd);
@@ -26,8 +27,10 @@ namespace mm2hack::core::winapi
                 MF_BYCOMMAND | ((i == selectedSlot) ? MF_CHECKED : MF_UNCHECKED));
         }
     }
+}
 
-
+namespace mm2hack::core::winapi
+{
     void HandleCreate(HWND hWnd, LPARAM lParam)
     {
         HMENU hMenu = GetMenu(hWnd);
@@ -160,8 +163,6 @@ namespace mm2hack::core::winapi
 
         case ID_SLOT_EMPTY:
         {
-            bool found = false;
-
             // Find the first empty save slot.
             for (int i = 0; i < 10; ++i)
             {
@@ -172,13 +173,9 @@ namespace mm2hack::core::winapi
                 {
                     SaveSystem::SetCurrentSlot(i);
                     UpdateSlotMenuState(hWnd);
-                    found = true;
                     break;
                 }
             }
-            if (!found)
-                MessageBox(hWnd, L"There's no free save slots.\nAll 10 slots are already used.", L"Save Slot Warning", MB_OK | MB_ICONWARNING);
-
             break;
         }
 
@@ -247,6 +244,27 @@ namespace mm2hack::core::winapi
                 // Handle Ctrl + R key press for reset the sequence.
                 SendMessage(hWnd, WM_COMMAND, ID_FILE_RESET, 0);
             }
+        }
+        else if (isFirstPress && wParam == 'S')
+        {
+            if (GetKeyState(VK_CONTROL) & 0x8000)
+            {
+                // Handle Ctrl + S key press for saving the sequence.
+                SendMessage(hWnd, WM_COMMAND, ID_FILE_SAVE, 0);
+            }
+        }
+        else if (isFirstPress && wParam == 'L')
+        {
+            if (GetKeyState(VK_CONTROL) & 0x8000)
+            {
+                // Handle Ctrl + L key press for loading the sequence.
+                SendMessage(hWnd, WM_COMMAND, ID_FILE_LOAD, 0);
+            }
+        }
+        else if (isFirstPress && wParam == VK_F5)
+        {
+            // Handle F5 key press for toggling the menu bar.
+            WindowManager::GetInstance().UpdateMenuBarState();
         }
     }
 

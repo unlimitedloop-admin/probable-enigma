@@ -18,10 +18,9 @@ namespace mm2hack::apps::scenes
     {
         auto& joystick = input::JoystickSingleton::Instance();
 
-        // 入力更新
         joystick.Update();
 
-        // 16キー分を表示
+        // Show the state of each button.
         for (size_t i = 0; i < JPBTN_COUNT; ++i)
         {
             const auto& frame = joystick.GetButtonState(i);
