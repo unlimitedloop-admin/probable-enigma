@@ -11,6 +11,7 @@
 #include "ISequence.h"
 
 #include "apps/scenes/SceneManager.h"
+#include "core/save/SaveData.h"
 
 namespace mm2hack::apps::sequence
 {
@@ -23,6 +24,8 @@ namespace mm2hack::apps::sequence
         // Override the Execute method to implement the sequence logic
         void Execute() override;
         scenes::SceneManager* GetSceneManager() override;
+        bool Save(core::save::SaveData& out) const override;
+        bool Load(const core::save::SaveData& in) override;
 
     private:
         scenes::SceneManager _sceneManager;     // Scene manager instance

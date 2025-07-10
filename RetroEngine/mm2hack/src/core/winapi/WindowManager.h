@@ -29,10 +29,21 @@ namespace mm2hack::core::winapi
         WindowManager& operator=(WindowManager&&) = delete;
         // WindowManager is a singleton, so we delete the copy and move constructors and assignment operators.
 
+        // Initialize the main window and DxLib
         bool Initialize(HINSTANCE hInstance, LPWSTR lpCmdLine, int nCmdShow, const std::wstring& windowTitle);
+        // Run the main loop of the application
         void RunMainLoop();
+        // Shutdown the application and release resources
         void Shutdown();
+
+        // Initialize the menu bar on application startup
+        void InitializeMenuOnStartup();
+        // Update the state of the menu bar based on the current game state
+        void UpdateMenuBarState() const;
+
+        // Get the main window handle
         HWND GetMainWindowHandle() const;
+        // Check if the main window is currently active
         bool IsMainWindowActive();
 
         // Get the window procedure handle for DxLib
@@ -47,7 +58,9 @@ namespace mm2hack::core::winapi
         HWND _mainWindowHandle = nullptr;
         HINSTANCE _hInstance = nullptr;
         WNDPROC _dxLibWnd = nullptr;
-        std::wstring _windowTitle;          // Title of the main window
-        float _viewerRate = 0.0f;           // Viewer rate for the main window, used for scaling
+        std::wstring _windowTitle;                  // Title of the main window
+        float _viewerRate = 0.0f;                   // Viewer rate for the main window, used for scaling
+
+        bool IsDebugMode() const;                   // Check if the application is running in debug mode
     };
 }

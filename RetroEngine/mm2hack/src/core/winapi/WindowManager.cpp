@@ -8,6 +8,7 @@
 #include "config/EnvironmentConfig.h"
 #include "config/SystemConfig.h"
 #include "core/GameLoopManager.h"
+#include "core/GameStateManager.h"
 #include "exceptions/CoreException.h"
 #include "exceptions/ErrorHandler.h"
 #include "exceptions/ErrorLevel.h"
@@ -17,6 +18,8 @@
 
 namespace mm2hack::core::winapi
 {
+    constexpr UINT WM_USER_CREATE = WM_USER + 100;
+
     bool WindowManager::Initialize(HINSTANCE hInstance, LPWSTR lpCmdLine, int nCmdShow, const std::wstring& windowTitle)
     {
         using namespace config;
@@ -41,10 +44,6 @@ namespace mm2hack::core::winapi
             return reportInitError(L"Window title is empty.");
         }
         _windowTitle = windowTitle;
-
-        const bool isDebugMode =
-            (lstrcmp(lpCmdLine, L"debug") == 0) ||
-            EnvironmentConfig::GetBool(L"MM2HACK_DEBUG", false);
 
         if (EnvironmentConfig::GetBool(L"OUTPUT_LOG_ENABLE"))
         {
@@ -72,6 +71,9 @@ namespace mm2hack::core::winapi
             return reportInitError(L"Failed to initialize the window.");
         }
 
+        InitializeMenuOnStartup();
+        UpdateMenuBarState();
+
         // DxLib initialization.
         if (DxLib::DxLib_Init() == -1)
         {
@@ -87,18 +89,12 @@ namespace mm2hack::core::winapi
 
         _dxLibWnd = reinterpret_cast<WNDPROC>(GetWindowLongPtr(_mainWindowHandle, GWLP_WNDPROC));
         SetWindowLongPtr(_mainWindowHandle, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WindowProc));
+        PostMessage(_mainWindowHandle, WM_USER_CREATE, 0, 0);
 
         if (DxLib::SetDrawScreen(DX_SCREEN_BACK) == -1)
         {
             DxLib::DxLib_End();
             return reportInitError(L"The SetDrawScreen(DX_SCREEN_BACK) function failed.");
-        }
-
-        if (!isDebugMode)
-        {
-            HMENU hMenu = GetMenu(_mainWindowHandle);
-            EnableMenuItem(hMenu, ID_FILE_START_DEBUG, MF_BYCOMMAND | MF_GRAYED);
-            DrawMenuBar(_mainWindowHandle);
         }
 
         return true;
@@ -116,6 +112,41 @@ namespace mm2hack::core::winapi
         _hInstance = nullptr;
         _mainWindowHandle = nullptr;
         _windowTitle.clear();
+    }
+
+    void WindowManager::InitializeMenuOnStartup()
+    {
+        HMENU hMenu = GetMenu(_mainWindowHandle);
+        if (!hMenu) return;
+
+        if (!IsDebugMode())
+        {
+            // Debug(&D) is the 3rd command on the menu.
+            RemoveMenu(hMenu, 3, MF_BYPOSITION);
+            HMENU hFileMenu = GetSubMenu(hMenu, 0); // File menu is the first submenu
+            if (hFileMenu)
+            {
+                // Remove the Debug Start command from the File menu.
+                RemoveMenu(hFileMenu, ID_FILE_START_DEBUG, MF_BYCOMMAND);
+            }
+            DrawMenuBar(_mainWindowHandle);     // Update the menu
+        }
+    }
+
+    void WindowManager::UpdateMenuBarState() const
+    {
+        HMENU hMenu = GetMenu(_mainWindowHandle);
+        if (!hMenu) return;
+
+        const bool canActivate = GameStateManager::GetInstance().CanActiveMenuBar();
+        const int topCount = GetMenuItemCount(hMenu);
+
+        for (int i = 0; i < topCount; ++i)
+        {
+            EnableMenuItem(hMenu, i, MF_BYPOSITION | (canActivate ? MF_ENABLED : MF_GRAYED));
+        }
+
+        DrawMenuBar(_mainWindowHandle);
     }
 
     HWND WindowManager::GetMainWindowHandle() const
@@ -149,7 +180,7 @@ namespace mm2hack::core::winapi
         {
             switch (message)
             {
-            case WM_CREATE:
+            case WM_USER_CREATE:
                 HandleCreate(hwnd, lParam);
                 return 0;
             case WM_DESTROY:
@@ -184,5 +215,11 @@ namespace mm2hack::core::winapi
             ErrorHandler::Handle(utils::utf8_to_wstring(e.what()), L"WindowManager", L"WindowProc", ErrorLevel::FatalError);
             return ForwardToDefaultProc();
         }
+    }
+
+    bool WindowManager::IsDebugMode() const
+    {
+        return (lstrcmp(GetCommandLine(), L"debug") == 0) ||
+            config::EnvironmentConfig::GetBool(L"MM2HACK_DEBUG", false);
     }
 }

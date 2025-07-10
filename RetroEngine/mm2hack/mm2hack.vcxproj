@@ -147,7 +147,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\apps\scenes\SceneChangeMediator.cpp" />
+    <ClCompile Include="src\apps\scenes\SceneFactory.cpp" />
     <ClCompile Include="src\apps\scenes\SceneManager.cpp" />
+    <ClCompile Include="src\apps\scenes\sub-scenes\LaunchingGame.cpp" />
     <ClCompile Include="src\apps\sequence\DebugSequence.cpp" />
     <ClCompile Include="src\apps\sequence\SequenceManager.cpp" />
     <ClCompile Include="src\apps\sequence\StandardSequence.cpp" />
@@ -155,6 +158,8 @@
     <ClCompile Include="src\config\SystemConfig.cpp" />
     <ClCompile Include="src\core\bootstrap.cpp" />
     <ClCompile Include="src\core\GameLoopManager.cpp" />
+    <ClCompile Include="src\core\GameStateManager.cpp" />
+    <ClCompile Include="src\core\save\SaveSystem.cpp" />
     <ClCompile Include="src\core\winapi\WindowManager.cpp" />
     <ClCompile Include="src\core\winapi\WindowMessageHandlers.cpp" />
     <ClCompile Include="src\input\C16ButtonState.cpp" />
@@ -179,7 +184,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
+    <ClInclude Include="src\apps\parameters\Parameters.h" />
+    <ClInclude Include="src\apps\scenes\IBaseScene.h" />
+    <ClInclude Include="src\apps\scenes\ISceneChangedListener.h" />
+    <ClInclude Include="src\apps\scenes\SceneChangeMediator.h" />
+    <ClInclude Include="src\apps\scenes\SceneFactory.h" />
+    <ClInclude Include="src\apps\scenes\SceneID.h" />
     <ClInclude Include="src\apps\scenes\SceneManager.h" />
+    <ClInclude Include="src\apps\scenes\sub-scenes\LaunchingGame.h" />
     <ClInclude Include="src\apps\sequence\DebugSequence.h" />
     <ClInclude Include="src\apps\sequence\ISequence.h" />
     <ClInclude Include="src\apps\sequence\SequenceManager.h" />
@@ -189,6 +201,10 @@
     <ClInclude Include="src\config\SystemConfig.h" />
     <ClInclude Include="src\core\bootstrap.h" />
     <ClInclude Include="src\core\GameLoopManager.h" />
+    <ClInclude Include="src\core\GameState.h" />
+    <ClInclude Include="src\core\GameStateManager.h" />
+    <ClInclude Include="src\core\save\SaveData.h" />
+    <ClInclude Include="src\core\save\SaveSystem.h" />
     <ClInclude Include="src\core\winapi\WindowManager.h" />
     <ClInclude Include="src\core\winapi\WindowMessageHandlers.h" />
     <ClInclude Include="src\exceptions\CoreException.h" />

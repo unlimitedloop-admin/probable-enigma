@@ -1,6 +1,8 @@
 #include "DebugSequence.h"
 
 #include "apps/scenes/SceneManager.h"
+#include "core/save/SaveData.h"
+#include "SequenceType.h"
 
 namespace mm2hack::apps::sequence
 {
@@ -22,5 +24,17 @@ namespace mm2hack::apps::sequence
     scenes::SceneManager* DebugSequence::GetSceneManager()
     {
         return &_sceneManager;
+    }
+
+    bool DebugSequence::Save(core::save::SaveData& out) const
+    {
+        // Add more data to SaveData if needed. (Other managers, etc.)
+        out.sequenceID = static_cast<int>(SequenceType::Debug);
+        return true;
+    }
+
+    bool DebugSequence::Load(const core::save::SaveData& in)
+    {
+        return true;
     }
 }

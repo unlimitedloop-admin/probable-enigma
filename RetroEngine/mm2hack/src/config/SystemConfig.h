@@ -8,6 +8,7 @@
 //==============================================================================
 #pragma once
 
+#include <cstdint>
 #include <string>
 
 namespace mm2hack::config
@@ -30,5 +31,7 @@ namespace mm2hack::config
         
         // Frame rate settings
         static constexpr int kTargetFps = 60;                       // Frame rate (frames per second)
+
+        static constexpr uint32_t kCurrentSaveVersion = 1;          // Current save version
     };
 }
