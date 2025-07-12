@@ -172,6 +172,7 @@
     <ClCompile Include="src\input\XInputProvider.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\test\driver\001\PressKeyCommand.cpp" />
+    <ClCompile Include="src\test\driver\002\DrawGraph.cpp" />
     <ClCompile Include="src\test\TestSequence.cpp" />
     <ClCompile Include="src\utils\Fps.cpp" />
     <ClCompile Include="src\utils\LogWriter.cpp" />
@@ -205,6 +206,7 @@
     <ClInclude Include="src\core\GameStateManager.h" />
     <ClInclude Include="src\core\save\SaveData.h" />
     <ClInclude Include="src\core\save\SaveSystem.h" />
+    <ClInclude Include="src\core\winapi\WindowContext.h" />
     <ClInclude Include="src\core\winapi\WindowManager.h" />
     <ClInclude Include="src\core\winapi\WindowMessageHandlers.h" />
     <ClInclude Include="src\exceptions\CoreException.h" />
@@ -223,6 +225,7 @@
     <ClInclude Include="src\input\KeyboardsIn.h" />
     <ClInclude Include="src\input\XInputProvider.h" />
     <ClInclude Include="src\test\driver\001\PressKeyCommand.h" />
+    <ClInclude Include="src\test\driver\002\DrawGraph.h" />
     <ClInclude Include="src\test\driver\ITestDriver.h" />
     <ClInclude Include="src\test\TestSequence.h" />
     <ClInclude Include="src\utils\Fps.h" />
@@ -239,6 +242,7 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="mm2hack.ico" />
+    <Image Include="src\resources\exams\bg\default-windowsize-picture.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -14,6 +14,7 @@
 #include "exceptions/ErrorLevel.h"
 #include "utils/LogWriter.h"
 #include "utils/string_converter.h"
+#include "WindowContext.h"
 #include "WindowMessageHandlers.h"
 
 namespace mm2hack::core::winapi
@@ -25,6 +26,7 @@ namespace mm2hack::core::winapi
         using namespace config;
         using namespace exceptions;
         using namespace utils;
+        using conf = config::SystemConfig;
 
         // Error reporting lambda function
         auto reportInitError = [](const std::wstring& message) -> bool
@@ -47,7 +49,6 @@ namespace mm2hack::core::winapi
 
         if (EnvironmentConfig::GetBool(L"OUTPUT_LOG_ENABLE"))
         {
-            using conf = config::SystemConfig;
             DxLib::SetApplicationLogSaveDirectory(conf::kLogFilePath.c_str());
             DxLib::SetApplicationLogFileName(conf::kDxLibLogFileName.c_str());
             DxLib::SetOutApplicationLogValidFlag(TRUE);
@@ -64,6 +65,11 @@ namespace mm2hack::core::winapi
         // Create the main window.
         if (DxLib::SetDoubleStartValidFlag(FALSE) ||
             DxLib::ChangeWindowMode(TRUE) != DX_CHANGESCREEN_OK ||
+            DxLib::SetWindowSizeChangeEnableFlag(FALSE, FALSE) != 0 ||
+            DxLib::SetGraphMode(
+                static_cast<int>(conf::kScreenWidth * conf::kScreenScaleMax),
+                static_cast<int>(conf::kScreenHeight * conf::kScreenScaleMax),
+                conf::kScreenColorDepth) != 0 ||
             DxLib::SetMainWindowText(_windowTitle.c_str()) != 0 ||
             DxLib::SetWindowIconID(IDI_WNDICON) != 0 ||
             DxLib::LoadMenuResource(IDR_MAINMENU) != 0)
@@ -71,6 +77,7 @@ namespace mm2hack::core::winapi
             return reportInitError(L"Failed to initialize the window.");
         }
 
+        ChangeWindowSize(conf::kScreenScale);
         InitializeMenuOnStartup();
         UpdateMenuBarState();
 
@@ -91,7 +98,9 @@ namespace mm2hack::core::winapi
         SetWindowLongPtr(_mainWindowHandle, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WindowProc));
         PostMessage(_mainWindowHandle, WM_USER_CREATE, 0, 0);
 
-        if (DxLib::SetDrawScreen(DX_SCREEN_BACK) == -1)
+        _screenHandle = DxLib::MakeScreen(conf::kScreenWidth, conf::kScreenHeight, FALSE);  // Create a screen for drawing
+
+        if (DxLib::SetDrawScreen(_screenHandle) == -1)
         {
             DxLib::DxLib_End();
             return reportInitError(L"The SetDrawScreen(DX_SCREEN_BACK) function failed.");
@@ -102,7 +111,13 @@ namespace mm2hack::core::winapi
 
     void WindowManager::RunMainLoop()
     {
-        GameLoopManager gameLoop(_mainWindowHandle, _viewerRate);
+        WindowContext context{
+            .hWnd = _mainWindowHandle,
+            .viewerRate = _viewerRate,
+            .screenHandle = _screenHandle
+        };
+
+        GameLoopManager gameLoop(context);
         gameLoop.Run();
     }
 
@@ -112,6 +127,15 @@ namespace mm2hack::core::winapi
         _hInstance = nullptr;
         _mainWindowHandle = nullptr;
         _windowTitle.clear();
+    }
+
+    void WindowManager::ChangeWindowSize(float viewerRate)
+    {
+        using conf = config::SystemConfig;
+        DxLib::SetWindowSize(
+            static_cast<int>(conf::kScreenWidth * viewerRate),
+            static_cast<int>(conf::kScreenHeight * viewerRate));
+        _viewerRate = viewerRate;
     }
 
     void WindowManager::InitializeMenuOnStartup()

@@ -32,6 +32,15 @@ namespace mm2hack::config
         // Frame rate settings
         static constexpr int kTargetFps = 60;                       // Frame rate (frames per second)
 
+        // Window settings
+        // NOTE: The default window size is 256x240 pixels and scaled to 512x480 pixels. 
+        static const std::wstring kWindowClassName;                 // Window class name
+        static constexpr int kScreenWidth = 256;                    // Width of the screen (pixels)
+        static constexpr int kScreenHeight = 240;                   // Height of the screen (pixels)
+        static constexpr int kScreenColorDepth = 16;                // Color depth (bits)
+        static constexpr float kScreenScale = 2.0f;                 // Scale factor for the screen
+        static constexpr float kScreenScaleMax = 4.0f;              // Maximum scale factor for the screen
+
         static constexpr uint32_t kCurrentSaveVersion = 1;          // Current save version
     };
 }

@@ -5,6 +5,7 @@
 #include "apps/scenes/SceneManager.h"
 #include "core/save/SaveData.h"
 #include "driver/001/PressKeyCommand.h"
+#include "driver/002/DrawGraph.h"
 
 namespace mm2hack::apps::sequence
 {
@@ -15,8 +16,16 @@ namespace mm2hack::apps::sequence
         case 1:
             _driver = std::make_unique<scenes::PressKeyCommand>();
             break;
+        case 2:
+            _driver = std::make_unique<scenes::DrawGraph>();
+            break;
         default:
             throw std::invalid_argument("Invalid script number");
+        }
+
+        if (!_driver->Initialize())
+        {
+            throw std::runtime_error("Failed to initialize the test driver.");
         }
     }
 

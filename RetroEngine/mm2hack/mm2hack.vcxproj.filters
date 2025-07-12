@@ -31,6 +31,7 @@
     <ClCompile Include="src\apps\scenes\SceneFactory.cpp" />
     <ClCompile Include="src\apps\scenes\SceneChangeMediator.cpp" />
     <ClCompile Include="src\core\save\SaveSystem.cpp" />
+    <ClCompile Include="src\test\driver\002\DrawGraph.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
@@ -84,6 +85,8 @@
     <ClInclude Include="src\apps\scenes\SceneChangeMediator.h" />
     <ClInclude Include="src\core\save\SaveData.h" />
     <ClInclude Include="src\core\save\SaveSystem.h" />
+    <ClInclude Include="src\test\driver\002\DrawGraph.h" />
+    <ClInclude Include="src\core\winapi\WindowContext.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />
@@ -93,5 +96,6 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="mm2hack.ico" />
+    <Image Include="src\resources\exams\bg\default-windowsize-picture.png" />
   </ItemGroup>
 </Project>

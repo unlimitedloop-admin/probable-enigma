@@ -11,11 +11,14 @@
 #include "utils/Fps.h"
 #include "utils/ScopeGuard.h"
 #include "utils/string_converter.h"
+#include "winapi/WindowContext.h"
 
 namespace mm2hack::core
 {
-    GameLoopManager::GameLoopManager(HWND hWnd, const float& viewerRate)
-        : _hWnd(hWnd), _viewerRate(viewerRate)
+    GameLoopManager::GameLoopManager(const winapi::WindowContext& context)
+        : _hWnd(context.hWnd),
+        _viewerRate(context.viewerRate),
+        _screenHandle(context.screenHandle)
     {
     }
 
@@ -25,20 +28,29 @@ namespace mm2hack::core
         using namespace utils;
         using conf = config::SystemConfig;
 
-        utils::ScopeGuard finally([]
+        ScopeGuard finally([]
             {
                 apps::sequence::SequenceManager::GetInstance().Release();
             });
 
-        utils::Fps fps(conf::kTargetFps);
+        Fps fps(conf::kTargetFps);
 
         try
         {
-            while (DxLib::ProcessMessage() == 0)
+            while (!DxLib::ProcessMessage() && !DxLib::SetDrawScreen(_screenHandle) && !DxLib::ClearDrawScreen())
             {
-                DxLib::ClearDrawScreen();
                 apps::sequence::SequenceManager::GetInstance().Update();
-                DxLib::ScreenFlip();
+                
+                if (DxLib::SetDrawScreen(DX_SCREEN_BACK) ||
+                    DxLib::DrawExtendGraph(0, 0,
+                        static_cast<int>(conf::kScreenWidth * _viewerRate),
+                        static_cast<int>(conf::kScreenHeight * _viewerRate),
+                        _screenHandle, FALSE) ||
+                    DxLib::ScreenFlip())
+                {
+                    break;
+                }
+
                 fps.Wait();
             }
         }
@@ -49,7 +61,7 @@ namespace mm2hack::core
         catch (const std::exception& e)
         {
             ErrorHandler::Handle(
-                utils::utf8_to_wstring(e.what()),
+                utf8_to_wstring(e.what()),
                 L"GameLoopManager",
                 L"Run",
                 ErrorLevel::FatalError

@@ -36,6 +36,8 @@ namespace mm2hack::core::winapi
         // Shutdown the application and release resources
         void Shutdown();
 
+        // Change the size of the main window based on the viewer rate
+        void ChangeWindowSize(float viewerRate);
         // Initialize the menu bar on application startup
         void InitializeMenuOnStartup();
         // Update the state of the menu bar based on the current game state
@@ -60,6 +62,7 @@ namespace mm2hack::core::winapi
         WNDPROC _dxLibWnd = nullptr;
         std::wstring _windowTitle;                  // Title of the main window
         float _viewerRate = 0.0f;                   // Viewer rate for the main window, used for scaling
+        int _screenHandle = -1;                     // Handle for the screen
 
         bool IsDebugMode() const;                   // Check if the application is running in debug mode
     };

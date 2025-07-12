@@ -193,6 +193,10 @@ namespace mm2hack::core::winapi
             seq.StartTestSequence(1);
             break;
 
+        case ID_SCRIPT_002:
+            seq.StartTestSequence(2);
+            break;
+
         default:
             break;
         }
