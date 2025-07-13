@@ -189,6 +189,18 @@ namespace mm2hack::core::winapi
             break;
         }
 
+        case ID_SCREEN_1X:
+            WindowManager::GetInstance().ChangeWindowSize(1.0f);
+            break;
+
+        case ID_SCREEN_2X:
+            WindowManager::GetInstance().ChangeWindowSize(2.0f);
+            break;
+
+        case ID_SCREEN_4X:
+            WindowManager::GetInstance().ChangeWindowSize(4.0f);
+            break;
+
         case ID_SCRIPT_001:
             seq.StartTestSequence(1);
             break;

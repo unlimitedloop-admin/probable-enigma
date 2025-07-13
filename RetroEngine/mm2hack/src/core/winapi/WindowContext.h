@@ -17,7 +17,7 @@ namespace mm2hack::core::winapi
     struct WindowContext
     {
         HWND hWnd = nullptr;
-        float viewerRate = 1.0f;
-        int screenHandle = -1;
+        float& viewerRate;
+        int& screenHandle;
     };
 }

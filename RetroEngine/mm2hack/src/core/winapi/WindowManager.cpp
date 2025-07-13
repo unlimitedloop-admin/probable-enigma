@@ -46,6 +46,7 @@ namespace mm2hack::core::winapi
             return reportInitError(L"Window title is empty.");
         }
         _windowTitle = windowTitle;
+        _viewerRate = conf::kScreenScale;
 
         if (EnvironmentConfig::GetBool(L"OUTPUT_LOG_ENABLE"))
         {
@@ -65,11 +66,15 @@ namespace mm2hack::core::winapi
         // Create the main window.
         if (DxLib::SetDoubleStartValidFlag(FALSE) ||
             DxLib::ChangeWindowMode(TRUE) != DX_CHANGESCREEN_OK ||
-            DxLib::SetWindowSizeChangeEnableFlag(FALSE, FALSE) != 0 ||
             DxLib::SetGraphMode(
                 static_cast<int>(conf::kScreenWidth * conf::kScreenScaleMax),
                 static_cast<int>(conf::kScreenHeight * conf::kScreenScaleMax),
                 conf::kScreenColorDepth) != 0 ||
+            DxLib::SetWindowSizeChangeEnableFlag(FALSE, FALSE) != 0 ||
+            DxLib::SetWindowSize(
+                static_cast<int>(conf::kScreenWidth * _viewerRate),
+                static_cast<int>(conf::kScreenHeight * _viewerRate)) != 0 ||
+            DxLib::SetWindowSizeExtendRate(1.0f) != 0 ||
             DxLib::SetMainWindowText(_windowTitle.c_str()) != 0 ||
             DxLib::SetWindowIconID(IDI_WNDICON) != 0 ||
             DxLib::LoadMenuResource(IDR_MAINMENU) != 0)
@@ -77,7 +82,6 @@ namespace mm2hack::core::winapi
             return reportInitError(L"Failed to initialize the window.");
         }
 
-        ChangeWindowSize(conf::kScreenScale);
         InitializeMenuOnStartup();
         UpdateMenuBarState();
 
@@ -99,8 +103,7 @@ namespace mm2hack::core::winapi
         PostMessage(_mainWindowHandle, WM_USER_CREATE, 0, 0);
 
         _screenHandle = DxLib::MakeScreen(conf::kScreenWidth, conf::kScreenHeight, FALSE);  // Create a screen for drawing
-
-        if (DxLib::SetDrawScreen(_screenHandle) == -1)
+        if (_screenHandle == -1)
         {
             DxLib::DxLib_End();
             return reportInitError(L"The SetDrawScreen(DX_SCREEN_BACK) function failed.");
@@ -129,13 +132,43 @@ namespace mm2hack::core::winapi
         _windowTitle.clear();
     }
 
-    void WindowManager::ChangeWindowSize(float viewerRate)
+    bool WindowManager::ChangeWindowSize(float viewerRate)
     {
         using conf = config::SystemConfig;
-        DxLib::SetWindowSize(
-            static_cast<int>(conf::kScreenWidth * viewerRate),
-            static_cast<int>(conf::kScreenHeight * viewerRate));
+
+        // Validate the viewer rate.
+        int clientW = static_cast<int>(conf::kScreenWidth * viewerRate);
+        int clientH = static_cast<int>(conf::kScreenHeight * viewerRate);
+
+        HWND hWnd = GetMainWindowHandle();
+        DWORD style = GetWindowLong(hWnd, GWL_STYLE);
+        DWORD exStyle = GetWindowLong(hWnd, GWL_EXSTYLE);
+        HMENU hMenu = GetMenu(hWnd);
+
+        // Adjust the window size based on the client area size and styles.
+        RECT rect = { 0, 0, clientW, clientH };
+        AdjustWindowRectEx(&rect, style, hMenu != nullptr, exStyle);
+        int windowW = rect.right - rect.left;
+        int windowH = rect.bottom - rect.top;
+
+        // Correction: Check the actual client size and add height if there is any discrepancy.
+        SetWindowPos(hWnd, nullptr, 0, 0, windowW, windowH, SWP_NOMOVE | SWP_NOZORDER);
+        ShowWindow(hWnd, SW_SHOW);
+
+        RECT actualClient = {};
+        GetClientRect(hWnd, &actualClient);
+        int actualClientH = actualClient.bottom - actualClient.top;
+
+        if (actualClientH < clientH)
+        {
+            int delta = clientH - actualClientH;
+            windowH += delta;
+
+            SetWindowPos(hWnd, nullptr, 0, 0, windowW, windowH, SWP_NOMOVE | SWP_NOZORDER);
+        }
         _viewerRate = viewerRate;
+
+        return true;
     }
 
     void WindowManager::InitializeMenuOnStartup()
@@ -206,28 +239,29 @@ namespace mm2hack::core::winapi
             {
             case WM_USER_CREATE:
                 HandleCreate(hwnd, lParam);
-                return 0;
+                break;
             case WM_DESTROY:
                 HandleDestroy(hwnd);
-                return 0;
+                break;
             case WM_COMMAND:
                 HandleCommand(hwnd, wParam);
-                return 0;
+                break;
             case WM_PAINT:
                 HandlePaint(hwnd);
-                return 0;
+                break;
             case WM_SIZE:
                 HandleSize(hwnd, wParam, lParam);
-                return 0;
+                break;
             case WM_KEYDOWN:
                 HandleKeyDown(hwnd, wParam, lParam);
-                return 0;
+                break;
             case WM_KEYUP:
                 HandleKeyUp(hwnd, wParam);
-                return 0;
+                break;
             default:
                 return ForwardToDefaultProc();
             }
+            return ForwardToDefaultProc();
         }
         catch (const CoreException& ex)
         {

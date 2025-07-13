@@ -15,7 +15,7 @@
 
 namespace mm2hack::core
 {
-    GameLoopManager::GameLoopManager(const winapi::WindowContext& context)
+    GameLoopManager::GameLoopManager(winapi::WindowContext& context)
         : _hWnd(context.hWnd),
         _viewerRate(context.viewerRate),
         _screenHandle(context.screenHandle)

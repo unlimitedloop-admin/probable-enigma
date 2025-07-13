@@ -37,7 +37,7 @@ namespace mm2hack::core::winapi
         void Shutdown();
 
         // Change the size of the main window based on the viewer rate
-        void ChangeWindowSize(float viewerRate);
+        bool ChangeWindowSize(float viewerRate);
         // Initialize the menu bar on application startup
         void InitializeMenuOnStartup();
         // Update the state of the menu bar based on the current game state

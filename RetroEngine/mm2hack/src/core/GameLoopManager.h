@@ -17,12 +17,12 @@ namespace mm2hack::core
     class GameLoopManager
     {
     public:
-        explicit GameLoopManager(const winapi::WindowContext& context);
+        explicit GameLoopManager(winapi::WindowContext& context);
         void Run();
 
     private:
         HWND _hWnd;
-        float _viewerRate;
-        int _screenHandle;
+        float& _viewerRate;
+        int& _screenHandle;
     };
 }
