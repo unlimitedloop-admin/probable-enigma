@@ -64,7 +64,11 @@ namespace mm2hack::core::winapi
         DxLib::SetAlwaysRunFlag(isAlwaysRun);
 
         // Create the main window.
-        if (DxLib::SetDoubleStartValidFlag(FALSE) ||
+        if (DxLib::SetDoubleStartValidFlag(FALSE) != 0 ||
+            DxLib::SetAlwaysRunFlag(FALSE) != 0 ||
+            DxLib::SetUseASyncChangeWindowModeFunction(FALSE, nullptr, nullptr) != 0 ||
+            DxLib::SetWindowUserCloseEnableFlag(TRUE) != 0 ||
+            DxLib::SetDxLibEndPostQuitMessageFlag(TRUE) != 0 ||
             DxLib::ChangeWindowMode(TRUE) != DX_CHANGESCREEN_OK ||
             DxLib::SetGraphMode(
                 static_cast<int>(conf::kScreenWidth * conf::kScreenScaleMax),
@@ -77,7 +81,8 @@ namespace mm2hack::core::winapi
             DxLib::SetWindowSizeExtendRate(1.0f) != 0 ||
             DxLib::SetMainWindowText(_windowTitle.c_str()) != 0 ||
             DxLib::SetWindowIconID(IDI_WNDICON) != 0 ||
-            DxLib::LoadMenuResource(IDR_MAINMENU) != 0)
+            DxLib::LoadMenuResource(IDR_MAINMENU) != 0 ||
+            DxLib::SetWindowInitPosition(0, 0) != 0 /* HACK: Get content from the application's ".ini" files. */)
         {
             return reportInitError(L"Failed to initialize the window.");
         }
@@ -259,7 +264,7 @@ namespace mm2hack::core::winapi
                 HandleKeyUp(hwnd, wParam);
                 break;
             default:
-                return ForwardToDefaultProc();
+                break;
             }
             return ForwardToDefaultProc();
         }

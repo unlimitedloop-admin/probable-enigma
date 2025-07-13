@@ -10,6 +10,8 @@
 #include "core/GameStateManager.h"
 #include "core/save/SaveData.h"
 #include "core/save/SaveSystem.h"
+#include "exceptions/ErrorHandler.h"
+#include "exceptions/ErrorLevel.h"
 #include "WindowManager.h"
 
 namespace
@@ -122,6 +124,15 @@ namespace mm2hack::core::winapi
                 }
                 MessageBox(hWnd, L"Failed to save game.", L"Error", MB_ICONERROR);
             }
+            else
+            {
+                exceptions::ErrorHandler::Handle(
+                    L"Cannot save while the game is running.",
+                    L"WindowManager",
+                    L"HandleCommand",
+                    exceptions::ErrorLevel::Info
+                );
+            }
             break;
 
         case ID_FILE_LOAD:
@@ -142,6 +153,15 @@ namespace mm2hack::core::winapi
                     }
                 }
                 MessageBox(hWnd, L"Failed to load game.", L"Error", MB_OK | MB_ICONERROR);
+            }
+            else
+            {
+                exceptions::ErrorHandler::Handle(
+                    L"Cannot load while the game is running.",
+                    L"WindowManager",
+                    L"HandleCommand",
+                    exceptions::ErrorLevel::Info
+                );
             }
             break;
 
