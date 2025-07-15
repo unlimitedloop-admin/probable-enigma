@@ -19,7 +19,8 @@ namespace mm2hack::apps::scenes
         ~DrawGraph() {}
 
         bool Initialize() override;
-        void Update() override;
+        void Update() override {}
+        void Draw() override;
         void Finalize() override;
 
     private:

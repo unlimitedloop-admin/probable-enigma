@@ -10,7 +10,7 @@ namespace mm2hack::apps::scenes
         return graph_handle != -1;
     }
 
-    void DrawGraph::Update()
+    void DrawGraph::Draw()
     {
         if (graph_handle != -1)
         {

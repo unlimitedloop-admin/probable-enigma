@@ -160,6 +160,7 @@
     <ClCompile Include="src\core\bootstrap.cpp" />
     <ClCompile Include="src\core\GameLoopManager.cpp" />
     <ClCompile Include="src\core\GameStateManager.cpp" />
+    <ClCompile Include="src\core\overlay\PauseManager.cpp" />
     <ClCompile Include="src\core\save\SaveSystem.cpp" />
     <ClCompile Include="src\core\winapi\WindowManager.cpp" />
     <ClCompile Include="src\core\winapi\WindowMessageHandlers.cpp" />
@@ -206,6 +207,7 @@
     <ClInclude Include="src\core\GameLoopManager.h" />
     <ClInclude Include="src\core\GameState.h" />
     <ClInclude Include="src\core\GameStateManager.h" />
+    <ClInclude Include="src\core\overlay\PauseManager.h" />
     <ClInclude Include="src\core\save\SaveData.h" />
     <ClInclude Include="src\core\save\SaveSystem.h" />
     <ClInclude Include="src\core\winapi\WindowContext.h" />

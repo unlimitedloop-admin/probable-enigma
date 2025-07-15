@@ -23,6 +23,7 @@ namespace mm2hack::apps::scenes
         virtual void Initialize(const parameters::Parameters& params) = 0;
         virtual void Finalize() = 0;
         virtual void Update() = 0;
+        virtual void Draw() = 0;
 
         virtual SceneID GetSceneID() const = 0;
         virtual std::wstring GetSceneName() const = 0;

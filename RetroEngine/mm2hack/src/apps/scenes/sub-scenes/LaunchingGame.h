@@ -24,6 +24,7 @@ namespace mm2hack::apps::scenes
         void Initialize(const parameters::Parameters& params) override;
         void Finalize() override;
         void Update() override;
+        void Draw() override;
 
         SceneID GetSceneID() const override;
         std::wstring GetSceneName() const override;

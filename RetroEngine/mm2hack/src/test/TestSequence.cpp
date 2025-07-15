@@ -3,6 +3,7 @@
 #include <memory>
 #include <stdexcept>
 #include "apps/scenes/SceneManager.h"
+#include "core/overlay/PauseManager.h"
 #include "core/save/SaveData.h"
 #include "driver/001/PressKeyCommand.h"
 #include "driver/002/DrawGraph.h"
@@ -40,7 +41,19 @@ namespace mm2hack::apps::sequence
 
     void TestSequence::Execute()
     {
-        _driver.get()->Update();
+        using namespace core::overlay;
+
+        if (!PauseManager::IsPaused())
+        {
+            _driver.get()->Update();
+        }
+
+        _driver.get()->Draw();
+
+        if (PauseManager::IsPaused())
+        {
+            PauseManager::DrawOverlay();
+        }
     }
 
     scenes::SceneManager* TestSequence::GetSceneManager()

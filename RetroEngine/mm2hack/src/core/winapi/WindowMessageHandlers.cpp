@@ -251,15 +251,24 @@ namespace mm2hack::core::winapi
 
         if (GameStateManager::GetInstance().Is(GameState::Running))
         {
+            // Enter the pause mode if the game is running and the Escape key is pressed.
             if (isFirstPress && wParam == VK_ESCAPE)
             {
                 GameStateManager::GetInstance().SetState(GameState::Paused);
                 WindowManager::GetInstance().UpdateMenuBarState();
                 return;
             }
+
+            return;     // If the game is running, we do not handle other key presses.
         }
 
-        if (isFirstPress && wParam == VK_F1)
+        if (isFirstPress && wParam == VK_ESCAPE)
+        {
+            GameStateManager::GetInstance().SetState(GameState::Running);
+            WindowManager::GetInstance().UpdateMenuBarState();
+            return;
+        }
+        else if (isFirstPress && wParam == VK_F1)
         {
             if (GetKeyState(VK_SHIFT) & 0x8000)
             {

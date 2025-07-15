@@ -33,6 +33,7 @@
     <ClCompile Include="src\core\save\SaveSystem.cpp" />
     <ClCompile Include="src\test\driver\002\DrawGraph.cpp" />
     <ClCompile Include="src\apps\NES\NESPalette.cpp" />
+    <ClCompile Include="src\core\overlay\PauseManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
@@ -89,6 +90,7 @@
     <ClInclude Include="src\test\driver\002\DrawGraph.h" />
     <ClInclude Include="src\core\winapi\WindowContext.h" />
     <ClInclude Include="src\apps\NES\NESPalette.h" />
+    <ClInclude Include="src\core\overlay\PauseManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />
