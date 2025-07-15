@@ -5,6 +5,7 @@
 #include <string>
 #include <Windows.h>
 #include "../resource.h"
+#include "apps/NES/NESPalette.h"
 #include "config/EnvironmentConfig.h"
 #include "config/SystemConfig.h"
 #include "core/GameLoopManager.h"
@@ -106,6 +107,15 @@ namespace mm2hack::core::winapi
         _dxLibWnd = reinterpret_cast<WNDPROC>(GetWindowLongPtr(_mainWindowHandle, GWLP_WNDPROC));
         SetWindowLongPtr(_mainWindowHandle, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WindowProc));
         PostMessage(_mainWindowHandle, WM_USER_CREATE, 0, 0);
+
+        // Set the background color using NES palette
+        if (!apps::NES::NESPalette::LoadPaletteFromFile(conf::kNESPaletteFilepath))
+        {
+            // If palette loading fails, handle the error
+            DxLib::DxLib_End();
+            return reportInitError(L"Failed to load NES palette.");
+        }
+        apps::NES::NESPalette::SetBackgroundFor(conf::kDefaultNESPaletteIndex);
 
         _screenHandle = DxLib::MakeScreen(conf::kScreenWidth, conf::kScreenHeight, FALSE);  // Create a screen for drawing
         if (_screenHandle == -1)

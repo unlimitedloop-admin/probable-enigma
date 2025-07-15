@@ -32,6 +32,7 @@
     <ClCompile Include="src\apps\scenes\SceneChangeMediator.cpp" />
     <ClCompile Include="src\core\save\SaveSystem.cpp" />
     <ClCompile Include="src\test\driver\002\DrawGraph.cpp" />
+    <ClCompile Include="src\apps\NES\NESPalette.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
@@ -87,6 +88,7 @@
     <ClInclude Include="src\core\save\SaveSystem.h" />
     <ClInclude Include="src\test\driver\002\DrawGraph.h" />
     <ClInclude Include="src\core\winapi\WindowContext.h" />
+    <ClInclude Include="src\apps\NES\NESPalette.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />
@@ -97,5 +99,8 @@
   <ItemGroup>
     <Image Include="mm2hack.ico" />
     <Image Include="src\resources\exams\bg\default-windowsize-picture.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="assets\system\nes_palette.txt" />
   </ItemGroup>
 </Project>

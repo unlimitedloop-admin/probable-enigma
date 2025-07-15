@@ -28,7 +28,13 @@ namespace mm2hack::config
         static const std::wstring kLogFilePath;                     // Location of the log file
         static const std::wstring kLogFileName;                     // Name of the log file
         static const std::wstring kDxLibLogFileName;                // Name of the DxLib log file
-        
+
+        // NES palette file path
+        static const std::wstring kNESPaletteFilepath;              // Path to the NES palette file
+        static constexpr int kNESPaletteSize = 64;                  // Size of the NES palette (number of colors)
+        static constexpr int kDefaultNESPaletteIndex = 15U;         // Default NES palette index for background color (pitch black)
+        static constexpr int kMakeSeqPaletteIndex = 0U;             // System palette index for the default color (gray)
+
         // Frame rate settings
         static constexpr int kTargetFps = 60;                       // Frame rate (frames per second)
 

@@ -1,6 +1,8 @@
 #include "DebugSequence.h"
 
+#include "apps/NES/NESPalette.h"
 #include "apps/scenes/SceneManager.h"
+#include "config/SystemConfig.h"
 #include "core/save/SaveData.h"
 #include "SequenceType.h"
 
@@ -9,11 +11,13 @@ namespace mm2hack::apps::sequence
     DebugSequence::DebugSequence()
     {
         // Initialize the sequence, load resources, etc.
+        NES::NESPalette::SetBackgroundFor(config::SystemConfig::kMakeSeqPaletteIndex);
     }
 
     DebugSequence::~DebugSequence()
     {
         // Clean up resources, finalize the sequence, etc.
+        NES::NESPalette::SetBackgroundFor(config::SystemConfig::kDefaultNESPaletteIndex);
     }
 
     void DebugSequence::Execute()
