@@ -116,6 +116,7 @@ namespace mm2hack::core::winapi
             return reportInitError(L"Failed to load NES palette.");
         }
         apps::NES::NESPalette::SetBackgroundFor(conf::kDefaultNESPaletteIndex);
+        DxLib::ChangeFont(L"Segoe UI");
 
         _screenHandle = DxLib::MakeScreen(conf::kScreenWidth, conf::kScreenHeight, FALSE);  // Create a screen for drawing
         if (_screenHandle == -1)
@@ -229,6 +230,11 @@ namespace mm2hack::core::winapi
     bool WindowManager::IsMainWindowActive()
     {
         return static_cast<bool>(DxLib::GetWindowActiveFlag());
+    }
+
+    int WindowManager::GetScreenHandle() const
+    {
+        return _screenHandle;
     }
 
     WNDPROC WindowManager::GetDxLibWnd() const

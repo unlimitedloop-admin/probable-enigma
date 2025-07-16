@@ -9,6 +9,8 @@
 #pragma once
 
 #include <memory>
+#include <string>
+#include "core/overlay/FeedbackOverlay.h"
 #include "ISequence.h"
 #include "SequenceType.h"
 
@@ -49,12 +51,14 @@ namespace mm2hack::apps::sequence
             return _sequenceType;
         }
 
+        void SendFeedback(const std::wstring& message);
+
     private:
         SequenceManager() = default;
         ~SequenceManager() = default;
 
         std::unique_ptr<ISequence> _currentSequence = nullptr;
         SequenceType _sequenceType = SequenceType::None;
-        // HACK: core::overlay::FeedbackOverlay _feedbackOverlay;
+        core::overlay::FeedbackOverlay _feedbackOverlay;
     };
 }

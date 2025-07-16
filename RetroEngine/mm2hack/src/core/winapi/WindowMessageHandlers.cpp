@@ -14,6 +14,15 @@
 #include "exceptions/ErrorLevel.h"
 #include "WindowManager.h"
 
+// VC F12 is reserved for use by the debugger, so we use F11 in debug mode.
+// For more details, refer to the following page: RegisterHotKey function (winuser.h)
+// => https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-registerhotkey
+#ifdef _DEBUG
+constexpr int SCREENSHOT_KEY = VK_F11;
+#else
+constexpr int SCREENSHOT_KEY = VK_F12;  // Use F12 for screenshots in release mode
+#endif
+
 namespace
 {
     using namespace mm2hack::core;
@@ -248,6 +257,12 @@ namespace mm2hack::core::winapi
     {
         // bit 30 = previous key state (1 = down before this message, 0 = was up before).
         const bool isFirstPress = !(lParam & (1 << 30));
+
+        if (isFirstPress && wParam == SCREENSHOT_KEY)
+        {
+            // Handle screenshot key press.
+            apps::sequence::SequenceManager::GetInstance().SendFeedback(L"Screenshot taken.");
+        }
 
         if (GameStateManager::GetInstance().Is(GameState::Running))
         {

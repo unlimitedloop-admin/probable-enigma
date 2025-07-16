@@ -47,6 +47,8 @@ namespace mm2hack::core::winapi
         HWND GetMainWindowHandle() const;
         // Check if the main window is currently active
         bool IsMainWindowActive();
+        // Get drawing screen handle
+        int GetScreenHandle() const;
 
         // Get the window procedure handle for DxLib
         WNDPROC GetDxLibWnd() const;
