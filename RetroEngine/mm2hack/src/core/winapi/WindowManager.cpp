@@ -187,6 +187,16 @@ namespace mm2hack::core::winapi
         return true;
     }
 
+    int WindowManager::GetScreenWidth() const
+    {
+        return static_cast<int>(config::SystemConfig::kScreenWidth * _viewerRate);
+    }
+
+    int WindowManager::GetScreenHeight() const
+    {
+        return static_cast<int>(config::SystemConfig::kScreenHeight * _viewerRate);
+    }
+
     void WindowManager::InitializeMenuOnStartup()
     {
         HMENU hMenu = GetMenu(_mainWindowHandle);

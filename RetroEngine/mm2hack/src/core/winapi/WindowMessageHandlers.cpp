@@ -6,10 +6,12 @@
 #include "../resource.h"
 #include "apps/sequence/SequenceManager.h"
 #include "apps/sequence/SequenceType.h"
+#include "core/assembly/ScreenshotManager.h"
 #include "core/GameState.h"
 #include "core/GameStateManager.h"
 #include "core/save/SaveData.h"
 #include "core/save/SaveSystem.h"
+#include "exceptions/CoreException.h"
 #include "exceptions/ErrorHandler.h"
 #include "exceptions/ErrorLevel.h"
 #include "WindowManager.h"
@@ -135,12 +137,7 @@ namespace mm2hack::core::winapi
             }
             else
             {
-                exceptions::ErrorHandler::Handle(
-                    L"Cannot save while the game is running.",
-                    L"WindowManager",
-                    L"HandleCommand",
-                    exceptions::ErrorLevel::Info
-                );
+                THROW_EXCEPTION_EX("Cannot save while the game is running.", L"WindowManager", exceptions::ErrorLevel::Info);
             }
             break;
 
@@ -165,12 +162,7 @@ namespace mm2hack::core::winapi
             }
             else
             {
-                exceptions::ErrorHandler::Handle(
-                    L"Cannot load while the game is running.",
-                    L"WindowManager",
-                    L"HandleCommand",
-                    exceptions::ErrorLevel::Info
-                );
+                THROW_EXCEPTION_EX("Cannot load while the game is running.", L"WindowManager", exceptions::ErrorLevel::Info);
             }
             break;
 
@@ -261,6 +253,7 @@ namespace mm2hack::core::winapi
         if (isFirstPress && wParam == SCREENSHOT_KEY)
         {
             // Handle screenshot key press.
+            assembly::ScreenshotManager::CaptureToPng();
             apps::sequence::SequenceManager::GetInstance().SendFeedback(L"Screenshot taken.");
         }
 

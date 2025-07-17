@@ -35,6 +35,7 @@
     <ClCompile Include="src\apps\NES\NESPalette.cpp" />
     <ClCompile Include="src\core\overlay\PauseManager.cpp" />
     <ClCompile Include="src\core\overlay\FeedbackOverlay.cpp" />
+    <ClCompile Include="src\core\assembly\ScreenshotManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
@@ -93,6 +94,7 @@
     <ClInclude Include="src\apps\NES\NESPalette.h" />
     <ClInclude Include="src\core\overlay\PauseManager.h" />
     <ClInclude Include="src\core\overlay\FeedbackOverlay.h" />
+    <ClInclude Include="src\core\assembly\ScreenshotManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

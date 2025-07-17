@@ -157,6 +157,7 @@
     <ClCompile Include="src\apps\sequence\StandardSequence.cpp" />
     <ClCompile Include="src\config\EnvironmentConfig.cpp" />
     <ClCompile Include="src\config\SystemConfig.cpp" />
+    <ClCompile Include="src\core\assembly\ScreenshotManager.cpp" />
     <ClCompile Include="src\core\bootstrap.cpp" />
     <ClCompile Include="src\core\GameLoopManager.cpp" />
     <ClCompile Include="src\core\GameStateManager.cpp" />
@@ -204,6 +205,7 @@
     <ClInclude Include="src\apps\sequence\StandardSequence.h" />
     <ClInclude Include="src\config\EnvironmentConfig.h" />
     <ClInclude Include="src\config\SystemConfig.h" />
+    <ClInclude Include="src\core\assembly\ScreenshotManager.h" />
     <ClInclude Include="src\core\bootstrap.h" />
     <ClInclude Include="src\core\GameLoopManager.h" />
     <ClInclude Include="src\core\GameState.h" />

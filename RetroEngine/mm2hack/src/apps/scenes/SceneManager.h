@@ -17,10 +17,13 @@
 
 namespace mm2hack::apps::scenes
 {
-    // Scene management class (sample)
+    // SceneManager is responsible for managing the current scene in the application
     class SceneManager final : public ISceneChangedListener
     {
     public:
+        SceneManager() = default;
+        ~SceneManager() override = default;
+
         // Updates the currentScene instance, standard game program execution procedures
         void Update();
         // Releases the currentScene
@@ -31,7 +34,7 @@ namespace mm2hack::apps::scenes
         void RequestSceneChange(SceneID nextScene, const parameters::Parameters& params = {}) override;
 
     private:
-        std::unique_ptr<IBaseScene> _currentScene;  // Current scene instance
+        std::unique_ptr<IBaseScene> _currentScene;      // Manage the main part of the game program
 
         // Transition to a new scene, releasing the current one if necessary (concept of state-pattern)
         void ChangeScene(std::unique_ptr<IBaseScene> newScene);
