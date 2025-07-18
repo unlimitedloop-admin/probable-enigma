@@ -36,6 +36,10 @@
     <ClCompile Include="src\core\overlay\PauseManager.cpp" />
     <ClCompile Include="src\core\overlay\FeedbackOverlay.cpp" />
     <ClCompile Include="src\core\assembly\ScreenshotManager.cpp" />
+    <ClCompile Include="src\core\ui\CommonUIStyle.cpp" />
+    <ClCompile Include="src\core\ui\GraphicsSettingsUI.cpp" />
+    <ClCompile Include="src\config\ConfigUIManager.cpp" />
+    <ClCompile Include="src\core\ui\SettingsWindow.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
@@ -95,6 +99,10 @@
     <ClInclude Include="src\core\overlay\PauseManager.h" />
     <ClInclude Include="src\core\overlay\FeedbackOverlay.h" />
     <ClInclude Include="src\core\assembly\ScreenshotManager.h" />
+    <ClInclude Include="src\core\ui\CommonUIStyle.h" />
+    <ClInclude Include="src\core\ui\GraphicsSettingsUI.h" />
+    <ClInclude Include="src\config\ConfigUIManager.h" />
+    <ClInclude Include="src\core\ui\SettingsWindow.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

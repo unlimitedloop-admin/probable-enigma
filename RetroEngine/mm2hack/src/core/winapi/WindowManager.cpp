@@ -10,6 +10,7 @@
 #include "config/SystemConfig.h"
 #include "core/GameLoopManager.h"
 #include "core/GameStateManager.h"
+#include "core/ui/SettingsWindow.h"
 #include "exceptions/CoreException.h"
 #include "exceptions/ErrorHandler.h"
 #include "exceptions/ErrorLevel.h"
@@ -96,6 +97,13 @@ namespace mm2hack::core::winapi
         {
             return reportInitError(L"Failed to initialize DxLib.");
         }
+
+        // Register the settings window class.
+        INITCOMMONCONTROLSEX iccex{};
+        iccex.dwSize = sizeof(iccex);
+        iccex.dwICC = ICC_WIN95_CLASSES;
+        InitCommonControlsEx(&iccex);
+        overlay::SettingsWindow::RegisterWindowClass(hInstance);
 
         _mainWindowHandle = DxLib::GetMainWindowHandle();
         if (_mainWindowHandle == nullptr)

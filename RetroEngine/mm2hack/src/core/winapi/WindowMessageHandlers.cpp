@@ -11,8 +11,8 @@
 #include "core/GameStateManager.h"
 #include "core/save/SaveData.h"
 #include "core/save/SaveSystem.h"
+#include "core/ui/SettingsWindow.h"
 #include "exceptions/CoreException.h"
-#include "exceptions/ErrorHandler.h"
 #include "exceptions/ErrorLevel.h"
 #include "WindowManager.h"
 
@@ -220,6 +220,11 @@ namespace mm2hack::core::winapi
 
         case ID_SCREEN_4X:
             WindowManager::GetInstance().ChangeWindowSize(4.0f);
+            break;
+
+        case ID_MENU_GRAPHICS_SETTINGS:
+            // Open the graphics settings window.
+            overlay::SettingsWindow::OpenTab(hWnd, overlay::SettingsWindow::Tab::Graphics);
             break;
 
         case ID_SCRIPT_001:

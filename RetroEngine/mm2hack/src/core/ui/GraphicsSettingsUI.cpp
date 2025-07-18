@@ -1,0 +1,97 @@
+#include "GraphicsSettingsUI.h"
+
+#include <libloaderapi.h>
+#include <Windows.h>
+#include <Windowsx.h>
+#include "config/ConfigUIManager.h"
+#include "core/ui/CommonUIStyle.h"
+
+namespace mm2hack::core::overlay
+{
+
+    GraphicsSettingsUI::GraphicsSettingsUI(HWND parent)
+        : _parent(parent),
+        _combo_resolution(nullptr),
+        _check_vsync(nullptr),
+        _combo_framerate(nullptr)
+    {
+    }
+
+    void GraphicsSettingsUI::CreateControls()
+    {
+        ui::CommonUIStyle uiStyle;
+
+        // Resolution ComboBox
+        auto label = CreateWindowEx(0, L"STATIC", L"Resolution:",
+            WS_CHILD | WS_VISIBLE,
+            20, 20, 80, 20,
+            _parent, nullptr, GetModuleHandle(nullptr), nullptr);
+        uiStyle.ApplyUIFont(label);
+
+        _combo_resolution = CreateWindowEx(0, L"COMBOBOX", nullptr,
+            CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE,
+            110, 17, 150, 100,
+            _parent, nullptr, GetModuleHandle(nullptr), nullptr);
+        uiStyle.ApplyUIFont(_combo_resolution);
+        AddResolutionOptions();
+
+        // VSSync CheckBox
+        _check_vsync = CreateWindowEx(0, L"BUTTON", L"VSync Enabled?",
+            WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
+            20, 60, 200, 20,
+            _parent, nullptr, GetModuleHandle(nullptr), nullptr);
+        uiStyle.ApplyUIFont(_check_vsync);
+
+        // Limit Framerate ComboBox
+        label = CreateWindowEx(0, L"STATIC", L"FPS:",
+            WS_CHILD | WS_VISIBLE,
+            20, 100, 100, 20,
+            _parent, nullptr, GetModuleHandle(nullptr), nullptr);
+        uiStyle.ApplyUIFont(label);
+
+        _combo_framerate = CreateWindowEx(0, L"COMBOBOX", nullptr,
+            CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE,
+            110, 97, 120, 100,
+            _parent, nullptr, GetModuleHandle(nullptr), nullptr);
+        uiStyle.ApplyUIFont(_combo_framerate);
+        AddFramerateOptions();
+
+        LoadSettings();
+    }
+
+    void GraphicsSettingsUI::AddResolutionOptions() const
+    {
+        SendMessage(_combo_resolution, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"640 x 480"));
+        SendMessage(_combo_resolution, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"800 x 600"));
+        SendMessage(_combo_resolution, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1280 x 720"));
+        SendMessage(_combo_resolution, CB_SETCURSEL, 0, 0);
+    }
+
+    void GraphicsSettingsUI::AddFramerateOptions() const
+    {
+        SendMessage(_combo_framerate, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"30 FPS"));
+        SendMessage(_combo_framerate, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"60 FPS"));
+        SendMessage(_combo_framerate, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"not restricted"));
+        SendMessage(_combo_framerate, CB_SETCURSEL, 1, 0);
+    }
+
+    void GraphicsSettingsUI::ApplySettings() const
+    {
+        config::GraphicsConfig config{};
+        config.resolutionIndex = static_cast<int>(SendMessage(_combo_resolution, CB_GETCURSEL, 0, 0));
+        config.vsync = Button_GetCheck(_check_vsync);
+        config.fpsLimitIndex = static_cast<int>(SendMessage(_combo_framerate, CB_GETCURSEL, 0, 0));
+
+        config::ConfigManager::SaveGraphicsConfig(config);
+    }
+
+    void GraphicsSettingsUI::LoadSettings() const
+    {
+        config::GraphicsConfig config{};
+        config::ConfigManager::LoadGraphicsConfig(config);
+
+        SendMessage(_combo_resolution, CB_SETCURSEL, config.resolutionIndex, 0);
+        Button_SetCheck(_check_vsync, config.vsync ? BST_CHECKED : BST_UNCHECKED);
+        SendMessage(_combo_framerate, CB_SETCURSEL, config.fpsLimitIndex, 0);
+    }
+}
