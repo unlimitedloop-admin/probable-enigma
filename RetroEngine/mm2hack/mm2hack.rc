@@ -51,8 +51,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,0,0,34
- PRODUCTVERSION 0,0,0,34
+ FILEVERSION 0,0,0,35
+ PRODUCTVERSION 0,0,0,35
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -69,12 +69,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Sirius X"
             VALUE "FileDescription", "mm2hack"
-            VALUE "FileVersion", "0.0.0.34"
+            VALUE "FileVersion", "0.0.0.35"
             VALUE "InternalName", "mm2hack.exe"
             VALUE "LegalCopyright", "Copyright (C) 2025"
             VALUE "OriginalFilename", "mm2hack.exe"
             VALUE "ProductName", "mm2hack project"
-            VALUE "ProductVersion", "0.0.0.34"
+            VALUE "ProductVersion", "0.0.0.35"
         END
     END
     BLOCK "VarFileInfo"
@@ -118,7 +118,7 @@ BEGIN
             MENUITEM "空きスロットを選択 (&E)",              ID_SLOT_EMPTY
         END
         MENUITEM SEPARATOR
-        MENUITEM "終了 (&X)\tAlt+F4",             ID_APP_EXIT
+        MENUITEM "終了 (&X)\tCtrl+Shift+Q",       ID_APP_EXIT
     END
     POPUP "設定 (&C)"
     BEGIN
