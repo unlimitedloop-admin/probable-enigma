@@ -5,6 +5,7 @@
 #include <Windows.h>
 #include "core/ui/CommonUIStyle.h"
 #include "GraphicsSettingsUI.h"
+#include "SoundSettingsUI.h"
 
 namespace mm2hack::core::overlay
 {
@@ -114,7 +115,10 @@ namespace mm2hack::core::overlay
         {
             _graphics_ui->ApplySettings();
         }
-        // TODO: Add sound settings when implemented.
+        if (_sound_ui)
+        {
+            _sound_ui->ApplySettings();
+        }
     }
 
     void SettingsWindow::SetHandle(HWND hwnd)
@@ -131,7 +135,11 @@ namespace mm2hack::core::overlay
             _graphics_ui = std::make_unique<GraphicsSettingsUI>(_hwnd);
             _graphics_ui->CreateControls();
         }
-        // TODO: tab == Tab::Sound when implemented.
+        if (tab == Tab::Sound)
+        {
+            _sound_ui = std::make_unique<SoundSettingsUI>(_hwnd);
+            _sound_ui->CreateControls();
+        }
 
         HWND buttonOK = CreateWindowEx(0, L"BUTTON", L"OK",
             WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,

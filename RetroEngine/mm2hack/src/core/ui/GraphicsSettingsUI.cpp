@@ -3,8 +3,8 @@
 #include <libloaderapi.h>
 #include <Windows.h>
 #include <Windowsx.h>
+#include "CommonUIStyle.h"
 #include "config/ConfigUIManager.h"
-#include "core/ui/CommonUIStyle.h"
 
 namespace mm2hack::core::overlay
 {
@@ -35,7 +35,7 @@ namespace mm2hack::core::overlay
         uiStyle.ApplyUIFont(_combo_resolution);
         AddResolutionOptions();
 
-        // VSSync CheckBox
+        // VSync CheckBox
         _check_vsync = CreateWindowEx(0, L"BUTTON", L"VSync Enabled?",
             WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
             20, 60, 200, 20,
@@ -61,9 +61,9 @@ namespace mm2hack::core::overlay
 
     void GraphicsSettingsUI::AddResolutionOptions() const
     {
-        SendMessage(_combo_resolution, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"640 x 480"));
-        SendMessage(_combo_resolution, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"800 x 600"));
-        SendMessage(_combo_resolution, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1280 x 720"));
+        SendMessage(_combo_resolution, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"256 x 240"));
+        SendMessage(_combo_resolution, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"512 x 480"));
+        SendMessage(_combo_resolution, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1024 x 960"));
         SendMessage(_combo_resolution, CB_SETCURSEL, 0, 0);
     }
 

@@ -11,6 +11,7 @@
 #include <memory>
 #include <windows.h>
 #include "GraphicsSettingsUI.h"
+#include "SoundSettingsUI.h"
 
 namespace mm2hack::core::overlay
 {
@@ -20,8 +21,8 @@ namespace mm2hack::core::overlay
     public:
         enum class Tab
         {
-            Graphics
-            //, Sound   // TODO: Add Sound tab when implemented.
+            Graphics,
+            Sound
         };
 
         static void RegisterWindowClass(HINSTANCE hInstance);
@@ -32,7 +33,7 @@ namespace mm2hack::core::overlay
         static HWND _hwnd;
         static Tab _current_tab;
         std::unique_ptr<GraphicsSettingsUI> _graphics_ui;
-        // TODO: Add SoundSettingsUI when implemented.
+        std::unique_ptr<SoundSettingsUI> _sound_ui;
 
         static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 

@@ -229,6 +229,11 @@ namespace mm2hack::core::winapi
             overlay::SettingsWindow::OpenTab(hWnd, overlay::SettingsWindow::Tab::Graphics);
             break;
 
+        case ID_MENU_SOUND_SETTINGS:
+            // Open the sound settings window.
+            overlay::SettingsWindow::OpenTab(hWnd, overlay::SettingsWindow::Tab::Sound);
+            break;
+
         case ID_SCRIPT_001:
             seq.StartTestSequence(1);
             setGameState(GameState::Running);
