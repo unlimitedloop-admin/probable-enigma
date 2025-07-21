@@ -41,6 +41,7 @@
     <ClCompile Include="src\config\ConfigUIManager.cpp" />
     <ClCompile Include="src\core\ui\SettingsWindow.cpp" />
     <ClCompile Include="src\core\ui\SoundSettingsUI.cpp" />
+    <ClCompile Include="src\apps\graphics\SpriteManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
@@ -105,6 +106,9 @@
     <ClInclude Include="src\config\ConfigUIManager.h" />
     <ClInclude Include="src\core\ui\SettingsWindow.h" />
     <ClInclude Include="src\core\ui\SoundSettingsUI.h" />
+    <ClInclude Include="src\apps\graphics\ITextureObject.h" />
+    <ClInclude Include="src\apps\graphics\SpriteManager.h" />
+    <ClInclude Include="src\apps\supervisor\ResourceManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

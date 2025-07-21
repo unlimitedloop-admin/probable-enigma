@@ -51,7 +51,11 @@ namespace mm2hack::exceptions
         int _line = 0;
     };
 
-    // Macro to throw an exception with class and method information
+
+#define THROW_EXCEPTION(msg, klass) \
+        throw mm2hack::exceptions::CoreException((msg), (klass), __func__, mm2hack::exceptions::ErrorLevel::Error, __FILE__, __LINE__)
+
+// Macro to throw an exception with class and method information
 #define THROW_EXCEPTION_EX(msg, klass, errlvl) \
         throw mm2hack::exceptions::CoreException((msg), (klass), __func__, (errlvl), __FILE__, __LINE__)
 

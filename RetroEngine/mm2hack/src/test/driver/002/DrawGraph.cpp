@@ -1,29 +1,46 @@
 #include "DrawGraph.h"
 
-#include <DxLib.h>
+#include "apps/supervisor/ResourceManager.h"
 
 namespace mm2hack::apps::scenes
 {
     bool DrawGraph::Initialize()
     {
-        graph_handle = DxLib::LoadGraph(L"src\\resources\\exams\\bg\\default-windowsize-picture.png");
-        return graph_handle != -1;
+        if (!InitializeResources())
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    bool DrawGraph::InitializeResources()
+    {
+        using namespace mm2hack::apps::supervisor;
+        auto& spriteLoader = ResourceManager::GetInstance().GetSpriteManager();
+
+        // Load the graph from the resource manager.
+        spriteLoader.SetDivSettings(L"Player", 32, 32, 20, 10);
+        if (!spriteLoader.Load(L"Player", L"assets\\sprite\\MegaManAllTiles.png"))
+        {
+            return false;   // Failed to load the sprite.
+        }
+
+        return true;
     }
 
     void DrawGraph::Draw()
     {
-        if (graph_handle != -1)
-        {
-            DxLib::DrawGraph(0, 0, graph_handle, TRUE);
-        }
+        using namespace mm2hack::apps::supervisor;
+        auto& spriteDrawer = ResourceManager::GetInstance().GetSpriteManager();
+
+        // Draw the graph from the resource manager.
+        spriteDrawer.Use(L"Player", 1, 0, 0);
     }
 
     void DrawGraph::Finalize()
     {
-        if (graph_handle != -1)
-        {
-            DxLib::DeleteGraph(graph_handle);
-            graph_handle = -1;
-        }
+        using namespace mm2hack::apps::supervisor;
+        ResourceManager::GetInstance().GetSpriteManager().Remove(L"Player");
     }
 }

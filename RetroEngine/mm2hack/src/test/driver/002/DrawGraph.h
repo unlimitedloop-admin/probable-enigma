@@ -19,11 +19,9 @@ namespace mm2hack::apps::scenes
         ~DrawGraph() {}
 
         bool Initialize() override;
+        bool InitializeResources();
         void Update() override {}
         void Draw() override;
         void Finalize() override;
-
-    private:
-        int graph_handle = -1;  // Handle for the loaded graph
     };
 }
