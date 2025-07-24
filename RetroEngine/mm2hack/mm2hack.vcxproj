@@ -147,6 +147,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\apps\deal\GameContext.cpp" />
+    <ClCompile Include="src\apps\graphics\BGTileManager.cpp" />
     <ClCompile Include="src\apps\graphics\SpriteManager.cpp" />
     <ClCompile Include="src\apps\NES\NESPalette.cpp" />
     <ClCompile Include="src\apps\scenes\SceneChangeMediator.cpp" />
@@ -175,7 +177,6 @@
     <ClCompile Include="src\input\C16ButtonState.cpp" />
     <ClCompile Include="src\input\DirectInputProvider.cpp" />
     <ClCompile Include="src\input\JoystickManager.cpp" />
-    <ClCompile Include="src\input\JoystickSingleton.cpp" />
     <ClCompile Include="src\input\KeyBinding.cpp" />
     <ClCompile Include="src\input\KeyboardInputProvider.cpp" />
     <ClCompile Include="src\input\KeyboardsIn.cpp" />
@@ -195,6 +196,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
+    <ClInclude Include="src\apps\deal\GameContext.h" />
+    <ClInclude Include="src\apps\deal\IGameContext.h" />
+    <ClInclude Include="src\apps\graphics\BGTileManager.h" />
     <ClInclude Include="src\apps\graphics\ITextureObject.h" />
     <ClInclude Include="src\apps\graphics\SpriteManager.h" />
     <ClInclude Include="src\apps\NES\NESPalette.h" />
@@ -240,7 +244,6 @@
     <ClInclude Include="src\input\IInputProvider.h" />
     <ClInclude Include="src\input\InputFrame.h" />
     <ClInclude Include="src\input\JoystickManager.h" />
-    <ClInclude Include="src\input\JoystickSingleton.h" />
     <ClInclude Include="src\input\Jpbtn.h" />
     <ClInclude Include="src\input\KeyBinding.h" />
     <ClInclude Include="src\input\KeyboardInputProvider.h" />

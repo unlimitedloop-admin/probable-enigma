@@ -8,36 +8,25 @@
 //==============================================================================
 #pragma once
 
+#include "apps/graphics/BGTileManager.h"
 #include "apps/graphics/SpriteManager.h"
 
 namespace mm2hack::apps::supervisor
 {
-    // Manages game resources, including graphics and other assets
+    // Manages game resources, including sprite and background tile, sound engine
     class ResourceManager
     {
     public:
-        static ResourceManager& GetInstance()
-        {
-            static ResourceManager instance;
-            return instance;
-        }
-
-        ResourceManager(const ResourceManager&) = delete;
-        ResourceManager& operator=(const ResourceManager&) = delete;
-        ResourceManager(ResourceManager&&) = delete;
-        ResourceManager& operator=(ResourceManager&&) = delete;
-        // ResourceManager is a singleton, so we delete the copy and move constructors and assignment operators.
-
-        // Gets the SpriteManager instance for managing sprite textures
-        graphics::SpriteManager& GetSpriteManager()
-        {
-            return _spriteManager;
-        }
-
-    private:
         ResourceManager() = default;
         ~ResourceManager() = default;
 
+        // Gets the SpriteManager instance for managing sprite textures
+        graphics::SpriteManager& GetSpriteManager() { return _spriteManager; }
+        // Gets the BGTileManager instance for managing background tile textures
+        graphics::BGTileManager& GetBGTileManager() { return _bgTileManager; }
+
+    private:
         graphics::SpriteManager _spriteManager;         // Instance of SpriteManager
+        graphics::BGTileManager _bgTileManager;         // Instance of BGTileManager
     };
 }

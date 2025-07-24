@@ -11,36 +11,6 @@
 
 namespace mm2hack::apps::graphics
 {
-    bool SpriteManager::CreateSpriteGraphs(const std::wstring& name)
-    {
-        auto itSetting = _divSettings.find(name);
-        auto itSoft = _softImageHandles.find(name);
-        if (itSetting == _divSettings.end() || itSoft == _softImageHandles.end())
-        {
-            return false;       // Not found
-        }
-
-        const DivSettings& settings = itSetting->second;
-        int soft = itSoft->second;
-        int totalCount = settings.tilesX * settings.tilesY;
-        std::vector<int> handles(totalCount);
-        if (DxLib::CreateDivGraphFromSoftImage(soft, totalCount, settings.tilesX, settings.tilesY,
-            settings.tileWidth, settings.tileHeight, handles.data()) != 0)
-        {
-            return false;       // Failed to create div graph
-        }
-
-        _spriteHandles[name] = std::move(handles);
-        return true;
-    }
-
-    void SpriteManager::SetDivSettings(const std::wstring& name, int tileWidth, int tileHeight, int tilesX, int tilesY)
-    {
-        // Set various parameters used when loading graphics in advance
-        // For example, tile width, height, number of tiles in the X and Y directions, etc.
-        _divSettings[name] = { tileWidth, tileHeight, tilesX, tilesY };
-    }
-
     bool SpriteManager::Load(const std::wstring& name, const std::wstring& filepath)
     {
         // Check if the loading parameters of sprite are set for specified name (If not, an error will occur).
@@ -90,6 +60,13 @@ namespace mm2hack::apps::graphics
         }
     }
 
+    void SpriteManager::SetDivSettings(const std::wstring& name, int tileWidth, int tileHeight, int tilesX, int tilesY)
+    {
+        // Set various parameters used when loading graphics in advance
+        // For example, tile width, height, number of tiles in the X and Y directions, etc.
+        _divSettings[name] = { tileWidth, tileHeight, tilesX, tilesY };
+    }
+
     void SpriteManager::ReplacePaletteColor(const std::wstring& name, int targetPaletteIndex, int sourcePaletteIndex)
     {
         using NES::NESPalette;
@@ -133,5 +110,28 @@ namespace mm2hack::apps::graphics
             return it->second[index];
         }
         return -1;      // Invalid handle
+    }
+
+    bool SpriteManager::CreateSpriteGraphs(const std::wstring& name)
+    {
+        auto itSetting = _divSettings.find(name);
+        auto itSoft = _softImageHandles.find(name);
+        if (itSetting == _divSettings.end() || itSoft == _softImageHandles.end())
+        {
+            return false;       // Not found.
+        }
+
+        const DivSettings& settings = itSetting->second;
+        int soft = itSoft->second;
+        int totalCount = settings.tilesX * settings.tilesY;
+        std::vector<int> handles(totalCount);
+        if (DxLib::CreateDivGraphFromSoftImage(soft, totalCount, settings.tilesX, settings.tilesY,
+            settings.tileWidth, settings.tileHeight, handles.data()) != 0)
+        {
+            return false;       // Failed to create div graph.
+        }
+
+        _spriteHandles[name] = std::move(handles);
+        return true;
     }
 }

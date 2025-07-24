@@ -16,7 +16,7 @@
 
 namespace mm2hack::input
 {
-    // JoystickManager is a class that manages the joystick input
+    // Manages key input devices, specifically joystick input (Keyboards and Gamepads)
     class JoystickManager final
     {
     public:

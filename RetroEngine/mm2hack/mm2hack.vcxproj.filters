@@ -22,7 +22,6 @@
     <ClCompile Include="src\input\KeyboardInputProvider.cpp" />
     <ClCompile Include="src\input\KeyBinding.cpp" />
     <ClCompile Include="src\input\JoystickManager.cpp" />
-    <ClCompile Include="src\input\JoystickSingleton.cpp" />
     <ClCompile Include="src\test\TestSequence.cpp" />
     <ClCompile Include="src\test\driver\001\PressKeyCommand.cpp" />
     <ClCompile Include="src\input\DirectInputProvider.cpp" />
@@ -42,6 +41,8 @@
     <ClCompile Include="src\core\ui\SettingsWindow.cpp" />
     <ClCompile Include="src\core\ui\SoundSettingsUI.cpp" />
     <ClCompile Include="src\apps\graphics\SpriteManager.cpp" />
+    <ClCompile Include="src\apps\graphics\BGTileManager.cpp" />
+    <ClCompile Include="src\apps\deal\GameContext.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
@@ -79,7 +80,6 @@
     <ClInclude Include="src\input\KeyboardInputProvider.h" />
     <ClInclude Include="src\input\KeyBinding.h" />
     <ClInclude Include="src\input\JoystickManager.h" />
-    <ClInclude Include="src\input\JoystickSingleton.h" />
     <ClInclude Include="src\test\TestSequence.h" />
     <ClInclude Include="src\test\driver\001\PressKeyCommand.h" />
     <ClInclude Include="src\test\driver\ITestDriver.h" />
@@ -109,6 +109,9 @@
     <ClInclude Include="src\apps\graphics\ITextureObject.h" />
     <ClInclude Include="src\apps\graphics\SpriteManager.h" />
     <ClInclude Include="src\apps\supervisor\ResourceManager.h" />
+    <ClInclude Include="src\apps\graphics\BGTileManager.h" />
+    <ClInclude Include="src\apps\deal\IGameContext.h" />
+    <ClInclude Include="src\apps\deal\GameContext.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

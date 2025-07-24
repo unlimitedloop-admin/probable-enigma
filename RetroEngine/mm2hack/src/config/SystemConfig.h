@@ -13,6 +13,7 @@
 
 namespace mm2hack::config
 {
+    // This struct defines the system configuration settings for the mm2hack project.
     struct SystemConfig
     {
     public:
@@ -48,5 +49,11 @@ namespace mm2hack::config
         static constexpr float kScreenScaleMax = 4.0f;              // Maximum scale factor for the screen
 
         static constexpr uint32_t kCurrentSaveVersion = 1;          // Current save version
+
+
+        // NES Style properties
+        // Tile Set
+        static const unsigned int kTileSizeWidth = 16;
+        static const unsigned int kTileSizeHeight = 16;
     };
 }

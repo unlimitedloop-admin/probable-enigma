@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <stdexcept>
+#include "apps/deal/GameContext.h"
 #include "apps/scenes/SceneManager.h"
 #include "core/overlay/PauseManager.h"
 #include "core/save/SaveData.h"
@@ -24,6 +25,8 @@ namespace mm2hack::apps::sequence
             throw std::invalid_argument("Invalid script number");
         }
 
+        deal::GameContext::GetInstance().Initialize();
+
         if (!_driver->Initialize())
         {
             throw std::runtime_error("Failed to initialize the test driver.");
@@ -37,6 +40,8 @@ namespace mm2hack::apps::sequence
             _driver.get()->Finalize();
             _driver.reset();
         }
+
+        deal::GameContext::GetInstance().Shutdown();
     }
 
     void TestSequence::Execute()

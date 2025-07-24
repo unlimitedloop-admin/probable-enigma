@@ -2,21 +2,19 @@
 
 #include <DxLib.h>
 #include <string>
-#include "input/JoystickSingleton.h"
+#include "apps/deal/GameContext.h"
 #include "input/Jpbtn.h"
 
 namespace mm2hack::apps::scenes
 {
     bool PressKeyCommand::Initialize()
     {
-        using joystick = input::JoystickSingleton;
-        joystick::Initialize();
-        return joystick::Instance().IsEnableInputDevice();
+        return true;
     }
 
     void PressKeyCommand::Update()
     {
-        auto& joystick = input::JoystickSingleton::Instance();
+        auto& joystick = apps::deal::GameContext::GetInstance().GetJoystickManager();
 
         joystick.Update();
 
@@ -32,6 +30,5 @@ namespace mm2hack::apps::scenes
 
     void PressKeyCommand::Finalize()
     {
-        input::JoystickSingleton::Finalize();
     }
 }
