@@ -1,3 +1,5 @@
+#include "pch.h"
+
 #include "DrawGraph.h"
 
 #include "apps/deal/GameContext.h"

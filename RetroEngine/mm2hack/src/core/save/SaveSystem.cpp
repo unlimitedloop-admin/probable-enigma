@@ -1,12 +1,10 @@
+#include "pch.h"
+
 #include "SaveSystem.h"
 
-#include <algorithm>
 #include <cstdint>
 #include <cstdio>
 #include <filesystem>
-#include <fstream>
-#include <string>
-#include "config/SystemConfig.h"
 #include "SaveData.h"
 
 namespace mm2hack::core::save

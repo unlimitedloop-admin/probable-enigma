@@ -1,8 +1,8 @@
+#include "pch.h"
+
 #include "SettingsWindow.h"
 
 #include <libloaderapi.h>
-#include <memory>
-#include <Windows.h>
 #include "core/ui/CommonUIStyle.h"
 #include "GraphicsSettingsUI.h"
 #include "SoundSettingsUI.h"

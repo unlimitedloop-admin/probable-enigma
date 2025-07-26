@@ -1,7 +1,6 @@
-#include "PauseManager.h"
+#include "pch.h"
 
-#include <DxLib.h>
-#include "config/SystemConfig.h"
+#include "PauseManager.h"
 
 namespace mm2hack::core::overlay
 {

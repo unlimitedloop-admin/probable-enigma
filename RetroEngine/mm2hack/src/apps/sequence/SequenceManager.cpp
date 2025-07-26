@@ -1,7 +1,7 @@
+#include "pch.h"
+
 #include "SequenceManager.h"
 
-#include <memory>
-#include <string>
 #include "DebugSequence.h"
 #include "SequenceType.h"
 #include "StandardSequence.h"

@@ -1,6 +1,7 @@
+#include "pch.h"
+
 #include "SceneManager.h"
 
-#include <memory>
 #include <utility>
 #include "apps/parameters/Parameters.h"
 #include "core/overlay/PauseManager.h"

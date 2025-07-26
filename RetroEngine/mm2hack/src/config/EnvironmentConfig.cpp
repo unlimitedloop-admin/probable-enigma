@@ -1,8 +1,6 @@
-#include "EnvironmentConfig.h"
+#include "pch.h"
 
-#include <fstream>
-#include <string>
-#include <unordered_map>
+#include "EnvironmentConfig.h"
 
 namespace mm2hack::config
 {

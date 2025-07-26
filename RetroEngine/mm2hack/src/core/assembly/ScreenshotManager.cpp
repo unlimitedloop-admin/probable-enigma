@@ -1,12 +1,10 @@
+#include "pch.h"
+
 #include "ScreenshotManager.h"
 
-#include <chrono>
 #include <ctime>
-#include <DxLib.h>
 #include <filesystem>
 #include <iomanip>
-#include <sstream>
-#include <string>
 #include "core/winapi/WindowManager.h"
 
 namespace fs = std::filesystem;

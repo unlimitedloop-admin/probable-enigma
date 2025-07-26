@@ -1,8 +1,9 @@
+#include "pch.h"
+
 #include "WindowMessageHandlers.h"
 
 #include <cstdio>
 #include <filesystem>
-#include <Windows.h>
 #include "../resource.h"
 #include "apps/sequence/SequenceManager.h"
 #include "apps/sequence/SequenceType.h"

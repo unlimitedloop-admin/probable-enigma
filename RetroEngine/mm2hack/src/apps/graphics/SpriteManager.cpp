@@ -1,10 +1,9 @@
+#include "pch.h"
+
 #include "SpriteManager.h"
 
 #include <cstdlib>
-#include <DxLib.h>
-#include <string>
 #include <utility>
-#include <vector>
 #include "apps/NES/NESPalette.h"
 #include "exceptions/CoreException.h"
 #include "utils/string_converter.h"

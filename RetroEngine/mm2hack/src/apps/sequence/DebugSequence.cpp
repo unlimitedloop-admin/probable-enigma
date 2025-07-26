@@ -1,8 +1,9 @@
+#include "pch.h"
+
 #include "DebugSequence.h"
 
 #include "apps/NES/NESPalette.h"
 #include "apps/scenes/SceneManager.h"
-#include "config/SystemConfig.h"
 #include "core/save/SaveData.h"
 #include "SequenceType.h"
 

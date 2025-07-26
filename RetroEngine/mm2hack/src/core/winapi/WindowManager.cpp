@@ -1,13 +1,11 @@
+#include "pch.h"
+
 #include "WindowManager.h"
 
-#include <DxLib.h>
 #include <exception>
-#include <string>
-#include <Windows.h>
 #include "../resource.h"
 #include "apps/NES/NESPalette.h"
 #include "config/EnvironmentConfig.h"
-#include "config/SystemConfig.h"
 #include "core/GameLoopManager.h"
 #include "core/GameStateManager.h"
 #include "core/ui/SettingsWindow.h"

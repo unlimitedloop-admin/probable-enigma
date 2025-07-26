@@ -1,7 +1,8 @@
+#include "pch.h"
+
 #include "CommonUIStyle.h"
 
 #include <cstring>
-#include <Windows.h>
 
 namespace mm2hack::core::ui
 {

@@ -1,10 +1,9 @@
+#include "pch.h"
+
 #include "GameLoopManager.h"
 
-#include <DxLib.h>
 #include <exception>
-#include <Windows.h>
 #include "apps/sequence/SequenceManager.h"
-#include "config/SystemConfig.h"
 #include "exceptions/CoreException.h"
 #include "exceptions/ErrorHandler.h"
 #include "exceptions/ErrorLevel.h"
@@ -45,9 +44,9 @@ namespace mm2hack::core
                 // If the game is paused, we skip the update logic.
                 overlay::PauseManager::SetPaused(GameStateManager::GetInstance().Is(GameState::Paused));
 
-                // ★★★ Main ★★★
+                // Update the main sequence
                 apps::sequence::SequenceManager::GetInstance().Update();
-                
+
                 if (DxLib::SetDrawScreen(DX_SCREEN_BACK) ||
                     DxLib::DrawExtendGraph(0, 0,
                         static_cast<int>(conf::kScreenWidth * _viewerRate),

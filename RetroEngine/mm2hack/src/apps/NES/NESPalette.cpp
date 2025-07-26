@@ -1,9 +1,8 @@
+#include "pch.h"
+
 #include "NESPalette.h"
 
-#include <DxLib.h>
 #include <fstream>
-#include <sstream>
-#include <string>
 
 namespace mm2hack::apps::NES
 {

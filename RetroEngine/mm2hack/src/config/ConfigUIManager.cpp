@@ -1,8 +1,8 @@
+#include "pch.h"
+
 #include "ConfigUIManager.h"
 
 #include <cstdlib>
-#include <string>
-#include <Windows.h>
 
 namespace mm2hack::config
 {

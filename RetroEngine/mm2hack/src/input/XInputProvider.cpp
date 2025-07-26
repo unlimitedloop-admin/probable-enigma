@@ -1,6 +1,7 @@
+#include "pch.h"
+
 #include "XInputProvider.h"
 
-#include <DxLib.h>
 #include "C16ButtonState.h"
 #include "Jpbtn.h"
 

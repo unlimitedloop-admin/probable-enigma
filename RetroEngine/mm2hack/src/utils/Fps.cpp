@@ -1,6 +1,7 @@
+#include "pch.h"
+
 #include "Fps.h"
 
-#include <chrono>
 #include <ratio>
 #include <thread>
 

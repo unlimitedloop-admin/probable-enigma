@@ -1,3 +1,5 @@
+#include "pch.h"
+
 #include "SceneFactory.h"
 
 #include <memory>

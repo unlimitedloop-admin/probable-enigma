@@ -1,10 +1,11 @@
+#include "pch.h"
+
 #include "StandardSequence.h"
 
 #include "apps/NES/NESPalette.h"
 #include "apps/scenes/SceneChangeMediator.h"
 #include "apps/scenes/SceneID.h"
 #include "apps/scenes/SceneManager.h"
-#include "config/SystemConfig.h"
 #include "core/save/SaveData.h"
 #include "SequenceType.h"
 

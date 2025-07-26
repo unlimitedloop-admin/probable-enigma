@@ -1,7 +1,8 @@
+#include "pch.h"
+
 #include "SoundSettingsUI.h"
 
 #include <CommCtrl.h>
-#include <Windows.h>
 #include <Windowsx.h>
 #include "CommonUIStyle.h"
 #include "config/ConfigUIManager.h"

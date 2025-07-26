@@ -1,11 +1,11 @@
+#include "pch.h"
+
 #include "bootstrap.h"
 
 #include <crtdbg.h>
 #include <cstdlib>
 #include <d3d9.h>
-#include <string>
 #include <VersionHelpers.h>
-#include <Windows.h>
 #include "config/EnvironmentConfig.h"
 #include "exceptions/ErrorHandler.h"
 #include "exceptions/ErrorLevel.h"

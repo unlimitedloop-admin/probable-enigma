@@ -1,6 +1,7 @@
+#include "pch.h"
+
 #include "GameContext.h"
 
-#include <memory>
 #include "apps/supervisor/ResourceManager.h"
 #include "input/JoystickManager.h"
 

@@ -1,11 +1,7 @@
-#define NOMINMAX
+#include "pch.h"
 
 #include "FeedbackOverlay.h"
 
-#include <algorithm>
-#include <DxLib.h>
-#include <string>
-#include <Windows.h>
 #include "core/winapi/WindowManager.h"
 
 namespace mm2hack::core::overlay

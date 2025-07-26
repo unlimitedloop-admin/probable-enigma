@@ -1,6 +1,7 @@
+#include "pch.h"
+
 #include "LaunchingGame.h"
 
-#include <string>
 #include "apps/parameters/Parameters.h"
 #include "apps/scenes/SceneID.h"
 #include "utils/output_debug.h"

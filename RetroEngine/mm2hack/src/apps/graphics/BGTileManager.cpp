@@ -1,14 +1,12 @@
+#include "pch.h"
+
 #include "BGTileManager.h"
 
 #include <cstdint>
-#include <DxLib.h>
 #include <fstream>
 #include <iterator>
-#include <string>
 #include <utility>
-#include <vector>
 #include "apps/NES/NESPalette.h"
-#include "config/SystemConfig.h"
 #include "exceptions/CoreException.h"
 #include "utils/string_converter.h"
 

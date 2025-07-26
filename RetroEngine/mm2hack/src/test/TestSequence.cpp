@@ -1,6 +1,7 @@
+#include "pch.h"
+
 #include "TestSequence.h"
 
-#include <memory>
 #include <stdexcept>
 #include "apps/deal/GameContext.h"
 #include "apps/scenes/SceneManager.h"

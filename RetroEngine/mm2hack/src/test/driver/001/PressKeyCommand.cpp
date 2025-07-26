@@ -1,7 +1,7 @@
+#include "pch.h"
+
 #include "PresskeyCommand.h"
 
-#include <DxLib.h>
-#include <string>
 #include "apps/deal/GameContext.h"
 #include "input/Jpbtn.h"
 

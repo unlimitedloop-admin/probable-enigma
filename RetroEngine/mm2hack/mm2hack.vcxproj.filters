@@ -43,10 +43,13 @@
     <ClCompile Include="src\apps\graphics\SpriteManager.cpp" />
     <ClCompile Include="src\apps\graphics\BGTileManager.cpp" />
     <ClCompile Include="src\apps\deal\GameContext.cpp" />
+    <ClCompile Include="src\apps\audio\SoundChannel.cpp" />
+    <ClCompile Include="src\pch.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
     <None Include="mm2hack.env" />
+    <None Include="src\resources\exams\bg\SAMPLESTAGE1.bin" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -112,6 +115,9 @@
     <ClInclude Include="src\apps\graphics\BGTileManager.h" />
     <ClInclude Include="src\apps\deal\IGameContext.h" />
     <ClInclude Include="src\apps\deal\GameContext.h" />
+    <ClInclude Include="src\apps\audio\ISoundChannel.h" />
+    <ClInclude Include="src\apps\audio\SoundChannel.h" />
+    <ClInclude Include="src\pch.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />
@@ -122,6 +128,7 @@
   <ItemGroup>
     <Image Include="mm2hack.ico" />
     <Image Include="src\resources\exams\bg\default-windowsize-picture.png" />
+    <Image Include="src\resources\exams\bg\demostage1tiles.png" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="assets\system\nes_palette.txt" />

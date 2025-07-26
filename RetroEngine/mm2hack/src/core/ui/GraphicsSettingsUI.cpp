@@ -1,14 +1,14 @@
+#include "pch.h"
+
 #include "GraphicsSettingsUI.h"
 
 #include <libloaderapi.h>
-#include <Windows.h>
 #include <Windowsx.h>
 #include "CommonUIStyle.h"
 #include "config/ConfigUIManager.h"
 
 namespace mm2hack::core::overlay
 {
-
     GraphicsSettingsUI::GraphicsSettingsUI(HWND parent)
         : _parent(parent),
         _combo_resolution(nullptr),
