@@ -3,7 +3,7 @@
 //  Project: mm2hack
 //  ISoundChannel.h
 // 
-//  ** Descriptions **
+//  Multi-channel sound interface for audio playback in applications.
 // 
 //==============================================================================
 #pragma once
@@ -12,6 +12,7 @@
 
 namespace mm2hack::apps::audio
 {
+    // Interface for sound channel management
     class ISoundChannel
     {
     public:
@@ -33,5 +34,7 @@ namespace mm2hack::apps::audio
         virtual void StartFade(int targetVolume, int durationFrames) = 0;
         // Update every frame (for fade processing, etc.)
         virtual void Update() = 0;
+        // Get the handle of the sound channel (for external use)
+        virtual int GetNativeHandle() const = 0;
     };
 }

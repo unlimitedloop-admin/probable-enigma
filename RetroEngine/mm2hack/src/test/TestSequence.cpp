@@ -9,6 +9,7 @@
 #include "core/save/SaveData.h"
 #include "driver/001/PressKeyCommand.h"
 #include "driver/002/DrawGraph.h"
+#include "driver/003/SoundTest.h"
 
 namespace mm2hack::apps::sequence
 {
@@ -21,6 +22,9 @@ namespace mm2hack::apps::sequence
             break;
         case 2:
             _driver = std::make_unique<scenes::DrawGraph>();
+            break;
+        case 3:
+            _driver = std::make_unique<scenes::SoundTest>();
             break;
         default:
             throw std::invalid_argument("Invalid script number");

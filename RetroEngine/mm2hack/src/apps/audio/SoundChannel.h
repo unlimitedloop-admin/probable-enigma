@@ -1,3 +1,11 @@
+//==============================================================================
+// 
+//  Project: mm2hack
+//  SoundChannel.h
+// 
+//  Sound channel implementation for audio playback in applications.
+// 
+//==============================================================================
 #pragma once
 
 #include "ISoundChannel.h"
@@ -6,6 +14,7 @@
 
 namespace mm2hack::apps::audio
 {
+    // Sound channel implementation
     class SoundChannel : public ISoundChannel
     {
     public:
@@ -29,6 +38,8 @@ namespace mm2hack::apps::audio
         void StartFade(int targetVolume, int durationFrames) override;
         // Update every frame (for fade processing, etc.)
         void Update() override;
+
+        int GetNativeHandle() const override { return _handle; }
 
     private:
         int _handle = -1;

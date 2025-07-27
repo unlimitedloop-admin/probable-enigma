@@ -245,6 +245,11 @@ namespace mm2hack::core::winapi
             setGameState(GameState::Running);
             break;
 
+        case ID_SCRIPT_003:
+            seq.StartTestSequence(3);
+            setGameState(GameState::Running);
+            break;
+
         default:
             break;
         }

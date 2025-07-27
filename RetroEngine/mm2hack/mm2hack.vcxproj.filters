@@ -45,6 +45,13 @@
     <ClCompile Include="src\apps\deal\GameContext.cpp" />
     <ClCompile Include="src\apps\audio\SoundChannel.cpp" />
     <ClCompile Include="src\pch.cpp" />
+    <ClCompile Include="src\apps\audio\ChannelManager.cpp" />
+    <ClCompile Include="src\apps\audio\SeManager.cpp" />
+    <ClCompile Include="src\apps\audio\BgmManager.cpp" />
+    <ClCompile Include="src\apps\audio\AudioConfigLoader.cpp" />
+    <ClCompile Include="src\apps\audio\AudioInitializer.cpp" />
+    <ClCompile Include="src\apps\audio\AudioMixer.cpp" />
+    <ClCompile Include="src\test\driver\003\SoundTest.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
@@ -118,6 +125,14 @@
     <ClInclude Include="src\apps\audio\ISoundChannel.h" />
     <ClInclude Include="src\apps\audio\SoundChannel.h" />
     <ClInclude Include="src\pch.h" />
+    <ClInclude Include="src\apps\audio\ChannelManager.h" />
+    <ClInclude Include="src\apps\audio\SeManager.h" />
+    <ClInclude Include="src\apps\audio\BgmManager.h" />
+    <ClInclude Include="src\libs\json.hpp" />
+    <ClInclude Include="src\apps\audio\AudioConfigLoader.h" />
+    <ClInclude Include="src\apps\audio\AudioInitializer.h" />
+    <ClInclude Include="src\apps\audio\AudioMixer.h" />
+    <ClInclude Include="src\test\driver\003\SoundTest.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

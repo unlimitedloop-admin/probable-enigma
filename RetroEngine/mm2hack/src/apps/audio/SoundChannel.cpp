@@ -2,6 +2,8 @@
 
 #include "SoundChannel.h"
 
+#include "utils/output_debug.h"
+
 namespace mm2hack::apps::audio
 {
     SoundChannel::SoundChannel() = default;
@@ -10,7 +12,7 @@ namespace mm2hack::apps::audio
     {
         if (_handle != -1)
         {
-            DeleteSoundMem(_handle);
+            DxLib::DeleteSoundMem(_handle);
         }
     }
 
@@ -18,9 +20,9 @@ namespace mm2hack::apps::audio
     {
         if (_handle != -1)
         {
-            DeleteSoundMem(_handle);
+            DxLib::DeleteSoundMem(_handle);
         }
-        _handle = LoadSoundMem(filepath.c_str());
+        _handle = DxLib::LoadSoundMem(filepath.c_str());
         return _handle != -1;
     }
 
@@ -28,7 +30,7 @@ namespace mm2hack::apps::audio
     {
         if (_handle != -1)
         {
-            PlaySoundMem(_handle, loop ? DX_PLAYTYPE_LOOP : DX_PLAYTYPE_BACK);
+            DxLib::PlaySoundMem(_handle, loop ? DX_PLAYTYPE_LOOP : DX_PLAYTYPE_BACK);
         }
     }
 
@@ -36,7 +38,7 @@ namespace mm2hack::apps::audio
     {
         if (_handle != -1)
         {
-            StopSoundMem(_handle);
+            DxLib::StopSoundMem(_handle);
         }
     }
 
@@ -45,7 +47,8 @@ namespace mm2hack::apps::audio
         _volume = std::clamp(volume, 0, 255);
         if (_handle != -1)
         {
-            ChangeVolumeSoundMem(_volume, _handle);
+            auto i = DxLib::ChangeVolumeSoundMem(_volume, _handle);
+            utils::debug_log(L"SetVolume: {}, Result: {}", _volume, i);
         }
     }
 
@@ -56,7 +59,7 @@ namespace mm2hack::apps::audio
 
     bool SoundChannel::IsPlaying() const
     {
-        return (_handle != -1 && CheckSoundMem(_handle) == 1);
+        return (_handle != -1 && DxLib::CheckSoundMem(_handle) == 1);
     }
 
     void SoundChannel::StartFade(int targetVolume, int durationFrames)
