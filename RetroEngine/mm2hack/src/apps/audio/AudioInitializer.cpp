@@ -42,7 +42,7 @@ namespace mm2hack::apps::audio
         // Registration of SE
         for (const auto& [name, config] : loader.GetSeConfigs())
         {
-            seManager.LoadSe(name, config.file);
+            seManager.LoadSe(name, config.file, config.volume, config.targetBgmChannels);
         }
 
         return true;

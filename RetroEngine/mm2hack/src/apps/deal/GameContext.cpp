@@ -17,7 +17,14 @@ namespace mm2hack::apps::deal
     void GameContext::Shutdown()
     {
         // Cleanup resources if necessary.
-        _resourceManager.reset();
-        _joystickManager.reset();
+        if (_resourceManager)
+        {
+            _resourceManager->Release();
+            _resourceManager.reset();
+        }
+        if (_joystickManager)
+        {
+            _joystickManager.reset();
+        }
     }
 }

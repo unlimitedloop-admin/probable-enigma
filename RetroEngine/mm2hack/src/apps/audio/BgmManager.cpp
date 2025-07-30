@@ -1,7 +1,9 @@
 #include "pch.h"
 
 #include "BgmManager.h"
+
 #include "ChannelManager.h"
+#include "utils/output_debug.h"
 
 namespace mm2hack::apps::audio
 {
@@ -123,5 +125,11 @@ namespace mm2hack::apps::audio
         ApplyFade();
         CheckAndApplyLoop();
         _channels.Update();
+
+        for (int i = 0; i < _channels.GetChannelCount(); ++i)
+        {
+            int vol = _channels.GetVolume(i);
+            utils::debug_log(L"SetVolume: {}, Channels: {}", vol, i);
+        }
     }
 }

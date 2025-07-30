@@ -54,6 +54,8 @@ namespace mm2hack::apps::audio
         // Get the handle of the specified channel (for external use)
         int GetHandle(int channelIndex) const;
 
+        void Clear();
+
     private:
         std::vector<std::unique_ptr<ISoundChannel>> _channels;      // List of sound channels
     };

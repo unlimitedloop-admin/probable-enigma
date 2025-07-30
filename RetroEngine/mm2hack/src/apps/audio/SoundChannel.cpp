@@ -13,6 +13,7 @@ namespace mm2hack::apps::audio
         if (_handle != -1)
         {
             DxLib::DeleteSoundMem(_handle);
+            _handle = -1;
         }
     }
 
@@ -21,6 +22,7 @@ namespace mm2hack::apps::audio
         if (_handle != -1)
         {
             DxLib::DeleteSoundMem(_handle);
+            _handle = -1;
         }
         _handle = DxLib::LoadSoundMem(filepath.c_str());
         return _handle != -1;
@@ -48,7 +50,6 @@ namespace mm2hack::apps::audio
         if (_handle != -1)
         {
             auto i = DxLib::ChangeVolumeSoundMem(_volume, _handle);
-            utils::debug_log(L"SetVolume: {}, Result: {}", _volume, i);
         }
     }
 

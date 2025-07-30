@@ -60,6 +60,16 @@ namespace mm2hack::apps::audio
                 SeConfig seConfig;
                 seConfig.file = utf8_to_wstring(seJson.value("file", ""));
                 seConfig.volume = seJson.value("volume", 255);
+                if (seJson.contains("target_bgm_channels"))
+                {
+                    for (auto& ch : seJson["target_bgm_channels"])
+                    {
+                        if (ch.is_number_integer())
+                        {
+                            seConfig.targetBgmChannels.push_back(ch.get<int>());
+                        }
+                    }
+                }
                 _seConfigs[utf8_to_wstring(name)] = seConfig;
             }
         }

@@ -4,11 +4,11 @@
             "channels": [
                 {
                     "file": "src/resources/exams/audio/wav/bgm/sample1_pulse1.wav",
-                    "volume": 200
+                    "volume": 220
                 },
                 {
                     "file": "src/resources/exams/audio/wav/bgm/sample1_pulse2.wav",
-                    "volume": 180
+                    "volume": 220
                 },
                 {
                     "file": "src/resources/exams/audio/wav/bgm/sample1_triangle.wav",
@@ -16,13 +16,15 @@
                 },
                 {
                     "file": "src/resources/exams/audio/wav/bgm/sample1_noise.wav",
-                    "volume": 180
+                    "volume": 200
                 },
                 {
                     "file": "src/resources/exams/audio/wav/bgm/sample1_deltaPCM.wav",
                     "volume": 220
                 }
-            ]
+            ],
+            "loop_start": 16.82,
+            "loop_end": 50.19
         },
         "sample2": {
             "channels": [
@@ -54,7 +56,13 @@
     "se": {
         "1up": {
             "file": "src/resources/exams/audio/wav/se/1up.wav",
-            "volume": 255
+            "volume": 255,
+            "target_bgm_channels": [ 1 ]
+        },
+        "sonic_boom": {
+            "file": "src/resources/exams/audio/wav/se/sonic_boom.wav",
+            "volume": 255,
+            "target_bgm_channels": [ 3 ]
         }
     }
 }

@@ -8,6 +8,7 @@
 //==============================================================================
 #pragma once
 
+#include "apps/audio/AudioManager.h"
 #include "apps/graphics/BGTileManager.h"
 #include "apps/graphics/SpriteManager.h"
 
@@ -24,9 +25,14 @@ namespace mm2hack::apps::supervisor
         graphics::SpriteManager& GetSpriteManager() { return _spriteManager; }
         // Gets the BGTileManager instance for managing background tile textures
         graphics::BGTileManager& GetBGTileManager() { return _bgTileManager; }
+        // Gets the AudioManager instance for managing audio playback
+        audio::AudioManager& GetAudioManager() { return _audioManager; }
+
+        void Release();
 
     private:
         graphics::SpriteManager _spriteManager;         // Instance of SpriteManager
         graphics::BGTileManager _bgTileManager;         // Instance of BGTileManager
+        audio::AudioManager _audioManager;              // Instance of AudioManager
     };
 }

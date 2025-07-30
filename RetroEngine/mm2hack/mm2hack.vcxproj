@@ -169,6 +169,7 @@
   <ItemGroup>
     <ClCompile Include="src\apps\audio\AudioConfigLoader.cpp" />
     <ClCompile Include="src\apps\audio\AudioInitializer.cpp" />
+    <ClCompile Include="src\apps\audio\AudioManager.cpp" />
     <ClCompile Include="src\apps\audio\AudioMixer.cpp" />
     <ClCompile Include="src\apps\audio\BgmManager.cpp" />
     <ClCompile Include="src\apps\audio\ChannelManager.cpp" />
@@ -185,6 +186,7 @@
     <ClCompile Include="src\apps\sequence\DebugSequence.cpp" />
     <ClCompile Include="src\apps\sequence\SequenceManager.cpp" />
     <ClCompile Include="src\apps\sequence\StandardSequence.cpp" />
+    <ClCompile Include="src\apps\supervisor\ResourceManager.cpp" />
     <ClCompile Include="src\config\ConfigUIManager.cpp" />
     <ClCompile Include="src\config\EnvironmentConfig.cpp" />
     <ClCompile Include="src\config\SystemConfig.cpp" />
@@ -233,6 +235,7 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="src\apps\audio\AudioConfigLoader.h" />
     <ClInclude Include="src\apps\audio\AudioInitializer.h" />
+    <ClInclude Include="src\apps\audio\AudioManager.h" />
     <ClInclude Include="src\apps\audio\AudioMixer.h" />
     <ClInclude Include="src\apps\audio\BgmManager.h" />
     <ClInclude Include="src\apps\audio\ChannelManager.h" />

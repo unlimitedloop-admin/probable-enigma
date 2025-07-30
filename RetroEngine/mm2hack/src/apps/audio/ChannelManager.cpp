@@ -91,4 +91,13 @@ namespace mm2hack::apps::audio
         if (channelIndex < 0 || channelIndex >= GetChannelCount()) return -1;
         return _channels[channelIndex]->GetNativeHandle();
     }
+
+    void ChannelManager::Clear()
+    {
+        for (auto& ch : _channels)
+        {
+            ch.reset();     // Stop any playing sound before clearing
+        }
+        _channels.clear();
+    }
 }

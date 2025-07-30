@@ -3,6 +3,7 @@
 #include "GameLoopManager.h"
 
 #include <exception>
+#include "apps/deal/GameContext.h"
 #include "apps/sequence/SequenceManager.h"
 #include "exceptions/CoreException.h"
 #include "exceptions/ErrorHandler.h"
@@ -59,6 +60,8 @@ namespace mm2hack::core
 
                 fps.Wait();
             }
+
+            apps::deal::GameContext::GetInstance().Shutdown();  // Ensure the game context is properly shut down
         }
         catch (const CoreException& ex)
         {

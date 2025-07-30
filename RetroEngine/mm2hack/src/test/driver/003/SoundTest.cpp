@@ -2,28 +2,55 @@
 
 #include "SoundTest.h"
 
-#include "apps/audio/AudioInitializer.h"
-#include "apps/audio/BgmManager.h"
+#include "apps/deal/GameContext.h"
+#include "input/Jpbtn.h"
 
 namespace mm2hack::apps::scenes
 {
     bool SoundTest::Initialize()
     {
         // Initialize audio systems here
-        // For example, load audio configurations, initialize BGM and SE managers, etc.
-        if (!audio::AudioInitializer::InitializeAudio(L"src\\resources\\exams\\audio\\json\\audio_config.json", _bgmManager, _seManager, _bgmChannels))
-        {
-            return false; // Failed to initialize audio systems
-        }
-
-        _bgmManager.Play(L"sample2");   // Play a sample BGM
-        return true;
+        auto& audio = deal::GameContext::GetInstance().GetResourceManager().GetAudioManager();
+        return audio.Initialize(L"src\\resources\\exams\\audio\\json\\audio_config.json");
     }
 
     void SoundTest::Update()
     {
         // Update audio systems, handle input for playing/stopping sounds, etc.
-        _bgmManager.Update();
+        auto& joystick = deal::GameContext::GetInstance().GetJoystickManager();
+        joystick.Update();
+
+        auto& audio = deal::GameContext::GetInstance().GetResourceManager().GetAudioManager();
+
+        if (joystick.GetButtonState(JPBTN::START).pressed_frame == 1)
+        {
+            if (_isPlayThisTrack)
+            {
+                audio.StopBgm();
+                _isPlayThisTrack = false;
+            }
+            else
+            {
+                audio.PlayBgm(L"sample1");
+                _isPlayThisTrack = true;
+            }
+        }
+
+        if (joystick.GetButtonState(JPBTN::A).pressed_frame == 1)
+        {
+            audio.PlaySe(L"1up");
+        }
+
+        if (joystick.GetButtonState(JPBTN::B).pressed_frame == 1)
+        {
+            audio.PlaySe(L"sonic_boom");
+        }
+
+        // Example: Check for input to play a specific track
+        if (_isPlayThisTrack)
+        {
+            audio.Update();
+        }
     }
 
     void SoundTest::Draw()
@@ -34,6 +61,5 @@ namespace mm2hack::apps::scenes
     void SoundTest::Finalize()
     {
         // Clean up audio systems and resources
-        _bgmManager.Stop();
     }
 }

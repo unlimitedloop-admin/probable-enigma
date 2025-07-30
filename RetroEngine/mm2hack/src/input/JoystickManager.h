@@ -12,6 +12,7 @@
 #include "C16ButtonState.h"
 #include "IInputProvider.h"
 #include "InputFrame.h"
+#include "Jpbtn.h"
 #include "KeyBinding.h"
 
 namespace mm2hack::input
@@ -26,6 +27,10 @@ namespace mm2hack::input
         bool Update();
         // Get the state of a specific button by its index
         const InputFrame& GetButtonState(size_t index) const;
+        const InputFrame& GetButtonState(JPBTN button) const
+        {
+            return GetButtonState(static_cast<size_t>(button));
+        }
         // Get the state of all buttons
         const C16ButtonState& GetAllStates() const;
         // Check if the input device is enabled

@@ -10,10 +10,7 @@
 
 #include "test/driver/ITestDriver.h"
 
-#include "apps/audio/AudioConfigLoader.h"
-#include "apps/audio/BgmManager.h"
-#include "apps/audio/ChannelManager.h"
-#include "apps/audio/SeManager.h"
+#include "apps/audio/AudioManager.h"
 
 namespace mm2hack::apps::scenes
 {
@@ -29,9 +26,6 @@ namespace mm2hack::apps::scenes
         void Finalize() override;
 
     private:
-        audio::ChannelManager _bgmChannels{ 5 };            // Default 5 channels for BGM
-        audio::BgmManager _bgmManager{ _bgmChannels };      // BGM manager for handling background music
-        audio::SeManager _seManager{ _bgmChannels, 8 };     // Default 8 channels for SE
-        audio::AudioConfigLoader _configLoader;             // Load BGM and SE configurations
+        bool _isPlayThisTrack = false;
     };
 }
