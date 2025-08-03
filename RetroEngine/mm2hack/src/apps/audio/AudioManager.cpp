@@ -35,7 +35,7 @@ namespace mm2hack::apps::audio
 
     void AudioManager::SetBgmVolume(int volume)
     {
-        _mixer.SetBgmVolume(volume);
+        _mixer.SetBgmVolume(ToDxVolume(volume));
     }
 
     void AudioManager::PlaySe(const std::wstring& name)
@@ -45,12 +45,17 @@ namespace mm2hack::apps::audio
 
     void AudioManager::SetSeVolume(int volume)
     {
-        _mixer.SetSeVolume(volume);
+        _mixer.SetSeVolume(ToDxVolume(volume));
     }
 
     void AudioManager::SetMasterVolume(int volume)
     {
-        _mixer.SetMasterVolume(volume);
+        _mixer.SetMasterVolume(ToDxVolume(volume));
+    }
+
+    void AudioManager::SetEnabled(bool enabled)
+    {
+        _mixer.SetEnabled(enabled);
     }
 
     void AudioManager::Update()
@@ -66,5 +71,11 @@ namespace mm2hack::apps::audio
 
         _bgmChannels.Clear();
         _seChannels.Clear();
+    }
+
+    int AudioManager::ToDxVolume(int uiVolume)
+    {
+        uiVolume = std::clamp(uiVolume, 0, 100);
+        return (uiVolume * 255 + 50) / 100;     // Convert 0-100 to 0-255 range (50 is for rounding)
     }
 }

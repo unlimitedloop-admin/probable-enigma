@@ -39,6 +39,10 @@ namespace mm2hack::apps::audio
         // Master volume leveling
         void SetMasterVolume(int volume);
 
+        // Enable / disable all sounds
+        void SetEnabled(bool enabled);
+        bool IsEnabled() const { return _enabled; }
+
         // Every updates
         void Update();
 
@@ -51,6 +55,9 @@ namespace mm2hack::apps::audio
         SeManager _seManager;
         AudioMixer _mixer;
 
-        AudioConfigLoader _config;              // Configuration loader for audio settings
+        AudioConfigLoader _config;   // Configuration loader for audio settings
+        bool _enabled = true;        // NEW: Sound enable flag
+
+        int ToDxVolume(int uiVolume);
     };
 }

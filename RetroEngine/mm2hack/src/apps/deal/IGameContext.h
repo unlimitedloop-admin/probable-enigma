@@ -18,7 +18,12 @@ namespace mm2hack::apps::deal
     {
     public:
         virtual ~IGameContext() = default;
+        // Assumes the game is running: Retrieves the instance of the resource manager
         virtual supervisor::ResourceManager& GetResourceManager() = 0;
+        // Get safety pointer to the ResourceManager, if not initialized, returns nullptr
+        virtual supervisor::ResourceManager* GetResourceManagerPtr() = 0;
+        // Assumes the game is running: Retrieves the instance of the joystick manager
         virtual input::JoystickManager& GetJoystickManager() = 0;
+        virtual bool IsInitialized() const = 0;
     };
 }

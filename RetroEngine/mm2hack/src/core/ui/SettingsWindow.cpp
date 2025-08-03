@@ -3,6 +3,8 @@
 #include "SettingsWindow.h"
 
 #include <libloaderapi.h>
+#include "apps/deal/GameContext.h"
+#include "config/ConfigUIManager.h"
 #include "core/ui/CommonUIStyle.h"
 #include "GraphicsSettingsUI.h"
 #include "SoundSettingsUI.h"
@@ -118,6 +120,23 @@ namespace mm2hack::core::overlay
         if (_sound_ui)
         {
             _sound_ui->ApplySettings();
+            ApplySoundToAudio();
+        }
+    }
+
+    void SettingsWindow::ApplySoundToAudio()
+    {
+        config::SoundConfig cfg;
+        config::ConfigUIManager::LoadSoundConfig(cfg);
+
+        auto& ctx = apps::deal::GameContext::GetInstance();
+        if (ctx.IsInitialized())
+        {
+            auto& audio = ctx.GetResourceManager().GetAudioManager();
+            audio.SetMasterVolume(cfg.master);
+            audio.SetBgmVolume(cfg.bgm);
+            audio.SetSeVolume(cfg.se);
+            audio.SetEnabled(cfg.enabled);
         }
     }
 

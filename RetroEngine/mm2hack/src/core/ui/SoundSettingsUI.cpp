@@ -3,7 +3,9 @@
 #include "SoundSettingsUI.h"
 
 #include <CommCtrl.h>
+#include <sysinfoapi.h>
 #include <Windowsx.h>
+#include "apps/deal/GameContext.h"
 #include "CommonUIStyle.h"
 #include "config/ConfigUIManager.h"
 
@@ -11,11 +13,8 @@ namespace mm2hack::core::overlay
 {
     SoundSettingsUI::SoundSettingsUI(HWND parent)
         : _parent(parent),
-        _slider_master(nullptr),
-        _slider_bgm(nullptr),
-        _slider_se(nullptr),
-        _check_sound_enabled(nullptr),
-        _combo_source(nullptr)
+        _slider_master(nullptr), _slider_bgm(nullptr), _slider_se(nullptr),
+        _check_sound_enabled(nullptr), _combo_source(nullptr)
     {
     }
 
@@ -54,6 +53,53 @@ namespace mm2hack::core::overlay
         LoadSettings();
     }
 
+    void SoundSettingsUI::ApplySettings() const
+    {
+        config::SoundConfig config;
+        config.master = static_cast<int>(SendMessage(_slider_master, TBM_GETPOS, 0, 0));
+        config.bgm = static_cast<int>(SendMessage(_slider_bgm, TBM_GETPOS, 0, 0));
+        config.se = static_cast<int>(SendMessage(_slider_se, TBM_GETPOS, 0, 0));
+        config.enabled = (Button_GetCheck(_check_sound_enabled) == BST_CHECKED);
+        config.sourceIndex = static_cast<int>(SendMessage(_combo_source, CB_GETCURSEL, 0, 0));
+
+        // Save to INI.
+        config::ConfigUIManager::SaveSoundConfig(config);
+
+        // To apply the settings, we need to access the ResourceManager.
+        auto& ctx = apps::deal::GameContext::GetInstance();
+        if (ctx.GetResourceManagerPtr())
+        {
+            auto& audio = ctx.GetResourceManager().GetAudioManager();
+            audio.SetMasterVolume(config.master);
+            audio.SetBgmVolume(config.bgm);
+            audio.SetSeVolume(config.se);
+            audio.SetEnabled(config.enabled);
+        }
+    }
+
+    void SoundSettingsUI::OnScroll(WPARAM wParam, LPARAM lParam)
+    {
+        ULONGLONG now = GetTickCount64();
+        if (now - _last_update_tick < kUpdateInterval)
+            return;     // Throttle updates
+
+        _last_update_tick = now;
+        HWND hwnd = (HWND)lParam;
+        if (hwnd == _slider_master || hwnd == _slider_bgm || hwnd == _slider_se)
+        {
+            ApplySettings();
+        }
+    }
+
+    void SoundSettingsUI::OnCommand(WPARAM wParam, LPARAM lParam) const
+    {
+        HWND hwnd = (HWND)lParam;
+        if (hwnd == _check_sound_enabled || hwnd == _combo_source)
+        {
+            ApplySettings();
+        }
+    }
+
     void SoundSettingsUI::CreateSlider(LPCWSTR label, int x, int y, HWND& out_slider) const
     {
         CreateWindowEx(0, L"STATIC", label,
@@ -77,22 +123,10 @@ namespace mm2hack::core::overlay
         SendMessage(_combo_source, CB_SETCURSEL, 0, 0);
     }
 
-    void SoundSettingsUI::ApplySettings() const
-    {
-        config::SoundConfig config;
-        config.master = static_cast<int>(SendMessage(_slider_master, TBM_GETPOS, 0, 0));
-        config.bgm = static_cast<int>(SendMessage(_slider_bgm, TBM_GETPOS, 0, 0));
-        config.se = static_cast<int>(SendMessage(_slider_se, TBM_GETPOS, 0, 0));
-        config.enabled = Button_GetCheck(_check_sound_enabled);
-        config.sourceIndex = static_cast<int>(SendMessage(_combo_source, CB_GETCURSEL, 0, 0));
-
-        config::ConfigManager::SaveSoundConfig(config);
-    }
-
     void SoundSettingsUI::LoadSettings() const
     {
         config::SoundConfig config;
-        config::ConfigManager::LoadSoundConfig(config);
+        config::ConfigUIManager::LoadSoundConfig(config);
 
         SendMessage(_slider_master, TBM_SETPOS, TRUE, config.master);
         SendMessage(_slider_bgm, TBM_SETPOS, TRUE, config.bgm);

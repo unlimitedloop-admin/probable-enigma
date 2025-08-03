@@ -6,12 +6,12 @@
 
 namespace mm2hack::config
 {
-    std::wstring ConfigManager::GetIniPath()
+    std::wstring ConfigUIManager::GetIniPath()
     {
         return L"./settings.ini";
     }
 
-    void ConfigManager::SaveGraphicsConfig(const GraphicsConfig& config)
+    void ConfigUIManager::SaveGraphicsConfig(const GraphicsConfig& config)
     {
         const std::wstring path = GetIniPath();
 
@@ -20,7 +20,7 @@ namespace mm2hack::config
         WritePrivateProfileString(L"Graphics", L"FpsLimit", std::to_wstring(config.fpsLimitIndex).c_str(), path.c_str());
     }
 
-    void ConfigManager::LoadGraphicsConfig(GraphicsConfig& config)
+    void ConfigUIManager::LoadGraphicsConfig(GraphicsConfig& config)
     {
         const std::wstring path = GetIniPath();
         wchar_t buffer[32];
@@ -35,7 +35,7 @@ namespace mm2hack::config
         config.fpsLimitIndex = _wtoi(buffer);
     }
 
-    void ConfigManager::SaveSoundConfig(const SoundConfig& config)
+    void ConfigUIManager::SaveSoundConfig(const SoundConfig& config)
     {
         const std::wstring path = GetIniPath();
 
@@ -46,7 +46,7 @@ namespace mm2hack::config
         WritePrivateProfileString(L"Sound", L"Source", std::to_wstring(config.sourceIndex).c_str(), path.c_str());
     }
 
-    void ConfigManager::LoadSoundConfig(SoundConfig& config)
+    void ConfigUIManager::LoadSoundConfig(SoundConfig& config)
     {
         const std::wstring path = GetIniPath();
         wchar_t buffer[32];

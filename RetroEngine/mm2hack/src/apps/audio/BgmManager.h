@@ -11,6 +11,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <Windows.h>
 #include "ChannelManager.h"
 
 namespace mm2hack::apps::audio

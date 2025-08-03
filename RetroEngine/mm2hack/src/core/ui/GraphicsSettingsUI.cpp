@@ -82,13 +82,13 @@ namespace mm2hack::core::overlay
         config.vsync = Button_GetCheck(_check_vsync);
         config.fpsLimitIndex = static_cast<int>(SendMessage(_combo_framerate, CB_GETCURSEL, 0, 0));
 
-        config::ConfigManager::SaveGraphicsConfig(config);
+        config::ConfigUIManager::SaveGraphicsConfig(config);
     }
 
     void GraphicsSettingsUI::LoadSettings() const
     {
         config::GraphicsConfig config{};
-        config::ConfigManager::LoadGraphicsConfig(config);
+        config::ConfigUIManager::LoadGraphicsConfig(config);
 
         SendMessage(_combo_resolution, CB_SETCURSEL, config.resolutionIndex, 0);
         Button_SetCheck(_check_vsync, config.vsync ? BST_CHECKED : BST_UNCHECKED);

@@ -2,15 +2,13 @@
 
 #include "CommonUIStyle.h"
 
-#include <cstring>
-
 namespace mm2hack::core::ui
 {
     CommonUIStyle::CommonUIStyle()
         : _font(nullptr)
     {
         LOGFONT lf{};
-        lf.lfHeight = -12;                      // 10px
+        lf.lfHeight = -14;
         wcscpy_s(lf.lfFaceName, L"Segoe UI");   // Segoe UI(Windows 10 or later)
         lf.lfCharSet = DEFAULT_CHARSET;
         lf.lfWeight = FW_NORMAL;

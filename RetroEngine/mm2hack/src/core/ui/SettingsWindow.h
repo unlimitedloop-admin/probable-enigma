@@ -38,6 +38,7 @@ namespace mm2hack::core::overlay
         static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
         void ApplySettings();
+        void ApplySoundToAudio();
         void SetHandle(HWND hwnd);
         void CreateContent(Tab tab);
         static SettingsWindow* GetThis(HWND hwnd);

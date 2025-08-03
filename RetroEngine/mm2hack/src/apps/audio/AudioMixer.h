@@ -27,6 +27,7 @@ namespace mm2hack::apps::audio
         // Set the BGM volume and SE volume
         void SetBgmVolume(int volume);
         void SetSeVolume(int volume);
+        void SetEnabled(bool enabled);
 
         // Get the current master volume, BGM volume, and SE volume
         int GetMasterVolume() const { return _masterVolume; }
@@ -40,17 +41,20 @@ namespace mm2hack::apps::audio
         void Update();
 
     private:
-        BgmManager& _bgm;
-        SeManager& _se;
-
         int _masterVolume = 255;
         int _bgmVolume = 255;
         int _seVolume = 255;
+        bool _enabled = true;
+
+        BgmManager& _bgm;
+        SeManager& _se;
 
         // Fade management
         bool _fading = false;
         int _fadeTarget = 255;
         int _fadeStep = 0;
         int _fadeFramesRemaining = 0;
+
+        void ApplyVolumes();
     };
 }

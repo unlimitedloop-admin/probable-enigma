@@ -1,7 +1,7 @@
 //==============================================================================
 // 
 //  Project: mm2hack
-//  ConfigManager.h
+//  ConfigUIManager.h
 // 
 //  Configuration of the application settings to be saved and loaded from an INI file.
 // 
@@ -14,9 +14,9 @@ namespace mm2hack::config
 {
     struct GraphicsConfig
     {
-        int resolutionIndex; // Index of the selected resolution
-        bool vsync;          // VSync enabled/disabled
-        int fpsLimitIndex;   // FPS limit set by the user
+        int resolutionIndex;    // Index of the selected resolution
+        bool vsync;             // VSync enabled/disabled
+        int fpsLimitIndex;      // FPS limit set by the user
     };
 
     struct SoundConfig
@@ -28,8 +28,8 @@ namespace mm2hack::config
         int sourceIndex = 0;    // Index of the selected sound source (0 for default, 1 for add DPCM channel, etc.)
     };
 
-    // ConfigManager is responsible for saving and loading the application settings to/from an INI file
-    class ConfigManager final
+    // ConfigUIManager is responsible for saving and loading the application settings to/from an INI file
+    class ConfigUIManager final
     {
     public:
         static void SaveGraphicsConfig(const GraphicsConfig& config);
