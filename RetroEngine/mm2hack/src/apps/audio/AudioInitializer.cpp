@@ -9,7 +9,7 @@
 
 namespace mm2hack::apps::audio
 {
-    bool AudioInitializer::InitializeAudio(const std::wstring& configPath, BgmManager& bgmManager, SeManager& seManager, ChannelManager& bgmChannels)
+    bool AudioInitializer::InitializeAudio(const std::wstring& configPath, BgmManager& bgmManager, SeManager& seManager, ChannelManager& bgmChannels, ChannelManager& seChannels)
     {
         AudioConfigLoader loader;
         if (!loader.LoadFromFile(configPath))
@@ -42,7 +42,25 @@ namespace mm2hack::apps::audio
         // Registration of SE
         for (const auto& [name, config] : loader.GetSeConfigs())
         {
-            seManager.LoadSe(name, config.file, config.volume, config.targetBgmChannels);
+            std::vector<std::wstring> filepaths;
+            std::vector<int> volumes;
+            std::vector<int> targetBgmChannels;
+            for (const auto& ch : config.channels)
+            {
+                filepaths.push_back(ch.file);
+                volumes.push_back(ch.volume);
+                targetBgmChannels.push_back(ch.target_bgm_channels);
+            }
+            seManager.LoadSe(name, filepaths, volumes, targetBgmChannels);
+
+            // Initial volume settings
+            for (size_t i = 0; i < config.channels.size(); ++i)
+            {
+                if (i < static_cast<size_t>(seChannels.GetChannelCount()))
+                {
+                    seChannels.SetVolume(static_cast<int>(i), config.channels[i].volume);
+                }
+            }
         }
 
         return true;

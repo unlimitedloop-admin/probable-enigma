@@ -19,15 +19,19 @@ namespace mm2hack::apps::audio
     class SeManager
     {
     public:
-        SeManager(ChannelManager& bgmChannels, int seChannelCount = 8);
+        explicit SeManager(ChannelManager& bgmChannels, int seChannelCount = 8);
         ~SeManager() = default;
 
         // Load SE data from file
-        bool LoadSe(const std::wstring& name, const std::wstring& filepath, int volume = 255, const std::vector<int>& targetChannels = {});
+        bool LoadSe(const std::wstring& name, const std::vector<std::wstring>& filepath, const std::vector<int>& volume, const std::vector<int>& targetChannels = {});
         // Play SE (search for an available channel, if none found, stop the oldest one and use it)
         void PlaySe(const std::wstring& name, int volume = -1);
         // Stop all SE
         void StopAll();
+        // Pause all SE
+        void Pause();
+        // Resume all SE
+        void Resume();
         // Update (check for SE end + restore BGM channel)
         void Update();
         // Volume control
@@ -36,9 +40,9 @@ namespace mm2hack::apps::audio
     private:
         struct SeData
         {
-            std::wstring filepath;
-            int volume = 255;
-            std::vector<int> targetBgmChannels;     // Channels to restore BGM volume after SE playback
+            std::vector<std::wstring> filepaths;
+            std::vector<int> volumes;
+            std::vector<int> targetBgmChannels;
         };
 
         struct ActiveSeChannel

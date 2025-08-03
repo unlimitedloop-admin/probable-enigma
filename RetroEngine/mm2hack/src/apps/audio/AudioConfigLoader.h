@@ -29,12 +29,17 @@ namespace mm2hack::apps::audio
         double loopEnd = 0.0;
     };
 
-    // Configuration structure for SE (Sound Effects), which includes the file and volume
-    struct SeConfig
+    struct SeChannelConfig
     {
         std::wstring file;
         int volume = 255;
-        std::vector<int> targetBgmChannels;     // Channels to restore BGM volume after SE playback
+        int target_bgm_channels = -1; // Channel to restore BGM volume after SE playback, -1 means no specific channel
+    };
+
+    // Configuration structure for SE (Sound Effects), which includes the file and volume
+    struct SeConfig
+    {
+        std::vector<SeChannelConfig> channels;  // SE channels configuration
     };
 
     // Audio configuration loader that reads BGM and SE configurations from a JSON file

@@ -38,6 +38,7 @@ namespace mm2hack::apps::audio
             SetSoundCurrentPosition(0, _channels.GetHandle(static_cast<int>(i)));
         }
 
+        // NOTE: To play the audio data synchronously, only the Play call is expanded in a loop.
         for (size_t i = 0; i < config.filepaths.size(); ++i)
         {
             _channels.Play(static_cast<int>(i), true);
@@ -54,6 +55,16 @@ namespace mm2hack::apps::audio
     {
         _channels.StopAll();
         _isPlaying = false;
+    }
+
+    void BgmManager::Pause()
+    {
+        _channels.PauseAll();
+    }
+
+    void BgmManager::Resume()
+    {
+        _channels.ResumeAll(true);  // Playing with loop
     }
 
     void BgmManager::FadeOut(int durationFrames)
@@ -83,6 +94,7 @@ namespace mm2hack::apps::audio
             int baseVol = (i < config.volumes.size()) ? config.volumes[i] : 255;
             int adjustedVol = (baseVol * _masterVolume) / 255;
             _channels.SetVolume(static_cast<int>(i), adjustedVol);
+            utils::debug_log(L"change BGM vol: {}, at channel: {}", adjustedVol, i);
         }
     }
 
@@ -114,7 +126,9 @@ namespace mm2hack::apps::audio
                 double posSec = posMs / 1000.0;
                 if (posSec >= _loopEnd)
                 {
-                    DxLib::SetSoundCurrentTime(static_cast<LONGLONG>(_loopStart * 1000), _channels.GetHandle(i));
+                    auto loop = static_cast<LONGLONG>(_loopStart * 1000);
+                    DxLib::SetSoundCurrentTime(loop, _channels.GetHandle(i));
+                    utils::debug_log(L"BGM looped: {} at channel: {}", loop, i);
                 }
             }
         }
@@ -129,7 +143,6 @@ namespace mm2hack::apps::audio
         for (int i = 0; i < _channels.GetChannelCount(); ++i)
         {
             int vol = _channels.GetVolume(i);
-            utils::debug_log(L"SetVolume: {}, Channels: {}", vol, i);
         }
     }
 }

@@ -8,9 +8,10 @@
 //==============================================================================
 #pragma once
 
+#include <debugapi.h>
 #include <format>
 #include <string>
-#include <Windows.h>
+#include <string_view>
 
 namespace mm2hack::utils
 {
@@ -18,9 +19,9 @@ namespace mm2hack::utils
     void debug_log(const std::wstring& message);
     // Prints a character to the output console (with string formatting).
     template <typename... Args>
-    void debug_log(const std::wstring& formatStr, Args&&... args)
+    void debug_log(std::wstring_view formatStr, Args&&... args)
     {
         std::wstring message = std::vformat(formatStr, std::make_wformat_args(std::forward<Args>(args)...));
-        OutputDebugString((message + L"\n").c_str());
+        OutputDebugStringW((message + L"\n").c_str());
     }
 }

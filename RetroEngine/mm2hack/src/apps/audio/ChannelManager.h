@@ -43,6 +43,10 @@ namespace mm2hack::apps::audio
 
         // Stop all channels
         void StopAll();
+        // Pause all channels (saves current position)
+        void PauseAll();
+        // Resume all channels (resumes from saved position)
+        void ResumeAll(bool loop);
         // Set volume for all channels (0-255)
         void SetAllVolumes(int volume);
         // Update all channels (for fade processing, etc.)
@@ -50,10 +54,13 @@ namespace mm2hack::apps::audio
 
         // Get the number of channels managed
         int GetChannelCount() const { return static_cast<int>(_channels.size()); }
+        // Ensure the channel count is at least 'count', adding empty channels if necessary
+        void EnsureChannelCount(int count);
 
         // Get the handle of the specified channel (for external use)
         int GetHandle(int channelIndex) const;
 
+        // Clear all channels
         void Clear();
 
     private:

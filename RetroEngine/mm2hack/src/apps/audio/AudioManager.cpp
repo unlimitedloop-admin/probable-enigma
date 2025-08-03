@@ -15,7 +15,7 @@ namespace mm2hack::apps::audio
 
     bool AudioManager::Initialize(const std::wstring& configPath)
     {
-        return AudioInitializer::InitializeAudio(configPath, _bgmManager, _seManager, _bgmChannels);
+        return AudioInitializer::InitializeAudio(configPath, _bgmManager, _seManager, _bgmChannels, _seChannels);
     }
 
     void AudioManager::PlayBgm(const std::wstring& name)
@@ -51,6 +51,18 @@ namespace mm2hack::apps::audio
     void AudioManager::SetMasterVolume(int volume)
     {
         _mixer.SetMasterVolume(ToDxVolume(volume));
+    }
+
+    void AudioManager::Pause()
+    {
+        _bgmManager.Pause();
+        _seManager.Pause();
+    }
+
+    void AudioManager::Resume()
+    {
+        _bgmManager.Resume();
+        _seManager.Resume();
     }
 
     void AudioManager::SetEnabled(bool enabled)

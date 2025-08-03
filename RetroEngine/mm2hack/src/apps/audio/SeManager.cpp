@@ -11,69 +11,46 @@ namespace mm2hack::apps::audio
         _bgmVolumeBackup.resize(_bgmChannels.GetChannelCount(), -1);
     }
 
-    bool SeManager::LoadSe(const std::wstring& name, const std::wstring& filepath, int volume, const std::vector<int>& targetChannels)
+    bool SeManager::LoadSe(const std::wstring& name, const std::vector<std::wstring>& filepath, const std::vector<int>& volume, const std::vector<int>& targetChannels)
     {
         if (name.empty() || filepath.empty()) return false;
         _seData[name] = { filepath, volume, targetChannels };
         return true;
     }
 
-    void SeManager::PlaySe(const std::wstring& name, int volume)
+    void SeManager::PlaySe(const std::wstring& name, int overrideVolume)
     {
         auto it = _seData.find(name);
         if (it == _seData.end()) return;
         const auto& se = it->second;
 
-        for (int ch : se.targetBgmChannels)
+        // Check if we have enough channels.
+        _seChannels.EnsureChannelCount(static_cast<int>(se.filepaths.size()));
+
+        for (size_t i = 0; i < se.filepaths.size(); ++i)
         {
-            if (_activeSeChannels.count(ch))
+            _seChannels.Load(static_cast<int>(i), se.filepaths[i]);
+            int baseVol = (i < se.volumes.size()) ? se.volumes[i] : 255;
+            int adjustedVol = ((overrideVolume >= 0 ? overrideVolume : baseVol) * _masterVolume) / 255;
+            _seChannels.SetVolume(static_cast<int>(i), adjustedVol);
+            DxLib::SetSoundCurrentPosition(0, _seChannels.GetHandle(static_cast<int>(i)));
+        }
+
+        for (size_t i = 0; i < se.filepaths.size(); ++i)
+        {
+            _seChannels.Play(static_cast<int>(i), false);
+
+            // Mute BGM channel if specified.
+            if (i < se.targetBgmChannels.size())
             {
-                int seIdx = _activeSeChannels[ch].seChannelIndex;
-                if (_seChannels.IsPlaying(seIdx))
+                int bgmCh = se.targetBgmChannels[i];
+                if (bgmCh >= 0 && bgmCh < _bgmChannels.GetChannelCount())
                 {
-                    _seChannels.Stop(seIdx);
+                    if (_bgmVolumeBackup[bgmCh] == -1)
+                        _bgmVolumeBackup[bgmCh] = _bgmChannels.GetVolume(bgmCh);
+                    _bgmChannels.SetVolume(bgmCh, 0);
+                    _activeSeChannels[bgmCh] = { name, static_cast<int>(i) };
                 }
-                _activeSeChannels.erase(ch);
-            }
-        }
-
-        // 1. Find a free SE channel (if none, overwrite the oldest one)
-        int seChannelIndex = -1;
-        for (int i = 0; i < _seChannels.GetChannelCount(); ++i)
-        {
-            if (!_seChannels.IsPlaying(i))
-            {
-                seChannelIndex = i;
-                break;
-            }
-        }
-        if (seChannelIndex == -1)
-        {
-            seChannelIndex = 0;
-            _seChannels.Stop(seChannelIndex);
-        }
-
-        // 2. Load and play SE
-        _seChannels.Load(seChannelIndex, se.filepath);
-        int vol = (volume >= 0) ? volume : se.volume;
-        _seChannels.SetVolume(seChannelIndex, vol);
-        _seChannels.Play(seChannelIndex, false);
-
-        // 3. Immediately mute target BGM channels and update ownership
-        for (int ch : se.targetBgmChannels)
-        {
-            if (ch >= 0 && ch < _bgmChannels.GetChannelCount())
-            {
-                // Save backup only the first time
-                if (_bgmVolumeBackup[ch] == -1)
-                {
-                    _bgmVolumeBackup[ch] = _bgmChannels.GetVolume(ch);
-                }
-                // Immediately mute BGM channel
-                _bgmChannels.SetVolume(ch, 0);
-
-                // Update ownership mapping (last one wins)
-                _activeSeChannels[ch] = { name, seChannelIndex };
             }
         }
     }
@@ -82,7 +59,7 @@ namespace mm2hack::apps::audio
     {
         _seChannels.StopAll();
 
-        // Release all ownerships and restore BGM
+        // Release all ownerships and restore BGM.
         for (auto& [bgmCh, activeSe] : _activeSeChannels)
         {
             if (_bgmVolumeBackup[bgmCh] >= 0)
@@ -94,6 +71,16 @@ namespace mm2hack::apps::audio
         _activeSeChannels.clear();
     }
 
+    void SeManager::Pause()
+    {
+        _seChannels.PauseAll();
+    }
+
+    void SeManager::Resume()
+    {
+        _seChannels.ResumeAll(false);   // Playing without loop
+    }
+
     void SeManager::Update()
     {
         _seChannels.Update();
@@ -101,7 +88,7 @@ namespace mm2hack::apps::audio
         std::vector<int> toRelease;
         for (auto& [bgmCh, activeSe] : _activeSeChannels)
         {
-            // If the SE assigned to this BGM channel has ended, restore it
+            // If the SE assigned to this BGM channel has ended, restore it.
             if (!_seChannels.IsPlaying(activeSe.seChannelIndex))
             {
                 if (_bgmVolumeBackup[bgmCh] >= 0)
@@ -121,10 +108,16 @@ namespace mm2hack::apps::audio
     void SeManager::SetMasterVolume(int volume)
     {
         _masterVolume = std::clamp(volume, 0, 255);
-        for (int i = 0; i < _seChannels.GetChannelCount(); ++i)
+
+        for (auto& [bgmCh, activeSe] : _activeSeChannels)
         {
-            if (_seChannels.IsPlaying(i))
-                _seChannels.SetVolume(i, _masterVolume);
+            const auto& se = _seData[activeSe.seName];
+            for (size_t i = 0; i < se.filepaths.size(); ++i)
+            {
+                int baseVol = (i < se.volumes.size()) ? se.volumes[i] : 255;
+                int adjustedVol = (baseVol * _masterVolume) / 255;
+                _seChannels.SetVolume(activeSe.seChannelIndex, adjustedVol);
+            }
         }
     }
 }

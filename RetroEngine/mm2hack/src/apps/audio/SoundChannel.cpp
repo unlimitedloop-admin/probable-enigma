@@ -2,8 +2,6 @@
 
 #include "SoundChannel.h"
 
-#include "utils/output_debug.h"
-
 namespace mm2hack::apps::audio
 {
     SoundChannel::SoundChannel() = default;
@@ -44,6 +42,33 @@ namespace mm2hack::apps::audio
         }
     }
 
+    void SoundChannel::Pause()
+    {
+        if (_handle != -1)
+        {
+            if (DxLib::CheckSoundMem(_handle) == 1)
+            {
+                _pausedPos = DxLib::GetSoundCurrentPosition(_handle);
+                DxLib::StopSoundMem(_handle);
+                _wasPaused = true;
+            }
+            else
+            {
+                _wasPaused = false;
+            }
+        }
+    }
+
+    void SoundChannel::Resume(bool loop)
+    {
+        if (_handle != -1 && _wasPaused)
+        {
+            DxLib::SetSoundCurrentPosition(_pausedPos, _handle);
+            DxLib::PlaySoundMem(_handle, loop ? DX_PLAYTYPE_LOOP : DX_PLAYTYPE_BACK, FALSE);
+            _wasPaused = false;
+        }
+    }
+
     void SoundChannel::SetVolume(int volume)
     {
         _volume = std::clamp(volume, 0, 255);
@@ -61,6 +86,19 @@ namespace mm2hack::apps::audio
     bool SoundChannel::IsPlaying() const
     {
         return (_handle != -1 && DxLib::CheckSoundMem(_handle) == 1);
+    }
+
+    LONGLONG SoundChannel::GetPosition() const
+    {
+        return (_handle != -1) ? DxLib::GetSoundCurrentPosition(_handle) : 0LL;
+    }
+
+    void SoundChannel::SetPosition(LONGLONG pos) const
+    {
+        if (_handle != -1)
+        {
+            DxLib::SetSoundCurrentPosition(pos, _handle);
+        }
     }
 
     void SoundChannel::StartFade(int targetVolume, int durationFrames)

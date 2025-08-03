@@ -24,6 +24,10 @@ namespace mm2hack::apps::audio
         virtual void Play(bool loop = false) = 0;
         // Stop the sound
         virtual void Stop() = 0;
+        // Pause the sound
+        virtual void Pause() = 0;
+        // Resume the sound
+        virtual void Resume(bool loop) = 0;
         // Set volume (0-255)
         virtual void SetVolume(int volume) = 0;
         // Get current volume

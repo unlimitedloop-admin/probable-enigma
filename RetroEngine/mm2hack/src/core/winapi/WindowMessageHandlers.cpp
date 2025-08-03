@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <filesystem>
 #include "../resource.h"
+#include "apps/deal/GameContext.h"
 #include "apps/sequence/SequenceManager.h"
 #include "apps/sequence/SequenceType.h"
 #include "core/assembly/ScreenshotManager.h"
@@ -267,6 +268,8 @@ namespace mm2hack::core::winapi
 
     void HandleKeyDown(HWND hWnd, WPARAM wParam, LPARAM lParam)
     {
+        auto& gameContext = apps::deal::GameContext::GetInstance();
+
         // Handles screenshot key input with consistently high-priority execution.
         if (!(lParam & (1 << 30)) && wParam == SCREENSHOT_KEY)
         {
@@ -291,10 +294,18 @@ namespace mm2hack::core::winapi
             if (gameState.Is(GameState::Running))
             {
                 gameState.SetState(GameState::Paused);
+                if (gameContext.IsInitialized())
+                {
+                    gameContext.GetResourceManager().GetAudioManager().Pause();
+                }
             }
             else
             {
                 gameState.SetState(GameState::Running);
+                if (gameContext.IsInitialized())
+                {
+                    gameContext.GetResourceManager().GetAudioManager().Resume();
+                }
             }
 
             windowManager.UpdateMenuBarState();

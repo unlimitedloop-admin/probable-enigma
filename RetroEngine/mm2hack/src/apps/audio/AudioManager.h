@@ -39,6 +39,10 @@ namespace mm2hack::apps::audio
         // Master volume leveling
         void SetMasterVolume(int volume);
 
+        // Pause / resume BGM and SE
+        void Pause();
+        void Resume();
+
         // Enable / disable all sounds
         void SetEnabled(bool enabled);
         bool IsEnabled() const { return _enabled; }

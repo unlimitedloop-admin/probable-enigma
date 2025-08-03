@@ -43,7 +43,7 @@ namespace mm2hack::apps::scenes
 
         if (joystick.GetButtonState(JPBTN::B).pressed_frame == 1)
         {
-            audio.PlaySe(L"sonic_boom");
+            audio.PlaySe(L"icarus_block");
         }
 
         // Example: Check for input to play a specific track

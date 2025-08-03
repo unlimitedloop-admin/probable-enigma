@@ -58,17 +58,26 @@ namespace mm2hack::apps::audio
             for (auto& [name, seJson] : j["se"].items())
             {
                 SeConfig seConfig;
-                seConfig.file = utf8_to_wstring(seJson.value("file", ""));
-                seConfig.volume = seJson.value("volume", 255);
-                if (seJson.contains("target_bgm_channels"))
+                // If the "channels" array exists, import each channel.
+                if (seJson.contains("channels") && seJson["channels"].is_array())
                 {
-                    for (auto& ch : seJson["target_bgm_channels"])
+                    for (auto& ch : seJson["channels"])
                     {
-                        if (ch.is_number_integer())
-                        {
-                            seConfig.targetBgmChannels.push_back(ch.get<int>());
-                        }
+                        SeChannelConfig chConfig;
+                        chConfig.file = utf8_to_wstring(ch.value("file", ""));
+                        chConfig.volume = ch.value("volume", 255);
+                        chConfig.target_bgm_channels = ch.value("target_bgm_channels", -1);
+                        seConfig.channels.push_back(chConfig);
                     }
+                }
+                // Older: If the "file" and "volume" keys exist, import them as a single channel.
+                else
+                {
+                    SeChannelConfig chConfig;
+                    chConfig.file = utf8_to_wstring(seJson.value("file", ""));
+                    chConfig.volume = seJson.value("volume", 255);
+                    chConfig.target_bgm_channels = seJson.value("target_bgm_channels", -1);
+                    seConfig.channels.push_back(chConfig);
                 }
                 _seConfigs[utf8_to_wstring(name)] = seConfig;
             }

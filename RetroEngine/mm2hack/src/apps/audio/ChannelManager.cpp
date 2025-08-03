@@ -70,6 +70,22 @@ namespace mm2hack::apps::audio
         }
     }
 
+    void ChannelManager::PauseAll()
+    {
+        for (auto& ch : _channels)
+        {
+            ch->Pause();
+        }
+    }
+
+    void ChannelManager::ResumeAll(bool loop)
+    {
+        for (auto& ch : _channels)
+        {
+            ch->Resume(loop);
+        }
+    }
+
     void ChannelManager::SetAllVolumes(int volume)
     {
         for (auto& ch : _channels)
@@ -83,6 +99,14 @@ namespace mm2hack::apps::audio
         for (auto& ch : _channels)
         {
             ch->Update();
+        }
+    }
+
+    void ChannelManager::EnsureChannelCount(int count)
+    {
+        while (GetChannelCount() < count)
+        {
+            AddChannel();
         }
     }
 
