@@ -8,12 +8,17 @@
 //==============================================================================
 #pragma once
 
+#include <functional>
+#include <set>
 #include <string>
+#include <utility>
 #include "AudioConfigLoader.h"
 #include "AudioMixer.h"
 #include "BgmManager.h"
 #include "ChannelManager.h"
+#include "config/ConfigUIManager.h"
 #include "SeManager.h"
+#include "SoundChannel.h"
 
 namespace mm2hack::apps::audio
 {
@@ -39,6 +44,9 @@ namespace mm2hack::apps::audio
         // Master volume leveling
         void SetMasterVolume(int volume);
 
+        // Mute for channels
+        void MuteChannel(SoundChip chip, int index, bool mute);
+
         // Pause / resume BGM and SE
         void Pause();
         void Resume();
@@ -47,10 +55,18 @@ namespace mm2hack::apps::audio
         void SetEnabled(bool enabled);
         bool IsEnabled() const { return _enabled; }
 
+        void ApplyConfig(const config::SoundConfig& cfg);
+
         // Every updates
         void Update();
 
         void Release();
+
+        // Callbacks for sound events (e.g., when BGM starts/stops)
+        std::function<void(const std::wstring&)> OnBgmStarted;
+        std::function<void(const std::wstring&)> OnBgmStopped;
+        std::function<void(const std::wstring&)> OnSeStarted;
+        std::function<void(const std::wstring&)> OnSeStopped;
 
     private:
         ChannelManager _bgmChannels;
@@ -59,8 +75,10 @@ namespace mm2hack::apps::audio
         SeManager _seManager;
         AudioMixer _mixer;
 
-        AudioConfigLoader _config;   // Configuration loader for audio settings
-        bool _enabled = true;        // NEW: Sound enable flag
+        AudioConfigLoader _config;
+        bool _enabled = true;
+
+        std::set<std::pair<SoundChip, int>> _mutedChannels;
 
         int ToDxVolume(int uiVolume);
     };

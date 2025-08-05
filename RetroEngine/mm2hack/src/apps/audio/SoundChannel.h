@@ -15,6 +15,14 @@
 
 namespace mm2hack::apps::audio
 {
+    enum class SoundChip { APU, VRC6, MMC5, N163 };
+
+    struct ChannelInfo
+    {
+        SoundChip chip;
+        int index;
+    };
+
     // Sound channel implementation
     class SoundChannel : public ISoundChannel
     {
@@ -48,6 +56,9 @@ namespace mm2hack::apps::audio
         // Update every frame (for fade processing, etc.)
         void Update() override;
 
+        void SetChipInfo(SoundChip chip, int index);
+        ChannelInfo GetChipInfo() const;
+
         int GetNativeHandle() const override { return _handle; }
 
     private:
@@ -60,5 +71,8 @@ namespace mm2hack::apps::audio
         int _fade_target = 255;
         int _fade_step = 0;
         int _fade_frames_remaining = 0;
+
+        SoundChip _chip = SoundChip::APU;
+        int _chipIndex = 0;
     };
 }

@@ -3,6 +3,8 @@
 #include "AudioInitializer.h"
 #include "AudioManager.h"
 #include "ChannelManager.h"
+#include "config/ConfigUIManager.h"
+#include "SoundChannel.h"
 
 namespace mm2hack::apps::audio
 {
@@ -53,6 +55,14 @@ namespace mm2hack::apps::audio
         _mixer.SetMasterVolume(ToDxVolume(volume));
     }
 
+    void AudioManager::MuteChannel(SoundChip chip, int index, bool mute)
+    {
+        auto key = std::make_pair(chip, index);
+        if (mute) _mutedChannels.insert(key);
+        else _mutedChannels.erase(key);
+        // Add logic to actually set the channel volume to 0 or restore its original value.
+    }
+
     void AudioManager::Pause()
     {
         _bgmManager.Pause();
@@ -68,6 +78,14 @@ namespace mm2hack::apps::audio
     void AudioManager::SetEnabled(bool enabled)
     {
         _mixer.SetEnabled(enabled);
+    }
+
+    void AudioManager::ApplyConfig(const config::SoundConfig& cfg)
+    {
+        SetMasterVolume(cfg.master);
+        SetBgmVolume(cfg.bgm);
+        SetSeVolume(cfg.se);
+        SetEnabled(cfg.enabled);
     }
 
     void AudioManager::Update()

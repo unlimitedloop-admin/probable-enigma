@@ -122,4 +122,15 @@ namespace mm2hack::apps::audio
             }
         }
     }
+
+    void SoundChannel::SetChipInfo(SoundChip chip, int index)
+    {
+        _chip = chip;
+        _chipIndex = index;
+    }
+
+    ChannelInfo SoundChannel::GetChipInfo() const
+    {
+        return { _chip, _chipIndex };
+    }
 }

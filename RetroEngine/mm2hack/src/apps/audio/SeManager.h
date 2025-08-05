@@ -15,6 +15,14 @@
 
 namespace mm2hack::apps::audio
 {
+    enum class SePriority
+    {
+        Low,    // Low priority SE, can be interrupted by higher priority SE
+        Normal, // Normal priority SE, will not be interrupted by lower priority SE
+        High    // High priority SE, will interrupt any currently playing SE
+    };
+
+
     // Sound Effect (SE) Manager
     class SeManager
     {
@@ -43,6 +51,7 @@ namespace mm2hack::apps::audio
             std::vector<std::wstring> filepaths;
             std::vector<int> volumes;
             std::vector<int> targetBgmChannels;
+            SePriority priority = SePriority::Normal;
         };
 
         struct ActiveSeChannel
