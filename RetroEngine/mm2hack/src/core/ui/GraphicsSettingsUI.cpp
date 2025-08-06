@@ -2,10 +2,12 @@
 
 #include "GraphicsSettingsUI.h"
 
+#include <iterator>
 #include <libloaderapi.h>
 #include <Windowsx.h>
 #include "CommonUIStyle.h"
 #include "config/ConfigUIManager.h"
+#include "core/winapi/WindowManager.h"
 
 namespace mm2hack::core::overlay
 {
@@ -61,9 +63,10 @@ namespace mm2hack::core::overlay
 
     void GraphicsSettingsUI::AddResolutionOptions() const
     {
-        SendMessage(_combo_resolution, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"256 x 240"));
-        SendMessage(_combo_resolution, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"512 x 480"));
-        SendMessage(_combo_resolution, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"1024 x 960"));
+        for (const auto& option : kResolutionOptions)
+        {
+            SendMessage(_combo_resolution, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(option.label));
+        }
         SendMessage(_combo_resolution, CB_SETCURSEL, 0, 0);
     }
 
@@ -83,6 +86,12 @@ namespace mm2hack::core::overlay
         config.fpsLimitIndex = static_cast<int>(SendMessage(_combo_framerate, CB_GETCURSEL, 0, 0));
 
         config::ConfigUIManager::SaveGraphicsConfig(config);
+
+        int sel = static_cast<int>(SendMessage(_combo_resolution, CB_GETCURSEL, 0, 0));
+        if (sel >= 0 && sel < static_cast<int>(std::size(kResolutionOptions)))
+        {
+            core::winapi::WindowManager::GetInstance().ChangeWindowSize(kResolutionOptions[sel].scale);
+        }
     }
 
     void GraphicsSettingsUI::LoadSettings() const

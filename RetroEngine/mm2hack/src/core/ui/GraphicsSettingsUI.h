@@ -8,7 +8,7 @@
 //==============================================================================
 #pragma once
 
-#include <windows.h>
+#include <Windows.h>
 
 namespace mm2hack::core::overlay
 {
@@ -33,5 +33,18 @@ namespace mm2hack::core::overlay
         void AddResolutionOptions() const;
         void AddFramerateOptions() const;
         void LoadSettings() const;
+    };
+
+
+    struct ResolutionOption
+    {
+        const wchar_t* label;
+        float scale;
+    };
+
+    static constexpr ResolutionOption kResolutionOptions[] = {
+        { L"256 x 240", 1.0f },
+        { L"512 x 480", 2.0f },
+        { L"1024 x 960", 4.0f },
     };
 }
