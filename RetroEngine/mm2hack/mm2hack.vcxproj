@@ -194,6 +194,7 @@
     <ClCompile Include="src\core\bootstrap.cpp" />
     <ClCompile Include="src\core\GameLoopManager.cpp" />
     <ClCompile Include="src\core\GameStateManager.cpp" />
+    <ClCompile Include="src\core\overlay\DebugHud.cpp" />
     <ClCompile Include="src\core\overlay\FeedbackOverlay.cpp" />
     <ClCompile Include="src\core\overlay\PauseManager.cpp" />
     <ClCompile Include="src\core\save\SaveSystem.cpp" />
@@ -264,12 +265,14 @@
     <ClInclude Include="src\apps\supervisor\ResourceManager.h" />
     <ClInclude Include="src\config\ConfigUIManager.h" />
     <ClInclude Include="src\config\EnvironmentConfig.h" />
+    <ClInclude Include="src\config\HudConfig.h" />
     <ClInclude Include="src\config\SystemConfig.h" />
     <ClInclude Include="src\core\assembly\ScreenshotManager.h" />
     <ClInclude Include="src\core\bootstrap.h" />
     <ClInclude Include="src\core\GameLoopManager.h" />
     <ClInclude Include="src\core\GameState.h" />
     <ClInclude Include="src\core\GameStateManager.h" />
+    <ClInclude Include="src\core\overlay\DebugHud.h" />
     <ClInclude Include="src\core\overlay\FeedbackOverlay.h" />
     <ClInclude Include="src\core\overlay\PauseManager.h" />
     <ClInclude Include="src\core\save\SaveData.h" />
@@ -303,6 +306,7 @@
     <ClInclude Include="src\test\driver\ITestDriver.h" />
     <ClInclude Include="src\test\TestSequence.h" />
     <ClInclude Include="src\utils\Fps.h" />
+    <ClInclude Include="src\utils\FpsManager.h" />
     <ClInclude Include="src\utils\LogWriter.h" />
     <ClInclude Include="src\utils\output_debug.h" />
     <ClInclude Include="src\utils\ScopeGuard.h" />

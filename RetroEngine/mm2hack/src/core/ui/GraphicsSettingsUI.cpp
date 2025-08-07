@@ -8,6 +8,7 @@
 #include "CommonUIStyle.h"
 #include "config/ConfigUIManager.h"
 #include "core/winapi/WindowManager.h"
+#include "utils/FpsManager.h"
 
 namespace mm2hack::core::overlay
 {
@@ -72,9 +73,10 @@ namespace mm2hack::core::overlay
 
     void GraphicsSettingsUI::AddFramerateOptions() const
     {
-        SendMessage(_combo_framerate, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"30 FPS"));
-        SendMessage(_combo_framerate, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"60 FPS"));
-        SendMessage(_combo_framerate, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"not restricted"));
+        for (const auto& option : kFramerateOptions)
+        {
+            SendMessage(_combo_framerate, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(option.label));
+        }
         SendMessage(_combo_framerate, CB_SETCURSEL, 1, 0);
     }
 
@@ -87,10 +89,13 @@ namespace mm2hack::core::overlay
 
         config::ConfigUIManager::SaveGraphicsConfig(config);
 
-        int sel = static_cast<int>(SendMessage(_combo_resolution, CB_GETCURSEL, 0, 0));
-        if (sel >= 0 && sel < static_cast<int>(std::size(kResolutionOptions)))
+        // Changes the resolution
+        core::winapi::WindowManager::GetInstance().ChangeWindowSize(kResolutionOptions[config.resolutionIndex].scale);
+
+        // Changes the frame rate limit
+        if (config.fpsLimitIndex >= 0 && config.fpsLimitIndex < static_cast<int>(std::size(kFramerateOptions)))
         {
-            core::winapi::WindowManager::GetInstance().ChangeWindowSize(kResolutionOptions[sel].scale);
+            utils::FpsManager::GetInstance().SetTargetFps(kFramerateOptions[config.fpsLimitIndex].targetFps);
         }
     }
 

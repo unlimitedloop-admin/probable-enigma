@@ -36,13 +36,14 @@
 #define ID_MENU_SOUND_SETTINGS          40030
 #define ID_MENU_GAMEPAD_SETTINGS        40031
 #define ID_SCRIPT_003                   40032
+#define ID_HUD_FPS                      40033
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        103
-#define _APS_NEXT_COMMAND_VALUE         40033
+#define _APS_NEXT_COMMAND_VALUE         40034
 #define _APS_NEXT_CONTROL_VALUE         1001
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

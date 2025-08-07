@@ -54,6 +54,7 @@
     <ClCompile Include="src\test\driver\003\SoundTest.cpp" />
     <ClCompile Include="src\apps\audio\AudioManager.cpp" />
     <ClCompile Include="src\apps\supervisor\ResourceManager.cpp" />
+    <ClCompile Include="src\core\overlay\DebugHud.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
@@ -136,6 +137,9 @@
     <ClInclude Include="src\apps\audio\AudioMixer.h" />
     <ClInclude Include="src\test\driver\003\SoundTest.h" />
     <ClInclude Include="src\apps\audio\AudioManager.h" />
+    <ClInclude Include="src\utils\FpsManager.h" />
+    <ClInclude Include="src\core\overlay\DebugHud.h" />
+    <ClInclude Include="src\config\HudConfig.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

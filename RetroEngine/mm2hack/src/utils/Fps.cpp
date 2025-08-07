@@ -51,4 +51,16 @@ namespace mm2hack::utils
     {
         return _actualFps;
     }
+
+    void Fps::SetTargetFps(int targetFps)
+    {
+        if (targetFps > 0)
+        {
+            _frameDuration = 1000.0 / targetFps;
+        }
+        else
+        {
+            _frameDuration = 0;  // Unlimited
+        }
+    }
 }

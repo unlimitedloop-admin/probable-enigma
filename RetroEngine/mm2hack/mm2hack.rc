@@ -51,8 +51,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,0,0,45
- PRODUCTVERSION 0,0,0,45
+ FILEVERSION 0,0,0,46
+ PRODUCTVERSION 0,0,0,46
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -69,12 +69,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Sirius X"
             VALUE "FileDescription", "mm2hack"
-            VALUE "FileVersion", "0.0.0.45"
+            VALUE "FileVersion", "0.0.0.46"
             VALUE "InternalName", "mm2hack.exe"
             VALUE "LegalCopyright", "Copyright (C) 2025"
             VALUE "OriginalFilename", "mm2hack.exe"
             VALUE "ProductName", "mm2hack project"
-            VALUE "ProductVersion", "0.0.0.45"
+            VALUE "ProductVersion", "0.0.0.46"
         END
     END
     BLOCK "VarFileInfo"
@@ -135,7 +135,10 @@ BEGIN
     END
     POPUP "ÉcÅ[Éã (&T)"
     BEGIN
-        MENUITEM "HUD... (&H)",                 ID_TOOLS_HUD
+        POPUP "HUD (&H)"
+        BEGIN
+            MENUITEM "FPS (&F)",                    ID_HUD_FPS
+        END
     END
     POPUP "Debug (&D)"
     BEGIN

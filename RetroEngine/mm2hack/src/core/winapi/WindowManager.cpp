@@ -5,7 +5,9 @@
 #include <exception>
 #include "../resource.h"
 #include "apps/NES/NESPalette.h"
+#include "config/ConfigUIManager.h"
 #include "config/EnvironmentConfig.h"
+#include "config/HudConfig.h"
 #include "core/GameLoopManager.h"
 #include "core/GameStateManager.h"
 #include "core/ui/SettingsWindow.h"
@@ -130,6 +132,10 @@ namespace mm2hack::core::winapi
             DxLib::DxLib_End();
             return reportInitError(L"The SetDrawScreen(DX_SCREEN_BACK) function failed.");
         }
+
+        // Load the HUD configuration from the ini file.
+        HudConfig hudConfig;
+        ConfigUIManager::LoadHudConfig(hudConfig);
 
         return true;
     }

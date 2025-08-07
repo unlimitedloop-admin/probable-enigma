@@ -14,7 +14,7 @@ namespace mm2hack::core::overlay
 
     FeedbackOverlay::FeedbackOverlay()
     {
-        _fontScreen = MakeScreen(VIRTUAL_W, VIRTUAL_H, TRUE);
+        _fontScreen = DxLib::MakeScreen(VIRTUAL_W, VIRTUAL_H, TRUE);
         _fontHandle = DxLib::CreateFontToHandle(L"Segoe UI", 64, 3, DX_FONTTYPE_ANTIALIASING_EDGE);
     }
 

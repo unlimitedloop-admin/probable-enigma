@@ -4,13 +4,16 @@
 
 #include <exception>
 #include "apps/sequence/SequenceManager.h"
+#include "config/ConfigUIManager.h"
+#include "config/HudConfig.h"
 #include "exceptions/CoreException.h"
 #include "exceptions/ErrorHandler.h"
 #include "exceptions/ErrorLevel.h"
 #include "GameState.h"
 #include "GameStateManager.h"
+#include "overlay/DebugHud.h"
 #include "overlay/PauseManager.h"
-#include "utils/Fps.h"
+#include "utils/FpsManager.h"
 #include "utils/ScopeGuard.h"
 #include "utils/string_converter.h"
 #include "winapi/WindowContext.h"
@@ -27,6 +30,7 @@ namespace mm2hack::core
     void GameLoopManager::Run()
     {
         using namespace exceptions;
+        using namespace overlay;
         using namespace utils;
         using conf = config::SystemConfig;
 
@@ -35,30 +39,40 @@ namespace mm2hack::core
                 apps::sequence::SequenceManager::GetInstance().Release();
             });
 
-        Fps fps(conf::kTargetFps);
+        auto& fps = FpsManager::GetInstance();
 
         try
         {
             while (!DxLib::ProcessMessage() && !DxLib::SetDrawScreen(_screenHandle) && !DxLib::ClearDrawScreen())
             {
                 // If the game is paused, we skip the update logic.
-                overlay::PauseManager::SetPaused(GameStateManager::GetInstance().Is(GameState::Paused));
+                PauseManager::SetPaused(GameStateManager::GetInstance().Is(GameState::Paused));
 
                 // Update the main sequence
                 apps::sequence::SequenceManager::GetInstance().Update();
 
+                // 
                 if (DxLib::SetDrawScreen(DX_SCREEN_BACK) ||
                     DxLib::DrawExtendGraph(0, 0,
                         static_cast<int>(conf::kScreenWidth * _viewerRate),
                         static_cast<int>(conf::kScreenHeight * _viewerRate),
-                        _screenHandle, FALSE) ||
-                    DxLib::ScreenFlip())
+                        _screenHandle, FALSE))
                 {
                     break;
                 }
 
                 // Wait for the next frame
                 fps.Wait();
+
+                // Draw the HUD tools
+                const auto& hudConfig = config::ConfigUIManager::GetCurrentHudConfig();
+                if (hudConfig.showFps)
+                {
+                    DebugHud::GetInstance().Draw();     // Draw the FPS in the HUD, top-left corner
+                }
+
+                // Screen flip
+                DxLib::ScreenFlip();
             }
         }
         catch (const CoreException& ex)

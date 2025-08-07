@@ -47,4 +47,16 @@ namespace mm2hack::core::overlay
         { L"512 x 480", 2.0f },
         { L"1024 x 960", 4.0f },
     };
+
+    struct FramerateOption
+    {
+        const wchar_t* label;
+        int targetFps;
+    };
+
+    static constexpr FramerateOption kFramerateOptions[] = {
+        { L"30 FPS", 30 },
+        { L"60 FPS", 60 },
+        { L"not restricted", 0 },  // 0 means no limit
+    };
 }

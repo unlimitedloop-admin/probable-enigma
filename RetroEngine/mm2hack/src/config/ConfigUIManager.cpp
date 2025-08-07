@@ -3,6 +3,7 @@
 #include "ConfigUIManager.h"
 
 #include <cstdlib>
+#include "config/HudConfig.h"
 
 namespace mm2hack::config
 {
@@ -65,5 +66,35 @@ namespace mm2hack::config
 
         GetPrivateProfileString(L"Sound", L"Source", L"0", buffer, 32, path.c_str());
         config.sourceIndex = _wtoi(buffer);
+    }
+
+    HudConfig ConfigUIManager::_cachedHudConfig{ false };
+
+    void ConfigUIManager::SaveHudConfig(const HudConfig& config)
+    {
+        const std::wstring path = GetIniPath();
+        WritePrivateProfileString(L"Hud", L"ShowFps", config.showFps ? L"1" : L"0", path.c_str());
+    }
+
+    void ConfigUIManager::LoadHudConfig(HudConfig& config)
+    {
+        const std::wstring path = GetIniPath();
+        wchar_t buffer[32];
+        GetPrivateProfileString(L"Hud", L"ShowFps", L"0", buffer, 32, path.c_str());
+        config.showFps = (_wtoi(buffer) != 0);
+
+        // Cache the loaded configuration.
+        _cachedHudConfig = config;
+    }
+
+    const HudConfig& ConfigUIManager::GetCurrentHudConfig()
+    {
+        return _cachedHudConfig;
+    }
+
+    void ConfigUIManager::SetCurrentHudConfig(const HudConfig& config)
+    {
+        _cachedHudConfig = config;
+        SaveHudConfig(_cachedHudConfig);
     }
 }

@@ -8,6 +8,8 @@
 #include "apps/deal/GameContext.h"
 #include "apps/sequence/SequenceManager.h"
 #include "apps/sequence/SequenceType.h"
+#include "config/ConfigUIManager.h"
+#include "config/HudConfig.h"
 #include "core/assembly/ScreenshotManager.h"
 #include "core/GameState.h"
 #include "core/GameStateManager.h"
@@ -235,6 +237,20 @@ namespace mm2hack::core::winapi
             // Open the sound settings window.
             overlay::SettingsWindow::OpenTab(hWnd, overlay::SettingsWindow::Tab::Sound);
             break;
+
+        case ID_HUD_FPS:
+        {
+            using confUI = config::ConfigUIManager;
+            auto hudConfig = confUI::GetCurrentHudConfig();
+            config::HudConfig newConfig = hudConfig;
+            newConfig.showFps = !newConfig.showFps;
+            confUI::SetCurrentHudConfig(newConfig);
+
+            // Add check/uncheck the HUD => FPS menu item.
+            HMENU hMenu = GetMenu(hWnd);
+            CheckMenuItem(hMenu, ID_HUD_FPS, MF_BYCOMMAND | (newConfig.showFps ? MF_CHECKED : MF_UNCHECKED));
+            break;
+        }
 
         case ID_SCRIPT_001:
             seq.StartTestSequence(1);
