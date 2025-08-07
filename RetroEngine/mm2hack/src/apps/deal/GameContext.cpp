@@ -4,6 +4,7 @@
 
 #include "apps/supervisor/ResourceManager.h"
 #include "config/ConfigUIManager.h"
+#include "config/SoundConfig.h"
 #include "input/JoystickManager.h"
 
 namespace mm2hack::apps::deal

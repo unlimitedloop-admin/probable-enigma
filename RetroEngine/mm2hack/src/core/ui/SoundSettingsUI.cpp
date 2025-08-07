@@ -8,6 +8,7 @@
 #include "apps/deal/GameContext.h"
 #include "CommonUIStyle.h"
 #include "config/ConfigUIManager.h"
+#include "config/SoundConfig.h"
 
 namespace mm2hack::core::overlay
 {

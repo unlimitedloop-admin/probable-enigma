@@ -140,6 +140,8 @@
     <ClInclude Include="src\utils\FpsManager.h" />
     <ClInclude Include="src\core\overlay\DebugHud.h" />
     <ClInclude Include="src\config\HudConfig.h" />
+    <ClInclude Include="src\config\GraphicsConfig.h" />
+    <ClInclude Include="src\config\SoundConfig.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

@@ -3,7 +3,7 @@
 #include "AudioInitializer.h"
 #include "AudioManager.h"
 #include "ChannelManager.h"
-#include "config/ConfigUIManager.h"
+#include "config/SoundConfig.h"
 #include "SoundChannel.h"
 
 namespace mm2hack::apps::audio

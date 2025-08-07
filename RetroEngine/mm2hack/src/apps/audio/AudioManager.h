@@ -16,7 +16,7 @@
 #include "AudioMixer.h"
 #include "BgmManager.h"
 #include "ChannelManager.h"
-#include "config/ConfigUIManager.h"
+#include "config/SoundConfig.h"
 #include "SeManager.h"
 #include "SoundChannel.h"
 

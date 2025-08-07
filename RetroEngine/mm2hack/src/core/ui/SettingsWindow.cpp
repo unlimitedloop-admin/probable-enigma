@@ -5,6 +5,7 @@
 #include <libloaderapi.h>
 #include "apps/deal/GameContext.h"
 #include "config/ConfigUIManager.h"
+#include "config/SoundConfig.h"
 #include "core/ui/CommonUIStyle.h"
 #include "GraphicsSettingsUI.h"
 #include "SoundSettingsUI.h"

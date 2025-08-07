@@ -9,26 +9,12 @@
 #pragma once
 
 #include <string>
+#include "config/GraphicsConfig.h"
 #include "config/HudConfig.h"
+#include "config/SoundConfig.h"
 
 namespace mm2hack::config
 {
-    struct GraphicsConfig
-    {
-        int resolutionIndex;    // Index of the selected resolution
-        bool vsync;             // VSync enabled/disabled
-        int fpsLimitIndex;      // FPS limit set by the user
-    };
-
-    struct SoundConfig
-    {
-        int master = 80;        // Master volume level (0-100)
-        int bgm = 80;           // Background music volume level (0-100)
-        int se = 80;            // Sound effects volume level (0-100)
-        bool enabled = true;    // Sound enabled/disabled
-        int sourceIndex = 0;    // Index of the selected sound source (0 for default, 1 for add DPCM channel, etc.)
-    };
-
     // ConfigUIManager is responsible for saving and loading the application settings to/from an INI file
     class ConfigUIManager final
     {

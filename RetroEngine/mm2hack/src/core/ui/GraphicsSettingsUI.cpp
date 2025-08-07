@@ -7,6 +7,7 @@
 #include <Windowsx.h>
 #include "CommonUIStyle.h"
 #include "config/ConfigUIManager.h"
+#include "config/GraphicsConfig.h"
 #include "core/winapi/WindowManager.h"
 #include "utils/FpsManager.h"
 

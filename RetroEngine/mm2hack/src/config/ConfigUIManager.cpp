@@ -3,7 +3,9 @@
 #include "ConfigUIManager.h"
 
 #include <cstdlib>
+#include "config/GraphicsConfig.h"
 #include "config/HudConfig.h"
+#include "config/SoundConfig.h"
 
 namespace mm2hack::config
 {
