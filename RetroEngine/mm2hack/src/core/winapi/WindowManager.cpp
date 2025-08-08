@@ -8,6 +8,7 @@
 #include "config/ConfigUIManager.h"
 #include "config/EnvironmentConfig.h"
 #include "config/HudConfig.h"
+#include "config/SystemConfig.h"
 #include "core/GameLoopManager.h"
 #include "core/GameStateManager.h"
 #include "core/ui/SettingsWindow.h"

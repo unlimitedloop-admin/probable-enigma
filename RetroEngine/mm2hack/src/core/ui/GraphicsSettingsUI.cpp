@@ -91,13 +91,24 @@ namespace mm2hack::core::overlay
         config::ConfigUIManager::SaveGraphicsConfig(config);
 
         // Changes the resolution
-        core::winapi::WindowManager::GetInstance().ChangeWindowSize(kResolutionOptions[config.resolutionIndex].scale);
-
-        // Changes the frame rate limit
-        if (config.fpsLimitIndex >= 0 && config.fpsLimitIndex < static_cast<int>(std::size(kFramerateOptions)))
+        if (config.resolutionIndex >= 0 && config.resolutionIndex < static_cast<int>(std::size(kResolutionOptions)))
         {
-            utils::FpsManager::GetInstance().SetTargetFps(kFramerateOptions[config.fpsLimitIndex].targetFps);
+            core::winapi::WindowManager::GetInstance().ChangeWindowSize(kResolutionOptions[config.resolutionIndex].scale);
         }
+
+        // VSync control = pseudo FPS 60 lock or specified FPS.
+        int fpsToSet = 0;
+
+        if (config.vsync)
+        {
+            fpsToSet = 60;  // Enable VSync, which typically locks to 60 FPS.
+        }
+        else if (config.fpsLimitIndex >= 0 && config.fpsLimitIndex < static_cast<int>(std::size(kFramerateOptions)))
+        {
+            fpsToSet = kFramerateOptions[config.fpsLimitIndex].targetFps;   // Set the specified FPS limit.
+        }
+
+        utils::FpsManager::GetInstance().SetTargetFps(fpsToSet);
     }
 
     void GraphicsSettingsUI::LoadSettings() const
