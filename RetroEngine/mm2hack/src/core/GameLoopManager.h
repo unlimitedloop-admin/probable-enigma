@@ -9,6 +9,7 @@
 #pragma once
 
 #include <Windows.h>
+#include "winapi/WindowContext.h"
 
 namespace mm2hack::core
 {
@@ -16,11 +17,12 @@ namespace mm2hack::core
     class GameLoopManager
     {
     public:
-        GameLoopManager(HWND hWnd, const float& viewerRate);
+        explicit GameLoopManager(winapi::WindowContext& context);
         void Run();
 
     private:
         HWND _hWnd;
-        const float& _viewerRate;   // Viewer rate for the game loop, used for frame rate control
+        float& _viewerRate;
+        int& _screenHandle;
     };
 }

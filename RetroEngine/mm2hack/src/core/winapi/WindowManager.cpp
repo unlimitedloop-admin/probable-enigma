@@ -1,19 +1,23 @@
+#include "pch.h"
+
 #include "WindowManager.h"
 
-#include <DxLib.h>
 #include <exception>
-#include <string>
-#include <Windows.h>
 #include "../resource.h"
+#include "apps/NES/NESPalette.h"
+#include "config/ConfigUIManager.h"
 #include "config/EnvironmentConfig.h"
+#include "config/HudConfig.h"
 #include "config/SystemConfig.h"
 #include "core/GameLoopManager.h"
 #include "core/GameStateManager.h"
+#include "core/ui/SettingsWindow.h"
 #include "exceptions/CoreException.h"
 #include "exceptions/ErrorHandler.h"
 #include "exceptions/ErrorLevel.h"
 #include "utils/LogWriter.h"
 #include "utils/string_converter.h"
+#include "WindowContext.h"
 #include "WindowMessageHandlers.h"
 
 namespace mm2hack::core::winapi
@@ -25,6 +29,7 @@ namespace mm2hack::core::winapi
         using namespace config;
         using namespace exceptions;
         using namespace utils;
+        using conf = config::SystemConfig;
 
         // Error reporting lambda function
         auto reportInitError = [](const std::wstring& message) -> bool
@@ -44,10 +49,10 @@ namespace mm2hack::core::winapi
             return reportInitError(L"Window title is empty.");
         }
         _windowTitle = windowTitle;
+        _viewerRate = conf::kScreenScale;
 
         if (EnvironmentConfig::GetBool(L"OUTPUT_LOG_ENABLE"))
         {
-            using conf = config::SystemConfig;
             DxLib::SetApplicationLogSaveDirectory(conf::kLogFilePath.c_str());
             DxLib::SetApplicationLogFileName(conf::kDxLibLogFileName.c_str());
             DxLib::SetOutApplicationLogValidFlag(TRUE);
@@ -62,11 +67,25 @@ namespace mm2hack::core::winapi
         DxLib::SetAlwaysRunFlag(isAlwaysRun);
 
         // Create the main window.
-        if (DxLib::SetDoubleStartValidFlag(FALSE) ||
+        if (DxLib::SetDoubleStartValidFlag(FALSE) != 0 ||
+            DxLib::SetAlwaysRunFlag(FALSE) != 0 ||
+            DxLib::SetUseASyncChangeWindowModeFunction(FALSE, nullptr, nullptr) != 0 ||
+            DxLib::SetWindowUserCloseEnableFlag(TRUE) != 0 ||
+            DxLib::SetDxLibEndPostQuitMessageFlag(TRUE) != 0 ||
             DxLib::ChangeWindowMode(TRUE) != DX_CHANGESCREEN_OK ||
+            DxLib::SetGraphMode(
+                static_cast<int>(conf::kScreenWidth * conf::kScreenScaleMax),
+                static_cast<int>(conf::kScreenHeight * conf::kScreenScaleMax),
+                conf::kScreenColorDepth) != 0 ||
+            DxLib::SetWindowSizeChangeEnableFlag(FALSE, FALSE) != 0 ||
+            DxLib::SetWindowSize(
+                static_cast<int>(conf::kScreenWidth * _viewerRate),
+                static_cast<int>(conf::kScreenHeight * _viewerRate)) != 0 ||
+            DxLib::SetWindowSizeExtendRate(1.0f) != 0 ||
             DxLib::SetMainWindowText(_windowTitle.c_str()) != 0 ||
             DxLib::SetWindowIconID(IDI_WNDICON) != 0 ||
-            DxLib::LoadMenuResource(IDR_MAINMENU) != 0)
+            DxLib::LoadMenuResource(IDR_MAINMENU) != 0 ||
+            DxLib::SetWindowInitPosition(0, 0) != 0)
         {
             return reportInitError(L"Failed to initialize the window.");
         }
@@ -80,6 +99,13 @@ namespace mm2hack::core::winapi
             return reportInitError(L"Failed to initialize DxLib.");
         }
 
+        // Register the settings window class.
+        INITCOMMONCONTROLSEX iccex{};
+        iccex.dwSize = sizeof(iccex);
+        iccex.dwICC = ICC_WIN95_CLASSES;
+        InitCommonControlsEx(&iccex);
+        overlay::SettingsWindow::RegisterWindowClass(hInstance);
+
         _mainWindowHandle = DxLib::GetMainWindowHandle();
         if (_mainWindowHandle == nullptr)
         {
@@ -91,18 +117,39 @@ namespace mm2hack::core::winapi
         SetWindowLongPtr(_mainWindowHandle, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WindowProc));
         PostMessage(_mainWindowHandle, WM_USER_CREATE, 0, 0);
 
-        if (DxLib::SetDrawScreen(DX_SCREEN_BACK) == -1)
+        // Set the background color using NES palette
+        if (!apps::NES::NESPalette::LoadPaletteFromFile(conf::kNESPaletteFilepath))
+        {
+            // If palette loading fails, handle the error
+            DxLib::DxLib_End();
+            return reportInitError(L"Failed to load NES palette.");
+        }
+        apps::NES::NESPalette::SetBackgroundFor(conf::kDefaultNESPaletteIndex);
+        DxLib::ChangeFont(L"Segoe UI");
+
+        _screenHandle = DxLib::MakeScreen(conf::kScreenWidth, conf::kScreenHeight, FALSE);  // Create a screen for drawing
+        if (_screenHandle == -1)
         {
             DxLib::DxLib_End();
             return reportInitError(L"The SetDrawScreen(DX_SCREEN_BACK) function failed.");
         }
+
+        // Load the HUD configuration from the ini file.
+        HudConfig hudConfig;
+        ConfigUIManager::LoadHudConfig(hudConfig);
 
         return true;
     }
 
     void WindowManager::RunMainLoop()
     {
-        GameLoopManager gameLoop(_mainWindowHandle, _viewerRate);
+        WindowContext context{
+            .hWnd = _mainWindowHandle,
+            .viewerRate = _viewerRate,
+            .screenHandle = _screenHandle
+        };
+
+        GameLoopManager gameLoop(context);
         gameLoop.Run();
     }
 
@@ -112,6 +159,55 @@ namespace mm2hack::core::winapi
         _hInstance = nullptr;
         _mainWindowHandle = nullptr;
         _windowTitle.clear();
+    }
+
+    bool WindowManager::ChangeWindowSize(float viewerRate)
+    {
+        using conf = config::SystemConfig;
+
+        // Validate the viewer rate.
+        int clientW = static_cast<int>(conf::kScreenWidth * viewerRate);
+        int clientH = static_cast<int>(conf::kScreenHeight * viewerRate);
+
+        HWND hWnd = GetMainWindowHandle();
+        DWORD style = GetWindowLong(hWnd, GWL_STYLE);
+        DWORD exStyle = GetWindowLong(hWnd, GWL_EXSTYLE);
+        HMENU hMenu = GetMenu(hWnd);
+
+        // Adjust the window size based on the client area size and styles.
+        RECT rect = { 0, 0, clientW, clientH };
+        AdjustWindowRectEx(&rect, style, hMenu != nullptr, exStyle);
+        int windowW = rect.right - rect.left;
+        int windowH = rect.bottom - rect.top;
+
+        // Correction: Check the actual client size and add height if there is any discrepancy.
+        SetWindowPos(hWnd, nullptr, 0, 0, windowW, windowH, SWP_NOMOVE | SWP_NOZORDER);
+        ShowWindow(hWnd, SW_SHOW);
+
+        RECT actualClient = {};
+        GetClientRect(hWnd, &actualClient);
+        int actualClientH = actualClient.bottom - actualClient.top;
+
+        if (actualClientH < clientH)
+        {
+            int delta = clientH - actualClientH;
+            windowH += delta;
+
+            SetWindowPos(hWnd, nullptr, 0, 0, windowW, windowH, SWP_NOMOVE | SWP_NOZORDER);
+        }
+        _viewerRate = viewerRate;
+
+        return true;
+    }
+
+    int WindowManager::GetScreenWidth() const
+    {
+        return static_cast<int>(config::SystemConfig::kScreenWidth * _viewerRate);
+    }
+
+    int WindowManager::GetScreenHeight() const
+    {
+        return static_cast<int>(config::SystemConfig::kScreenHeight * _viewerRate);
     }
 
     void WindowManager::InitializeMenuOnStartup()
@@ -159,6 +255,11 @@ namespace mm2hack::core::winapi
         return static_cast<bool>(DxLib::GetWindowActiveFlag());
     }
 
+    int WindowManager::GetScreenHandle() const
+    {
+        return _screenHandle;
+    }
+
     WNDPROC WindowManager::GetDxLibWnd() const
     {
         return _dxLibWnd;
@@ -182,28 +283,29 @@ namespace mm2hack::core::winapi
             {
             case WM_USER_CREATE:
                 HandleCreate(hwnd, lParam);
-                return 0;
+                break;
             case WM_DESTROY:
                 HandleDestroy(hwnd);
-                return 0;
+                break;
             case WM_COMMAND:
                 HandleCommand(hwnd, wParam);
-                return 0;
+                break;
             case WM_PAINT:
                 HandlePaint(hwnd);
-                return 0;
+                break;
             case WM_SIZE:
                 HandleSize(hwnd, wParam, lParam);
-                return 0;
+                break;
             case WM_KEYDOWN:
                 HandleKeyDown(hwnd, wParam, lParam);
-                return 0;
+                break;
             case WM_KEYUP:
                 HandleKeyUp(hwnd, wParam);
-                return 0;
+                break;
             default:
-                return ForwardToDefaultProc();
+                break;
             }
+            return ForwardToDefaultProc();
         }
         catch (const CoreException& ex)
         {

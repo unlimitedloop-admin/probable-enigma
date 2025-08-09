@@ -1,3 +1,5 @@
+#include "pch.h"
+
 #include "SceneChangeMediator.h"
 
 #include "apps/parameters/Parameters.h"

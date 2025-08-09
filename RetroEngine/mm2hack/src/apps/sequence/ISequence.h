@@ -19,6 +19,8 @@ namespace mm2hack::apps::sequence
     public:
         virtual ~ISequence() = default;
         virtual void Execute() = 0;
+        virtual void RenderWorld() = 0;
+        virtual void RenderOverlay() = 0;
         virtual scenes::SceneManager* GetSceneManager() = 0;
         virtual bool Save(core::save::SaveData& out) const = 0;
         virtual bool Load(const core::save::SaveData& in) = 0;

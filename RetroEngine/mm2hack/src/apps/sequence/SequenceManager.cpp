@@ -1,6 +1,7 @@
+#include "pch.h"
+
 #include "SequenceManager.h"
 
-#include <memory>
 #include "DebugSequence.h"
 #include "SequenceType.h"
 #include "StandardSequence.h"
@@ -86,8 +87,26 @@ namespace mm2hack::apps::sequence
     {
         if (_currentSequence)
         {
+            _feedbackOverlay.Update();
             _currentSequence->Execute();
         }
+    }
+
+    void SequenceManager::RenderWorld()
+    {
+        if (_currentSequence)
+        {
+            _currentSequence->RenderWorld();
+        }
+    }
+
+    void SequenceManager::RenderOverlay()
+    {
+        if (_currentSequence)
+        {
+            _currentSequence->RenderOverlay();
+        }
+        _feedbackOverlay.Render();
     }
 
     void SequenceManager::Release()
@@ -97,5 +116,10 @@ namespace mm2hack::apps::sequence
             _currentSequence.reset();
             _sequenceType = SequenceType::None;
         }
+    }
+
+    void SequenceManager::SendFeedback(const std::wstring& message)
+    {
+        _feedbackOverlay.ShowMessage(message, 180);
     }
 }

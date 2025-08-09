@@ -1,7 +1,7 @@
+#include "pch.h"
+
 #include "JoystickManager.h"
 
-#include <DxLib.h>
-#include <memory>
 #include "C16ButtonState.h"
 #include "DirectInputProvider.h"
 #include "IInputProvider.h"

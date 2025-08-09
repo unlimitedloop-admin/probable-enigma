@@ -1,6 +1,7 @@
+#include "pch.h"
+
 #include "Fps.h"
 
-#include <chrono>
 #include <ratio>
 #include <thread>
 
@@ -49,5 +50,17 @@ namespace mm2hack::utils
     double Fps::GetActualFps() const
     {
         return _actualFps;
+    }
+
+    void Fps::SetTargetFps(int targetFps)
+    {
+        if (targetFps > 0)
+        {
+            _frameDuration = 1000.0 / targetFps;
+        }
+        else
+        {
+            _frameDuration = 0;  // Unlimited
+        }
     }
 }

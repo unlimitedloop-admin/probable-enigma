@@ -1,6 +1,7 @@
+#include "pch.h"
+
 #include "LaunchingGame.h"
 
-#include <string>
 #include "apps/parameters/Parameters.h"
 #include "apps/scenes/SceneID.h"
 #include "utils/output_debug.h"
@@ -31,6 +32,15 @@ namespace mm2hack::apps::scenes
     void LaunchingGame::Update()
     {
         // Update logic for launching the game
+    }
+
+    void LaunchingGame::RenderWorld()
+    {
+        // Drawing logic for the launching game scene
+    }
+
+    void LaunchingGame::RenderOverlay()
+    {
     }
 
     SceneID LaunchingGame::GetSceneID() const

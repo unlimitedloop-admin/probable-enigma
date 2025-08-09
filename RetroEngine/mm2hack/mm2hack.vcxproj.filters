@@ -22,7 +22,6 @@
     <ClCompile Include="src\input\KeyboardInputProvider.cpp" />
     <ClCompile Include="src\input\KeyBinding.cpp" />
     <ClCompile Include="src\input\JoystickManager.cpp" />
-    <ClCompile Include="src\input\JoystickSingleton.cpp" />
     <ClCompile Include="src\test\TestSequence.cpp" />
     <ClCompile Include="src\test\driver\001\PressKeyCommand.cpp" />
     <ClCompile Include="src\input\DirectInputProvider.cpp" />
@@ -31,10 +30,36 @@
     <ClCompile Include="src\apps\scenes\SceneFactory.cpp" />
     <ClCompile Include="src\apps\scenes\SceneChangeMediator.cpp" />
     <ClCompile Include="src\core\save\SaveSystem.cpp" />
+    <ClCompile Include="src\test\driver\002\DrawGraph.cpp" />
+    <ClCompile Include="src\apps\NES\NESPalette.cpp" />
+    <ClCompile Include="src\core\overlay\PauseManager.cpp" />
+    <ClCompile Include="src\core\overlay\FeedbackOverlay.cpp" />
+    <ClCompile Include="src\core\assembly\ScreenshotManager.cpp" />
+    <ClCompile Include="src\core\ui\CommonUIStyle.cpp" />
+    <ClCompile Include="src\core\ui\GraphicsSettingsUI.cpp" />
+    <ClCompile Include="src\config\ConfigUIManager.cpp" />
+    <ClCompile Include="src\core\ui\SettingsWindow.cpp" />
+    <ClCompile Include="src\core\ui\SoundSettingsUI.cpp" />
+    <ClCompile Include="src\apps\graphics\SpriteManager.cpp" />
+    <ClCompile Include="src\apps\graphics\BGTileManager.cpp" />
+    <ClCompile Include="src\apps\deal\GameContext.cpp" />
+    <ClCompile Include="src\apps\audio\SoundChannel.cpp" />
+    <ClCompile Include="src\pch.cpp" />
+    <ClCompile Include="src\apps\audio\ChannelManager.cpp" />
+    <ClCompile Include="src\apps\audio\SeManager.cpp" />
+    <ClCompile Include="src\apps\audio\BgmManager.cpp" />
+    <ClCompile Include="src\apps\audio\AudioConfigLoader.cpp" />
+    <ClCompile Include="src\apps\audio\AudioInitializer.cpp" />
+    <ClCompile Include="src\apps\audio\AudioMixer.cpp" />
+    <ClCompile Include="src\test\driver\003\SoundTest.cpp" />
+    <ClCompile Include="src\apps\audio\AudioManager.cpp" />
+    <ClCompile Include="src\apps\supervisor\ResourceManager.cpp" />
+    <ClCompile Include="src\core\overlay\DebugHud.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
     <None Include="mm2hack.env" />
+    <None Include="src\resources\exams\bg\SAMPLESTAGE1.bin" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -68,7 +93,6 @@
     <ClInclude Include="src\input\KeyboardInputProvider.h" />
     <ClInclude Include="src\input\KeyBinding.h" />
     <ClInclude Include="src\input\JoystickManager.h" />
-    <ClInclude Include="src\input\JoystickSingleton.h" />
     <ClInclude Include="src\test\TestSequence.h" />
     <ClInclude Include="src\test\driver\001\PressKeyCommand.h" />
     <ClInclude Include="src\test\driver\ITestDriver.h" />
@@ -84,6 +108,40 @@
     <ClInclude Include="src\apps\scenes\SceneChangeMediator.h" />
     <ClInclude Include="src\core\save\SaveData.h" />
     <ClInclude Include="src\core\save\SaveSystem.h" />
+    <ClInclude Include="src\test\driver\002\DrawGraph.h" />
+    <ClInclude Include="src\core\winapi\WindowContext.h" />
+    <ClInclude Include="src\apps\NES\NESPalette.h" />
+    <ClInclude Include="src\core\overlay\PauseManager.h" />
+    <ClInclude Include="src\core\overlay\FeedbackOverlay.h" />
+    <ClInclude Include="src\core\assembly\ScreenshotManager.h" />
+    <ClInclude Include="src\core\ui\CommonUIStyle.h" />
+    <ClInclude Include="src\core\ui\GraphicsSettingsUI.h" />
+    <ClInclude Include="src\config\ConfigUIManager.h" />
+    <ClInclude Include="src\core\ui\SettingsWindow.h" />
+    <ClInclude Include="src\core\ui\SoundSettingsUI.h" />
+    <ClInclude Include="src\apps\graphics\ITextureObject.h" />
+    <ClInclude Include="src\apps\graphics\SpriteManager.h" />
+    <ClInclude Include="src\apps\supervisor\ResourceManager.h" />
+    <ClInclude Include="src\apps\graphics\BGTileManager.h" />
+    <ClInclude Include="src\apps\deal\IGameContext.h" />
+    <ClInclude Include="src\apps\deal\GameContext.h" />
+    <ClInclude Include="src\apps\audio\ISoundChannel.h" />
+    <ClInclude Include="src\apps\audio\SoundChannel.h" />
+    <ClInclude Include="src\pch.h" />
+    <ClInclude Include="src\apps\audio\ChannelManager.h" />
+    <ClInclude Include="src\apps\audio\SeManager.h" />
+    <ClInclude Include="src\apps\audio\BgmManager.h" />
+    <ClInclude Include="src\libs\json.hpp" />
+    <ClInclude Include="src\apps\audio\AudioConfigLoader.h" />
+    <ClInclude Include="src\apps\audio\AudioInitializer.h" />
+    <ClInclude Include="src\apps\audio\AudioMixer.h" />
+    <ClInclude Include="src\test\driver\003\SoundTest.h" />
+    <ClInclude Include="src\apps\audio\AudioManager.h" />
+    <ClInclude Include="src\utils\FpsManager.h" />
+    <ClInclude Include="src\core\overlay\DebugHud.h" />
+    <ClInclude Include="src\config\HudConfig.h" />
+    <ClInclude Include="src\config\GraphicsConfig.h" />
+    <ClInclude Include="src\config\SoundConfig.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />
@@ -93,5 +151,10 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="mm2hack.ico" />
+    <Image Include="src\resources\exams\bg\default-windowsize-picture.png" />
+    <Image Include="src\resources\exams\bg\demostage1tiles.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="assets\system\nes_palette.txt" />
   </ItemGroup>
 </Project>

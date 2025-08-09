@@ -25,6 +25,10 @@ namespace mm2hack::apps::sequence
 
         // Override the Execute method to implement the sequence logic
         void Execute() override;
+        // Override the RenderWorld method to render the game world
+        void RenderWorld() override;
+        // Override the RenderOverlay method to render any overlays
+        void RenderOverlay() override;
         scenes::SceneManager* GetSceneManager() override;
         bool Save(core::save::SaveData& out) const override;
         bool Load(const core::save::SaveData& in) override;

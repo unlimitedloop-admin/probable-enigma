@@ -20,6 +20,8 @@ namespace mm2hack::apps::scenes
 
         bool Initialize() override;
         void Update() override;
+        void RenderWorld() override {}
+        void RenderOverlay() override {}
         void Finalize() override;
     };
 }

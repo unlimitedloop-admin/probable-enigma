@@ -51,8 +51,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,0,0,26
- PRODUCTVERSION 0,0,0,26
+ FILEVERSION 0,0,0,49
+ PRODUCTVERSION 0,0,0,49
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -69,12 +69,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Sirius X"
             VALUE "FileDescription", "mm2hack"
-            VALUE "FileVersion", "0.0.0.26"
+            VALUE "FileVersion", "0.0.0.49"
             VALUE "InternalName", "mm2hack.exe"
             VALUE "LegalCopyright", "Copyright (C) 2025"
             VALUE "OriginalFilename", "mm2hack.exe"
             VALUE "ProductName", "mm2hack project"
-            VALUE "ProductVersion", "0.0.0.26"
+            VALUE "ProductVersion", "0.0.0.49"
         END
     END
     BLOCK "VarFileInfo"
@@ -118,18 +118,41 @@ BEGIN
             MENUITEM "空きスロットを選択 (&E)",              ID_SLOT_EMPTY
         END
         MENUITEM SEPARATOR
-        MENUITEM "終了 (&X)\tAlt+F4",             ID_APP_EXIT
+        MENUITEM "終了 (&X)\tCtrl+Shift+Q",       ID_APP_EXIT
     END
-    MENUITEM "設定 (&C)",                     ID_MENU_C
-    MENUITEM "ツール (&T)",                    ID_MENU_T
+    POPUP "設定 (&C)"
+    BEGIN
+        POPUP "ウィンドウサイズ (&W)"
+        BEGIN
+            MENUITEM "1x (&1)",                     ID_SCREEN_1X
+            MENUITEM "2x (&2)",                     ID_SCREEN_2X
+            MENUITEM "4x (&4)",                     ID_SCREEN_4X
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "キーコンフィグ... (&I)",             ID_MENU_GAMEPAD_SETTINGS
+        MENUITEM "グラフィック設定... (&G)",            ID_MENU_GRAPHICS_SETTINGS
+        MENUITEM "サウンド設定... (&M)",              ID_MENU_SOUND_SETTINGS
+    END
+    POPUP "ツール (&T)"
+    BEGIN
+        POPUP "HUD (&H)"
+        BEGIN
+            MENUITEM "FPS (&F)",                    ID_HUD_FPS
+        END
+    END
     POPUP "Debug (&D)"
     BEGIN
         POPUP "スクリプト"
         BEGIN
             MENUITEM "キー入力テスト",                     ID_SCRIPT_001
+            MENUITEM "テクスチャ描画テスト",                  ID_SCRIPT_002
+            MENUITEM "オーディオテスト",                    ID_SCRIPT_003
         END
     END
-    MENUITEM "ヘルプ (&H)",                    ID_MENU_H
+    POPUP "ヘルプ (&H)"
+    BEGIN
+        MENUITEM "このアプリについて (&A)",              ID_ABOUT_IT
+    END
 END
 
 

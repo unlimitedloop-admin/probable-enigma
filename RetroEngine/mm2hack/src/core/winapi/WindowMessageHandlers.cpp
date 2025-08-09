@@ -1,16 +1,33 @@
+#include "pch.h"
+
 #include "WindowMessageHandlers.h"
 
 #include <cstdio>
 #include <filesystem>
-#include <Windows.h>
 #include "../resource.h"
+#include "apps/deal/GameContext.h"
 #include "apps/sequence/SequenceManager.h"
 #include "apps/sequence/SequenceType.h"
+#include "config/ConfigUIManager.h"
+#include "config/HudConfig.h"
+#include "core/assembly/ScreenshotManager.h"
 #include "core/GameState.h"
 #include "core/GameStateManager.h"
 #include "core/save/SaveData.h"
 #include "core/save/SaveSystem.h"
+#include "core/ui/SettingsWindow.h"
+#include "exceptions/CoreException.h"
+#include "exceptions/ErrorLevel.h"
 #include "WindowManager.h"
+
+// VC F12 is reserved for use by the debugger, so we use F11 in debug mode.
+// For more details, refer to the following page: RegisterHotKey function (winuser.h)
+// => https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-registerhotkey
+#ifdef _DEBUG
+constexpr int SCREENSHOT_KEY = VK_F11;
+#else
+constexpr int SCREENSHOT_KEY = VK_F12;  // Use F12 for screenshots in release mode
+#endif
 
 namespace
 {
@@ -48,16 +65,22 @@ namespace mm2hack::core::winapi
         using namespace apps::sequence;
         auto& seq = SequenceManager::GetInstance();
 
+        auto setGameState = [](GameState state)
+        {
+            GameStateManager::GetInstance().SetState(state);
+            WindowManager::GetInstance().UpdateMenuBarState();
+        };
+
         auto shouldConfirmReboot = [&]() -> bool
-            {
-                int result = MessageBox(
-                    hWnd,
-                    L"Reboot sequence?",
-                    L"mm2hack",
-                    MB_OKCANCEL | MB_ICONQUESTION | MB_DEFBUTTON2
-                );
-                return result == IDCANCEL;
-            };
+        {
+            int result = MessageBox(
+                hWnd,
+                L"Reboot sequence?",
+                L"mm2hack",
+                MB_OKCANCEL | MB_ICONQUESTION | MB_DEFBUTTON2
+            );
+            return result == IDCANCEL;
+        };
 
         switch (LOWORD(wParam))
         {
@@ -70,8 +93,7 @@ namespace mm2hack::core::winapi
             if (seq.GetCurrentSequenceType() != SequenceType::None)
             {
                 // NOTE: Even if a reset command is issued while paused, the system is designed to resume operation.
-                GameStateManager::GetInstance().SetState(GameState::Running);
-                WindowManager::GetInstance().UpdateMenuBarState();
+                setGameState(GameState::Running);
             }
             break;
 
@@ -84,8 +106,7 @@ namespace mm2hack::core::winapi
                 }
             }
             seq.StartStandardSequence();
-            GameStateManager::GetInstance().SetState(GameState::Running);
-            WindowManager::GetInstance().UpdateMenuBarState();
+            setGameState(GameState::Running);
             break;
 
         case ID_FILE_START_DEBUG:
@@ -97,14 +118,12 @@ namespace mm2hack::core::winapi
                 }
             }
             seq.StartDebugSequence();
-            GameStateManager::GetInstance().SetState(GameState::Running);
-            WindowManager::GetInstance().UpdateMenuBarState();
+            setGameState(GameState::Running);
             break;
 
         case ID_FILE_STOP:
             seq.StopCurrentSequence();
-            GameStateManager::GetInstance().SetState(GameState::Standby);
-            WindowManager::GetInstance().UpdateMenuBarState();
+            setGameState(GameState::Standby);
             break;
 
         case ID_FILE_SAVE:
@@ -121,6 +140,10 @@ namespace mm2hack::core::winapi
                     }
                 }
                 MessageBox(hWnd, L"Failed to save game.", L"Error", MB_ICONERROR);
+            }
+            else
+            {
+                THROW_EXCEPTION_EX("Cannot save while the game is running.", L"WindowManager", exceptions::ErrorLevel::Info);
             }
             break;
 
@@ -142,6 +165,10 @@ namespace mm2hack::core::winapi
                     }
                 }
                 MessageBox(hWnd, L"Failed to load game.", L"Error", MB_OK | MB_ICONERROR);
+            }
+            else
+            {
+                THROW_EXCEPTION_EX("Cannot load while the game is running.", L"WindowManager", exceptions::ErrorLevel::Info);
             }
             break;
 
@@ -189,8 +216,55 @@ namespace mm2hack::core::winapi
             break;
         }
 
+        case ID_SCREEN_1X:
+            WindowManager::GetInstance().ChangeWindowSize(1.0f);
+            break;
+
+        case ID_SCREEN_2X:
+            WindowManager::GetInstance().ChangeWindowSize(2.0f);
+            break;
+
+        case ID_SCREEN_4X:
+            WindowManager::GetInstance().ChangeWindowSize(4.0f);
+            break;
+
+        case ID_MENU_GRAPHICS_SETTINGS:
+            // Open the graphics settings window.
+            overlay::SettingsWindow::OpenTab(hWnd, overlay::SettingsWindow::Tab::Graphics);
+            break;
+
+        case ID_MENU_SOUND_SETTINGS:
+            // Open the sound settings window.
+            overlay::SettingsWindow::OpenTab(hWnd, overlay::SettingsWindow::Tab::Sound);
+            break;
+
+        case ID_HUD_FPS:
+        {
+            using confUI = config::ConfigUIManager;
+            auto hudConfig = confUI::GetCurrentHudConfig();
+            config::HudConfig newConfig = hudConfig;
+            newConfig.showFps = !newConfig.showFps;
+            confUI::SetCurrentHudConfig(newConfig);
+
+            // Add check/uncheck the HUD => FPS menu item.
+            HMENU hMenu = GetMenu(hWnd);
+            CheckMenuItem(hMenu, ID_HUD_FPS, MF_BYCOMMAND | (newConfig.showFps ? MF_CHECKED : MF_UNCHECKED));
+            break;
+        }
+
         case ID_SCRIPT_001:
             seq.StartTestSequence(1);
+            setGameState(GameState::Running);
+            break;
+
+        case ID_SCRIPT_002:
+            seq.StartTestSequence(2);
+            setGameState(GameState::Running);
+            break;
+
+        case ID_SCRIPT_003:
+            seq.StartTestSequence(3);
+            setGameState(GameState::Running);
             break;
 
         default:
@@ -210,21 +284,59 @@ namespace mm2hack::core::winapi
 
     void HandleKeyDown(HWND hWnd, WPARAM wParam, LPARAM lParam)
     {
-        // bit 30 = previous key state (1 = down before this message, 0 = was up before).
-        const bool isFirstPress = !(lParam & (1 << 30));
+        auto& gameContext = apps::deal::GameContext::GetInstance();
 
-        if (GameStateManager::GetInstance().Is(GameState::Running))
+        // Handles screenshot key input with consistently high-priority execution.
+        if (!(lParam & (1 << 30)) && wParam == SCREENSHOT_KEY)
         {
-            if (isFirstPress && wParam == VK_ESCAPE)
-            {
-                GameStateManager::GetInstance().SetState(GameState::Paused);
-                WindowManager::GetInstance().UpdateMenuBarState();
-                return;
-            }
+            assembly::ScreenshotManager::CaptureToPng();
+            apps::sequence::SequenceManager::GetInstance().SendFeedback(L"Screenshot taken.");
         }
 
-        if (isFirstPress && wParam == VK_F1)
+        // bit 30 = previous key state (1 = down before this message, 0 = was up before).
+        const bool isFirstPress = !(lParam & (1 << 30));
+        if (!isFirstPress)
         {
+            return;
+        }
+
+        GameStateManager& gameState = GameStateManager::GetInstance();
+        WindowManager& windowManager = WindowManager::GetInstance();
+
+        // Pressing the ESC key immediately triggers a return and transitions the game state,
+        // without interference from other key inputs.
+        if (wParam == VK_ESCAPE)
+        {
+            if (gameState.Is(GameState::Running))
+            {
+                gameState.SetState(GameState::Paused);
+                if (gameContext.IsInitialized())
+                {
+                    gameContext.GetResourceManager().GetAudioManager().Pause();
+                }
+            }
+            else
+            {
+                gameState.SetState(GameState::Running);
+                if (gameContext.IsInitialized())
+                {
+                    gameContext.GetResourceManager().GetAudioManager().Resume();
+                }
+            }
+
+            windowManager.UpdateMenuBarState();
+            return;
+        }
+
+        // If the game is running, we do not handle other key presses.
+        if (gameState.Is(GameState::Running))
+        {
+            return;
+        }
+
+        switch (wParam)
+        {
+        case VK_F1:
             if (GetKeyState(VK_SHIFT) & 0x8000)
             {
                 // Handle Shift + F1 key press for starting the debug sequence.
@@ -235,36 +347,47 @@ namespace mm2hack::core::winapi
                 // Handle F1 key press for starting the standard sequence.
                 SendMessage(hWnd, WM_COMMAND, ID_FILE_START, 0);
             }
-            return;
-        }
-        else if (isFirstPress && wParam == 'R')
-        {
+            break;
+
+        case 'Q':
+            if ((GetKeyState(VK_CONTROL) & 0x8000) && (GetKeyState(VK_SHIFT) & 0x8000))
+            {
+                // Handle Ctrl + Shift + Q key press for exiting the application.
+                SendMessage(hWnd, WM_COMMAND, ID_APP_EXIT, 0);
+            }
+            break;
+
+        case 'R':
             if (GetKeyState(VK_CONTROL) & 0x8000)
             {
                 // Handle Ctrl + R key press for reset the sequence.
                 SendMessage(hWnd, WM_COMMAND, ID_FILE_RESET, 0);
             }
-        }
-        else if (isFirstPress && wParam == 'S')
-        {
+            break;
+
+        case 'S':
             if (GetKeyState(VK_CONTROL) & 0x8000)
             {
                 // Handle Ctrl + S key press for saving the sequence.
                 SendMessage(hWnd, WM_COMMAND, ID_FILE_SAVE, 0);
             }
-        }
-        else if (isFirstPress && wParam == 'L')
-        {
+            break;
+
+        case 'L':
             if (GetKeyState(VK_CONTROL) & 0x8000)
             {
                 // Handle Ctrl + L key press for loading the sequence.
                 SendMessage(hWnd, WM_COMMAND, ID_FILE_LOAD, 0);
             }
-        }
-        else if (isFirstPress && wParam == VK_F5)
-        {
+            break;
+
+        case VK_F5:
             // Handle F5 key press for toggling the menu bar.
-            WindowManager::GetInstance().UpdateMenuBarState();
+            windowManager.UpdateMenuBarState();
+            break;
+
+        default:
+            break;
         }
     }
 

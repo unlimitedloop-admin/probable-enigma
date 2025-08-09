@@ -1,8 +1,9 @@
+#include "pch.h"
+
 #include "KeyBinding.h"
 
 #include <array>
 #include <cstdint>
-#include <DxLib.h>
 #include "DefaultKeyArray.h"
 #include "Jpbtn.h"
 

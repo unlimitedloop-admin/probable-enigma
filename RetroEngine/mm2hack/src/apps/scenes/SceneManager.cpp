@@ -1,8 +1,10 @@
+#include "pch.h"
+
 #include "SceneManager.h"
 
-#include <memory>
 #include <utility>
 #include "apps/parameters/Parameters.h"
+#include "core/overlay/PauseManager.h"
 #include "IBaseScene.h"
 #include "SceneFactory.h"
 #include "SceneID.h"
@@ -11,9 +13,36 @@ namespace mm2hack::apps::scenes
 {
     void SceneManager::Update()
     {
+        using namespace core::overlay;
+
         if (_currentScene)
         {
-            _currentScene->Update();
+            if (!PauseManager::IsPaused())
+            {
+                _currentScene->Update();
+            }
+
+            if (PauseManager::IsPaused())
+            {
+                PauseManager::DrawOverlay();
+            }
+        }
+    }
+
+    void SceneManager::RenderWorld()
+    {
+        if (_currentScene)
+        {
+            _currentScene->RenderWorld();
+        }
+    }
+
+    void SceneManager::RenderOverlay()
+    {
+        using namespace core::overlay;
+        if (_currentScene)
+        {
+            _currentScene->RenderOverlay();
         }
     }
 

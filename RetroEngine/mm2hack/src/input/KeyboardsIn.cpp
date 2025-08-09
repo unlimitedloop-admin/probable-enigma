@@ -1,8 +1,9 @@
+#include "pch.h"
+
 #include "KeyboardsIn.h"
 
 #include <array>
 #include <cstdint>
-#include <DxLib.h>
 
 namespace mm2hack::input
 {

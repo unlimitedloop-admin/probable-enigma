@@ -1,13 +1,11 @@
+#include "pch.h"
+
 #include "LogWriter.h"
 
-#include <chrono>
 #include <corecrt.h>
 #include <ctime>
 #include <filesystem>
-#include <fstream>
 #include <ios>
-#include <string>
-#include "config/SystemConfig.h"
 #include "string_converter.h"
 
 namespace fs = std::filesystem;
