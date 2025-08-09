@@ -24,6 +24,19 @@ namespace mm2hack::apps::sequence
     void DebugSequence::Execute()
     {
         // Backdoor menu execution logic for debugging purposes only.
+        _sceneManager.Update();
+    }
+
+    void DebugSequence::RenderWorld()
+    {
+        // Render the game world for the debug mode.
+        _sceneManager.RenderWorld();
+    }
+
+    void DebugSequence::RenderOverlay()
+    {
+        // Render any overlays for the debug mode.
+        _sceneManager.RenderOverlay();
     }
 
     scenes::SceneManager* DebugSequence::GetSceneManager()

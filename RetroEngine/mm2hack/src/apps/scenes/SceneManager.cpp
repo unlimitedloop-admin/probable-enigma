@@ -22,12 +22,27 @@ namespace mm2hack::apps::scenes
                 _currentScene->Update();
             }
 
-            _currentScene->Draw();
-
             if (PauseManager::IsPaused())
             {
                 PauseManager::DrawOverlay();
             }
+        }
+    }
+
+    void SceneManager::RenderWorld()
+    {
+        if (_currentScene)
+        {
+            _currentScene->RenderWorld();
+        }
+    }
+
+    void SceneManager::RenderOverlay()
+    {
+        using namespace core::overlay;
+        if (_currentScene)
+        {
+            _currentScene->RenderOverlay();
         }
     }
 

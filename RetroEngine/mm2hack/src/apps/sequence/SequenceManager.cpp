@@ -89,8 +89,24 @@ namespace mm2hack::apps::sequence
         {
             _feedbackOverlay.Update();
             _currentSequence->Execute();
-            _feedbackOverlay.Render();
         }
+    }
+
+    void SequenceManager::RenderWorld()
+    {
+        if (_currentSequence)
+        {
+            _currentSequence->RenderWorld();
+        }
+    }
+
+    void SequenceManager::RenderOverlay()
+    {
+        if (_currentSequence)
+        {
+            _currentSequence->RenderOverlay();
+        }
+        _feedbackOverlay.Render();
     }
 
     void SequenceManager::Release()

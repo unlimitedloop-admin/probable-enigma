@@ -48,10 +48,14 @@ namespace mm2hack::core
                 // If the game is paused, we skip the update logic.
                 PauseManager::SetPaused(GameStateManager::GetInstance().Is(GameState::Paused));
 
-                // Update the main sequence
-                apps::sequence::SequenceManager::GetInstance().Update();
+                auto& seq = apps::sequence::SequenceManager::GetInstance();
 
-                // 
+                // Update the main sequence.
+                seq.Update();
+                // Render the game content.
+                seq.RenderWorld();
+
+                // Scale what we draw to fit the viewer rate.
                 if (DxLib::SetDrawScreen(DX_SCREEN_BACK) ||
                     DxLib::DrawExtendGraph(0, 0,
                         static_cast<int>(conf::kScreenWidth * _viewerRate),
@@ -61,17 +65,12 @@ namespace mm2hack::core
                     break;
                 }
 
-                // Wait for the next frame
+                // Render the overlay content (e.g., HUD, debug information).
+                seq.RenderOverlay();
+                DebugHud::GetInstance().Draw();     // Draw the FPS in the HUD, top-left corner
+
+                // Pace & Flip the screen.
                 fps.Wait();
-
-                // Draw the HUD tools
-                const auto& hudConfig = config::ConfigUIManager::GetCurrentHudConfig();
-                if (hudConfig.showFps)
-                {
-                    DebugHud::GetInstance().Draw();     // Draw the FPS in the HUD, top-left corner
-                }
-
-                // Screen flip
                 DxLib::ScreenFlip();
             }
         }

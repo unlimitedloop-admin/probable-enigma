@@ -9,11 +9,6 @@
 
 namespace mm2hack::config
 {
-    std::wstring ConfigUIManager::GetIniPath()
-    {
-        return L"./settings.ini";
-    }
-
     void ConfigUIManager::SaveGraphicsConfig(const GraphicsConfig& config)
     {
         const std::wstring path = GetIniPath();
@@ -98,5 +93,10 @@ namespace mm2hack::config
     {
         _cachedHudConfig = config;
         SaveHudConfig(_cachedHudConfig);
+    }
+
+    std::wstring ConfigUIManager::GetIniPath()
+    {
+        return L"./settings.ini";
     }
 }

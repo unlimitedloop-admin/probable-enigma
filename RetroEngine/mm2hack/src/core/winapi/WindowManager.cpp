@@ -85,7 +85,7 @@ namespace mm2hack::core::winapi
             DxLib::SetMainWindowText(_windowTitle.c_str()) != 0 ||
             DxLib::SetWindowIconID(IDI_WNDICON) != 0 ||
             DxLib::LoadMenuResource(IDR_MAINMENU) != 0 ||
-            DxLib::SetWindowInitPosition(0, 0) != 0 /* HACK: Get content from the application's ".ini" files. */)
+            DxLib::SetWindowInitPosition(0, 0) != 0)
         {
             return reportInitError(L"Failed to initialize the window.");
         }

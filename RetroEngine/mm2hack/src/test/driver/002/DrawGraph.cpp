@@ -39,7 +39,7 @@ namespace mm2hack::apps::scenes
         return true;
     }
 
-    void DrawGraph::Draw()
+    void DrawGraph::RenderWorld()
     {
         using namespace deal;
         auto& spriteDrawer = GameContext::GetInstance().GetResourceManager().GetSpriteManager();

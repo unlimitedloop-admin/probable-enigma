@@ -47,8 +47,9 @@ namespace mm2hack::apps::audio
         void PauseAll();
         // Resume all channels (resumes from saved position)
         void ResumeAll(bool loop);
-        // Set volume for all channels (0-255)
+        // Set volume for all channels (0-255), when use pause/resume, volume is not changed
         void SetAllVolumes(int volume);
+
         // Update all channels (for fade processing, etc.)
         void Update();
 
@@ -60,7 +61,6 @@ namespace mm2hack::apps::audio
         // Get the handle of the specified channel (for external use)
         int GetHandle(int channelIndex) const;
 
-        // Clear all channels
         void Clear();
 
     private:

@@ -32,6 +32,18 @@ namespace mm2hack::apps::sequence
         _sceneManager.Update();
     }
 
+    void StandardSequence::RenderWorld()
+    {
+        // Render the game world for the standard game mode.
+        _sceneManager.RenderWorld();
+    }
+
+    void StandardSequence::RenderOverlay()
+    {
+        // Render any overlays for the standard game mode.
+        _sceneManager.RenderOverlay();
+    }
+
     scenes::SceneManager* StandardSequence::GetSceneManager()
     {
         return &_sceneManager;

@@ -21,7 +21,8 @@ namespace mm2hack::apps::scenes
         bool Initialize() override;
         bool InitializeResources();
         void Update() override {}
-        void Draw() override;
+        void RenderWorld() override;
+        void RenderOverlay() override {};
         void Finalize() override;
     };
 }

@@ -26,6 +26,9 @@ namespace mm2hack::apps::scenes
 
         // Updates the currentScene instance, standard game program execution procedures
         void Update();
+        void RenderWorld();
+        void RenderOverlay();
+
         // Releases the currentScene
         void Release();
         // Retrieves the current scene ID as a integer

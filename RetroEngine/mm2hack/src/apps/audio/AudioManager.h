@@ -55,6 +55,7 @@ namespace mm2hack::apps::audio
         void SetEnabled(bool enabled);
         bool IsEnabled() const { return _enabled; }
 
+        // Load configuration from file
         void ApplyConfig(const config::SoundConfig& cfg);
 
         // Every updates
@@ -78,8 +79,9 @@ namespace mm2hack::apps::audio
         AudioConfigLoader _config;
         bool _enabled = true;
 
-        std::set<std::pair<SoundChip, int>> _mutedChannels;
+        std::set<std::pair<SoundChip, int>> _mutedChannels; // Set of muted channels (chip, index)
 
+        // Convert volume from 0-100 range to 0-255 range used by the audio system
         int ToDxVolume(int uiVolume);
     };
 }

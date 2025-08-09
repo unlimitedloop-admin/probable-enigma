@@ -34,9 +34,13 @@ namespace mm2hack::apps::scenes
         // Update logic for launching the game
     }
 
-    void LaunchingGame::Draw()
+    void LaunchingGame::RenderWorld()
     {
         // Drawing logic for the launching game scene
+    }
+
+    void LaunchingGame::RenderOverlay()
+    {
     }
 
     SceneID LaunchingGame::GetSceneID() const

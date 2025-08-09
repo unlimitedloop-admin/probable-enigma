@@ -19,17 +19,24 @@ namespace mm2hack::config
     class ConfigUIManager final
     {
     public:
-        // Save graphics configuration to the INI file
+        ConfigUIManager() = delete;
+        ~ConfigUIManager() = delete;
+        ConfigUIManager(const ConfigUIManager&) = delete;
+        ConfigUIManager& operator=(const ConfigUIManager&) = delete;
+        ConfigUIManager(ConfigUIManager&&) = delete;
+        ConfigUIManager& operator=(ConfigUIManager&&) = delete;
+        // This class is not copyable or movable (static class)
+
+        // Save/Load graphics configuration to/from the INI file
         static void SaveGraphicsConfig(const GraphicsConfig& config);
-        // Load graphics configuration from the INI file
         static void LoadGraphicsConfig(GraphicsConfig& config);
-        // Save sound configuration to the INI file
+
+        // Save/Load sound configuration to/from the INI file
         static void SaveSoundConfig(const SoundConfig& config);
-        // Load sound configuration from the INI file
         static void LoadSoundConfig(SoundConfig& config);
-        // Save HUD configuration to the INI file
+
+        // Save/Load HUD configuration to/from the INI file
         static void SaveHudConfig(const HudConfig& config);
-        // Load HUD configuration from the INI file
         static void LoadHudConfig(HudConfig& config);
         // Get the current HUD configuration from the cache
         static const HudConfig& GetCurrentHudConfig();
@@ -37,7 +44,8 @@ namespace mm2hack::config
         static void SetCurrentHudConfig(const HudConfig& config);
 
     private:
+        static HudConfig _cachedHudConfig;  // Cached HUD configuration to avoid repeated file I/O.
+
         static std::wstring GetIniPath();
-        static HudConfig _cachedHudConfig;  // NOTE: Cached HUD configuration to avoid repeated file I/O.
     };
 }

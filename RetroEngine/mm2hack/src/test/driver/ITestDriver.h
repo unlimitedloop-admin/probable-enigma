@@ -16,7 +16,8 @@ namespace mm2hack::apps::scenes
         virtual ~ITestDriver() = default;
         virtual bool Initialize() = 0;
         virtual void Update() = 0;
-        virtual void Draw() = 0; // Optional, if drawing is needed
+        virtual void RenderWorld() = 0;     // Optional, if drawing is needed
+        virtual void RenderOverlay() = 0;   // Optional, if drawing is needed
         virtual void Finalize() = 0;
     };
 }

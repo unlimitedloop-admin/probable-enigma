@@ -52,17 +52,32 @@ namespace mm2hack::apps::sequence
     void TestSequence::Execute()
     {
         using namespace core::overlay;
-
         if (!PauseManager::IsPaused())
         {
             _driver.get()->Update();
         }
+    }
 
-        _driver.get()->Draw();
+    void TestSequence::RenderWorld()
+    {
+        using namespace core::overlay;
+        if (_driver)
+        {
+            _driver.get()->RenderWorld();
+        }
 
         if (PauseManager::IsPaused())
         {
             PauseManager::DrawOverlay();
+        }
+    }
+
+    void TestSequence::RenderOverlay()
+    {
+        using namespace core::overlay;
+        if (_driver)
+        {
+            _driver.get()->RenderOverlay();
         }
     }
 

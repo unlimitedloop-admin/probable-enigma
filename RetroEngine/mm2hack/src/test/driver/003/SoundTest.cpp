@@ -46,16 +46,26 @@ namespace mm2hack::apps::scenes
             audio.PlaySe(L"icarus_block");
         }
 
-        // Example: Check for input to play a specific track
+        // Ex. Check for input to play a specific track
         if (_isPlayThisTrack)
         {
             audio.Update();
         }
     }
 
-    void SoundTest::Draw()
+    void SoundTest::RenderWorld()
     {
         // Draw any UI elements related to the sound test
+    }
+
+    void SoundTest::RenderOverlay()
+    {
+        // Draw any overlay elements, such as debug information or instructions
+        DxLib::DrawString(20, 36, L"Press START to toggle sample BGM", DxLib::GetColor(255, 255, 255));
+        DxLib::DrawString(20, 56, L"Press A to play '1up' sound effect", DxLib::GetColor(255, 255, 255));
+        DxLib::DrawString(20, 76, L"Press B to play 'AppearingBlock' sound effect", DxLib::GetColor(255, 255, 255));
+        DxLib::DrawString(20, 96, L"The BGM channel will be muted while a sound effect", DxLib::GetColor(255, 255, 255));
+        DxLib::DrawString(20, 116, L"that overlaps with the BGM is being played.", DxLib::GetColor(255, 255, 255));
     }
 
     void SoundTest::Finalize()
