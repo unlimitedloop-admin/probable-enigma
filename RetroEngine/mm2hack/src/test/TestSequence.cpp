@@ -30,7 +30,7 @@ namespace mm2hack::apps::sequence
             throw std::invalid_argument("Invalid script number");
         }
 
-        deal::GameContext::GetInstance().Initialize();
+        //deal::GameContext::GetInstance().Initialize();
 
         if (!_driver->Initialize())
         {
@@ -46,7 +46,7 @@ namespace mm2hack::apps::sequence
             _driver.reset();
         }
 
-        deal::GameContext::GetInstance().Shutdown();
+        //deal::GameContext::GetInstance().Shutdown();
     }
 
     void TestSequence::Execute()

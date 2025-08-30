@@ -3,15 +3,15 @@
 #include "GameLoopManager.h"
 
 #include <exception>
+#include "apps/deal/GameContext.h"
 #include "apps/sequence/SequenceManager.h"
-#include "config/ConfigUIManager.h"
-#include "config/HudConfig.h"
 #include "exceptions/CoreException.h"
 #include "exceptions/ErrorHandler.h"
 #include "exceptions/ErrorLevel.h"
 #include "GameState.h"
 #include "GameStateManager.h"
 #include "overlay/DebugHud.h"
+#include "overlay/InputConfigOverlay.h"
 #include "overlay/PauseManager.h"
 #include "utils/FpsManager.h"
 #include "utils/ScopeGuard.h"
@@ -25,6 +25,7 @@ namespace mm2hack::core
         _viewerRate(context.viewerRate),
         _screenHandle(context.screenHandle)
     {
+        apps::deal::GameContext::GetInstance().Initialize();
     }
 
     void GameLoopManager::Run()
@@ -36,6 +37,7 @@ namespace mm2hack::core
 
         ScopeGuard finally([]
             {
+                apps::deal::GameContext::GetInstance().Shutdown();
                 apps::sequence::SequenceManager::GetInstance().Release();
             });
 
@@ -67,6 +69,12 @@ namespace mm2hack::core
 
                 // Render the overlay content (e.g., HUD, debug information).
                 seq.RenderOverlay();
+                // If we are in JPBTN configuration mode, update the joystick manager and tick the input config overlay.
+                if (GameStateManager::GetInstance().Is(GameState::JpbtnConfig))
+                {
+                    apps::deal::GameContext::GetInstance().GetJoystickManager().Update();
+                    overlay::InputConfigOverlay::GetInstance().Tick(fps.GetDeltaSeconds());
+                }
                 DebugHud::GetInstance().Draw();     // Draw the FPS in the HUD, top-left corner
 
                 // Pace & Flip the screen.

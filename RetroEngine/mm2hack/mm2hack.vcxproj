@@ -196,6 +196,7 @@
     <ClCompile Include="src\core\GameStateManager.cpp" />
     <ClCompile Include="src\core\overlay\DebugHud.cpp" />
     <ClCompile Include="src\core\overlay\FeedbackOverlay.cpp" />
+    <ClCompile Include="src\core\overlay\InputConfigOverlay.cpp" />
     <ClCompile Include="src\core\overlay\PauseManager.cpp" />
     <ClCompile Include="src\core\save\SaveSystem.cpp" />
     <ClCompile Include="src\core\ui\CommonUIStyle.cpp" />
@@ -276,6 +277,7 @@
     <ClInclude Include="src\core\GameStateManager.h" />
     <ClInclude Include="src\core\overlay\DebugHud.h" />
     <ClInclude Include="src\core\overlay\FeedbackOverlay.h" />
+    <ClInclude Include="src\core\overlay\InputConfigOverlay.h" />
     <ClInclude Include="src\core\overlay\PauseManager.h" />
     <ClInclude Include="src\core\save\SaveData.h" />
     <ClInclude Include="src\core\save\SaveSystem.h" />
@@ -299,6 +301,8 @@
     <ClInclude Include="src\input\KeyBinding.h" />
     <ClInclude Include="src\input\KeyboardInputProvider.h" />
     <ClInclude Include="src\input\KeyboardsIn.h" />
+    <ClInclude Include="src\input\KeyToken.h" />
+    <ClInclude Include="src\input\RawInputEvent.h" />
     <ClInclude Include="src\input\XInputProvider.h" />
     <ClInclude Include="src\libs\json.hpp" />
     <ClInclude Include="src\pch.h" />

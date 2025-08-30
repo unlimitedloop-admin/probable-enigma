@@ -26,10 +26,13 @@ namespace mm2hack::input
         KeyBinding& operator=(KeyBinding&&) = delete;
         // KeyBinding is not copyable or movable, so we delete the copy and move constructors and assignment operators.
 
+        bool SetBinding(JPBTN button, uint16_t token);
+        bool UnsetBinding(JPBTN button);
         // Set the button mapping for the Serial-Controller
         bool SetBindingSCon(const std::array<uint16_t, JPBTN_COUNT>& buttonMap, bool xInput, bool hatswc, bool trgg, bool thumb);
         // Get the button mapping for the Serial-Controller
         uint16_t GetBindingSCon(JPBTN button) const;
+        const std::array<uint16_t, JPBTN_COUNT>& GetAllBindingsSCon() const noexcept;
         // Check if the Serial-Controller for XInput is enabled
         bool IsXInputEnabled() const;
         // Set the Serial-Controller default key binding

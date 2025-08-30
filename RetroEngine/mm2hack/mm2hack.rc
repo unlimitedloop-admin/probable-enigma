@@ -51,8 +51,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,0,0,49
- PRODUCTVERSION 0,0,0,49
+ FILEVERSION 0,0,0,50
+ PRODUCTVERSION 0,0,0,50
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -69,12 +69,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Sirius X"
             VALUE "FileDescription", "mm2hack"
-            VALUE "FileVersion", "0.0.0.49"
+            VALUE "FileVersion", "0.0.0.50"
             VALUE "InternalName", "mm2hack.exe"
             VALUE "LegalCopyright", "Copyright (C) 2025"
             VALUE "OriginalFilename", "mm2hack.exe"
             VALUE "ProductName", "mm2hack project"
-            VALUE "ProductVersion", "0.0.0.49"
+            VALUE "ProductVersion", "0.0.0.50"
         END
     END
     BLOCK "VarFileInfo"
@@ -129,7 +129,7 @@ BEGIN
             MENUITEM "4x (&4)",                     ID_SCREEN_4X
         END
         MENUITEM SEPARATOR
-        MENUITEM "キーコンフィグ... (&I)",             ID_MENU_GAMEPAD_SETTINGS
+        MENUITEM "キーコンフィグ (&I)",                ID_MENU_GAMEPAD_SETTINGS
         MENUITEM "グラフィック設定... (&G)",            ID_MENU_GRAPHICS_SETTINGS
         MENUITEM "サウンド設定... (&M)",              ID_MENU_SOUND_SETTINGS
     END

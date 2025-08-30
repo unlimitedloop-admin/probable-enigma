@@ -63,4 +63,9 @@ namespace mm2hack::utils
             _frameDuration = 0;  // Unlimited
         }
     }
+
+    float Fps::GetDeltaSeconds() const
+    {
+        return static_cast<float>(_frameDuration) / 1000.0f;
+    }
 }

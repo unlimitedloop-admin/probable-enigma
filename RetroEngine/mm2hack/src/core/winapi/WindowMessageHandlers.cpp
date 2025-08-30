@@ -13,6 +13,7 @@
 #include "core/assembly/ScreenshotManager.h"
 #include "core/GameState.h"
 #include "core/GameStateManager.h"
+#include "core/overlay/InputConfigOverlay.h"
 #include "core/save/SaveData.h"
 #include "core/save/SaveSystem.h"
 #include "core/ui/SettingsWindow.h"
@@ -228,6 +229,14 @@ namespace mm2hack::core::winapi
             WindowManager::GetInstance().ChangeWindowSize(4.0f);
             break;
 
+        case ID_MENU_GAMEPAD_SETTINGS:
+        {
+            auto& keyBinding = apps::deal::GameContext::GetInstance().GetJoystickManager().GetKeyBinding();
+            auto steps = overlay::BuildStepsFull16();
+            overlay::InputConfigOverlay::GetInstance().Open(keyBinding, steps);
+            break;
+        }
+
         case ID_MENU_GRAPHICS_SETTINGS:
             // Open the graphics settings window.
             overlay::SettingsWindow::OpenTab(hWnd, overlay::SettingsWindow::Tab::Graphics);
@@ -241,7 +250,7 @@ namespace mm2hack::core::winapi
         case ID_HUD_FPS:
         {
             using confUI = config::ConfigUIManager;
-            auto hudConfig = confUI::GetCurrentHudConfig();
+            auto& hudConfig = confUI::GetCurrentHudConfig();
             config::HudConfig newConfig = hudConfig;
             newConfig.showFps = !newConfig.showFps;
             confUI::SetCurrentHudConfig(newConfig);

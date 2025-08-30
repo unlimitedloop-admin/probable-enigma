@@ -23,6 +23,7 @@ namespace mm2hack::utils
         void Reset();
         double GetActualFps() const;
         void SetTargetFps(int targetFps);
+        float GetDeltaSeconds() const;
 
     private:
         using Clock = std::chrono::steady_clock;
