@@ -147,6 +147,9 @@
     <ClInclude Include="src\core\overlay\InputConfigOverlay.h" />
     <ClInclude Include="src\input\KeyToken.h" />
     <ClInclude Include="src\input\xi\XInputToken.h" />
+    <ClInclude Include="src\input\di\DirectInputToken.h" />
+    <ClInclude Include="src\utils\AnalogGate.h" />
+    <ClInclude Include="src\utils\AnalogPress.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

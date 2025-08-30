@@ -6,6 +6,8 @@
 #include "apps/deal/GameContext.h"
 #include "core/GameState.h"
 #include "core/GameStateManager.h"
+#include "input/di/DirectInputToken.h"
+#include "input/JoystickManager.h"
 #include "input/Jpbtn.h"
 #include "input/KeyBinding.h"
 #include "input/KeyToken.h"
@@ -15,61 +17,65 @@
 
 namespace mm2hack::core::overlay
 {
-    using namespace input::xi;
 
     namespace
     {
         [[nodiscard]] uint16_t ToXInputToken(const input::RawInputEvent& e) noexcept
         {
-            using RD = input::RawDevice; using RK = input::RawKind;
-            constexpr uint8_t kDefaultThr = 8; // ≒50%
-            if (e.device == RD::XInput)
-            {
-                if (e.kind == RK::Button)  return MakeBtn(e.code);
-                if (e.kind == RK::Trigger) return MakeTrig(e.code, kDefaultThr);
-                if (e.kind == RK::Axis)    return MakeAxis(e.code, e.negative, kDefaultThr);
-            }
-            else if (e.device == RD::Keyboard)
-            {
-                // 必要なら Keyboard 用もここで
-                return e.code; // VK をそのまま（別途Providerで解釈）
-            }
+            using namespace input::xi;
+            using RK = input::RawKind;
+            constexpr uint8_t kDefaultThr = 8;  // nearly 50% threshold
+            if (e.kind == RK::Button)  return MakeBtn(e.code);
+            if (e.kind == RK::Trigger) return MakeTrig(e.code, kDefaultThr);
+            if (e.kind == RK::Axis)    return MakeAxis(e.code, e.negative, kDefaultThr);
             return 0xFFFFui16;
         }
 
-        // CaptureStep が JPBTN を持っている前提に寄せる
+        [[nodiscard]] uint16_t ToDirectInputToken(const input::RawInputEvent& e) noexcept
+        {
+            using namespace input::di;
+            using RK = input::RawKind;
+            constexpr uint8_t kThr = 8; // ≒50%
+
+            if (e.kind == RK::Button) return MakeBtn(e.code);
+            if (e.kind == RK::Axis)   return MakeAxis(e.code, e.negative, kThr);
+            // NOTE: If POV support is needed, it should be handled here.
+            return 0xFFFFu;
+        }
+
         [[nodiscard]] JPBTN StepToJpbtn(const CaptureStep& s) noexcept
         {
             return s.jpbtn;
         }
     }
 
+    // DEPRECATED: not used
+    //using input::MakeToken; using input::Device; using input::XI_LT; using input::XI_RT;
 
-    using input::MakeToken; using input::Device; using input::XI_LT; using input::XI_RT;
-
-    static uint16_t ToToken(const input::RawInputEvent& e, uint8_t thrNibbleDefault)
-    {
-        using RD = input::RawDevice; using RK = input::RawKind;
-        switch (e.device)
-        {
-        case RD::Keyboard:
-            return MakeToken(Device::Keyboard, false, e.code, false, 0);
-        case RD::XInput:
-            if (e.kind == RK::Button)  return MakeToken(Device::XInput, false, e.code);
-            if (e.kind == RK::Trigger) return MakeToken(Device::XInput, true, e.code, false, thrNibbleDefault);
-            if (e.kind == RK::Axis)    return MakeToken(Device::XInput, true, e.code, e.negative, thrNibbleDefault);
-            break;
-        case RD::DirectInput:
-            return MakeToken(Device::DirectInput, e.kind != RK::Button, e.code, e.negative, thrNibbleDefault);
-        }
-        return 0xFFFFui16;
-    }
+    //static uint16_t ToToken(const input::RawInputEvent& e, uint8_t thrNibbleDefault)
+    //{
+    //    using RD = input::RawDevice; using RK = input::RawKind;
+    //    switch (e.device)
+    //    {
+    //    case RD::Keyboard:
+    //        return MakeToken(Device::Keyboard, false, e.code, false, 0);
+    //    case RD::XInput:
+    //        if (e.kind == RK::Button)  return MakeToken(Device::XInput, false, e.code);
+    //        if (e.kind == RK::Trigger) return MakeToken(Device::XInput, true, e.code, false, thrNibbleDefault);
+    //        if (e.kind == RK::Axis)    return MakeToken(Device::XInput, true, e.code, e.negative, thrNibbleDefault);
+    //        break;
+    //    case RD::DirectInput:
+    //        return MakeToken(Device::DirectInput, e.kind != RK::Button, e.code, e.negative, thrNibbleDefault);
+    //    }
+    //    return 0xFFFFui16;
+    //}
 
     void InputConfigOverlay::Open(input::KeyBinding& target, std::vector<CaptureStep> steps)
     {
         _target = &target;
         _steps = std::move(steps);
         _index = 0;
+        _captureKind = apps::deal::GameContext::GetInstance().GetJoystickManager().ActiveDevice();
 
         if (_steps.empty())
         {
@@ -135,9 +141,9 @@ namespace mm2hack::core::overlay
                 _stateStart = std::chrono::steady_clock::now();
             break;
         case Listening:
-            if (auto evt = jm.PollFirstRawChange(_analogThreshold))
+            if (auto evt = jm.PollFirstRawChange(_analogThreshold, _captureKind))
             {
-                adoptBinding(*evt);    // KeyBinding に反映（重複ポリシーもここで適用）
+                adoptBinding(*evt);    // Assign to KeyBinding.
                 advance();
             }
             break;
@@ -160,14 +166,27 @@ namespace mm2hack::core::overlay
             return;
         }
         _state = CaptureState::Quiescent;
+        onStepEntered();
         _stateStart = std::chrono::steady_clock::now();
     }
 
     void InputConfigOverlay::adoptBinding(const input::RawInputEvent& e)
     {
-        const auto jp = StepToJpbtn(_steps[_index]);
-        const uint16_t token = ToXInputToken(e);
+        const auto jp = _steps[_index].jpbtn;
+
+        uint16_t token = 0xFFFFu;
+        switch (_captureKind)
+        {
+        case input::Device::XInput:      token = ToXInputToken(e);              break;
+        case input::Device::DirectInput: token = ToDirectInputToken(e);         break;
+        case input::Device::Keyboard:    token = static_cast<uint16_t>(e.code); break; // VK
+        }
+        if (token == 0xFFFFu) { return; }
+
+        // Assigning to single button (1:1 mapping assumed).
         _target->SetBinding(jp, token);
+
+        // NOTE: If you assign the same token to multiple buttons, you need to add logic here to unbind the existing assignment.
     }
 
     void InputConfigOverlay::render() const
@@ -191,5 +210,30 @@ namespace mm2hack::core::overlay
         DrawString(40, 80, msg.c_str(), GetColor(255, 255, 255));
 
         // 右上に現在のバインド一覧と採用ルール、左下に接続デバイス名など（省略）
+    }
+
+    void InputConfigOverlay::onStepEntered()
+    {
+        using namespace input;
+
+        if (_index >= _steps.size()) return;
+        if (_captureKind == Device::DirectInput)
+        {
+            const auto jp = _steps[_index].jpbtn;
+            auto& JM = apps::deal::GameContext::GetInstance().GetJoystickManager();
+            switch (jp)
+            {
+            case mm2hack::JPBTN::UP:
+            case mm2hack::JPBTN::DOWN:
+            case mm2hack::JPBTN::LEFT:
+            case mm2hack::JPBTN::RIGHT:
+                JM.SetDirectInputCaptureGroup(AxisGroup::Left);
+                break;
+            default:
+                // 右スティックで取りたいステップ（例：RTHUMB用など）があれば Right を指定
+                JM.SetDirectInputCaptureGroup(AxisGroup::Any);
+                break;
+            }
+        }
     }
 }

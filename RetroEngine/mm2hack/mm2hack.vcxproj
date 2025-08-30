@@ -294,6 +294,7 @@
     <ClInclude Include="src\input\C16ButtonState.h" />
     <ClInclude Include="src\input\DefaultKeyArray.h" />
     <ClInclude Include="src\input\DirectInputProvider.h" />
+    <ClInclude Include="src\input\di\DirectInputToken.h" />
     <ClInclude Include="src\input\IInputProvider.h" />
     <ClInclude Include="src\input\InputFrame.h" />
     <ClInclude Include="src\input\JoystickManager.h" />
@@ -312,6 +313,8 @@
     <ClInclude Include="src\test\driver\003\SoundTest.h" />
     <ClInclude Include="src\test\driver\ITestDriver.h" />
     <ClInclude Include="src\test\TestSequence.h" />
+    <ClInclude Include="src\utils\AnalogGate.h" />
+    <ClInclude Include="src\utils\AnalogPress.h" />
     <ClInclude Include="src\utils\Fps.h" />
     <ClInclude Include="src\utils\FpsManager.h" />
     <ClInclude Include="src\utils\LogWriter.h" />

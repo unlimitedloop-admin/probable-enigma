@@ -16,10 +16,13 @@
 #include "InputFrame.h"
 #include "Jpbtn.h"
 #include "KeyBinding.h"
+#include "KeyToken.h"
 #include "RawInputEvent.h"
 
 namespace mm2hack::input
 {
+    enum class AxisGroup : uint8_t { Any, Left, Right };
+
     // Manages key input devices, specifically joystick input (Keyboards and Gamepads)
     class JoystickManager final
     {
@@ -30,10 +33,8 @@ namespace mm2hack::input
         bool Update();
         // Get the state of a specific button by its index
         const InputFrame& GetButtonState(size_t index) const;
-        const InputFrame& GetButtonState(JPBTN button) const
-        {
-            return GetButtonState(static_cast<size_t>(button));
-        }
+        // Get the state of a specific button by its JPBTN enum
+        const InputFrame& GetButtonState(JPBTN button) const { return GetButtonState(static_cast<size_t>(button)); }
         // Get the state of all buttons
         const C16ButtonState& GetAllStates() const;
         // Check if the input device is enabled
@@ -42,14 +43,21 @@ namespace mm2hack::input
         bool ApplyBindingOne(JPBTN button, uint16_t token) { return _binding.SetBinding(button, token); }
         bool UnsetBindingOne(JPBTN button) { return _binding.UnsetBinding(button); }
 
-        std::optional<RawInputEvent> PollFirstRawChange(float deadzone = 0.5f) noexcept;
+        void SetDirectInputCaptureGroup(AxisGroup g) noexcept { _diCaptureGroup = g; }
+
+        std::optional<RawInputEvent> PollFirstRawChange(float deadzone = 0.5f, std::optional<Device> only = std::nullopt) noexcept;
 
         KeyBinding& GetKeyBinding() noexcept { return _binding; }
+        const KeyBinding& GetKeyBinding() const noexcept { return _binding; }
+        Device ActiveDevice() const noexcept { return _activeKind; }
 
     private:
         std::unique_ptr<IInputProvider> _provider;      // Pointer to the input provider
         C16ButtonState _button_state;
         KeyBinding _binding;
+
+        AxisGroup _diCaptureGroup{ AxisGroup::Left };   // DirectInput axis capture group
+        Device _activeKind{ Device::Keyboard };         // Currently active input device kind
 
         // Check if XInput is available
         bool CheckXInputAvailable();

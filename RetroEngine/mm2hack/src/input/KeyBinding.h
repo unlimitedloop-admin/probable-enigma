@@ -11,6 +11,7 @@
 #include <array>
 #include <cstdint>
 #include "JpBtn.h"
+#include "KeyToken.h"
 
 namespace mm2hack::input
 {
@@ -36,7 +37,7 @@ namespace mm2hack::input
         // Check if the Serial-Controller for XInput is enabled
         bool IsXInputEnabled() const;
         // Set the Serial-Controller default key binding
-        bool SetDefaultBindingSCon();
+        bool SetDefaultBindingSCon(Device type);
 
     private:
         // Binding array for Serial-Controller

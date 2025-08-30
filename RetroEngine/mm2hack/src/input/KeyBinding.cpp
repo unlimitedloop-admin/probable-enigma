@@ -6,6 +6,7 @@
 #include <cstdint>
 #include "DefaultKeyArray.h"
 #include "Jpbtn.h"
+#include "KeyToken.h"
 
 namespace mm2hack::input
 {
@@ -21,7 +22,7 @@ namespace mm2hack::input
     {
         const size_t idx = static_cast<size_t>(button);
         if (idx >= JPBTN_COUNT) return false;
-        _sCon.button_map[idx] = 0xFFFF;
+        _sCon.button_map[idx] = 0xFFFFui16;
         return true;
     }
 
@@ -30,7 +31,7 @@ namespace mm2hack::input
         _sCon.xinput_enabled = xInput;
         for (size_t i = 0; i < JPBTN_COUNT; ++i)
         {
-            if (buttonMap[i] > 0xFFFF)
+            if (buttonMap[i] > 0xFFFFu)
             {
                 return false;
             }
@@ -65,13 +66,17 @@ namespace mm2hack::input
         return _sCon.xinput_enabled;
     }
 
-    bool KeyBinding::SetDefaultBindingSCon()
+    bool KeyBinding::SetDefaultBindingSCon(Device type)
     {
-        if (DxLib::GetJoypadNum())
+        if (type == Device::XInput)
         {
             return SetBindingSCon(GetDefaultXInputArray(), true, true, true, true);
         }
-        else
+        else if (type == Device::DirectInput)
+        {
+            return SetBindingSCon(GetDefaultDirectInputArray(), false, true, true, true);
+        }
+        else // Keyboard or others
         {
             return SetBindingSCon(GetDefaultKeyArray(), false, false, false, false);
         }

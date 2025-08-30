@@ -14,6 +14,7 @@
 #include <vector>
 #include "input/Jpbtn.h"
 #include "input/KeyBinding.h"
+#include "input/KeyToken.h"
 #include "input/RawInputEvent.h"
 
 namespace mm2hack::core::overlay
@@ -24,7 +25,7 @@ namespace mm2hack::core::overlay
     struct CaptureStep
     {
         JPBTN jpbtn;        // Up, Down, A, B, ...
-        const char* label;  // "Up" 等
+        const char* label;  // e.g. "Up" ...
     };
 
     inline std::vector<CaptureStep> BuildStepsFull16()
@@ -59,24 +60,27 @@ namespace mm2hack::core::overlay
             return instance;
         }
 
-        static uint16_t ToToken(const input::RawInputEvent& e, uint8_t thrNibbleDefault = 8);
+        // DEPRECATED: not used
+        //static uint16_t ToToken(const input::RawInputEvent& e, uint8_t thrNibbleDefault = 8);
 
         void Open(input::KeyBinding& target, std::vector<CaptureStep> steps);
         void Cancel() noexcept;
         bool IsOpen() const noexcept;
 
-        // 毎フレーム呼ぶ：RenderOverlay() 内で OK
+        // Must be called periodically (e.g., once per frame)
         void Tick(float dtSec);
 
     private:
         void render() const;
         void advance();
         void adoptBinding(const input::RawInputEvent& e);
+        void onStepEntered();
 
         input::KeyBinding* _target{ nullptr };
         std::vector<CaptureStep> _steps;
         size_t _index{ 0 };
         CaptureState _state{ CaptureState::Hidden };
+        input::Device _captureKind{ input::Device::Keyboard };
 
         std::optional<input::RawInputEvent> _candidate;
         std::chrono::steady_clock::time_point _stateStart{};
