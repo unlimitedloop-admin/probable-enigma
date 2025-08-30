@@ -10,16 +10,31 @@
 #include "input/KeyBinding.h"
 #include "input/KeyToken.h"
 #include "input/RawInputEvent.h"
+#include "input/xi/XInputToken.h"
 #include "utils/string_converter.h"
 
 namespace mm2hack::core::overlay
 {
+    using namespace input::xi;
+
     namespace
     {
         [[nodiscard]] uint16_t ToXInputToken(const input::RawInputEvent& e) noexcept
         {
-            // 必要ならここで Trigger/Axis も拡張（0x1xxx など）
-            return static_cast<uint16_t>(e.code); // ボタンだけならこれで十分
+            using RD = input::RawDevice; using RK = input::RawKind;
+            constexpr uint8_t kDefaultThr = 8; // ≒50%
+            if (e.device == RD::XInput)
+            {
+                if (e.kind == RK::Button)  return MakeBtn(e.code);
+                if (e.kind == RK::Trigger) return MakeTrig(e.code, kDefaultThr);
+                if (e.kind == RK::Axis)    return MakeAxis(e.code, e.negative, kDefaultThr);
+            }
+            else if (e.device == RD::Keyboard)
+            {
+                // 必要なら Keyboard 用もここで
+                return e.code; // VK をそのまま（別途Providerで解釈）
+            }
+            return 0xFFFFui16;
         }
 
         // CaptureStep が JPBTN を持っている前提に寄せる

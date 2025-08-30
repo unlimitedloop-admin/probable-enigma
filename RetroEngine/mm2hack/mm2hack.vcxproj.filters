@@ -146,6 +146,7 @@
     <ClInclude Include="src\input\RawInputEvent.h" />
     <ClInclude Include="src\core\overlay\InputConfigOverlay.h" />
     <ClInclude Include="src\input\KeyToken.h" />
+    <ClInclude Include="src\input\xi\XInputToken.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

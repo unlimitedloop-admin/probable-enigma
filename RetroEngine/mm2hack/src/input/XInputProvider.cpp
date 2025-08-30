@@ -5,7 +5,7 @@
 #include <cstdint>
 #include "C16ButtonState.h"
 #include "Jpbtn.h"
-#include "KeyToken.h"
+#include "xi/XInputToken.h"
 
 namespace mm2hack::input
 {
@@ -17,33 +17,18 @@ namespace mm2hack::input
             return false;
         }
 
-        // Buttons[] の想定：ユーザー既存コードに合わせインデックス式
-        auto get_button_pressed = [&](uint8_t idx)->bool
+        auto btn = [&](uint8_t i) { return state.Buttons[i] != 0; };
+        auto trg = [&](bool left, float thr01)
             {
-                // 範囲チェックは適宜（ここでは簡潔に）
-                return state.Buttons[idx] != 0;
+                const int raw = left ? state.LeftTrigger : state.RightTrigger; // 0..255
+                const int thr = static_cast<int>(thr01 * 255.0f + 0.5f);
+                return raw >= thr;
             };
-
-        auto get_trigger_pressed = [&](bool left, float thr01)->bool
+        auto axis = [&](uint8_t idx, bool neg, float thr01)
             {
-                const int raw = left ? state.LeftTrigger : state.RightTrigger; // 0..255 想定
-                return raw >= static_cast<int>(thr01 * 255.0f + 0.5f);
-            };
-
-        auto get_axis_pressed = [&](uint8_t axisIdx, bool negative, float thr01)->bool
-            {
-                // -32768..32767 を想定（DxLibのXINPUT_STATEに準拠）
-                int raw = 0;
-                switch (axisIdx)
-                {
-                case XI_LX: raw = state.ThumbLX; break;
-                case XI_LY: raw = state.ThumbLY; break;
-                case XI_RX: raw = state.ThumbRX; break;
-                case XI_RY: raw = state.ThumbRY; break;
-                default: break;
-                }
+                const int raw = (idx == xi::LX ? state.ThumbLX : idx == xi::LY ? state.ThumbLY : idx == xi::RX ? state.ThumbRX : state.ThumbRY); // -32768..32767
                 const int thr = static_cast<int>(thr01 * 32767.0f + 0.5f);
-                return negative ? (raw <= -thr) : (raw >= thr);
+                return neg ? (raw <= -thr) : (raw >= thr);
             };
 
         for (size_t i = 0; i < JPBTN_COUNT; ++i)
@@ -51,24 +36,26 @@ namespace mm2hack::input
             const auto token = _binding.GetBindingSCon(static_cast<JPBTN>(i));
             bool pressed = false;
 
-            if (token != 0xFFFFu)
+            if (token == 0xFFFFui16)
             {
-                // 最小仕様：ボタンのみ（token は Buttons[] の index）
-                const uint8_t btn_idx = static_cast<uint8_t>(token & 0xFFu);
-                // 範囲チェックを追加
-                if (btn_idx < sizeof(state.Buttons) / sizeof(state.Buttons[0]))
-                {
-                    pressed = (state.Buttons[btn_idx] != 0);
-                }
-                else
-                {
-                    pressed = false;
-                }
+                pressed = false;
+            }
+            else if (xi::IsBtn(token))
+            {
+                pressed = btn(xi::Code(token)); // Buttons[] index
+            }
+            else if (xi::IsTrig(token))
+            {
+                const uint8_t which = xi::Code(token); // 0=LT,1=RT
+                pressed = trg(which == xi::LT, xi::Thr01(token));
+            }
+            else if (xi::IsAxis(token))
+            {
+                pressed = axis(xi::Code(token), xi::IsNeg(token), xi::Thr01(token));
             }
 
             out_state.UpdateButton(i, pressed);
         }
-
         return true;
     }
 }

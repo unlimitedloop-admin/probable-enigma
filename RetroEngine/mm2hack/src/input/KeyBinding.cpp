@@ -28,16 +28,13 @@ namespace mm2hack::input
     bool KeyBinding::SetBindingSCon(const std::array<uint16_t, JPBTN_COUNT>& buttonMap, bool xInput, bool hatswc, bool trgg, bool thumb)
     {
         _sCon.xinput_enabled = xInput;
-        if (!_sCon.xinput_enabled)
+        for (size_t i = 0; i < JPBTN_COUNT; ++i)
         {
-            for (size_t i = 0; i < JPBTN_COUNT; ++i)
+            if (buttonMap[i] > 0xFFFF)
             {
-                if (buttonMap[i] > 0xFF)
-                {
-                    return false;
-                }
-                _sCon.button_map[i] = buttonMap[i];
+                return false;
             }
+            _sCon.button_map[i] = buttonMap[i];
         }
 
         _sCon.hatswitch_enabled = hatswc;
@@ -72,7 +69,7 @@ namespace mm2hack::input
     {
         if (DxLib::GetJoypadNum())
         {
-            return SetBindingSCon({}, true, true, true, true);
+            return SetBindingSCon(GetDefaultXInputArray(), true, true, true, true);
         }
         else
         {
