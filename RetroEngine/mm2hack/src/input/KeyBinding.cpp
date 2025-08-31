@@ -22,7 +22,7 @@ namespace mm2hack::input
     {
         const size_t idx = static_cast<size_t>(button);
         if (idx >= JPBTN_COUNT) return false;
-        _sCon.button_map[idx] = 0xFFFFui16;
+        _sCon.button_map[idx] = kTokenUnbound;
         return true;
     }
 
@@ -31,13 +31,8 @@ namespace mm2hack::input
         _sCon.xinput_enabled = xInput;
         for (size_t i = 0; i < JPBTN_COUNT; ++i)
         {
-            if (buttonMap[i] > 0xFFFFu)
-            {
-                return false;
-            }
             _sCon.button_map[i] = buttonMap[i];
         }
-
         _sCon.hatswitch_enabled = hatswc;
         _sCon.trigger_enabled = trgg;
         _sCon.thumb_enabled = thumb;
@@ -50,7 +45,7 @@ namespace mm2hack::input
         const size_t index = static_cast<size_t>(button);
         if (index >= JPBTN_COUNT)
         {
-            return 0xFFFF; // Invalid button index
+            return kTokenUnbound;   // Invalid button index
         }
 
         return _sCon.button_map[index];

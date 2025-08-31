@@ -1,9 +1,9 @@
 //==============================================================================
 // 
 //  Project: mm2hack
-//  ***.h
+//  InputConfigOverlay.h
 // 
-//  ** Descriptions **
+//  Join the input configuration mode overlay.
 // 
 //==============================================================================
 #pragma once
@@ -19,18 +19,18 @@
 
 namespace mm2hack::core::overlay
 {
-
     enum class CaptureState : uint8_t { Hidden, Intro, Quiescent, Listening, Confirm, Completed, Cancelled };
 
+    // A step in the input configuration process
     struct CaptureStep
     {
-        JPBTN jpbtn;        // Up, Down, A, B, ...
-        const char* label;  // e.g. "Up" ...
+        JPBTN jpbtn;
+        const char* label;
     };
 
     inline std::vector<CaptureStep> BuildStepsFull16()
     {
-        using mm2hack::JPBTN;
+        // The key binding procedure will proceed in the order written here.
         return {
             { JPBTN::UP,          "Up" },
             { JPBTN::DOWN,        "Down" },
@@ -41,16 +41,17 @@ namespace mm2hack::core::overlay
             { JPBTN::X,           "X" },
             { JPBTN::Y,           "Y" },
             { JPBTN::START,       "Start" },
-            { JPBTN::BACK,        "Back" },
-            { JPBTN::LSHOULDER,   "LB" },
-            { JPBTN::RSHOULDER,   "RB" },
-            { JPBTN::LTRIGGER,    "LT" },
-            { JPBTN::RTRIGGER,    "RT" },
-            { JPBTN::LTHUMB,      "LStick Click" },
-            { JPBTN::RTHUMB,      "RStick Click" },
+            { JPBTN::BACK,        "Back (Select)" },
+            { JPBTN::LSHOULDER,   "LB (L1)" },
+            { JPBTN::RSHOULDER,   "RB (R1)" },
+            { JPBTN::LTRIGGER,    "LT (L2)" },
+            { JPBTN::RTRIGGER,    "RT (R2)" },
+            { JPBTN::LTHUMB,      "LStick (L3)" },
+            { JPBTN::RTHUMB,      "RStick (R3)" },
         };
     }
 
+    // Overlay for configuring input bindings
     class InputConfigOverlay final
     {
     public:
@@ -60,17 +61,25 @@ namespace mm2hack::core::overlay
             return instance;
         }
 
-        // DEPRECATED: not used
-        //static uint16_t ToToken(const input::RawInputEvent& e, uint8_t thrNibbleDefault = 8);
+        InputConfigOverlay(const InputConfigOverlay&) = delete;
+        InputConfigOverlay& operator=(const InputConfigOverlay&) = delete;
+        InputConfigOverlay(InputConfigOverlay&&) = delete;
+        InputConfigOverlay& operator=(InputConfigOverlay&&) = delete;
 
+        // Begin input configuration for the specified KeyBinding and steps
         void Open(input::KeyBinding& target, std::vector<CaptureStep> steps);
+        // Cancel the input configuration
         void Cancel() noexcept;
+        // Check if the overlay is currently open
         bool IsOpen() const noexcept;
-
-        // Must be called periodically (e.g., once per frame)
+        // Controlling the overlay (should be called every frame)
         void Tick(float dtSec);
 
     private:
+        InputConfigOverlay() = default;
+        ~InputConfigOverlay() = default;
+
+        // Rendering and internal logic
         void render() const;
         void advance();
         void adoptBinding(const input::RawInputEvent& e);
@@ -84,9 +93,13 @@ namespace mm2hack::core::overlay
 
         std::optional<input::RawInputEvent> _candidate;
         std::chrono::steady_clock::time_point _stateStart{};
-        int _requiredQuiescentMs{ 150 };   // 静穏期間
-        float _analogThreshold{ 0.5f };    // 軸・トリガの採用しきい値
-        bool _allowMultiple{ false };      // 多重許可ポリシー
-    };
+        int _requiredQuiescentMs{ 150 };   // Quiescent time before accepting input
+        float _analogThreshold{ 0.5f };    // Analog input threshold
+        bool _allowMultiple{ false };      // Allow multiple bindings
 
+        float _confirmElapsedSec{ 0.0f };
+        float _confirmQuietSec{ 0.0f };
+        int _confirmMinShowMs{ 250 };
+        int _confirmQuietMs{ 150 };
+    };
 }

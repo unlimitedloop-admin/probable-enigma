@@ -3,6 +3,7 @@
 #include "JoystickManager.h"
 
 #include <cstdint>
+#include <cstdlib>
 #include <optional>
 #include "C16ButtonState.h"
 #include "DirectInputProvider.h"
@@ -74,13 +75,12 @@ namespace mm2hack::input
             return std::nullopt;
         }
 
+        // For gamepads with XInput
         if (kind == Device::XInput)
         {
             XINPUT_STATE st{};
-            if (GetJoypadXInputState(DX_INPUT_KEY_PAD1, &st) != 0)
-            {
-                return std::nullopt;
-            }
+            if (GetJoypadXInputState(DX_INPUT_KEY_PAD1, &st) != 0) return std::nullopt;
+
             // Buttons
             for (uint8_t bi = 0; bi < 16; ++bi)
             {
@@ -104,6 +104,7 @@ namespace mm2hack::input
             return std::nullopt;
         }
 
+        // For gamepads with DirectInput
         if (kind == Device::DirectInput)
         {
             DINPUT_JOYSTATE st{};
@@ -113,6 +114,7 @@ namespace mm2hack::input
             struct P { float deadzone = 0.25f, pressThr = 0.60f; int holdMs = 120, settleMs = 120; };
             static P p{};
 
+            // Context for each axis pair, to manage calibration and state
             struct Ctx
             {
                 bool measuring = true, ready = false;
@@ -128,6 +130,7 @@ namespace mm2hack::input
                     return std::clamp(f, -1.0f, 1.0f);
                 };
 
+            // Capture a pair of axes (e.g., X/Y, Rx/Ry, Z/Rz, S0/S1)
             auto capturePair = [&](long vx_raw, long vy_raw, Ctx& ctx, uint8_t codeX, uint8_t codeY)
                 -> std::optional<RawInputEvent>
                 {
@@ -170,28 +173,28 @@ namespace mm2hack::input
             auto tryPair = [&](long vx, long vy, Ctx& ctx, uint8_t codeX, uint8_t codeY)
                 -> std::optional<RawInputEvent>
                 {
-                    return capturePair(vx, vy, ctx, codeX, codeY); // 既存の capturePair をそのまま使う
+                    return capturePair(vx, vy, ctx, codeX, codeY);
                 };
 
-            //    左狙い＝XY→RxRy→ZRz→S0S1 の順で、最初に確定したものを返す
+            // Target to left stick => XY > ZRz > RxRy > S0S1
             if (_diCaptureGroup != AxisGroup::Right)
             {
-                if (auto ev = tryPair(st.X, st.Y, xy,   /*codeX=*/0, /*codeY=*/1)) return ev; // X/Y
-                if (auto ev = tryPair(st.Rx, st.Ry, rxry, /*codeX=*/3, /*codeY=*/4)) return ev; // Rx/Ry
-                if (auto ev = tryPair(st.Z, st.Rz, zrz,  /*codeX=*/2, /*codeY=*/5)) return ev; // Z/Rz
-                if (auto ev = tryPair(st.Slider[0], st.Slider[1], s01, /*codeX=*/6, /*codeY=*/7)) return ev; // S0/S1
+                if (auto ev = tryPair(st.X, st.Y, xy,   /*codeX=*/0, /*codeY=*/1)) return ev;                   // X/Y
+                if (auto ev = tryPair(st.Rx, st.Ry, rxry, /*codeX=*/3, /*codeY=*/4)) return ev;                 // Rx/Ry
+                if (auto ev = tryPair(st.Z, st.Rz, zrz,  /*codeX=*/2, /*codeY=*/5)) return ev;                  // Z/Rz
+                if (auto ev = tryPair(st.Slider[0], st.Slider[1], s01, /*codeX=*/6, /*codeY=*/7)) return ev;    // S0/S1
             }
 
-            //    右狙い＝RxRy→ZRz→XY→S0S1 の順
+            // Target to right stick => RxRy > ZRz > XY > S0S1
             if (_diCaptureGroup != AxisGroup::Left)
             {
-                if (auto ev = tryPair(st.Rx, st.Ry, rxry, /*codeX=*/3, /*codeY=*/4)) return ev; // Rx/Ry
-                if (auto ev = tryPair(st.Z, st.Rz, zrz,  /*codeX=*/2, /*codeY=*/5)) return ev; // Z/Rz
-                if (auto ev = tryPair(st.X, st.Y, xy,   /*codeX=*/0, /*codeY=*/1)) return ev; // X/Y
-                if (auto ev = tryPair(st.Slider[0], st.Slider[1], s01, /*codeX=*/6, /*codeY=*/7)) return ev; // S0/S1
+                if (auto ev = tryPair(st.Rx, st.Ry, rxry, /*codeX=*/3, /*codeY=*/4)) return ev;                 // Rx/Ry
+                if (auto ev = tryPair(st.Z, st.Rz, zrz,  /*codeX=*/2, /*codeY=*/5)) return ev;                  // Z/Rz
+                if (auto ev = tryPair(st.X, st.Y, xy,   /*codeX=*/0, /*codeY=*/1)) return ev;                   // X/Y
+                if (auto ev = tryPair(st.Slider[0], st.Slider[1], s01, /*codeX=*/6, /*codeY=*/7)) return ev;    // S0/S1
             }
 
-            // 次に POV（任意）
+            // Catch POV hat
             const unsigned int pov = st.POV[0];
             if (pov != 0xFFFFFFFFu)
             {
@@ -199,13 +202,13 @@ namespace mm2hack::input
                 const bool right = (pov == 9000u || pov == 4500u || pov == 13500u);
                 const bool down = (pov == 18000u || pov == 13500u || pov == 22500u);
                 const bool left = (pov == 27000u || pov == 22500u || pov == 31500u);
-                if (up)    return RawInputEvent{ RawDevice::DirectInput, RawKind::Axis, 1, true,  1.0f };
-                if (right) return RawInputEvent{ RawDevice::DirectInput, RawKind::Axis, 0, false, 1.0f };
-                if (down)  return RawInputEvent{ RawDevice::DirectInput, RawKind::Axis, 1, false, 1.0f };
-                if (left)  return RawInputEvent{ RawDevice::DirectInput, RawKind::Axis, 0, true,  1.0f };
+                if (up)    return RawInputEvent{ RawDevice::DirectInput, RawKind::POV, /*code=*/0, /*neg=*/false, 1.0f }; // Up
+                if (right) return RawInputEvent{ RawDevice::DirectInput, RawKind::POV, /*code=*/1, false, 1.0f };         // Right
+                if (down)  return RawInputEvent{ RawDevice::DirectInput, RawKind::POV, /*code=*/2, false, 1.0f };         // Down
+                if (left)  return RawInputEvent{ RawDevice::DirectInput, RawKind::POV, /*code=*/3, false, 1.0f };         // Left
             }
 
-            // 最後にボタン等（必要なら）
+            // Buttons (0..31)
             for (uint8_t bi = 0; bi < 32; ++bi) if (st.Buttons[bi])
                 return RawInputEvent{ RawDevice::DirectInput, RawKind::Button, bi, false, 1.0f };
 

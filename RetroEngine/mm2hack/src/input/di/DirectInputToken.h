@@ -1,18 +1,18 @@
 //==============================================================================
 // 
 //  Project: mm2hack
-//  ***.h
+//  DirectInputToken.h
 // 
-//  ** Descriptions **
+//  DirectInput device token definitions.
 // 
 //==============================================================================
 #pragma once
 
 #include <cstdint>
+#include "input/KeyToken.h"
 
 namespace mm2hack::input::di
 {
-    constexpr uint16_t kMaskType = 0xC000u;
     constexpr uint16_t kTypeBtn  = 0x0000u;     // Buttons[code]
     constexpr uint16_t kTypeAxis = 0x8000u;     // X, Y, Z, Rx, Ry, Rz, Slider[0], Slider[1]
     constexpr uint16_t kTypePOV  = 0x4000u;     // code: 0=Up, 1=Right, 2=Down, 3=Left

@@ -41,7 +41,7 @@ namespace mm2hack::input
 
     private:
         // Binding array for Serial-Controller
-        struct XInputModulation
+        struct SConBindingData
         {
             std::array<uint16_t, JPBTN_COUNT> button_map{};
             bool xinput_enabled = false;
@@ -49,15 +49,15 @@ namespace mm2hack::input
             bool trigger_enabled = false;
             bool thumb_enabled = false;
 
-            XInputModulation() = default;
-            ~XInputModulation() = default;
+            SConBindingData() = default;
+            ~SConBindingData() = default;
 
-            XInputModulation(const XInputModulation&) = delete;
-            XInputModulation& operator=(const XInputModulation&) = delete;
-            XInputModulation(XInputModulation&&) = delete;
-            XInputModulation& operator=(XInputModulation&&) = delete;
+            SConBindingData(const SConBindingData&) = delete;
+            SConBindingData& operator=(const SConBindingData&) = delete;
+            SConBindingData(SConBindingData&&) = delete;
+            SConBindingData& operator=(SConBindingData&&) = delete;
         };
 
-        XInputModulation _sCon;     // Serial-Controller binding data
+        SConBindingData _sCon;     // Serial-Controller binding data
     };
 }

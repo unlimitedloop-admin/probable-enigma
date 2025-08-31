@@ -6,6 +6,7 @@
 #include "C16ButtonState.h"
 #include "di/DirectInputToken.h"
 #include "Jpbtn.h"
+#include "KeyToken.h"
 
 namespace mm2hack::input
 {
@@ -49,7 +50,7 @@ namespace mm2hack::input
             const auto token = _binding.GetBindingSCon(static_cast<JPBTN>(i));
             bool pressed = false;
 
-            if (token != 0xFFFFu)
+            if (!IsUnboundToken(token))
             {
                 if (IsBtn(token))
                 {
@@ -69,7 +70,6 @@ namespace mm2hack::input
                 else if (IsAxis(token))
                 {
                     pressed = axisPressed(Code(token), IsNeg(token), Thr01(token));
-                    // おまけ：X/YのAxisはPOVでも代用OK
                     if (!pressed && (Code(token) == AX_X || Code(token) == AX_Y))
                     {
                         pressed = (Code(token) == AX_X) ? (IsNeg(token) ? povL : povR)
@@ -79,7 +79,7 @@ namespace mm2hack::input
             }
             else
             {
-                // old binding (0xFFFF) means unbound
+                // old binding (0xFFFF) means unbound [no input]
             }
 
             out_state.UpdateButton(i, pressed);

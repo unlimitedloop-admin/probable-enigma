@@ -5,6 +5,7 @@
 #include <cstdint>
 #include "C16ButtonState.h"
 #include "Jpbtn.h"
+#include "KeyToken.h"
 #include "xi/XInputToken.h"
 
 namespace mm2hack::input
@@ -36,7 +37,7 @@ namespace mm2hack::input
             const auto token = _binding.GetBindingSCon(static_cast<JPBTN>(i));
             bool pressed = false;
 
-            if (token == 0xFFFFui16)
+            if (IsUnboundToken(token))
             {
                 pressed = false;
             }

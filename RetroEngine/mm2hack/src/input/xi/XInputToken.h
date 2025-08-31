@@ -1,20 +1,19 @@
 //==============================================================================
 // 
 //  Project: mm2hack
-//  ***.h
+//  XInputToken.h
 // 
-//  ** Descriptions **
+//  XInput device token definitions.
 // 
 //==============================================================================
 #pragma once
 
 #include <cstdint>
+#include "input/KeyToken.h"
 
 namespace mm2hack::input::xi
 {
-
     // Upper 2 bits for type: 00=Button, 01=Trigger, 10=Axis
-    constexpr uint16_t kMaskType = 0xC000u;
     constexpr uint16_t kTypeBtn  = 0x0000u;
     constexpr uint16_t kTypeTrg  = 0x4000u;
     constexpr uint16_t kTypeAxis = 0x8000u;
@@ -41,5 +40,4 @@ namespace mm2hack::input::xi
     constexpr uint8_t LT = 0;
     constexpr uint8_t RT = 1;
     constexpr uint8_t LX = 0, LY = 1, RX = 2, RY = 3;
-
 }

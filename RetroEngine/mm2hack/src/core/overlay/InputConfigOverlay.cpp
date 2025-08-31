@@ -17,58 +17,34 @@
 
 namespace mm2hack::core::overlay
 {
-
     namespace
     {
         [[nodiscard]] uint16_t ToXInputToken(const input::RawInputEvent& e) noexcept
         {
-            using namespace input::xi;
-            using RK = input::RawKind;
+            using namespace input;
+            using namespace xi;
+            using RK = RawKind;
             constexpr uint8_t kDefaultThr = 8;  // nearly 50% threshold
+
             if (e.kind == RK::Button)  return MakeBtn(e.code);
             if (e.kind == RK::Trigger) return MakeTrig(e.code, kDefaultThr);
             if (e.kind == RK::Axis)    return MakeAxis(e.code, e.negative, kDefaultThr);
-            return 0xFFFFui16;
+            return kTokenUnbound;
         }
 
         [[nodiscard]] uint16_t ToDirectInputToken(const input::RawInputEvent& e) noexcept
         {
-            using namespace input::di;
-            using RK = input::RawKind;
-            constexpr uint8_t kThr = 8; // ≒50%
+            using namespace input;
+            using namespace di;
+            using RK = RawKind;
+            constexpr uint8_t kThr = 8;
 
             if (e.kind == RK::Button) return MakeBtn(e.code);
             if (e.kind == RK::Axis)   return MakeAxis(e.code, e.negative, kThr);
-            // NOTE: If POV support is needed, it should be handled here.
-            return 0xFFFFu;
-        }
-
-        [[nodiscard]] JPBTN StepToJpbtn(const CaptureStep& s) noexcept
-        {
-            return s.jpbtn;
+            if (e.kind == RK::POV)    return MakePOV(e.code);
+            return kTokenUnbound;
         }
     }
-
-    // DEPRECATED: not used
-    //using input::MakeToken; using input::Device; using input::XI_LT; using input::XI_RT;
-
-    //static uint16_t ToToken(const input::RawInputEvent& e, uint8_t thrNibbleDefault)
-    //{
-    //    using RD = input::RawDevice; using RK = input::RawKind;
-    //    switch (e.device)
-    //    {
-    //    case RD::Keyboard:
-    //        return MakeToken(Device::Keyboard, false, e.code, false, 0);
-    //    case RD::XInput:
-    //        if (e.kind == RK::Button)  return MakeToken(Device::XInput, false, e.code);
-    //        if (e.kind == RK::Trigger) return MakeToken(Device::XInput, true, e.code, false, thrNibbleDefault);
-    //        if (e.kind == RK::Axis)    return MakeToken(Device::XInput, true, e.code, e.negative, thrNibbleDefault);
-    //        break;
-    //    case RD::DirectInput:
-    //        return MakeToken(Device::DirectInput, e.kind != RK::Button, e.code, e.negative, thrNibbleDefault);
-    //    }
-    //    return 0xFFFFui16;
-    //}
 
     void InputConfigOverlay::Open(input::KeyBinding& target, std::vector<CaptureStep> steps)
     {
@@ -104,6 +80,7 @@ namespace mm2hack::core::overlay
     {
         if (_state == CaptureState::Hidden) return;
 
+        // CHANGED: If you uncomment it, the notification message will no longer appear after you set the key.
         if (/* _state == CaptureState::Completed || */_state == CaptureState::Cancelled)
         {
             _state = CaptureState::Hidden;
@@ -133,10 +110,10 @@ namespace mm2hack::core::overlay
                 _state = Quiescent, _stateStart = std::chrono::steady_clock::now();
             break;
         case Quiescent:
-            // 150ms 入力が静かなら Listening へ
+            // If quiescent time has passed, go to Listening state.
             if (std::chrono::steady_clock::now() - _stateStart > std::chrono::milliseconds(_requiredQuiescentMs))
                 _state = Listening;
-            // 何か入力があれば静穏やり直し
+            // If there is any input, restart quiescent period.
             if (jm.PollFirstRawChange(_analogThreshold))
                 _stateStart = std::chrono::steady_clock::now();
             break;
@@ -144,10 +121,24 @@ namespace mm2hack::core::overlay
             if (auto evt = jm.PollFirstRawChange(_analogThreshold, _captureKind))
             {
                 adoptBinding(*evt);    // Assign to KeyBinding.
-                advance();
+                _state = Confirm;
+                _confirmElapsedSec = 0.0f;
+                _confirmQuietSec = 0.0f;
             }
             break;
-        case Confirm: /* シンプル版は即 advance */ break;
+        case Confirm:
+        {
+            _confirmElapsedSec += dt;
+            _confirmQuietSec = jm.PollFirstRawChange(_analogThreshold, _captureKind) ? 0.0f : _confirmQuietSec + dt;
+            const bool shownEnough = (_confirmElapsedSec * 1000.0f) >= _confirmMinShowMs;
+            const bool quietEnough = (_confirmQuietSec * 1000.0f) >= _confirmQuietMs;
+
+            if (shownEnough && quietEnough)
+            {
+                advance();  // Go to next step.
+            }
+            break;
+        }
         case Cancelled:
             _state = Hidden;
             break;
@@ -156,37 +147,6 @@ namespace mm2hack::core::overlay
         }
 
         render();
-    }
-
-    void InputConfigOverlay::advance()
-    {
-        if (++_index >= _steps.size())
-        {
-            _state = CaptureState::Completed;
-            return;
-        }
-        _state = CaptureState::Quiescent;
-        onStepEntered();
-        _stateStart = std::chrono::steady_clock::now();
-    }
-
-    void InputConfigOverlay::adoptBinding(const input::RawInputEvent& e)
-    {
-        const auto jp = _steps[_index].jpbtn;
-
-        uint16_t token = 0xFFFFu;
-        switch (_captureKind)
-        {
-        case input::Device::XInput:      token = ToXInputToken(e);              break;
-        case input::Device::DirectInput: token = ToDirectInputToken(e);         break;
-        case input::Device::Keyboard:    token = static_cast<uint16_t>(e.code); break; // VK
-        }
-        if (token == 0xFFFFu) { return; }
-
-        // Assigning to single button (1:1 mapping assumed).
-        _target->SetBinding(jp, token);
-
-        // NOTE: If you assign the same token to multiple buttons, you need to add logic here to unbind the existing assignment.
     }
 
     void InputConfigOverlay::render() const
@@ -203,13 +163,53 @@ namespace mm2hack::core::overlay
             return;
         }
 
+        if (_state == CaptureState::Confirm)
+        {
+            DrawString(40, 80, L"Binding adopted.\nPlease wait...", GetColor(192, 192, 192));
+            return;
+        }
+
         // Draw instructions.
         const auto& step = _steps[_index];
         std::wstring msg = L"Press the \"" + utils::utf8_to_wstring(step.label) + L"\" key on your device.\n"
             L"[Esc] Cancel  [Enter] Skip  [Backspace] Unbind";
         DrawString(40, 80, msg.c_str(), GetColor(255, 255, 255));
 
-        // 右上に現在のバインド一覧と採用ルール、左下に接続デバイス名など（省略）
+        // Draw current binding list and adoption rules in the top right, device name in the bottom left (omitted).
+    }
+
+    void InputConfigOverlay::advance()
+    {
+        if (++_index >= _steps.size())
+        {
+            _state = CaptureState::Completed;
+            return;
+        }
+        _state = CaptureState::Quiescent;
+        onStepEntered();
+        _stateStart = std::chrono::steady_clock::now();
+    }
+
+    void InputConfigOverlay::adoptBinding(const input::RawInputEvent& e)
+    {
+        using namespace input;
+
+        if (_index >= _steps.size()) return;
+        const auto jp = _steps[_index].jpbtn;
+
+        uint16_t token = kTokenUnbound;
+        switch (_captureKind)
+        {
+        case Device::XInput:      token = ToXInputToken(e);              break;
+        case Device::DirectInput: token = ToDirectInputToken(e);         break;
+        case Device::Keyboard:    token = static_cast<uint16_t>(e.code); break; // VK
+        }
+        if (IsUnboundToken(token)) { return; }
+
+        // Assigning to single button (1:1 mapping assumed).
+        _target->SetBinding(jp, token);
+
+        // NOTE: If you assign the same token to multiple buttons, you need to add logic here to unbind the existing assignment.
     }
 
     void InputConfigOverlay::onStepEntered()
@@ -230,7 +230,7 @@ namespace mm2hack::core::overlay
                 JM.SetDirectInputCaptureGroup(AxisGroup::Left);
                 break;
             default:
-                // 右スティックで取りたいステップ（例：RTHUMB用など）があれば Right を指定
+                // If you need to capture Right stick axes, change here. (use AxisGroup::Right)
                 JM.SetDirectInputCaptureGroup(AxisGroup::Any);
                 break;
             }
