@@ -68,12 +68,12 @@ namespace mm2hack::core::overlay
 
         // Begin input configuration for the specified KeyBinding and steps
         void Open(input::KeyBinding& target, std::vector<CaptureStep> steps);
-        // Cancel the input configuration
-        void Cancel() noexcept;
         // Check if the overlay is currently open
         bool IsOpen() const noexcept;
         // Controlling the overlay (should be called every frame)
         void Tick(float dtSec);
+        // Finish the input configuration, saving if committed
+        void Finish(bool committed);
 
     private:
         InputConfigOverlay() = default;

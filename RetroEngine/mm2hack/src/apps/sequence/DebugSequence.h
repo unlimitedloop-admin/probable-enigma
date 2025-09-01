@@ -27,6 +27,7 @@ namespace mm2hack::apps::sequence
         void RenderWorld() override;
         // Override the RenderOverlay method to render any overlays
         void RenderOverlay() override;
+        // Get the scene manager instance
         scenes::SceneManager* GetSceneManager() override;
         bool Save(core::save::SaveData& out) const override;
         bool Load(const core::save::SaveData& in) override;

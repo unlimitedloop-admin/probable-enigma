@@ -12,6 +12,7 @@
 
 namespace mm2hack::core
 {
+    // Manages the game state across different scenes in the game
     class GameStateManager final
     {
     public:

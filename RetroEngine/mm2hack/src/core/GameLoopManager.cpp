@@ -5,6 +5,7 @@
 #include <exception>
 #include "apps/deal/GameContext.h"
 #include "apps/sequence/SequenceManager.h"
+#include "config/ConfigUIManager.h"
 #include "exceptions/CoreException.h"
 #include "exceptions/ErrorHandler.h"
 #include "exceptions/ErrorLevel.h"
@@ -26,6 +27,8 @@ namespace mm2hack::core
         _screenHandle(context.screenHandle)
     {
         apps::deal::GameContext::GetInstance().Initialize();
+        auto& jm = apps::deal::GameContext::GetInstance().GetJoystickManager();
+        config::ConfigUIManager::LoadInputConfigIfMatches(jm.GetKeyBinding(), jm.ActiveDevice());
     }
 
     void GameLoopManager::Run()

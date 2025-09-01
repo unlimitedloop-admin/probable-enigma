@@ -1,9 +1,9 @@
 //==============================================================================
 // 
 //  Project: mm2hack
-//  ***.h
+//  RawInputEvent.h
 // 
-//  ** Descriptions **
+//  Raw input event structure.
 // 
 //==============================================================================
 #pragma once
@@ -15,6 +15,7 @@ namespace mm2hack::input
     enum class RawDevice : uint8_t { Keyboard, XInput, DirectInput };
     enum class RawKind : uint8_t { Button, Trigger, Axis, Key, POV };
 
+    // Represents a low-level input event from keyboard or joystick
     struct RawInputEvent
     {
         RawDevice device;

@@ -31,7 +31,6 @@ namespace mm2hack::core::winapi
         using namespace utils;
         using conf = config::SystemConfig;
 
-        // Error reporting lambda function
         auto reportInitError = [](const std::wstring& message) -> bool
             {
                 ErrorHandler::Handle(

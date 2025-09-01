@@ -31,8 +31,8 @@ namespace mm2hack::apps::supervisor
         void Release();
 
     private:
-        graphics::SpriteManager _spriteManager;         // Instance of SpriteManager
-        graphics::BGTileManager _bgTileManager;         // Instance of BGTileManager
-        audio::AudioManager _audioManager;              // Instance of AudioManager
+        graphics::SpriteManager _spriteManager;     // Instance of SpriteManager
+        graphics::BGTileManager _bgTileManager;     // Instance of BGTileManager
+        audio::AudioManager _audioManager;          // Instance of AudioManager
     };
 }

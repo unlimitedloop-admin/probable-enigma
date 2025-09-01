@@ -27,15 +27,32 @@ namespace mm2hack::input
         KeyBinding& operator=(KeyBinding&&) = delete;
         // KeyBinding is not copyable or movable, so we delete the copy and move constructors and assignment operators.
 
+        // Set the button mapping for a specific button
         bool SetBinding(JPBTN button, uint16_t token);
+        // Set the button mapping to unbound for a specific button
         bool UnsetBinding(JPBTN button);
         // Set the button mapping for the Serial-Controller
         bool SetBindingSCon(const std::array<uint16_t, JPBTN_COUNT>& buttonMap, bool xInput, bool hatswc, bool trgg, bool thumb);
         // Get the button mapping for the Serial-Controller
         uint16_t GetBindingSCon(JPBTN button) const;
+        // Get all button mappings for the Serial-Controller
         const std::array<uint16_t, JPBTN_COUNT>& GetAllBindingsSCon() const noexcept;
-        // Check if the Serial-Controller for XInput is enabled
-        bool IsXInputEnabled() const;
+        
+        // Getters for Serial-Controller configuration flags
+        bool IsXInputEnabled() const noexcept { return _sCon.xinput_enabled; }
+        bool IsHatSwitchEnabled() const noexcept { return _sCon.hatswitch_enabled; }
+        bool IsTriggerEnabled() const noexcept { return _sCon.trigger_enabled; }
+        bool IsThumbEnabled() const noexcept { return _sCon.thumb_enabled; }
+
+        // Setters for Serial-Controller configuration flags
+        void SetFeatureFlags(bool xinput, bool hatswitch, bool trigger, bool thumb) noexcept
+        {
+            _sCon.xinput_enabled = xinput;
+            _sCon.hatswitch_enabled = hatswitch;
+            _sCon.trigger_enabled = trigger;
+            _sCon.thumb_enabled = thumb;
+        }
+        
         // Set the Serial-Controller default key binding
         bool SetDefaultBindingSCon(Device type);
 

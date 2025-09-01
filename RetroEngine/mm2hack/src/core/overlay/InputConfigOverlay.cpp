@@ -4,6 +4,7 @@
 
 #include <cstdint>
 #include "apps/deal/GameContext.h"
+#include "config/ConfigUIManager.h"
 #include "core/GameState.h"
 #include "core/GameStateManager.h"
 #include "input/di/DirectInputToken.h"
@@ -65,12 +66,6 @@ namespace mm2hack::core::overlay
         GameStateManager::GetInstance().SetState(GameState::JpbtnConfig);
     }
 
-    void InputConfigOverlay::Cancel() noexcept
-    {
-        _state = CaptureState::Cancelled;
-        GameStateManager::GetInstance().SetState(GameState::Paused);
-    }
-
     bool InputConfigOverlay::IsOpen() const noexcept
     {
         return _state != CaptureState::Hidden;
@@ -80,17 +75,11 @@ namespace mm2hack::core::overlay
     {
         if (_state == CaptureState::Hidden) return;
 
-        // CHANGED: If you uncomment it, the notification message will no longer appear after you set the key.
-        if (/* _state == CaptureState::Completed || */_state == CaptureState::Cancelled)
-        {
-            _state = CaptureState::Hidden;
-            GameStateManager::GetInstance().SetState(GameState::Paused);
-            return;
-        }
+        if (_state == CaptureState::Cancelled) { Finish(false); return; }
 
         if (CheckHitKey(KEY_INPUT_ESCAPE))
         {
-            Cancel(); return;
+            _state = CaptureState::Cancelled; return;
         }
         if (_state == CaptureState::Listening && CheckHitKey(KEY_INPUT_BACK))
         {
@@ -139,14 +128,31 @@ namespace mm2hack::core::overlay
             }
             break;
         }
-        case Cancelled:
-            _state = Hidden;
+        case Completed:
+            if (CheckHitKey(KEY_INPUT_ESCAPE) || CheckHitKey(KEY_INPUT_RETURN))
+            {
+                Finish(true);  // Finish and save.
+                return;
+            }
             break;
         default:
             break;
         }
 
         render();
+    }
+
+    void InputConfigOverlay::Finish(bool committed)
+    {
+        // Whether to save or not, enable saveOnCancel if you want to save when canceled.
+        if (committed /*|| saveOnCancel*/)
+        {
+            auto& jm = apps::deal::GameContext::GetInstance().GetJoystickManager();
+            config::ConfigUIManager::SaveInputDeviceConfig(jm.GetKeyBinding(), jm.ActiveDevice());
+        }
+
+        _state = CaptureState::Hidden;
+        core::GameStateManager::GetInstance().SetState(core::GameState::Running);
     }
 
     void InputConfigOverlay::render() const
@@ -185,8 +191,8 @@ namespace mm2hack::core::overlay
             _state = CaptureState::Completed;
             return;
         }
-        _state = CaptureState::Quiescent;
         onStepEntered();
+        _state = CaptureState::Quiescent;
         _stateStart = std::chrono::steady_clock::now();
     }
 

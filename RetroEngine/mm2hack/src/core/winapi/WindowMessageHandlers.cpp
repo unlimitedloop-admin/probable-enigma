@@ -324,7 +324,7 @@ namespace mm2hack::core::winapi
                     gameContext.GetResourceManager().GetAudioManager().Pause();
                 }
             }
-            else
+            else if (gameState.Is(GameState::Paused))
             {
                 gameState.SetState(GameState::Running);
                 if (gameContext.IsInitialized())

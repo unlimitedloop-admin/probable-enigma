@@ -1,7 +1,7 @@
 //==============================================================================
 // 
 //  Project: mm2hack
-//  XInputProvider.h
+//  DirectInputProvider.h
 // 
 //  Joypad of DirectInput provider.
 // 

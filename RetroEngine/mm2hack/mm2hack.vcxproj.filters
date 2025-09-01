@@ -148,6 +148,7 @@
     <ClInclude Include="src\input\KeyToken.h" />
     <ClInclude Include="src\input\xi\XInputToken.h" />
     <ClInclude Include="src\input\di\DirectInputToken.h" />
+    <ClInclude Include="src\config\InputLoadResult.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

@@ -18,7 +18,7 @@ namespace mm2hack::input
         int64_t pressed_frame = 0;
         int64_t released_frame = 0;
 
-        // Update the pressed and released frames based on the current state.
+        // Update the pressed and released frames based on the current state
         void Update(bool is_pressed)
         {
             if (is_pressed)
@@ -33,6 +33,7 @@ namespace mm2hack::input
             }
         }
 
+        // Reset the frame counters
         void Reset()
         {
             pressed_frame = 0;

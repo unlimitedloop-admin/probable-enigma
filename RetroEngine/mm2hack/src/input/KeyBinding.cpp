@@ -56,11 +56,6 @@ namespace mm2hack::input
         return _sCon.button_map;
     }
 
-    bool KeyBinding::IsXInputEnabled() const
-    {
-        return _sCon.xinput_enabled;
-    }
-
     bool KeyBinding::SetDefaultBindingSCon(Device type)
     {
         if (type == Device::XInput)

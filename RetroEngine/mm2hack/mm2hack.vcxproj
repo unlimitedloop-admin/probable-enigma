@@ -268,6 +268,7 @@
     <ClInclude Include="src\config\EnvironmentConfig.h" />
     <ClInclude Include="src\config\GraphicsConfig.h" />
     <ClInclude Include="src\config\HudConfig.h" />
+    <ClInclude Include="src\config\InputLoadResult.h" />
     <ClInclude Include="src\config\SoundConfig.h" />
     <ClInclude Include="src\config\SystemConfig.h" />
     <ClInclude Include="src\core\assembly\ScreenshotManager.h" />

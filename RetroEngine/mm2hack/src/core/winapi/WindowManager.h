@@ -38,8 +38,10 @@ namespace mm2hack::core::winapi
 
         // Change the size of the main window based on the viewer rate
         bool ChangeWindowSize(float viewerRate);
+        // Get the current screen width and height
         int GetScreenWidth() const;
         int GetScreenHeight() const;
+
         // Initialize the menu bar on application startup
         void InitializeMenuOnStartup();
         // Update the state of the menu bar based on the current game state

@@ -20,9 +20,14 @@ namespace mm2hack::utils
 
         // Wait for the next frame
         void Wait();
+        // Reset the internal timer
         void Reset();
+
+        // Get the actual frame rate
         double GetActualFps() const;
+        // Set the target frame rate
         void SetTargetFps(int targetFps);
+        // Get the time elapsed since the last frame in seconds
         float GetDeltaSeconds() const;
 
     private:
