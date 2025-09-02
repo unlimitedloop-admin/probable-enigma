@@ -66,6 +66,9 @@ namespace mm2hack::apps::sequence
         // Sends feedback to the user, typically used for displaying messages or notifications
         void SendFeedback(const std::wstring& message);
 
+        // Handles the configuration mode for joystick button mapping
+        void HandleJpbtnConfigMode(double dt);
+
     private:
         SequenceManager() = default;
         ~SequenceManager() = default;

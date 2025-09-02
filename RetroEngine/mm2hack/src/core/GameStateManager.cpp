@@ -33,4 +33,10 @@ namespace mm2hack::core
             _currentState == GameState::MenuActive ||
             _currentState == GameState::Standby;
     }
+
+    bool GameStateManager::IsRunning() const
+    {
+        return _currentState == GameState::Transitioning ||
+            _currentState == GameState::Running;
+    }
 }

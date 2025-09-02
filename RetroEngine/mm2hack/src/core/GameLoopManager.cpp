@@ -11,8 +11,6 @@
 #include "exceptions/ErrorLevel.h"
 #include "GameState.h"
 #include "GameStateManager.h"
-#include "overlay/DebugHud.h"
-#include "overlay/InputConfigOverlay.h"
 #include "overlay/PauseManager.h"
 #include "utils/FpsManager.h"
 #include "utils/ScopeGuard.h"
@@ -72,16 +70,11 @@ namespace mm2hack::core
 
                 // Render the overlay content (e.g., HUD, debug information).
                 seq.RenderOverlay();
-                // If we are in JPBTN configuration mode, update the joystick manager and tick the input config overlay.
-                if (GameStateManager::GetInstance().Is(GameState::JpbtnConfig))
-                {
-                    apps::deal::GameContext::GetInstance().GetJoystickManager().Update();
-                    overlay::InputConfigOverlay::GetInstance().Tick(fps.GetDeltaSeconds());
-                }
-                DebugHud::GetInstance().Draw();     // Draw the FPS in the HUD, top-left corner
-
+                // Render the input configuration overlay if active.
+                seq.HandleJpbtnConfigMode(fps.GetDeltaSeconds());
                 // Pace & Flip the screen.
                 fps.Wait();
+                // Screen flip to present the rendered frame of the back buffer.
                 DxLib::ScreenFlip();
             }
         }
