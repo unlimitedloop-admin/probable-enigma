@@ -47,7 +47,7 @@ namespace mm2hack::apps::sequence
         // Renders the graphics for the current sequence
         void RenderWorld();
         // Renders the overlay for the current sequence, typically used for UI elements
-        void RenderOverlay();
+        void RenderOverlay(float viewerRate);
         // Releases the current sequence, cleaning up resources
         void Release();
 

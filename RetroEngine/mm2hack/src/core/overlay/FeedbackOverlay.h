@@ -32,7 +32,7 @@ namespace mm2hack::core::overlay
         // Update the overlay state
         void Update();
         // Render the overlay
-        void Render();
+        void Render(int destW, int destH);
 
     private:
         std::deque<Message> _messages;      // Queue of messages to display

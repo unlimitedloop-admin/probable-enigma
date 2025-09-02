@@ -46,7 +46,7 @@ namespace mm2hack::core::overlay
         }
     }
 
-    void FeedbackOverlay::Render()
+    void FeedbackOverlay::Render(int destW, int destH)
     {
         if (_messages.empty() || _fontScreen == -1) return;
 
@@ -99,9 +99,9 @@ namespace mm2hack::core::overlay
         DxLib::SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
 
         // Draws into the window you are showing.
-        DxLib::SetDrawScreen(core::winapi::WindowManager::GetInstance().GetScreenHandle());
+        DxLib::SetDrawScreen(DX_SCREEN_BACK);
         DxLib::SetDrawMode(DX_DRAWMODE_BILINEAR);
-        DxLib::DrawExtendGraph(0, 0, GAME_W, GAME_H, _fontScreen, TRUE);
+        DxLib::DrawExtendGraph(0, 0, destW, destH, _fontScreen, TRUE);
         DxLib::SetDrawMode(DX_DRAWMODE_NEAREST);
     }
 }

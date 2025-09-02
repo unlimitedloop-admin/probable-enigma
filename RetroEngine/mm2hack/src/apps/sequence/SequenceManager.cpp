@@ -106,15 +106,19 @@ namespace mm2hack::apps::sequence
         }
     }
 
-    void SequenceManager::RenderOverlay()
+    void SequenceManager::RenderOverlay(float viewerRate)
     {
+        using conf = config::SystemConfig;
         if (_currentSequence)
         {
             _currentSequence->RenderOverlay();
         }
-        _feedbackOverlay.Render();
+        _feedbackOverlay.Render(
+            static_cast<int>(conf::kScreenWidth * viewerRate),
+            static_cast<int>(conf::kScreenHeight * viewerRate)
+        );
 
-        //core::overlay::DebugHud::GetInstance().Draw();     // Draw the FPS in the HUD, top-left corner
+        core::overlay::DebugHud::GetInstance().Draw();     // Draw the FPS in the HUD, top-left corner
     }
 
     void SequenceManager::Release()

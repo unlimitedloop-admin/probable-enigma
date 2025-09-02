@@ -69,7 +69,7 @@ namespace mm2hack::core
                 }
 
                 // Render the overlay content (e.g., HUD, debug information).
-                seq.RenderOverlay();
+                seq.RenderOverlay(_viewerRate);
                 // Render the input configuration overlay if active.
                 seq.HandleJpbtnConfigMode(fps.GetDeltaSeconds());
                 // Pace & Flip the screen.
