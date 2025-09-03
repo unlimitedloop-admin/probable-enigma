@@ -19,5 +19,6 @@ namespace mm2hack::core::winapi
         HWND hWnd = nullptr;
         float& viewerRate;
         int& screenHandle;
+        bool& vSync;
     };
 }

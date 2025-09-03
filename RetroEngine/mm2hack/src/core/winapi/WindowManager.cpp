@@ -2,15 +2,20 @@
 
 #include "WindowManager.h"
 
+#include <cmath>
 #include <exception>
+#include <iterator>
+#include <limits>
 #include "../resource.h"
 #include "apps/NES/NESPalette.h"
 #include "config/ConfigUIManager.h"
 #include "config/EnvironmentConfig.h"
+#include "config/GraphicsConfig.h"
 #include "config/HudConfig.h"
 #include "config/SystemConfig.h"
 #include "core/GameLoopManager.h"
 #include "core/GameStateManager.h"
+#include "core/ui/GraphicsSettingsUI.h"
 #include "core/ui/SettingsWindow.h"
 #include "exceptions/CoreException.h"
 #include "exceptions/ErrorHandler.h"
@@ -19,6 +24,38 @@
 #include "utils/string_converter.h"
 #include "WindowContext.h"
 #include "WindowMessageHandlers.h"
+
+namespace
+{
+    struct ResolutionAppendix
+    {
+        const float rate;
+        UINT id;
+    };
+
+    static constexpr ResolutionAppendix kResolutionAppendices[] = {
+        { 1.0f, ID_SCREEN_1X },
+        { 2.0f, ID_SCREEN_2X },
+        { 4.0f, ID_SCREEN_4X },
+    };
+
+    inline UINT FindMenuIdForRate(float viewerRate) noexcept
+    {
+        // Absorbs floating point errors.
+        constexpr float kEps = 1e-3f;
+
+        int   best = 0;
+        float bestDiff = std::numeric_limits<float>::max();
+
+        for (int i = 0; i < static_cast<int>(std::size(kResolutionAppendices)); ++i)
+        {
+            const float d = std::fabs(kResolutionAppendices[i].rate - viewerRate);
+            if (d < bestDiff) { bestDiff = d; best = i; }
+        }
+        // Return the closest ID.
+        return kResolutionAppendices[best].id;
+    }
+}
 
 namespace mm2hack::core::winapi
 {
@@ -48,7 +85,8 @@ namespace mm2hack::core::winapi
             return reportInitError(L"Window title is empty.");
         }
         _windowTitle = windowTitle;
-        _viewerRate = conf::kScreenScale;
+        _viewerRate = LoadViewerRate();
+        _vSync = LoadVSync();
 
         if (EnvironmentConfig::GetBool(L"OUTPUT_LOG_ENABLE"))
         {
@@ -63,11 +101,11 @@ namespace mm2hack::core::winapi
         }
 
         const BOOL isAlwaysRun = EnvironmentConfig::GetBool(L"WINDOW_ALWAYS_RUN_ENABLE") ? TRUE : FALSE;
-        DxLib::SetAlwaysRunFlag(isAlwaysRun);
 
         // Create the main window.
         if (DxLib::SetDoubleStartValidFlag(FALSE) != 0 ||
-            DxLib::SetAlwaysRunFlag(FALSE) != 0 ||
+            DxLib::SetWaitVSyncFlag(FALSE) != 0 ||
+            DxLib::SetAlwaysRunFlag(isAlwaysRun) != 0 ||
             DxLib::SetUseASyncChangeWindowModeFunction(FALSE, nullptr, nullptr) != 0 ||
             DxLib::SetWindowUserCloseEnableFlag(TRUE) != 0 ||
             DxLib::SetDxLibEndPostQuitMessageFlag(TRUE) != 0 ||
@@ -103,7 +141,7 @@ namespace mm2hack::core::winapi
         iccex.dwSize = sizeof(iccex);
         iccex.dwICC = ICC_WIN95_CLASSES;
         InitCommonControlsEx(&iccex);
-        overlay::SettingsWindow::RegisterWindowClass(hInstance);
+        ui::SettingsWindow::RegisterWindowClass(hInstance);
 
         _mainWindowHandle = DxLib::GetMainWindowHandle();
         if (_mainWindowHandle == nullptr)
@@ -114,7 +152,6 @@ namespace mm2hack::core::winapi
 
         _dxLibWnd = reinterpret_cast<WNDPROC>(GetWindowLongPtr(_mainWindowHandle, GWLP_WNDPROC));
         SetWindowLongPtr(_mainWindowHandle, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WindowProc));
-        PostMessage(_mainWindowHandle, WM_USER_CREATE, 0, 0);
 
         // Set the background color using NES palette
         if (!apps::NES::NESPalette::LoadPaletteFromFile(conf::kNESPaletteFilepath))
@@ -137,6 +174,10 @@ namespace mm2hack::core::winapi
         HudConfig hudConfig;
         ConfigUIManager::LoadHudConfig(hudConfig);
 
+        // Synchronize various settings and menu bar status, etc...
+        PostMessage(_mainWindowHandle, WM_USER_CREATE, 0, 0);
+        SyncWindowSizeMenuCheck(_viewerRate);
+
         return true;
     }
 
@@ -145,7 +186,8 @@ namespace mm2hack::core::winapi
         WindowContext context{
             .hWnd = _mainWindowHandle,
             .viewerRate = _viewerRate,
-            .screenHandle = _screenHandle
+            .screenHandle = _screenHandle,
+            .vSync = _vSync
         };
 
         GameLoopManager gameLoop(context);
@@ -195,6 +237,7 @@ namespace mm2hack::core::winapi
             SetWindowPos(hWnd, nullptr, 0, 0, windowW, windowH, SWP_NOMOVE | SWP_NOZORDER);
         }
         _viewerRate = viewerRate;
+        SyncWindowSizeMenuCheck(viewerRate);
 
         return true;
     }
@@ -257,6 +300,11 @@ namespace mm2hack::core::winapi
     int WindowManager::GetScreenHandle() const
     {
         return _screenHandle;
+    }
+
+    bool WindowManager::SetVSyncEnabled(bool enabled)
+    {
+        return _vSync = enabled;
     }
 
     WNDPROC WindowManager::GetDxLibWnd() const
@@ -322,5 +370,49 @@ namespace mm2hack::core::winapi
     {
         return (lstrcmp(GetCommandLine(), L"debug") == 0) ||
             config::EnvironmentConfig::GetBool(L"MM2HACK_DEBUG", false);
+    }
+
+    float WindowManager::LoadViewerRate() const
+    {
+        using namespace config;
+        using namespace core::ui;
+        float viewerRate = SystemConfig::kScreenScale;
+
+        GraphicsConfig conf{};
+        ConfigUIManager::LoadGraphicsConfig(conf);
+        if (conf.resolutionIndex >= 0 && conf.resolutionIndex < static_cast<int>(std::size(kResolutionOptions)))
+        {
+            viewerRate = kResolutionOptions[conf.resolutionIndex].scale;
+        }
+        return viewerRate;
+    }
+
+    bool WindowManager::LoadVSync() const
+    {
+        using namespace config;
+        bool vsync = false;
+        GraphicsConfig conf{};
+        ConfigUIManager::LoadGraphicsConfig(conf);
+        if (conf.vsync)
+        {
+            vsync = true;
+        }
+        return vsync;
+    }
+
+    void WindowManager::SyncWindowSizeMenuCheck(float viewerRate) const
+    {
+        const auto& hwnd = WindowManager::GetInstance().GetMainWindowHandle();
+        HMENU hMenu = ::GetMenu(hwnd);
+        if (!hMenu) return;
+
+        for (const auto& a : kResolutionAppendices)
+        {
+            ::CheckMenuItem(hMenu, a.id, MF_BYCOMMAND | MF_UNCHECKED);
+        }
+        const UINT idToCheck = FindMenuIdForRate(viewerRate);
+        ::CheckMenuItem(hMenu, idToCheck, MF_BYCOMMAND | MF_CHECKED);
+
+        ::DrawMenuBar(hwnd);
     }
 }

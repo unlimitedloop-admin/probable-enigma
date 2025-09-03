@@ -53,6 +53,9 @@ namespace mm2hack::core::winapi
     {
         HMENU hMenu = GetMenu(hWnd);
         CheckMenuItem(hMenu, ID_SLOT_0, MF_BYCOMMAND | MF_CHECKED); // Set the first slot as checked by default.
+        CheckMenuItem(hMenu, ID_HUD_FPS,
+            config::ConfigUIManager::GetCurrentHudConfig().showFps ? MF_BYCOMMAND | MF_CHECKED : MF_BYCOMMAND | MF_UNCHECKED
+        );  // Set the FPS display state based on the HUD configuration.
     }
 
     void HandleDestroy(HWND hWnd)
@@ -62,8 +65,9 @@ namespace mm2hack::core::winapi
 
     void HandleCommand(HWND hWnd, WPARAM wParam)
     {
-        using namespace save;
         using namespace apps::sequence;
+        using namespace save;
+        using namespace ui;
         auto& seq = SequenceManager::GetInstance();
 
         auto setGameState = [](GameState state)
@@ -239,12 +243,12 @@ namespace mm2hack::core::winapi
 
         case ID_MENU_GRAPHICS_SETTINGS:
             // Open the graphics settings window.
-            overlay::SettingsWindow::OpenTab(hWnd, overlay::SettingsWindow::Tab::Graphics);
+            SettingsWindow::OpenTab(hWnd, SettingsWindow::Tab::Graphics);
             break;
 
         case ID_MENU_SOUND_SETTINGS:
             // Open the sound settings window.
-            overlay::SettingsWindow::OpenTab(hWnd, overlay::SettingsWindow::Tab::Sound);
+            SettingsWindow::OpenTab(hWnd, SettingsWindow::Tab::Sound);
             break;
 
         case ID_HUD_FPS:

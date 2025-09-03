@@ -32,13 +32,20 @@ namespace mm2hack::apps::deal
         GameContext& operator=(GameContext&&) = delete;
         // GameContext is a singleton, so we delete the copy and move constructors and assignment operators.
 
+        // Assumes the game is running: Retrieves the instance of the resource manager
         supervisor::ResourceManager& GetResourceManager() override { return *_resourceManager; }
         supervisor::ResourceManager* GetResourceManagerPtr() override { return _resourceManager.get(); }
         input::JoystickManager& GetJoystickManager() override { return *_joystickManager; }
 
+        // Initializes the game context, setting up resources and input management
         void Initialize();
+        // Shuts down the game context, releasing resources and cleaning up
         void Shutdown();
+        // Checks if the game context has been initialized
         bool IsInitialized() const override;
+        // Checks if the game context has been shut down
+        bool IsShutdown() const { return !IsInitialized(); }
+
 
     private:
         GameContext() = default;

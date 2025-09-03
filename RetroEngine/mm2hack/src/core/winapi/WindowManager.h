@@ -41,6 +41,7 @@ namespace mm2hack::core::winapi
         // Get the current screen width and height
         int GetScreenWidth() const;
         int GetScreenHeight() const;
+        float GetViewerRate() const { return _viewerRate; }
 
         // Initialize the menu bar on application startup
         void InitializeMenuOnStartup();
@@ -53,6 +54,8 @@ namespace mm2hack::core::winapi
         bool IsMainWindowActive();
         // Get drawing screen handle
         int GetScreenHandle() const;
+        // Set VSync enabled/disabled
+        bool SetVSyncEnabled(bool enabled);
 
         // Get the window procedure handle for DxLib
         WNDPROC GetDxLibWnd() const;
@@ -69,7 +72,12 @@ namespace mm2hack::core::winapi
         std::wstring _windowTitle;          // Title of the main window
         float _viewerRate = 0.0f;           // Viewer rate for the main window, used for scaling
         int _screenHandle = -1;             // Handle for the screen
+        bool _vSync{ false };               // VSync enabled/disabled
 
         bool IsDebugMode() const;           // Check if the application is running in debug mode
+        float LoadViewerRate() const;       // Load the viewer rate from configuration
+        bool LoadVSync() const;             // Load the VSync setting from configuration
+
+        void SyncWindowSizeMenuCheck(float viewerRate) const;
     };
 }

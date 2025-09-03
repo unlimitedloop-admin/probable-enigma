@@ -22,19 +22,21 @@ namespace mm2hack::core
     GameLoopManager::GameLoopManager(winapi::WindowContext& context)
         : _hWnd(context.hWnd),
         _viewerRate(context.viewerRate),
-        _screenHandle(context.screenHandle)
+        _screenHandle(context.screenHandle),
+        _vSync(context.vSync)
     {
-        apps::deal::GameContext::GetInstance().Initialize();
-        auto& jm = apps::deal::GameContext::GetInstance().GetJoystickManager();
+        auto& gcInstance = apps::deal::GameContext::GetInstance();
+        gcInstance.Initialize();
+        auto& jm = gcInstance.GetJoystickManager();
         config::ConfigUIManager::LoadInputConfigIfMatches(jm.GetKeyBinding(), jm.ActiveDevice());
     }
 
     void GameLoopManager::Run()
     {
+        using namespace config;
         using namespace exceptions;
         using namespace overlay;
         using namespace utils;
-        using conf = config::SystemConfig;
 
         ScopeGuard finally([]
             {
@@ -42,38 +44,30 @@ namespace mm2hack::core
                 apps::sequence::SequenceManager::GetInstance().Release();
             });
 
+        // Load graphics configuration and apply FPS limit if changed.
         auto& fps = FpsManager::GetInstance();
 
         try
         {
             while (!DxLib::ProcessMessage() && !DxLib::SetDrawScreen(_screenHandle) && !DxLib::ClearDrawScreen())
             {
+                auto& seq = apps::sequence::SequenceManager::GetInstance();
+
                 // If the game is paused, we skip the update logic.
                 PauseManager::SetPaused(GameStateManager::GetInstance().Is(GameState::Paused));
-
-                auto& seq = apps::sequence::SequenceManager::GetInstance();
 
                 // Update the main sequence.
                 seq.Update();
                 // Render the game content.
-                seq.RenderWorld();
-
-                // Scale what we draw to fit the viewer rate.
-                if (DxLib::SetDrawScreen(DX_SCREEN_BACK) ||
-                    DxLib::DrawExtendGraph(0, 0,
-                        static_cast<int>(conf::kScreenWidth * _viewerRate),
-                        static_cast<int>(conf::kScreenHeight * _viewerRate),
-                        _screenHandle, FALSE))
-                {
-                    break;
-                }
-
+                seq.RenderWorld(_screenHandle, _viewerRate);        // Render of game contents.
                 // Render the overlay content (e.g., HUD, debug information).
-                seq.RenderOverlay(_viewerRate);
+                seq.RenderOverlay(_viewerRate);                     // Render of overlay contents.
                 // Render the input configuration overlay if active.
                 seq.HandleJpbtnConfigMode(fps.GetDeltaSeconds());
                 // Pace & Flip the screen.
                 fps.Wait();
+
+                if (_vSync) DxLib::WaitVSync(1);  // VSync control = pseudo FPS with monitor refresh rate.
                 // Screen flip to present the rendered frame of the back buffer.
                 DxLib::ScreenFlip();
             }

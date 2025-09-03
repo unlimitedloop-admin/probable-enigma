@@ -98,12 +98,21 @@ namespace mm2hack::apps::sequence
         }
     }
 
-    void SequenceManager::RenderWorld()
+    void SequenceManager::RenderWorld(int screenHandle, float viewerRate)
     {
+        using conf = config::SystemConfig;
         if (_currentSequence)
         {
             _currentSequence->RenderWorld();
         }
+
+        // Scale what we draw to fit the viewer rate.
+        DxLib::SetDrawScreen(DX_SCREEN_BACK);
+        DxLib::DrawExtendGraph(0, 0,
+                static_cast<int>(conf::kScreenWidth * viewerRate),
+                static_cast<int>(conf::kScreenHeight * viewerRate),
+                screenHandle, FALSE
+        );
     }
 
     void SequenceManager::RenderOverlay(float viewerRate)

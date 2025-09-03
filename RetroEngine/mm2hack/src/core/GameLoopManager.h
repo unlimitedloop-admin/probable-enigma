@@ -24,5 +24,6 @@ namespace mm2hack::core
         HWND _hWnd;
         float& _viewerRate;
         int& _screenHandle;
+        bool& _vSync;
     };
 }

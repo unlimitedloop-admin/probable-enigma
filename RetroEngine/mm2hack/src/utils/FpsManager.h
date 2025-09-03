@@ -8,7 +8,6 @@
 //==============================================================================
 #pragma once
 
-#include "config/SystemConfig.h"
 #include "Fps.h"
 
 namespace mm2hack::utils
@@ -19,8 +18,17 @@ namespace mm2hack::utils
     public:
         static Fps& GetInstance()
         {
-            static Fps instance(config::SystemConfig::kTargetFps);
+            static Fps instance;
             return instance;
         }
+
+    private:
+        FpsManager() = default;
+        ~FpsManager() = default;
+        FpsManager(const FpsManager&) = delete;
+        FpsManager& operator=(const FpsManager&) = delete;
+        FpsManager(FpsManager&&) = delete;
+        FpsManager& operator=(FpsManager&&) = delete;
+        // FpsManager is a singleton, so we delete the copy and move constructors and assignment operators.
     };
 }

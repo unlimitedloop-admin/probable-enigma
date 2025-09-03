@@ -53,6 +53,8 @@ namespace mm2hack::apps::scenes
     void DrawGraph::Finalize()
     {
         using namespace deal;
+        // Test only?
+        if (GameContext::GetInstance().IsShutdown()) return;
         GameContext::GetInstance().GetResourceManager().GetSpriteManager().Remove(L"Player");
         GameContext::GetInstance().GetResourceManager().GetBGTileManager().Remove(L"SAMPLESTAGE1");
     }

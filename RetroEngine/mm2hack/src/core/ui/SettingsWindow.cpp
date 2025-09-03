@@ -10,7 +10,7 @@
 #include "GraphicsSettingsUI.h"
 #include "SoundSettingsUI.h"
 
-namespace mm2hack::core::overlay
+namespace mm2hack::core::ui
 {
     constexpr int ID_BUTTON_OK = 9001;
     constexpr int ID_BUTTON_CANCEL = 9002;

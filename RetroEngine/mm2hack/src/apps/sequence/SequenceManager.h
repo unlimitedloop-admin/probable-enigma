@@ -45,7 +45,7 @@ namespace mm2hack::apps::sequence
         // Executes the current sequence, which is responsible for running the game logic
         void Update();
         // Renders the graphics for the current sequence
-        void RenderWorld();
+        void RenderWorld(int screenHandle, float viewerRate);
         // Renders the overlay for the current sequence, typically used for UI elements
         void RenderOverlay(float viewerRate);
         // Releases the current sequence, cleaning up resources

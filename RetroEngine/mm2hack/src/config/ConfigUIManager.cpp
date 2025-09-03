@@ -165,13 +165,13 @@ namespace mm2hack::config
         const std::wstring path = GetIniPath();
         wchar_t buffer[32];
 
-        GetPrivateProfileString(L"Graphics", L"ResolutionIndex", L"0", buffer, 32, path.c_str());
+        GetPrivateProfileString(L"Graphics", L"ResolutionIndex", L"-1", buffer, 32, path.c_str());
         config.resolutionIndex = _wtoi(buffer);
 
         GetPrivateProfileString(L"Graphics", L"VSync", L"1", buffer, 32, path.c_str());
         config.vsync = (_wtoi(buffer) != 0);
 
-        GetPrivateProfileString(L"Graphics", L"FpsLimit", L"1", buffer, 32, path.c_str());
+        GetPrivateProfileString(L"Graphics", L"FpsLimit", L"-1", buffer, 32, path.c_str());
         config.fpsLimitIndex = _wtoi(buffer);
     }
 

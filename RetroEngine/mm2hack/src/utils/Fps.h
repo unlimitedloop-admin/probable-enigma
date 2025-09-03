@@ -16,7 +16,7 @@ namespace mm2hack::utils
     class Fps
     {
     public:
-        explicit Fps(int targetFps);
+        Fps();
 
         // Wait for the next frame
         void Wait();
@@ -37,5 +37,7 @@ namespace mm2hack::utils
         double _frameDuration;
         int _frameCount;
         mutable double _actualFps;
+
+        void LoadIniFps();
     };
 }
