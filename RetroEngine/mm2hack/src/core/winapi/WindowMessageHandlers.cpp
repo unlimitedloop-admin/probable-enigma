@@ -148,7 +148,7 @@ namespace mm2hack::core::winapi
             }
             else
             {
-                THROW_EXCEPTION_EX("Cannot save while the game is running.", L"WindowManager", exceptions::ErrorLevel::Info);
+                THROW_EXCEPTION_EX(L"Cannot save while the game is running.", L"WindowManager", exceptions::ErrorLevel::Info);
             }
             break;
 
@@ -298,6 +298,8 @@ namespace mm2hack::core::winapi
     void HandleKeyDown(HWND hWnd, WPARAM wParam, LPARAM lParam)
     {
         auto& gameContext = apps::deal::GameContext::GetInstance();
+        auto& gameState = GameStateManager::GetInstance();
+        auto& windowManager = WindowManager::GetInstance();
 
         // Handles screenshot key input with consistently high-priority execution.
         if (!(lParam & (1 << 30)) && wParam == SCREENSHOT_KEY)
@@ -312,9 +314,6 @@ namespace mm2hack::core::winapi
         {
             return;
         }
-
-        GameStateManager& gameState = GameStateManager::GetInstance();
-        WindowManager& windowManager = WindowManager::GetInstance();
 
         // Pressing the ESC key immediately triggers a return and transitions the game state,
         // without interference from other key inputs.

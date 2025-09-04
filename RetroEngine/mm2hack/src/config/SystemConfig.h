@@ -50,6 +50,7 @@ namespace mm2hack::config
 
         static constexpr uint32_t kCurrentSaveVersion = 1;          // Current save version
 
+        static constexpr uint32_t kFeedbackOverlayDuration = 180;   // Duration for feedback overlay display (milliseconds)
 
         // NES Style properties
         // Tile Set

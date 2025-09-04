@@ -17,11 +17,13 @@
 
 INT APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
 {
-    using namespace mm2hack;
+    using namespace mm2hack::core;
 
-    core::Bootstrapper(lpCmdLine);
-    core::RunMainProcess(hInstance, lpCmdLine, nCmdShow);
-    core::CleanUp();
+    Bootstrapper(lpCmdLine);
+
+    RunMainProcess(hInstance, lpCmdLine, nCmdShow);
+
+    CleanUp();
 
     return EXIT_SUCCESS;
 }

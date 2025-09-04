@@ -13,6 +13,7 @@
 
 namespace mm2hack::input::di
 {
+    // Upper 2 bits for type: 00=Button, 01=POV, 10=Axis
     constexpr uint16_t kTypeBtn  = 0x0000u;     // Buttons[code]
     constexpr uint16_t kTypeAxis = 0x8000u;     // X, Y, Z, Rx, Ry, Rz, Slider[0], Slider[1]
     constexpr uint16_t kTypePOV  = 0x4000u;     // code: 0=Up, 1=Right, 2=Down, 3=Left

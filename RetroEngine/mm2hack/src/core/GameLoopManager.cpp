@@ -52,6 +52,8 @@ namespace mm2hack::core
             while (!DxLib::ProcessMessage() && !DxLib::SetDrawScreen(_screenHandle) && !DxLib::ClearDrawScreen())
             {
                 auto& seq = apps::sequence::SequenceManager::GetInstance();
+                auto destW = static_cast<int>(config::SystemConfig::kScreenWidth * _viewerRate);
+                auto destH = static_cast<int>(config::SystemConfig::kScreenHeight * _viewerRate);
 
                 // If the game is paused, we skip the update logic.
                 PauseManager::SetPaused(GameStateManager::GetInstance().Is(GameState::Paused));
@@ -59,15 +61,15 @@ namespace mm2hack::core
                 // Update the main sequence.
                 seq.Update();
                 // Render the game content.
-                seq.RenderWorld(_screenHandle, _viewerRate);        // Render of game contents.
+                seq.RenderWorld(_screenHandle, destW, destH);
                 // Render the overlay content (e.g., HUD, debug information).
-                seq.RenderOverlay(_viewerRate);                     // Render of overlay contents.
+                seq.RenderOverlay(destW, destH);
                 // Render the input configuration overlay if active.
                 seq.HandleJpbtnConfigMode(fps.GetDeltaSeconds());
                 // Pace & Flip the screen.
                 fps.Wait();
-
-                if (_vSync) DxLib::WaitVSync(1);  // VSync control = pseudo FPS with monitor refresh rate.
+                // VSync control = pseudo FPS with monitor refresh rate.
+                if (_vSync) DxLib::WaitVSync(1);
                 // Screen flip to present the rendered frame of the back buffer.
                 DxLib::ScreenFlip();
             }
@@ -78,12 +80,7 @@ namespace mm2hack::core
         }
         catch (const std::exception& e)
         {
-            ErrorHandler::Handle(
-                utf8_to_wstring(e.what()),
-                L"GameLoopManager",
-                L"Run",
-                ErrorLevel::FatalError
-            );
+            ErrorHandler::Handle(utf8_to_wstring(e.what()), L"GameLoopManager", L"Run", ErrorLevel::FatalError);
         }
     }
 }

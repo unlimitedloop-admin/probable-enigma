@@ -38,6 +38,6 @@ namespace mm2hack::utils
         int _frameCount;
         mutable double _actualFps;
 
-        void LoadIniFps();
+        void LoadIniFps();  // Load target FPS from ini file or use SystemConfig value
     };
 }

@@ -42,12 +42,13 @@ namespace mm2hack::apps::sequence
         void RebootCurrentSequence();
         // Loads a specific sequence type, such as standard or debug, using when the loading save data
         void LoadSequence(const SequenceType type);
+
         // Executes the current sequence, which is responsible for running the game logic
         void Update();
         // Renders the graphics for the current sequence
-        void RenderWorld(int screenHandle, float viewerRate);
+        void RenderWorld(int screenHandle, int destW, int destH);
         // Renders the overlay for the current sequence, typically used for UI elements
-        void RenderOverlay(float viewerRate);
+        void RenderOverlay(int destW, int destH);
         // Releases the current sequence, cleaning up resources
         void Release();
 
@@ -63,18 +64,17 @@ namespace mm2hack::apps::sequence
             return _sequenceType;
         }
 
-        // Sends feedback to the user, typically used for displaying messages or notifications
-        void SendFeedback(const std::wstring& message);
-
         // Handles the configuration mode for joystick button mapping
         void HandleJpbtnConfigMode(double dt);
+        // Sends feedback to the user, typically used for displaying messages or notifications
+        void SendFeedback(const std::wstring& message);
 
     private:
         SequenceManager() = default;
         ~SequenceManager() = default;
 
-        std::unique_ptr<ISequence> _currentSequence = nullptr;              // Pointer to the current sequence object
-        SequenceType _sequenceType = SequenceType::None;                    // Current sequence type, indicating the mode of the game
-        core::overlay::FeedbackOverlay _feedbackOverlay;                    // Overlay for displaying feedback messages to the user
+        std::unique_ptr<ISequence> _currentSequence = nullptr;          // Pointer to the current sequence object
+        SequenceType _sequenceType = SequenceType::None;                // Current sequence type, indicating the mode of the game
+        core::overlay::FeedbackOverlay _feedbackOverlay;                // Overlay for displaying feedback messages to the user
     };
 }

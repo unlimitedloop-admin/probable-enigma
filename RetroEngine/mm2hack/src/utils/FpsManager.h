@@ -22,13 +22,14 @@ namespace mm2hack::utils
             return instance;
         }
 
-    private:
-        FpsManager() = default;
-        ~FpsManager() = default;
         FpsManager(const FpsManager&) = delete;
         FpsManager& operator=(const FpsManager&) = delete;
         FpsManager(FpsManager&&) = delete;
         FpsManager& operator=(FpsManager&&) = delete;
         // FpsManager is a singleton, so we delete the copy and move constructors and assignment operators.
+
+    private:
+        FpsManager() = default;
+        ~FpsManager() = default;
     };
 }

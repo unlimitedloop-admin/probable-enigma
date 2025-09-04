@@ -98,7 +98,7 @@ namespace mm2hack::apps::sequence
         }
     }
 
-    void SequenceManager::RenderWorld(int screenHandle, float viewerRate)
+    void SequenceManager::RenderWorld(int screenHandle, int destW, int destH)
     {
         using conf = config::SystemConfig;
         if (_currentSequence)
@@ -108,24 +108,17 @@ namespace mm2hack::apps::sequence
 
         // Scale what we draw to fit the viewer rate.
         DxLib::SetDrawScreen(DX_SCREEN_BACK);
-        DxLib::DrawExtendGraph(0, 0,
-                static_cast<int>(conf::kScreenWidth * viewerRate),
-                static_cast<int>(conf::kScreenHeight * viewerRate),
-                screenHandle, FALSE
-        );
+        DxLib::DrawExtendGraph(0, 0, destW, destH, screenHandle, FALSE);
     }
 
-    void SequenceManager::RenderOverlay(float viewerRate)
+    void SequenceManager::RenderOverlay(int destW, int destH)
     {
         using conf = config::SystemConfig;
         if (_currentSequence)
         {
             _currentSequence->RenderOverlay();
         }
-        _feedbackOverlay.Render(
-            static_cast<int>(conf::kScreenWidth * viewerRate),
-            static_cast<int>(conf::kScreenHeight * viewerRate)
-        );
+        _feedbackOverlay.Render(destW, destH);
 
         core::overlay::DebugHud::GetInstance().Draw();     // Draw the FPS in the HUD, top-left corner
     }
@@ -139,11 +132,6 @@ namespace mm2hack::apps::sequence
         }
     }
 
-    void SequenceManager::SendFeedback(const std::wstring& message)
-    {
-        _feedbackOverlay.ShowMessage(message, 180);
-    }
-
     void SequenceManager::HandleJpbtnConfigMode(double dt)
     {
         using namespace apps::deal;
@@ -154,5 +142,12 @@ namespace mm2hack::apps::sequence
             GameContext::GetInstance().GetJoystickManager().Update();
             overlay::InputConfigOverlay::GetInstance().Tick(static_cast<float>(dt));
         }
+    }
+
+    void SequenceManager::SendFeedback(const std::wstring& message)
+    {
+        // Your message will appear as a slide-in overlay for the duration you specify.
+        // It's automatic animation.
+        _feedbackOverlay.ShowMessage(message, config::SystemConfig::kFeedbackOverlayDuration);
     }
 }

@@ -24,6 +24,7 @@ namespace mm2hack::input
         const InputFrame& GetState(size_t index) const;
         // Get the pressed and released frames of all buttons
         const std::array<InputFrame, JPBTN_COUNT>& GetAllStates() const;
+        // Reset the pressed and released frames of all buttons
         void ResetAll();
 
     private:

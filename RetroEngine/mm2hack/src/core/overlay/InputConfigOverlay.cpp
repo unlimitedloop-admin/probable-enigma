@@ -129,7 +129,7 @@ namespace mm2hack::core::overlay
             break;
         }
         case Completed:
-            if (CheckHitKey(KEY_INPUT_ESCAPE) || CheckHitKey(KEY_INPUT_RETURN))
+            if (CheckHitKey(KEY_INPUT_RETURN))
             {
                 Finish(true);  // Finish and save.
                 return;
@@ -165,7 +165,7 @@ namespace mm2hack::core::overlay
 
         if (_index >= _steps.size())
         {
-            DrawString(40, 80, L"Configuration completed.\nPress [Esc] to exit.", GetColor(255, 255, 255));
+            DrawString(40, 80, L"Configuration completed.\nSave settings to an ini file? Press [Enter] key.\nOr if not, press [Esc] to exit.", GetColor(255, 255, 255));
             return;
         }
 

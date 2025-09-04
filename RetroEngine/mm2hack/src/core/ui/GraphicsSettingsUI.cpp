@@ -3,6 +3,7 @@
 #include "GraphicsSettingsUI.h"
 
 #include <cmath>
+#include <CommCtrl.h>
 #include <iterator>
 #include <libloaderapi.h>
 #include <limits>

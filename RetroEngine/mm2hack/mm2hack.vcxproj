@@ -211,6 +211,7 @@
     <ClCompile Include="src\input\KeyBinding.cpp" />
     <ClCompile Include="src\input\KeyboardInputProvider.cpp" />
     <ClCompile Include="src\input\KeyboardsIn.cpp" />
+    <ClCompile Include="src\input\RawInputPoller.cpp" />
     <ClCompile Include="src\input\XInputProvider.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\pch.cpp">
@@ -305,6 +306,7 @@
     <ClInclude Include="src\input\KeyboardsIn.h" />
     <ClInclude Include="src\input\KeyToken.h" />
     <ClInclude Include="src\input\RawInputEvent.h" />
+    <ClInclude Include="src\input\RawInputPoller.h" />
     <ClInclude Include="src\input\XInputProvider.h" />
     <ClInclude Include="src\input\xi\XInputToken.h" />
     <ClInclude Include="src\libs\json.hpp" />

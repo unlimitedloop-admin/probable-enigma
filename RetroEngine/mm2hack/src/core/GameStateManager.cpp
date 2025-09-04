@@ -6,12 +6,6 @@
 
 namespace mm2hack::core
 {
-    GameStateManager& GameStateManager::GetInstance()
-    {
-        static GameStateManager instance;
-        return instance;
-    }
-
     void GameStateManager::SetState(GameState newState)
     {
         _currentState = newState;

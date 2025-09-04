@@ -39,7 +39,7 @@ namespace
         { 4.0f, ID_SCREEN_4X },
     };
 
-    inline UINT FindMenuIdForRate(float viewerRate) noexcept
+    UINT FindMenuIdForRate(float viewerRate) noexcept
     {
         // Absorbs floating point errors.
         constexpr float kEps = 1e-3f;
@@ -70,12 +70,7 @@ namespace mm2hack::core::winapi
 
         auto reportInitError = [](const std::wstring& message) -> bool
             {
-                ErrorHandler::Handle(
-                    message,
-                    L"WindowManager",
-                    L"Initialize",
-                    ErrorLevel::Error
-                );
+                ErrorHandler::Handle(message, L"WindowManager", L"Initialize", ErrorLevel::Error);
                 return false;
             };
 
@@ -261,7 +256,7 @@ namespace mm2hack::core::winapi
         {
             // Debug(&D) is the 3rd command on the menu.
             RemoveMenu(hMenu, 3, MF_BYPOSITION);
-            HMENU hFileMenu = GetSubMenu(hMenu, 0); // File menu is the first submenu
+            HMENU hFileMenu = GetSubMenu(hMenu, 0);
             if (hFileMenu)
             {
                 // Remove the Debug Start command from the File menu.

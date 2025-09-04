@@ -17,7 +17,7 @@
 
 namespace mm2hack::input
 {
-    // Keyboard input provider
+    // Keyboard input provider, used when no Joycard is connected
     class KeyboardInputProvider final : public IInputProvider
     {
     public:

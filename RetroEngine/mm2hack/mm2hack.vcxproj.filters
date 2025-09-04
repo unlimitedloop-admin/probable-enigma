@@ -56,6 +56,7 @@
     <ClCompile Include="src\apps\supervisor\ResourceManager.cpp" />
     <ClCompile Include="src\core\overlay\DebugHud.cpp" />
     <ClCompile Include="src\core\overlay\InputConfigOverlay.cpp" />
+    <ClCompile Include="src\input\RawInputPoller.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
@@ -149,6 +150,7 @@
     <ClInclude Include="src\input\xi\XInputToken.h" />
     <ClInclude Include="src\input\di\DirectInputToken.h" />
     <ClInclude Include="src\config\InputLoadResult.h" />
+    <ClInclude Include="src\input\RawInputPoller.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

@@ -17,10 +17,11 @@
 namespace
 {
     using namespace mm2hack;
+    using namespace input;
 
     inline uint16_t ParseU16(const wchar_t* ws)
     {
-        if (!ws || !*ws) return input::kTokenUnbound;
+        if (!ws || !*ws) return kTokenUnbound;
         wchar_t* end = nullptr;
         unsigned long v = std::wcstoul(ws, &end, 0); // 0xFFFF, 65535 ...
         if (v > 0xFFFFul) v = 0xFFFFul;
@@ -33,16 +34,16 @@ namespace
     }
 
     // Translate Device enum to string and vice versa
-    inline const wchar_t* DeviceToW(input::Device d)
+    inline const wchar_t* DeviceToW(Device d)
     {
-        using D = input::Device;
+        using D = Device;
         switch (d) { case D::XInput: return L"XInput"; case D::DirectInput: return L"DirectInput"; default: return L"Keyboard"; }
     }
 
     // Parse device string to Device enum
-    inline input::Device ParseDevice(const wchar_t* ws)
+    inline Device ParseDevice(const wchar_t* ws)
     {
-        using D = input::Device;
+        using D = Device;
         if (!ws) return D::Keyboard;
         if (_wcsicmp(ws, L"XInput") == 0)      return D::XInput;
         if (_wcsicmp(ws, L"DirectInput") == 0) return D::DirectInput;
@@ -51,7 +52,7 @@ namespace
         if (n == 1) return D::XInput; if (n == 2) return D::DirectInput; return D::Keyboard;
     }
 
-    inline bool ProviderMatches(mm2hack::input::Device saved, mm2hack::input::Device detected)
+    inline bool ProviderMatches(Device saved, Device detected)
     {
         return saved == detected;
     }
@@ -60,6 +61,8 @@ namespace
 
 namespace mm2hack::config
 {
+    HudConfig ConfigUIManager::_cachedHudConfig{ false };
+
     void ConfigUIManager::SaveInputDeviceConfig(const input::KeyBinding& binding, input::Device provider)
     {
         using namespace input;
@@ -206,8 +209,6 @@ namespace mm2hack::config
         GetPrivateProfileString(L"Sound", L"Source", L"0", buffer, 32, path.c_str());
         config.sourceIndex = _wtoi(buffer);
     }
-
-    HudConfig ConfigUIManager::_cachedHudConfig{ false };
 
     void ConfigUIManager::SaveHudConfig(const HudConfig& config)
     {

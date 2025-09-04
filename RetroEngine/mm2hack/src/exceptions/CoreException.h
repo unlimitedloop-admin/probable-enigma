@@ -12,6 +12,7 @@
 #include <stdexcept>
 #include <string>
 #include "ErrorLevel.h"
+#include "utils/string_converter.h"
 
 namespace mm2hack::exceptions
 {
@@ -36,6 +37,25 @@ namespace mm2hack::exceptions
             _line(line)
         {
         }
+
+        // Wide string constructor
+        CoreException(
+            const std::wstring& message,
+            const std::wstring& className,
+            const char* methodName,
+            const ErrorLevel& errorLevel = ErrorLevel::Error,
+            const char* file = "",
+            int line = 0
+        )
+            : std::runtime_error(utils::wstring_to_utf8(message)),
+            _className(className),
+            _methodName(methodName ? std::wstring(methodName, methodName + strlen(methodName)) : L""),
+            _errorLevel(errorLevel),
+            _file(file),
+            _line(line)
+        {
+        }
+
 
         const std::wstring& GetKlassName() const { return _className; }
         const std::wstring& GetMethodName() const { return _methodName; }

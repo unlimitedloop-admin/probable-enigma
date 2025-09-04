@@ -78,6 +78,6 @@ namespace mm2hack::core::winapi
         float LoadViewerRate() const;       // Load the viewer rate from configuration
         bool LoadVSync() const;             // Load the VSync setting from configuration
 
-        void SyncWindowSizeMenuCheck(float viewerRate) const;
+        void SyncWindowSizeMenuCheck(float viewerRate) const;   // Sync the window size menu check state
     };
 }

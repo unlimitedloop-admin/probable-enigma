@@ -16,7 +16,11 @@ namespace mm2hack::core
     class GameStateManager final
     {
     public:
-        static GameStateManager& GetInstance();
+        static GameStateManager& GetInstance()
+        {
+            static GameStateManager instance;
+            return instance;
+        }
 
         GameStateManager(const GameStateManager&) = delete;
         GameStateManager& operator=(const GameStateManager&) = delete;
