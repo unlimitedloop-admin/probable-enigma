@@ -16,13 +16,19 @@ namespace mm2hack::utils
     class Fps
     {
     public:
-        explicit Fps(int targetFps);
+        Fps();
 
         // Wait for the next frame
         void Wait();
+        // Reset the internal timer
         void Reset();
+
+        // Get the actual frame rate
         double GetActualFps() const;
+        // Set the target frame rate
         void SetTargetFps(int targetFps);
+        // Get the time elapsed since the last frame in seconds
+        float GetDeltaSeconds() const;
 
     private:
         using Clock = std::chrono::steady_clock;
@@ -31,5 +37,7 @@ namespace mm2hack::utils
         double _frameDuration;
         int _frameCount;
         mutable double _actualFps;
+
+        void LoadIniFps();  // Load target FPS from ini file or use SystemConfig value
     };
 }

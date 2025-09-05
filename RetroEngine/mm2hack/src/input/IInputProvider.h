@@ -17,7 +17,7 @@ namespace mm2hack::input
     {
     public:
         virtual ~IInputProvider() = default;
-        // Update the input state and return the updated state.
+        // Update the input state and return the updated state
         virtual bool Update(C16ButtonState& out_state) = 0;
     };
 }

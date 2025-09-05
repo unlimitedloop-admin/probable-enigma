@@ -18,5 +18,6 @@ namespace mm2hack::core
         Paused,         // When the game is paused.
         MenuActive,     // When a menu is active, such as the pause menu or options menu.
         Transitioning,  // When the game is transitioning between states, such as loading a new level or scene.
+        JpbtnConfig,    // When configuring the JPBTN (Joypad Buttons) settings.
     };
 }

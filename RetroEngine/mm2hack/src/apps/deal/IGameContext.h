@@ -3,7 +3,7 @@
 //  Project: mm2hack
 //  IGameContext.h
 // 
-//  Interface for game context management
+//  Interface for game context management.
 // 
 //==============================================================================
 #pragma once

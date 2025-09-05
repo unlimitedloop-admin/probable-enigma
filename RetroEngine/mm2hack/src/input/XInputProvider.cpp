@@ -2,8 +2,11 @@
 
 #include "XInputProvider.h"
 
+#include <cstdint>
 #include "C16ButtonState.h"
 #include "Jpbtn.h"
+#include "KeyToken.h"
+#include "xi/XInputToken.h"
 
 namespace mm2hack::input
 {
@@ -15,48 +18,45 @@ namespace mm2hack::input
             return false;
         }
 
-        constexpr int xinput_btn[JPBTN_COUNT] = {
-            XINPUT_BUTTON_DPAD_UP,
-            XINPUT_BUTTON_DPAD_DOWN,
-            XINPUT_BUTTON_DPAD_LEFT,
-            XINPUT_BUTTON_DPAD_RIGHT,
-            XINPUT_BUTTON_A,
-            XINPUT_BUTTON_B,
-            XINPUT_BUTTON_X,
-            XINPUT_BUTTON_Y,
-            XINPUT_BUTTON_START,
-            XINPUT_BUTTON_BACK,
-            XINPUT_BUTTON_LEFT_SHOULDER,
-            XINPUT_BUTTON_RIGHT_SHOULDER,
-            -1, // LT
-            -1, // RT
-            XINPUT_BUTTON_LEFT_THUMB,
-            XINPUT_BUTTON_RIGHT_THUMB
-        };
+        auto btn = [&](uint8_t i) { return state.Buttons[i] != 0; };
+        auto trg = [&](bool left, float thr01)
+            {
+                const int raw = left ? state.LeftTrigger : state.RightTrigger; // 0..255
+                const int thr = static_cast<int>(thr01 * 255.0f + 0.5f);
+                return raw >= thr;
+            };
+        auto axis = [&](uint8_t idx, bool neg, float thr01)
+            {
+                const int raw = (idx == xi::LX ? state.ThumbLX : idx == xi::LY ? state.ThumbLY : idx == xi::RX ? state.ThumbRX : state.ThumbRY); // -32768..32767
+                const int thr = static_cast<int>(thr01 * 32767.0f + 0.5f);
+                return neg ? (raw <= -thr) : (raw >= thr);
+            };
 
         for (size_t i = 0; i < JPBTN_COUNT; ++i)
         {
+            const auto token = _binding.GetBindingSCon(static_cast<JPBTN>(i));
             bool pressed = false;
 
-            if (i == static_cast<size_t>(JPBTN::LTRIGGER))
+            if (IsUnboundToken(token))
             {
-                pressed = state.LeftTrigger > 30;
+                pressed = false;
             }
-            else if (i == static_cast<size_t>(JPBTN::RTRIGGER))
+            else if (xi::IsBtn(token))
             {
-                pressed = state.RightTrigger > 30;
+                pressed = btn(xi::Code(token)); // Buttons[] index
             }
-            else
+            else if (xi::IsTrig(token))
             {
-                int btn_index = xinput_btn[i];
-                if (btn_index >= 0)
-                {
-                    pressed = state.Buttons[btn_index] != 0;
-                }
+                const uint8_t which = xi::Code(token); // 0=LT,1=RT
+                pressed = trg(which == xi::LT, xi::Thr01(token));
             }
+            else if (xi::IsAxis(token))
+            {
+                pressed = axis(xi::Code(token), xi::IsNeg(token), xi::Thr01(token));
+            }
+
             out_state.UpdateButton(i, pressed);
         }
-
         return true;
     }
 }

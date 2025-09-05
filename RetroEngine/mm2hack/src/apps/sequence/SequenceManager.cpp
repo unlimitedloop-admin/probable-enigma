@@ -2,6 +2,11 @@
 
 #include "SequenceManager.h"
 
+#include "apps/deal/GameContext.h"
+#include "core/GameState.h"
+#include "core/GameStateManager.h"
+#include "core/overlay/DebugHud.h"
+#include "core/overlay/InputConfigOverlay.h"
 #include "DebugSequence.h"
 #include "SequenceType.h"
 #include "StandardSequence.h"
@@ -85,28 +90,37 @@ namespace mm2hack::apps::sequence
 
     void SequenceManager::Update()
     {
+        auto& gsm = core::GameStateManager::GetInstance();
         if (_currentSequence)
         {
             _feedbackOverlay.Update();
-            _currentSequence->Execute();
+            if (gsm.IsRunning()) _currentSequence->Execute();
         }
     }
 
-    void SequenceManager::RenderWorld()
+    void SequenceManager::RenderWorld(int screenHandle, int destW, int destH)
     {
+        using conf = config::SystemConfig;
         if (_currentSequence)
         {
             _currentSequence->RenderWorld();
         }
+
+        // Scale what we draw to fit the viewer rate.
+        DxLib::SetDrawScreen(DX_SCREEN_BACK);
+        DxLib::DrawExtendGraph(0, 0, destW, destH, screenHandle, FALSE);
     }
 
-    void SequenceManager::RenderOverlay()
+    void SequenceManager::RenderOverlay(int destW, int destH)
     {
+        using conf = config::SystemConfig;
         if (_currentSequence)
         {
             _currentSequence->RenderOverlay();
         }
-        _feedbackOverlay.Render();
+        _feedbackOverlay.Render(destW, destH);
+
+        core::overlay::DebugHud::GetInstance().Draw();     // Draw the FPS in the HUD, top-left corner
     }
 
     void SequenceManager::Release()
@@ -118,8 +132,22 @@ namespace mm2hack::apps::sequence
         }
     }
 
+    void SequenceManager::HandleJpbtnConfigMode(double dt)
+    {
+        using namespace apps::deal;
+        using namespace core;
+        // If we are in JPBTN configuration mode, update the joystick manager and tick the input config overlay.
+        if (GameStateManager::GetInstance().Is(GameState::JpbtnConfig))
+        {
+            GameContext::GetInstance().GetJoystickManager().Update();
+            overlay::InputConfigOverlay::GetInstance().Tick(static_cast<float>(dt));
+        }
+    }
+
     void SequenceManager::SendFeedback(const std::wstring& message)
     {
-        _feedbackOverlay.ShowMessage(message, 180);
+        // Your message will appear as a slide-in overlay for the duration you specify.
+        // It's automatic animation.
+        _feedbackOverlay.ShowMessage(message, config::SystemConfig::kFeedbackOverlayDuration);
     }
 }

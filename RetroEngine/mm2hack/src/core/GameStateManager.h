@@ -12,10 +12,15 @@
 
 namespace mm2hack::core
 {
+    // Manages the game state across different scenes in the game
     class GameStateManager final
     {
     public:
-        static GameStateManager& GetInstance();
+        static GameStateManager& GetInstance()
+        {
+            static GameStateManager instance;
+            return instance;
+        }
 
         GameStateManager(const GameStateManager&) = delete;
         GameStateManager& operator=(const GameStateManager&) = delete;
@@ -31,6 +36,8 @@ namespace mm2hack::core
         bool Is(GameState state) const;
         // Gets whether the menu bar can be operated
         bool CanActiveMenuBar() const;
+        // Check if the game is currently running
+        bool IsRunning() const;
 
     private:
         GameStateManager() = default;

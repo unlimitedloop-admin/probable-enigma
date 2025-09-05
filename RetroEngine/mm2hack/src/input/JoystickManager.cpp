@@ -2,32 +2,39 @@
 
 #include "JoystickManager.h"
 
+#include <optional>
 #include "C16ButtonState.h"
 #include "DirectInputProvider.h"
 #include "IInputProvider.h"
 #include "InputFrame.h"
 #include "KeyBinding.h"
 #include "KeyboardInputProvider.h"
+#include "KeyToken.h"
+#include "RawInputEvent.h"
+#include "RawInputPoller.h"
 #include "XInputProvider.h"
 
 namespace mm2hack::input
 {
     JoystickManager::JoystickManager()
     {
-        _binding.SetDefaultBindingSCon();
-
         if (CheckXInputAvailable())
         {
             _provider = std::make_unique<XInputProvider>(_binding);
+            _activeKind = Device::XInput;
         }
         else if (CheckDirectInputAvailable())
         {
             _provider = std::make_unique<DirectInputProvider>(_binding);
+            _activeKind = Device::DirectInput;
         }
         else
         {
             _provider = std::make_unique<KeyboardInputProvider>(_binding);
+            _activeKind = Device::Keyboard;
         }
+
+        _binding.SetDefaultBindingSCon(_activeKind);
     }
 
     bool JoystickManager::Update()
@@ -50,6 +57,11 @@ namespace mm2hack::input
         return _provider != nullptr;
     }
 
+    std::optional<RawInputEvent> JoystickManager::PollFirstRawChange(float deadzone, std::optional<Device> only) const noexcept
+    {
+        return RawInputPoller::PollFirstRawChange(deadzone, only, _activeKind, _diCaptureGroup);
+    }
+
     bool JoystickManager::CheckXInputAvailable()
     {
         XINPUT_STATE state{};
@@ -68,17 +80,11 @@ namespace mm2hack::input
             return false;
         }
 
-        if (state.POV[0] >= 0)
-        {
-            return true;
-        }
+        if (state.POV[0] >= 0) return true;
 
         for (int i = 0; i < 32; ++i)
         {
-            if (state.Buttons[i] != 0)
-            {
-                return true;
-            }
+            if (state.Buttons[i] != 0) return true;
         }
 
         return false;

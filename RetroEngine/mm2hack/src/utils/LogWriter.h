@@ -26,7 +26,9 @@ namespace mm2hack::utils
 
         // Create a directory to store the log files
         static void Initialize(const std::wstring& logDirectory);
+        // Write a log message to the log file with a timestamp and log level
         static void Write(const std::wstring& message, const std::wstring& level = L"INFO");
+        // Close the log file and clean up resources
         static void Shutdown();
 
     private:

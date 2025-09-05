@@ -13,7 +13,7 @@
 #include "GraphicsSettingsUI.h"
 #include "SoundSettingsUI.h"
 
-namespace mm2hack::core::overlay
+namespace mm2hack::core::ui
 {
     // Child window for settings, allowing users to adjust graphics and sound settings
     class SettingsWindow

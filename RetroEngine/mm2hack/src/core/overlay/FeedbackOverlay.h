@@ -3,7 +3,7 @@
 //  Project: mm2hack
 //  FeedbackOverlay.h
 // 
-//  ** Descriptions **
+//  It offers a semi-transparent pop-up message overlay.
 // 
 //==============================================================================
 #pragma once
@@ -13,7 +13,7 @@
 
 namespace mm2hack::core::overlay
 {
-
+    // Overlay for displaying feedback messages to the player
     class FeedbackOverlay
     {
     public:
@@ -32,7 +32,7 @@ namespace mm2hack::core::overlay
         // Update the overlay state
         void Update();
         // Render the overlay
-        void Render();
+        void Render(int destW, int destH);
 
     private:
         std::deque<Message> _messages;      // Queue of messages to display

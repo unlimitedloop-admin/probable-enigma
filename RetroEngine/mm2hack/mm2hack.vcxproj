@@ -196,6 +196,7 @@
     <ClCompile Include="src\core\GameStateManager.cpp" />
     <ClCompile Include="src\core\overlay\DebugHud.cpp" />
     <ClCompile Include="src\core\overlay\FeedbackOverlay.cpp" />
+    <ClCompile Include="src\core\overlay\InputConfigOverlay.cpp" />
     <ClCompile Include="src\core\overlay\PauseManager.cpp" />
     <ClCompile Include="src\core\save\SaveSystem.cpp" />
     <ClCompile Include="src\core\ui\CommonUIStyle.cpp" />
@@ -210,6 +211,7 @@
     <ClCompile Include="src\input\KeyBinding.cpp" />
     <ClCompile Include="src\input\KeyboardInputProvider.cpp" />
     <ClCompile Include="src\input\KeyboardsIn.cpp" />
+    <ClCompile Include="src\input\RawInputPoller.cpp" />
     <ClCompile Include="src\input\XInputProvider.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\pch.cpp">
@@ -267,6 +269,7 @@
     <ClInclude Include="src\config\EnvironmentConfig.h" />
     <ClInclude Include="src\config\GraphicsConfig.h" />
     <ClInclude Include="src\config\HudConfig.h" />
+    <ClInclude Include="src\config\InputLoadResult.h" />
     <ClInclude Include="src\config\SoundConfig.h" />
     <ClInclude Include="src\config\SystemConfig.h" />
     <ClInclude Include="src\core\assembly\ScreenshotManager.h" />
@@ -276,6 +279,7 @@
     <ClInclude Include="src\core\GameStateManager.h" />
     <ClInclude Include="src\core\overlay\DebugHud.h" />
     <ClInclude Include="src\core\overlay\FeedbackOverlay.h" />
+    <ClInclude Include="src\core\overlay\InputConfigOverlay.h" />
     <ClInclude Include="src\core\overlay\PauseManager.h" />
     <ClInclude Include="src\core\save\SaveData.h" />
     <ClInclude Include="src\core\save\SaveSystem.h" />
@@ -292,6 +296,7 @@
     <ClInclude Include="src\input\C16ButtonState.h" />
     <ClInclude Include="src\input\DefaultKeyArray.h" />
     <ClInclude Include="src\input\DirectInputProvider.h" />
+    <ClInclude Include="src\input\di\DirectInputToken.h" />
     <ClInclude Include="src\input\IInputProvider.h" />
     <ClInclude Include="src\input\InputFrame.h" />
     <ClInclude Include="src\input\JoystickManager.h" />
@@ -299,7 +304,11 @@
     <ClInclude Include="src\input\KeyBinding.h" />
     <ClInclude Include="src\input\KeyboardInputProvider.h" />
     <ClInclude Include="src\input\KeyboardsIn.h" />
+    <ClInclude Include="src\input\KeyToken.h" />
+    <ClInclude Include="src\input\RawInputEvent.h" />
+    <ClInclude Include="src\input\RawInputPoller.h" />
     <ClInclude Include="src\input\XInputProvider.h" />
+    <ClInclude Include="src\input\xi\XInputToken.h" />
     <ClInclude Include="src\libs\json.hpp" />
     <ClInclude Include="src\pch.h" />
     <ClInclude Include="src\test\driver\001\PressKeyCommand.h" />

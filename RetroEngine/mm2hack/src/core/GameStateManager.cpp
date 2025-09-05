@@ -6,12 +6,6 @@
 
 namespace mm2hack::core
 {
-    GameStateManager& GameStateManager::GetInstance()
-    {
-        static GameStateManager instance;
-        return instance;
-    }
-
     void GameStateManager::SetState(GameState newState)
     {
         _currentState = newState;
@@ -32,5 +26,11 @@ namespace mm2hack::core
         return _currentState == GameState::Paused ||
             _currentState == GameState::MenuActive ||
             _currentState == GameState::Standby;
+    }
+
+    bool GameStateManager::IsRunning() const
+    {
+        return _currentState == GameState::Transitioning ||
+            _currentState == GameState::Running;
     }
 }

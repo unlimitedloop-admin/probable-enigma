@@ -9,9 +9,12 @@
 #pragma once
 
 #include <string>
-#include "config/GraphicsConfig.h"
-#include "config/HudConfig.h"
-#include "config/SoundConfig.h"
+#include "GraphicsConfig.h"
+#include "HudConfig.h"
+#include "input/KeyBinding.h"
+#include "input/KeyToken.h"
+#include "InputLoadResult.h"
+#include "SoundConfig.h"
 
 namespace mm2hack::config
 {
@@ -26,6 +29,11 @@ namespace mm2hack::config
         ConfigUIManager(ConfigUIManager&&) = delete;
         ConfigUIManager& operator=(ConfigUIManager&&) = delete;
         // This class is not copyable or movable (static class)
+
+        // Save/Load input device configuration to/from the INI file
+        static void SaveInputDeviceConfig(const input::KeyBinding& binding, input::Device provider);
+        static input::Device LoadInputDeviceConfig(input::KeyBinding& binding);
+        static InputLoadResult LoadInputConfigIfMatches(input::KeyBinding& binding, input::Device detected);
 
         // Save/Load graphics configuration to/from the INI file
         static void SaveGraphicsConfig(const GraphicsConfig& config);

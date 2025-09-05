@@ -3,15 +3,14 @@
 #include "GameLoopManager.h"
 
 #include <exception>
+#include "apps/deal/GameContext.h"
 #include "apps/sequence/SequenceManager.h"
 #include "config/ConfigUIManager.h"
-#include "config/HudConfig.h"
 #include "exceptions/CoreException.h"
 #include "exceptions/ErrorHandler.h"
 #include "exceptions/ErrorLevel.h"
 #include "GameState.h"
 #include "GameStateManager.h"
-#include "overlay/DebugHud.h"
 #include "overlay/PauseManager.h"
 #include "utils/FpsManager.h"
 #include "utils/ScopeGuard.h"
@@ -23,54 +22,55 @@ namespace mm2hack::core
     GameLoopManager::GameLoopManager(winapi::WindowContext& context)
         : _hWnd(context.hWnd),
         _viewerRate(context.viewerRate),
-        _screenHandle(context.screenHandle)
+        _screenHandle(context.screenHandle),
+        _vSync(context.vSync)
     {
+        auto& gcInstance = apps::deal::GameContext::GetInstance();
+        gcInstance.Initialize();
+        auto& jm = gcInstance.GetJoystickManager();
+        config::ConfigUIManager::LoadInputConfigIfMatches(jm.GetKeyBinding(), jm.ActiveDevice());
     }
 
     void GameLoopManager::Run()
     {
+        using namespace config;
         using namespace exceptions;
         using namespace overlay;
         using namespace utils;
-        using conf = config::SystemConfig;
 
         ScopeGuard finally([]
             {
+                apps::deal::GameContext::GetInstance().Shutdown();
                 apps::sequence::SequenceManager::GetInstance().Release();
             });
 
+        // Load graphics configuration and apply FPS limit if changed.
         auto& fps = FpsManager::GetInstance();
 
         try
         {
             while (!DxLib::ProcessMessage() && !DxLib::SetDrawScreen(_screenHandle) && !DxLib::ClearDrawScreen())
             {
+                auto& seq = apps::sequence::SequenceManager::GetInstance();
+                auto destW = static_cast<int>(config::SystemConfig::kScreenWidth * _viewerRate);
+                auto destH = static_cast<int>(config::SystemConfig::kScreenHeight * _viewerRate);
+
                 // If the game is paused, we skip the update logic.
                 PauseManager::SetPaused(GameStateManager::GetInstance().Is(GameState::Paused));
-
-                auto& seq = apps::sequence::SequenceManager::GetInstance();
 
                 // Update the main sequence.
                 seq.Update();
                 // Render the game content.
-                seq.RenderWorld();
-
-                // Scale what we draw to fit the viewer rate.
-                if (DxLib::SetDrawScreen(DX_SCREEN_BACK) ||
-                    DxLib::DrawExtendGraph(0, 0,
-                        static_cast<int>(conf::kScreenWidth * _viewerRate),
-                        static_cast<int>(conf::kScreenHeight * _viewerRate),
-                        _screenHandle, FALSE))
-                {
-                    break;
-                }
-
+                seq.RenderWorld(_screenHandle, destW, destH);
                 // Render the overlay content (e.g., HUD, debug information).
-                seq.RenderOverlay();
-                DebugHud::GetInstance().Draw();     // Draw the FPS in the HUD, top-left corner
-
+                seq.RenderOverlay(destW, destH);
+                // Render the input configuration overlay if active.
+                seq.HandleJpbtnConfigMode(fps.GetDeltaSeconds());
                 // Pace & Flip the screen.
                 fps.Wait();
+                // VSync control = pseudo FPS with monitor refresh rate.
+                if (_vSync) DxLib::WaitVSync(1);
+                // Screen flip to present the rendered frame of the back buffer.
                 DxLib::ScreenFlip();
             }
         }
@@ -80,12 +80,7 @@ namespace mm2hack::core
         }
         catch (const std::exception& e)
         {
-            ErrorHandler::Handle(
-                utf8_to_wstring(e.what()),
-                L"GameLoopManager",
-                L"Run",
-                ErrorLevel::FatalError
-            );
+            ErrorHandler::Handle(utf8_to_wstring(e.what()), L"GameLoopManager", L"Run", ErrorLevel::FatalError);
         }
     }
 }

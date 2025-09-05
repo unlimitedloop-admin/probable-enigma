@@ -10,7 +10,7 @@
 
 #include <Windows.h>
 
-namespace mm2hack::core::overlay
+namespace mm2hack::core::ui
 {
     // The layout of the graphics settings UI
     class GraphicsSettingsUI
@@ -32,7 +32,10 @@ namespace mm2hack::core::overlay
 
         void AddResolutionOptions() const;
         void AddFramerateOptions() const;
-        void LoadSettings() const;
+        void LoadSettings();
+
+        int MapFpsToIndex(int fps) noexcept;
+        int MapFpsToNearestIndex(int fps) noexcept;
     };
 
 
@@ -57,6 +60,9 @@ namespace mm2hack::core::overlay
     static constexpr FramerateOption kFramerateOptions[] = {
         { L"30 FPS", 30 },
         { L"60 FPS", 60 },
+        { L"120 FPS", 120 },
+        { L"144 FPS", 144 },
+        { L"240 FPS", 240 },
         { L"not restricted", 0 },  // 0 means no limit
     };
 }

@@ -13,6 +13,7 @@
 #include "core/assembly/ScreenshotManager.h"
 #include "core/GameState.h"
 #include "core/GameStateManager.h"
+#include "core/overlay/InputConfigOverlay.h"
 #include "core/save/SaveData.h"
 #include "core/save/SaveSystem.h"
 #include "core/ui/SettingsWindow.h"
@@ -52,6 +53,9 @@ namespace mm2hack::core::winapi
     {
         HMENU hMenu = GetMenu(hWnd);
         CheckMenuItem(hMenu, ID_SLOT_0, MF_BYCOMMAND | MF_CHECKED); // Set the first slot as checked by default.
+        CheckMenuItem(hMenu, ID_HUD_FPS,
+            config::ConfigUIManager::GetCurrentHudConfig().showFps ? MF_BYCOMMAND | MF_CHECKED : MF_BYCOMMAND | MF_UNCHECKED
+        );  // Set the FPS display state based on the HUD configuration.
     }
 
     void HandleDestroy(HWND hWnd)
@@ -61,8 +65,9 @@ namespace mm2hack::core::winapi
 
     void HandleCommand(HWND hWnd, WPARAM wParam)
     {
-        using namespace save;
         using namespace apps::sequence;
+        using namespace save;
+        using namespace ui;
         auto& seq = SequenceManager::GetInstance();
 
         auto setGameState = [](GameState state)
@@ -143,7 +148,7 @@ namespace mm2hack::core::winapi
             }
             else
             {
-                THROW_EXCEPTION_EX("Cannot save while the game is running.", L"WindowManager", exceptions::ErrorLevel::Info);
+                THROW_EXCEPTION_EX(L"Cannot save while the game is running.", L"WindowManager", exceptions::ErrorLevel::Info);
             }
             break;
 
@@ -228,20 +233,28 @@ namespace mm2hack::core::winapi
             WindowManager::GetInstance().ChangeWindowSize(4.0f);
             break;
 
+        case ID_MENU_GAMEPAD_SETTINGS:
+        {
+            auto& keyBinding = apps::deal::GameContext::GetInstance().GetJoystickManager().GetKeyBinding();
+            auto steps = overlay::BuildStepsFull16();
+            overlay::InputConfigOverlay::GetInstance().Open(keyBinding, steps);
+            break;
+        }
+
         case ID_MENU_GRAPHICS_SETTINGS:
             // Open the graphics settings window.
-            overlay::SettingsWindow::OpenTab(hWnd, overlay::SettingsWindow::Tab::Graphics);
+            SettingsWindow::OpenTab(hWnd, SettingsWindow::Tab::Graphics);
             break;
 
         case ID_MENU_SOUND_SETTINGS:
             // Open the sound settings window.
-            overlay::SettingsWindow::OpenTab(hWnd, overlay::SettingsWindow::Tab::Sound);
+            SettingsWindow::OpenTab(hWnd, SettingsWindow::Tab::Sound);
             break;
 
         case ID_HUD_FPS:
         {
             using confUI = config::ConfigUIManager;
-            auto hudConfig = confUI::GetCurrentHudConfig();
+            auto& hudConfig = confUI::GetCurrentHudConfig();
             config::HudConfig newConfig = hudConfig;
             newConfig.showFps = !newConfig.showFps;
             confUI::SetCurrentHudConfig(newConfig);
@@ -285,6 +298,8 @@ namespace mm2hack::core::winapi
     void HandleKeyDown(HWND hWnd, WPARAM wParam, LPARAM lParam)
     {
         auto& gameContext = apps::deal::GameContext::GetInstance();
+        auto& gameState = GameStateManager::GetInstance();
+        auto& windowManager = WindowManager::GetInstance();
 
         // Handles screenshot key input with consistently high-priority execution.
         if (!(lParam & (1 << 30)) && wParam == SCREENSHOT_KEY)
@@ -300,9 +315,6 @@ namespace mm2hack::core::winapi
             return;
         }
 
-        GameStateManager& gameState = GameStateManager::GetInstance();
-        WindowManager& windowManager = WindowManager::GetInstance();
-
         // Pressing the ESC key immediately triggers a return and transitions the game state,
         // without interference from other key inputs.
         if (wParam == VK_ESCAPE)
@@ -315,7 +327,7 @@ namespace mm2hack::core::winapi
                     gameContext.GetResourceManager().GetAudioManager().Pause();
                 }
             }
-            else
+            else if (gameState.Is(GameState::Paused))
             {
                 gameState.SetState(GameState::Running);
                 if (gameContext.IsInitialized())

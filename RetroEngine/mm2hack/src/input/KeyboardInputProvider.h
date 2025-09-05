@@ -17,7 +17,7 @@
 
 namespace mm2hack::input
 {
-    // Keyboard input provider
+    // Keyboard input provider, used when no Joycard is connected
     class KeyboardInputProvider final : public IInputProvider
     {
     public:
@@ -32,7 +32,7 @@ namespace mm2hack::input
         bool Update(C16ButtonState& out_state) override;
 
     private:
-        std::unique_ptr<KeyboardsIn> _keyboard;
-        const KeyBinding& _binding;
+        std::unique_ptr<KeyboardsIn> _keyboard; // Keyboard input manager with composition relationship
+        const KeyBinding& _binding;             // Key binding for this provider
     };
 }

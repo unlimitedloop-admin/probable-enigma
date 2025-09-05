@@ -10,7 +10,7 @@
 
 #include <windows.h>
 
-namespace mm2hack::core::overlay
+namespace mm2hack::core::ui
 {
     // The layout of the sound settings UI
     class SoundSettingsUI

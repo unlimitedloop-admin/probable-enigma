@@ -10,7 +10,7 @@
 #include "config/ConfigUIManager.h"
 #include "config/SoundConfig.h"
 
-namespace mm2hack::core::overlay
+namespace mm2hack::core::ui
 {
     SoundSettingsUI::SoundSettingsUI(HWND parent)
         : _parent(parent),

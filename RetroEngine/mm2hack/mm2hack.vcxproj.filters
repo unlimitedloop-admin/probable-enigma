@@ -55,6 +55,8 @@
     <ClCompile Include="src\apps\audio\AudioManager.cpp" />
     <ClCompile Include="src\apps\supervisor\ResourceManager.cpp" />
     <ClCompile Include="src\core\overlay\DebugHud.cpp" />
+    <ClCompile Include="src\core\overlay\InputConfigOverlay.cpp" />
+    <ClCompile Include="src\input\RawInputPoller.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
@@ -142,6 +144,13 @@
     <ClInclude Include="src\config\HudConfig.h" />
     <ClInclude Include="src\config\GraphicsConfig.h" />
     <ClInclude Include="src\config\SoundConfig.h" />
+    <ClInclude Include="src\input\RawInputEvent.h" />
+    <ClInclude Include="src\core\overlay\InputConfigOverlay.h" />
+    <ClInclude Include="src\input\KeyToken.h" />
+    <ClInclude Include="src\input\xi\XInputToken.h" />
+    <ClInclude Include="src\input\di\DirectInputToken.h" />
+    <ClInclude Include="src\config\InputLoadResult.h" />
+    <ClInclude Include="src\input\RawInputPoller.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

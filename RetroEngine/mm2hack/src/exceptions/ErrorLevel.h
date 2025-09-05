@@ -12,16 +12,11 @@ namespace mm2hack::exceptions
 {
     // Error levels for the application
     // These levels are used to indicate the severity of an error or warning
-    // The values are defined as follows:
-    // 0 - No error
-    // 1 - Warning
-    // 2 - Error
-    // 3 - Fatal error
     enum class ErrorLevel
     {
-        Info,
-        Warning,
-        Error,
-        FatalError
+        Info,           // 0 - No error
+        Warning,        // 1 - Warning
+        Error,          // 2 - Error
+        FatalError      // 3 - Fatal error
     };
 }

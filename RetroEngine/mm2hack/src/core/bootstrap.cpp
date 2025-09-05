@@ -5,6 +5,9 @@
 #include <crtdbg.h>
 #include <cstdlib>
 #include <d3d9.h>
+#include <d3d9caps.h>
+#include <d3d9types.h>
+#include <sysinfoapi.h>
 #include <VersionHelpers.h>
 #include "config/EnvironmentConfig.h"
 #include "exceptions/ErrorHandler.h"
@@ -123,13 +126,13 @@ namespace mm2hack::core
 
             if (passSystemCheck)
             {
-                MessageBoxW(nullptr,
+                MessageBox(nullptr,
                     L"System check passed. Your system meets the minimum requirements for running mm2hack.",
                     L"System Check", MB_OK | MB_ICONINFORMATION);
             }
             else
             {
-                MessageBoxW(nullptr,
+                MessageBox(nullptr,
                     L"System check failed. Please see the log for details.",
                     L"System Check", MB_OK | MB_ICONERROR);
             }
@@ -144,7 +147,7 @@ namespace mm2hack::core
         winapi::WindowManager& windowManager = winapi::WindowManager::GetInstance();
         if (!windowManager.Initialize(hInstance, lpCmdLine, nCmdShow, windowTitle))
         {
-            MessageBoxW(nullptr, L"Failed to initialize window manager.", L"Error", MB_OK | MB_ICONERROR);
+            MessageBox(nullptr, L"Failed to initialize window manager.", L"Error", MB_OK | MB_ICONERROR);
             exit(EXIT_FAILURE);
         }
         windowManager.RunMainLoop();

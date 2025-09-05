@@ -2,13 +2,158 @@
 
 #include "ConfigUIManager.h"
 
+#include <array>
+#include <cstdint>
+#include <cstdio>
 #include <cstdlib>
-#include "config/GraphicsConfig.h"
-#include "config/HudConfig.h"
-#include "config/SoundConfig.h"
+#include "GraphicsConfig.h"
+#include "HudConfig.h"
+#include "input/Jpbtn.h"
+#include "input/KeyBinding.h"
+#include "input/KeyToken.h"
+#include "InputLoadResult.h"
+#include "SoundConfig.h"
+
+namespace
+{
+    using namespace mm2hack;
+    using namespace input;
+
+    inline uint16_t ParseU16(const wchar_t* ws)
+    {
+        if (!ws || !*ws) return kTokenUnbound;
+        wchar_t* end = nullptr;
+        unsigned long v = std::wcstoul(ws, &end, 0); // 0xFFFF, 65535 ...
+        if (v > 0xFFFFul) v = 0xFFFFul;
+        return static_cast<uint16_t>(v);
+    }
+    inline std::wstring ToStrU16(uint16_t v, bool hex = false)
+    {
+        if (hex) { wchar_t buf[16]; std::swprintf(buf, 16, L"0x%04X", (unsigned)v); return buf; }
+        return std::to_wstring((unsigned)v);
+    }
+
+    // Translate Device enum to string and vice versa
+    inline const wchar_t* DeviceToW(Device d)
+    {
+        using D = Device;
+        switch (d) { case D::XInput: return L"XInput"; case D::DirectInput: return L"DirectInput"; default: return L"Keyboard"; }
+    }
+
+    // Parse device string to Device enum
+    inline Device ParseDevice(const wchar_t* ws)
+    {
+        using D = Device;
+        if (!ws) return D::Keyboard;
+        if (_wcsicmp(ws, L"XInput") == 0)      return D::XInput;
+        if (_wcsicmp(ws, L"DirectInput") == 0) return D::DirectInput;
+        if (_wcsicmp(ws, L"Keyboard") == 0)    return D::Keyboard;
+        int n = _wtoi(ws);
+        if (n == 1) return D::XInput; if (n == 2) return D::DirectInput; return D::Keyboard;
+    }
+
+    inline bool ProviderMatches(Device saved, Device detected)
+    {
+        return saved == detected;
+    }
+}
+
 
 namespace mm2hack::config
 {
+    HudConfig ConfigUIManager::_cachedHudConfig{ false };
+
+    void ConfigUIManager::SaveInputDeviceConfig(const input::KeyBinding& binding, input::Device provider)
+    {
+        using namespace input;
+        const std::wstring path = GetIniPath();
+        constexpr bool kHex = false;
+
+        for (size_t i = 0; i < JPBTN_COUNT; ++i)
+        {
+            const auto tok = binding.GetBindingSCon(static_cast<JPBTN>(i));
+            WritePrivateProfileString(L"Input", kJpbtnKeys[i], ToStrU16(tok, kHex).c_str(), path.c_str());
+        }
+
+        WritePrivateProfileString(L"Input", L"XInputEnabled", binding.IsXInputEnabled() ? L"1" : L"0", path.c_str());
+        WritePrivateProfileString(L"Input", L"HatSwitchEnabled", binding.IsHatSwitchEnabled() ? L"1" : L"0", path.c_str());
+        WritePrivateProfileString(L"Input", L"TriggerEnabled", binding.IsTriggerEnabled() ? L"1" : L"0", path.c_str());
+        WritePrivateProfileString(L"Input", L"ThumbEnabled", binding.IsThumbEnabled() ? L"1" : L"0", path.c_str());
+        WritePrivateProfileString(L"Input", L"Provider", DeviceToW(provider), path.c_str());
+    }
+
+    input::Device ConfigUIManager::LoadInputDeviceConfig(input::KeyBinding& binding)
+    {
+        using namespace input;
+        const std::wstring path = GetIniPath();
+        wchar_t buf[64];
+
+        for (size_t i = 0; i < JPBTN_COUNT; ++i)
+        {
+            const uint16_t cur = binding.GetBindingSCon(static_cast<JPBTN>(i));
+            GetPrivateProfileString(L"Input", kJpbtnKeys[i], ToStrU16(cur, false).c_str(), buf, 64, path.c_str());
+            binding.SetBinding(static_cast<JPBTN>(i), ParseU16(buf));
+        }
+
+        auto getBool = [&](const wchar_t* key, bool def)->bool
+            {
+                GetPrivateProfileString(L"Input", key, def ? L"1" : L"0", buf, 64, path.c_str());
+                return _wtoi(buf) != 0;
+            };
+        const bool fx = getBool(L"XInputEnabled", binding.IsXInputEnabled());
+        const bool fhs = getBool(L"HatSwitchEnabled", binding.IsHatSwitchEnabled());
+        const bool ftg = getBool(L"TriggerEnabled", binding.IsTriggerEnabled());
+        const bool fth = getBool(L"ThumbEnabled", binding.IsThumbEnabled());
+        binding.SetFeatureFlags(fx, fhs, ftg, fth);
+
+        GetPrivateProfileString(L"Input", L"Provider", L"Keyboard", buf, 64, path.c_str());
+        return ParseDevice(buf);
+    }
+
+    InputLoadResult ConfigUIManager::LoadInputConfigIfMatches(input::KeyBinding& binding, input::Device detected)
+    {
+        using namespace input;
+        const std::wstring path = GetIniPath();
+        wchar_t buf[64];
+
+        // Load the saved provider and check if it matches the detected one.
+        GetPrivateProfileString(L"Input", L"Provider", L"", buf, 64, path.c_str());
+        const input::Device savedProv = (buf[0] ? ParseDevice(buf) : detected); // Default to detected if not found
+        const bool match = ProviderMatches(savedProv, detected);
+
+        // One by one, load the button mappings (default to current values if not found)
+        std::array<uint16_t, JPBTN_COUNT> tmp{};
+        for (size_t i = 0; i < JPBTN_COUNT; ++i)
+        {
+            const uint16_t cur = binding.GetBindingSCon(static_cast<JPBTN>(i));
+            GetPrivateProfileString(L"Input", kJpbtnKeys[i], ToStrU16(cur).c_str(), buf, 64, path.c_str());
+            tmp[i] = ParseU16(buf);
+        }
+        auto getBool = [&](const wchar_t* key, bool def)->bool
+            {
+                GetPrivateProfileString(L"Input", key, def ? L"1" : L"0", buf, 64, path.c_str());
+                return _wtoi(buf) != 0;
+            };
+        const bool fx = getBool(L"XInputEnabled", binding.IsXInputEnabled());
+        const bool fhs = getBool(L"HatSwitchEnabled", binding.IsHatSwitchEnabled());
+        const bool ftg = getBool(L"TriggerEnabled", binding.IsTriggerEnabled());
+        const bool fth = getBool(L"ThumbEnabled", binding.IsThumbEnabled());
+
+        // If not matched, return without applying
+        if (!match)
+        {
+            return { false, savedProv };
+        }
+
+        // Apply the loaded configuration
+        for (size_t i = 0; i < JPBTN_COUNT; ++i)
+        {
+            binding.SetBinding(static_cast<JPBTN>(i), tmp[i]);
+        }
+        binding.SetFeatureFlags(fx, fhs, ftg, fth);
+        return { true, savedProv };
+    }
+
     void ConfigUIManager::SaveGraphicsConfig(const GraphicsConfig& config)
     {
         const std::wstring path = GetIniPath();
@@ -23,13 +168,13 @@ namespace mm2hack::config
         const std::wstring path = GetIniPath();
         wchar_t buffer[32];
 
-        GetPrivateProfileString(L"Graphics", L"ResolutionIndex", L"0", buffer, 32, path.c_str());
+        GetPrivateProfileString(L"Graphics", L"ResolutionIndex", L"-1", buffer, 32, path.c_str());
         config.resolutionIndex = _wtoi(buffer);
 
         GetPrivateProfileString(L"Graphics", L"VSync", L"1", buffer, 32, path.c_str());
         config.vsync = (_wtoi(buffer) != 0);
 
-        GetPrivateProfileString(L"Graphics", L"FpsLimit", L"1", buffer, 32, path.c_str());
+        GetPrivateProfileString(L"Graphics", L"FpsLimit", L"-1", buffer, 32, path.c_str());
         config.fpsLimitIndex = _wtoi(buffer);
     }
 
@@ -64,8 +209,6 @@ namespace mm2hack::config
         GetPrivateProfileString(L"Sound", L"Source", L"0", buffer, 32, path.c_str());
         config.sourceIndex = _wtoi(buffer);
     }
-
-    HudConfig ConfigUIManager::_cachedHudConfig{ false };
 
     void ConfigUIManager::SaveHudConfig(const HudConfig& config)
     {
