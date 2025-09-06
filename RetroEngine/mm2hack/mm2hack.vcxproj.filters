@@ -57,6 +57,12 @@
     <ClCompile Include="src\core\overlay\DebugHud.cpp" />
     <ClCompile Include="src\core\overlay\InputConfigOverlay.cpp" />
     <ClCompile Include="src\input\RawInputPoller.cpp" />
+    <ClCompile Include="src\core\cheats\FreezePatchEffect.cpp" />
+    <ClCompile Include="src\core\cheats\OnceWriteEffect.cpp" />
+    <ClCompile Include="src\core\cheats\ParCodeParser.cpp" />
+    <ClCompile Include="src\core\cheats\SymbolicCodeParser.cpp" />
+    <ClCompile Include="src\core\cheats\CheatManager.cpp" />
+    <ClCompile Include="src\core\ui\CheatCodeInjectionUI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
@@ -151,6 +157,15 @@
     <ClInclude Include="src\input\di\DirectInputToken.h" />
     <ClInclude Include="src\config\InputLoadResult.h" />
     <ClInclude Include="src\input\RawInputPoller.h" />
+    <ClInclude Include="src\core\cheats\ICheatEffect.h" />
+    <ClInclude Include="src\core\cheats\ICodeParser.h" />
+    <ClInclude Include="src\core\cheats\ICheatMemoryMap.h" />
+    <ClInclude Include="src\core\cheats\FreezePatchEffect.h" />
+    <ClInclude Include="src\core\cheats\OnceWriteEffect.h" />
+    <ClInclude Include="src\core\cheats\ParCodeParser.h" />
+    <ClInclude Include="src\core\cheats\SymbolicCodeParser.h" />
+    <ClInclude Include="src\core\cheats\CheatManager.h" />
+    <ClInclude Include="src\core\ui\CheatCodeInjectionUI.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

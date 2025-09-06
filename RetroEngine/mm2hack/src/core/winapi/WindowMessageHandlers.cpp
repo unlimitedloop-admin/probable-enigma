@@ -265,6 +265,10 @@ namespace mm2hack::core::winapi
             break;
         }
 
+        case ID_INSERT_CHEATS:
+            SettingsWindow::OpenTab(hWnd, SettingsWindow::Tab::Cheats);
+            break;
+
         case ID_SCRIPT_001:
             seq.StartTestSequence(1);
             setGameState(GameState::Running);

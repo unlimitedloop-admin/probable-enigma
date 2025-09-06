@@ -4,6 +4,7 @@
 
 #include <libloaderapi.h>
 #include "apps/deal/GameContext.h"
+#include "CheatCodeInjectionUI.h"
 #include "config/ConfigUIManager.h"
 #include "config/SoundConfig.h"
 #include "core/ui/CommonUIStyle.h"
@@ -43,6 +44,8 @@ namespace mm2hack::core::ui
         }
 
         _instance = std::make_unique<SettingsWindow>();
+        auto width = kWindowProps[static_cast<int>(tab)].width;
+        auto height = kWindowProps[static_cast<int>(tab)].height;
 
         _hwnd = CreateWindowEx(
             WS_EX_DLGMODALFRAME,
@@ -50,7 +53,7 @@ namespace mm2hack::core::ui
             L"Settings",
             WS_OVERLAPPEDWINDOW | WS_VISIBLE,
             CW_USEDEFAULT, CW_USEDEFAULT,
-            400, 350,
+            width, height,
             parent,
             nullptr,
             GetModuleHandle(nullptr),
@@ -78,6 +81,7 @@ namespace mm2hack::core::ui
             switch (msg)
             {
             case WM_CLOSE:
+                self->_is_closing = true;
                 DestroyWindow(hwnd);
                 return 0;
             case WM_COMMAND:
@@ -96,6 +100,8 @@ namespace mm2hack::core::ui
                     self->ApplySettings();
                     return 0;
                 }
+                if (self->_is_closing) return 0;
+                if (self->_cheat_ui && self->_cheat_ui->HandleCommand(wParam, lParam)) return 0;
                 break;
             }
             case WM_CREATE:
@@ -106,6 +112,10 @@ namespace mm2hack::core::ui
                 _hwnd = nullptr;
                 _instance.reset();
                 return 0;
+            case WM_NOTIFY:
+                if (self->_is_closing) return 0;
+                if (self->_cheat_ui && self->_cheat_ui->HandleNotify(lParam)) return 0;
+                break;
             }
         }
 
@@ -160,22 +170,35 @@ namespace mm2hack::core::ui
             _sound_ui = std::make_unique<SoundSettingsUI>(_hwnd);
             _sound_ui->CreateControls();
         }
+        if (tab == Tab::Cheats)
+        {
+            _cheat_ui = std::make_unique<CheatCodeInjectionUI>(_hwnd);
+            _cheat_ui->CreateControls();
+        }
+
+        // --- Buttons ---
+        auto buttonOKposX = kWindowProps[static_cast<int>(tab)].okButtonX;
+        auto buttonOKposY = kWindowProps[static_cast<int>(tab)].okButtonY;
+        auto buttonCancelposX = kWindowProps[static_cast<int>(tab)].cancelButtonX;
+        auto buttonCancelposY = kWindowProps[static_cast<int>(tab)].cancelButtonY;
+        auto buttonApplyposX = kWindowProps[static_cast<int>(tab)].applyButtonX;
+        auto buttonApplyposY = kWindowProps[static_cast<int>(tab)].applyButtonY;
 
         HWND buttonOK = CreateWindowEx(0, L"BUTTON", L"OK",
             WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-            220, 280, 60, 28,
+            buttonOKposX, buttonOKposY, 60, 28,
             _hwnd, reinterpret_cast<HMENU>(static_cast<INT_PTR>(ID_BUTTON_OK)), GetModuleHandle(nullptr), nullptr);
         uiStyle.ApplyUIFont(buttonOK);
 
         HWND buttonCancel = CreateWindowEx(0, L"BUTTON", L"Cancel",
             WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-            290, 280, 80, 28,
+            buttonCancelposX, buttonCancelposY, 80, 28,
             _hwnd, reinterpret_cast<HMENU>(static_cast<INT_PTR>(ID_BUTTON_CANCEL)), GetModuleHandle(nullptr), nullptr);
         uiStyle.ApplyUIFont(buttonCancel);
 
         HWND buttonApply = CreateWindowEx(0, L"BUTTON", L"Apply",
             WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-            130, 280, 80, 28,
+            buttonApplyposX, buttonApplyposY, 80, 28,
             _hwnd, reinterpret_cast<HMENU>(static_cast<INT_PTR>(ID_BUTTON_APPLY)), GetModuleHandle(nullptr), nullptr);
         uiStyle.ApplyUIFont(buttonApply);
     }

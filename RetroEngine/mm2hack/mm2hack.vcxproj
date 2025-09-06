@@ -192,6 +192,11 @@
     <ClCompile Include="src\config\SystemConfig.cpp" />
     <ClCompile Include="src\core\assembly\ScreenshotManager.cpp" />
     <ClCompile Include="src\core\bootstrap.cpp" />
+    <ClCompile Include="src\core\cheats\CheatManager.cpp" />
+    <ClCompile Include="src\core\cheats\FreezePatchEffect.cpp" />
+    <ClCompile Include="src\core\cheats\OnceWriteEffect.cpp" />
+    <ClCompile Include="src\core\cheats\ParCodeParser.cpp" />
+    <ClCompile Include="src\core\cheats\SymbolicCodeParser.cpp" />
     <ClCompile Include="src\core\GameLoopManager.cpp" />
     <ClCompile Include="src\core\GameStateManager.cpp" />
     <ClCompile Include="src\core\overlay\DebugHud.cpp" />
@@ -199,6 +204,7 @@
     <ClCompile Include="src\core\overlay\InputConfigOverlay.cpp" />
     <ClCompile Include="src\core\overlay\PauseManager.cpp" />
     <ClCompile Include="src\core\save\SaveSystem.cpp" />
+    <ClCompile Include="src\core\ui\CheatCodeInjectionUI.cpp" />
     <ClCompile Include="src\core\ui\CommonUIStyle.cpp" />
     <ClCompile Include="src\core\ui\GraphicsSettingsUI.cpp" />
     <ClCompile Include="src\core\ui\SettingsWindow.cpp" />
@@ -274,6 +280,14 @@
     <ClInclude Include="src\config\SystemConfig.h" />
     <ClInclude Include="src\core\assembly\ScreenshotManager.h" />
     <ClInclude Include="src\core\bootstrap.h" />
+    <ClInclude Include="src\core\cheats\CheatManager.h" />
+    <ClInclude Include="src\core\cheats\FreezePatchEffect.h" />
+    <ClInclude Include="src\core\cheats\ICheatEffect.h" />
+    <ClInclude Include="src\core\cheats\ICheatMemoryMap.h" />
+    <ClInclude Include="src\core\cheats\ICodeParser.h" />
+    <ClInclude Include="src\core\cheats\OnceWriteEffect.h" />
+    <ClInclude Include="src\core\cheats\ParCodeParser.h" />
+    <ClInclude Include="src\core\cheats\SymbolicCodeParser.h" />
     <ClInclude Include="src\core\GameLoopManager.h" />
     <ClInclude Include="src\core\GameState.h" />
     <ClInclude Include="src\core\GameStateManager.h" />
@@ -283,6 +297,7 @@
     <ClInclude Include="src\core\overlay\PauseManager.h" />
     <ClInclude Include="src\core\save\SaveData.h" />
     <ClInclude Include="src\core\save\SaveSystem.h" />
+    <ClInclude Include="src\core\ui\CheatCodeInjectionUI.h" />
     <ClInclude Include="src\core\ui\CommonUIStyle.h" />
     <ClInclude Include="src\core\ui\GraphicsSettingsUI.h" />
     <ClInclude Include="src\core\ui\SettingsWindow.h" />

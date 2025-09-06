@@ -12,6 +12,19 @@
 
 namespace mm2hack::core::ui
 {
+    struct WindowProperties
+    {
+        const wchar_t* tab;
+        int width;
+        int height;
+        int applyButtonX;
+        int applyButtonY;
+        int okButtonX;
+        int okButtonY;
+        int cancelButtonX;
+        int cancelButtonY;
+    };
+
     // Settings for configurable UI elements
     class CommonUIStyle
     {
