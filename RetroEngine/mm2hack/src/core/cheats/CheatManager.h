@@ -3,7 +3,7 @@
 //  Project: mm2hack
 //  CheatManager.h
 // 
-//  ** Descriptions **
+//  Applys and manages cheat codes.
 // 
 //==============================================================================
 #pragma once
@@ -17,6 +17,7 @@
 
 namespace mm2hack::core::cheats
 {
+    // A single cheat entry, consisting of the original code string, the parsed effect, and its enabled state
     struct CheatEntry
     {
         std::wstring code_string;
@@ -24,6 +25,7 @@ namespace mm2hack::core::cheats
         bool enabled{ true };
     };
 
+    // Manages cheat codes: parsing, storing, enabling/disabling, and applying effects
     class CheatManager
     {
     public:
@@ -41,11 +43,12 @@ namespace mm2hack::core::cheats
         void OnPreUpdate();
         void OnLateUpdate();
 
+        // Enable/disable individual cheats
         const std::vector<CheatEntry>& GetEntries() const;
 
     private:
-        ICheatMemoryMap& _memory_map;
-        std::vector<std::unique_ptr<ICodeParser>> _parsers;
-        std::vector<CheatEntry> _entries;
+        ICheatMemoryMap& _memory_map;                           // Reference to the memory map for resolving addresses
+        std::vector<std::unique_ptr<ICodeParser>> _parsers;     // List of parsers for interpreting cheat codes
+        std::vector<CheatEntry> _entries;                       // List of all cheat entries
     };
 }

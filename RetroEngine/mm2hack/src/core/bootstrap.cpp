@@ -139,7 +139,7 @@ namespace mm2hack::core
         }
     }
 
-    void RunMainProcess(HINSTANCE hInstance, LPWSTR lpCmdLine, int nCmdShow)
+    void RunWindowManager(HINSTANCE hInstance, LPWSTR lpCmdLine, int nCmdShow)
     {
         std::wstring windowTitle = config::EnvironmentConfig::Get(L"WINDOW_TEXT", L"mm2hack.demo") + L" " +
             config::EnvironmentConfig::Get(L"MM2HACK_VERSION");

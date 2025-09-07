@@ -16,13 +16,13 @@ namespace mm2hack::apps::graphics
         auto it = _divSettings.find(name);
         if (it == _divSettings.end())
         {
-            THROW_EXCEPTION("Div settings not set for sprite: " + utils::wstring_to_utf8(name), L"SpriteManager");
+            THROW_EXCEPTION(L"Div settings not set for sprite: " + name, L"SpriteManager");
         }
 
         int soft = DxLib::LoadSoftImage(filepath.c_str());
         if (soft == -1)
         {
-            THROW_EXCEPTION("Failed to load sprite texture: " + utils::wstring_to_utf8(filepath), L"SpriteManager");
+            THROW_EXCEPTION(L"Failed to load sprite texture: " + filepath, L"SpriteManager");
         }
         _softImageHandles[name] = soft;
 
@@ -72,18 +72,18 @@ namespace mm2hack::apps::graphics
         auto it = _softImageHandles.find(name);
         if (it == _softImageHandles.end())
         {
-            THROW_EXCEPTION("Soft image not found for sprite: " + utils::wstring_to_utf8(name), L"SpriteManager");
+            THROW_EXCEPTION(L"Soft image not found for sprite: " + name, L"SpriteManager");
         }
 
         const auto& rgb = NESPalette::GetColor(targetPaletteIndex);
         if (DxLib::SetPaletteSoftImage(it->second, sourcePaletteIndex, rgb.red, rgb.green, rgb.blue, 255) != 0)
         {
-            THROW_EXCEPTION("Failed to set palette for sprite: " + utils::wstring_to_utf8(name), L"SpriteManager");
+            THROW_EXCEPTION(L"Failed to set palette for sprite: " + name, L"SpriteManager");
         }
 
         if (!CreateSpriteGraphs(name))
         {
-            THROW_EXCEPTION("Failed to rebuild sprite graphs after palette change: " + utils::wstring_to_utf8(name), L"SpriteManager");
+            THROW_EXCEPTION(L"Failed to rebuild sprite graphs after palette change: " + name, L"SpriteManager");
         }
     }
 

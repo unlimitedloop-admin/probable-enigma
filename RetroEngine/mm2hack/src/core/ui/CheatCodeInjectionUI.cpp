@@ -11,6 +11,7 @@ namespace
 {
     HINSTANCE GetHinst() { return GetModuleHandle(nullptr); }
 
+    // Trim whitespace from both ends of a wide string
     std::wstring GetWindowTextWString(HWND h)
     {
         const int len = GetWindowTextLength(h);

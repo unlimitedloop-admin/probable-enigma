@@ -173,7 +173,7 @@ namespace mm2hack::core::winapi
             }
             else
             {
-                THROW_EXCEPTION_EX("Cannot load while the game is running.", L"WindowManager", exceptions::ErrorLevel::Info);
+                THROW_EXCEPTION_EX(L"Cannot load while the game is running.", L"WindowManager", exceptions::ErrorLevel::Info);
             }
             break;
 

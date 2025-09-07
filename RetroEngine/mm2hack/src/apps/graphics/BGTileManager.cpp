@@ -18,13 +18,13 @@ namespace mm2hack::apps::graphics
         auto it = _divSettings.find(name);
         if (it == _divSettings.end())
         {
-            THROW_EXCEPTION("Div settings not set for BG tile: " + utils::wstring_to_utf8(name), L"BGTileManager");
+            THROW_EXCEPTION(L"Div settings not set for BG tile: " + name, L"BGTileManager");
         }
 
         int soft = DxLib::LoadSoftImage(filepath.c_str());
         if (soft == -1)
         {
-            THROW_EXCEPTION("Failed to load BG tile image: " + utils::wstring_to_utf8(filepath), L"BGTileManager");
+            THROW_EXCEPTION(L"Failed to load BG tile image: " + filepath, L"BGTileManager");
         }
 
         _softImageHandles[name] = soft;
@@ -32,7 +32,7 @@ namespace mm2hack::apps::graphics
         {
             DxLib::DeleteSoftImage(soft);
             _softImageHandles.erase(name);
-            THROW_EXCEPTION("Failed to create divided BG graph from soft image: " + utils::wstring_to_utf8(filepath), L"BGTileManager");
+            THROW_EXCEPTION(L"Failed to create divided BG graph from soft image: " + filepath, L"BGTileManager");
         }
 
         return true;
@@ -79,18 +79,18 @@ namespace mm2hack::apps::graphics
         auto it = _softImageHandles.find(name);
         if (it == _softImageHandles.end())
         {
-            THROW_EXCEPTION("Soft image not found for BG tile: " + utils::wstring_to_utf8(name), L"BGTileManager");
+            THROW_EXCEPTION(L"Soft image not found for BG tile: " + name, L"BGTileManager");
         }
 
         const auto& rgb = NESPalette::GetColor(targetPaletteIndex);
         if (DxLib::SetPaletteSoftImage(it->second, sourcePaletteIndex, rgb.red, rgb.green, rgb.blue, 255) != 0)
         {
-            THROW_EXCEPTION("Failed to set palette for BG tile: " + utils::wstring_to_utf8(name), L"BGTileManager");
+            THROW_EXCEPTION(L"Failed to set palette for BG tile: " + name, L"BGTileManager");
         }
 
         if (!CreateBGTileGraphs(name))
         {
-            THROW_EXCEPTION("Failed to rebuild BG tile graphs after palette change: " + utils::wstring_to_utf8(name), L"BGTileManager");
+            THROW_EXCEPTION(L"Failed to rebuild BG tile graphs after palette change: " + name, L"BGTileManager");
         }
     }
 
@@ -99,14 +99,14 @@ namespace mm2hack::apps::graphics
         std::ifstream file(mapFile, std::ios::binary);
         if (!file)
         {
-            THROW_EXCEPTION("Failed to open map file: " + utils::wstring_to_utf8(mapFile), L"BGTileManager");
+            THROW_EXCEPTION(L"Failed to open map file: " + mapFile, L"BGTileManager");
         }
 
         file.unsetf(std::ios::skipws);
         std::vector<uint8_t> rawData(std::istream_iterator<uint8_t>{file}, {});
         if (rawData.size() < 0x100)
         {
-            THROW_EXCEPTION("Map file is too small: " + utils::wstring_to_utf8(mapFile), L"BGTileManager");
+            THROW_EXCEPTION(L"Map file is too small: " + mapFile, L"BGTileManager");
         }
 
         _tileMap.assign(rawData.begin() + 0x10, rawData.begin() + 0x10 + (_mapWidth * _mapHeight));

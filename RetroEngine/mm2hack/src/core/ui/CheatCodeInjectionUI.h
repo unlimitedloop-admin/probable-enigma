@@ -3,7 +3,7 @@
 //  Project: mm2hack
 //  CheatCodeInjectionUI.h
 // 
-//  ** Descriptions **
+//  The UI component for managing cheat code injection.
 // 
 //==============================================================================
 #pragma once
@@ -14,12 +14,14 @@
 
 namespace mm2hack::core::ui
 {
+    // A UI component for managing cheat code injection
     class CheatCodeInjectionUI
     {
     public:
         explicit CheatCodeInjectionUI(HWND parent);
         ~CheatCodeInjectionUI() {}
 
+        // Create the controls for the cheat code injection UI
         void CreateControls();
 
         // Forward messages from the parent message loop (optional)
@@ -36,11 +38,12 @@ namespace mm2hack::core::ui
         void SaveToConfig() const; // TODO: Work In Progress
 
     private:
+        // Represents a single cheat code entry in the UI
         struct CheatRow
         {
             std::wstring code;      // The code string itself (e.g., L"PAR 00A123:FF" / L"player.invincible=1 freeze")
-            bool enabled{ true };
-            bool freeze{ false };
+            bool enabled{ true };   // Whether this code is enabled
+            bool freeze{ false };   // Whether this code has the "freeze" option
             std::wstring type;      // "PAR" / "Symbolic" (heuristic)
             std::wstring label;     // Display label (e.g., player.invincible / 00A123)
         };
@@ -59,6 +62,7 @@ namespace mm2hack::core::ui
         static constexpr int IDC_LIST_CODES = 4110;
         static constexpr int IDC_STATUS_TEXT = 4111;
 
+        // Controls
         HWND _parent;
         HWND _edit_code;
         HWND _check_freeze;
@@ -72,7 +76,7 @@ namespace mm2hack::core::ui
         HWND _list_codes;
         HWND _status_text;
 
-        std::vector<CheatRow> _rows;
+        std::vector<CheatRow> _rows;    // The list of cheat rows
 
     private:
         // Utilities

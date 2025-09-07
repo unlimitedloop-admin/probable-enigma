@@ -19,10 +19,13 @@ INT APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 {
     using namespace mm2hack::core;
 
+    // Initialize the application environment.
     Bootstrapper(lpCmdLine);
 
-    RunMainProcess(hInstance, lpCmdLine, nCmdShow);
+    // Run the WindowManager.
+    RunWindowManager(hInstance, lpCmdLine, nCmdShow);
 
+    // Clean up resources before exiting.
     CleanUp();
 
     return EXIT_SUCCESS;

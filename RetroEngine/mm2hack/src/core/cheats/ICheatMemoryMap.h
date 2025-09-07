@@ -3,7 +3,7 @@
 //  Project: mm2hack
 //  ICheatMemoryMap.h
 // 
-//  ** Descriptions **
+//  Cheat memory mapping interface.
 // 
 //==============================================================================
 #pragma once
@@ -14,6 +14,7 @@
 
 namespace mm2hack::core::cheats
 {
+    // Represents a memory location that can be read from and written to, along with a debug name
     struct ByteLocation
     {
         std::function<uint64_t()> read;
@@ -21,14 +22,13 @@ namespace mm2hack::core::cheats
         std::wstring debug_name;
     };
 
+    // Interface for resolving addresses and symbolic paths to ByteLocation instances
     class ICheatMemoryMap
     {
     public:
         virtual ~ICheatMemoryMap() = default;
-
         // Resolve PAR-style numeric address to a writable binding.
         virtual bool TryResolve(uint32_t address, ByteLocation& out) = 0;
-
         // Resolve "player.invincible" style symbolic path.
         virtual bool TryResolveSymbol(const std::wstring& path, ByteLocation& out) = 0;
     };
