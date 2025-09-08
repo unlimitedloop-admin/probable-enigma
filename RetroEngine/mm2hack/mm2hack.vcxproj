@@ -191,6 +191,7 @@
     <ClCompile Include="src\config\EnvironmentConfig.cpp" />
     <ClCompile Include="src\config\SystemConfig.cpp" />
     <ClCompile Include="src\core\assembly\ScreenshotManager.cpp" />
+    <ClCompile Include="src\core\assembly\StandardTimeController.cpp" />
     <ClCompile Include="src\core\bootstrap.cpp" />
     <ClCompile Include="src\core\cheats\CheatManager.cpp" />
     <ClCompile Include="src\core\cheats\FreezePatchEffect.cpp" />
@@ -278,7 +279,9 @@
     <ClInclude Include="src\config\InputLoadResult.h" />
     <ClInclude Include="src\config\SoundConfig.h" />
     <ClInclude Include="src\config\SystemConfig.h" />
+    <ClInclude Include="src\core\assembly\ITimeController.h" />
     <ClInclude Include="src\core\assembly\ScreenshotManager.h" />
+    <ClInclude Include="src\core\assembly\StandardTimeController.h" />
     <ClInclude Include="src\core\bootstrap.h" />
     <ClInclude Include="src\core\cheats\CheatManager.h" />
     <ClInclude Include="src\core\cheats\FreezePatchEffect.h" />

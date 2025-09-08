@@ -15,9 +15,12 @@ namespace mm2hack::apps::scenes
     void PressKeyCommand::Update()
     {
         auto& joystick = apps::deal::GameContext::GetInstance().GetJoystickManager();
-
         joystick.Update();
+    }
 
+    void PressKeyCommand::RenderWorld()
+    {
+        auto& joystick = apps::deal::GameContext::GetInstance().GetJoystickManager();
         // Show the state of each button.
         for (size_t i = 0; i < JPBTN_COUNT; ++i)
         {

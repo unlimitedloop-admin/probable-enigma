@@ -63,6 +63,7 @@
     <ClCompile Include="src\core\cheats\SymbolicCodeParser.cpp" />
     <ClCompile Include="src\core\cheats\CheatManager.cpp" />
     <ClCompile Include="src\core\ui\CheatCodeInjectionUI.cpp" />
+    <ClCompile Include="src\core\assembly\StandardTimeController.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
@@ -166,6 +167,8 @@
     <ClInclude Include="src\core\cheats\SymbolicCodeParser.h" />
     <ClInclude Include="src\core\cheats\CheatManager.h" />
     <ClInclude Include="src\core\ui\CheatCodeInjectionUI.h" />
+    <ClInclude Include="src\core\assembly\ITimeController.h" />
+    <ClInclude Include="src\core\assembly\StandardTimeController.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

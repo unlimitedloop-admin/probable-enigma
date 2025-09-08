@@ -14,6 +14,7 @@
 #include "core/GameState.h"
 #include "core/GameStateManager.h"
 #include "core/overlay/InputConfigOverlay.h"
+#include "core/overlay/PauseManager.h"
 #include "core/save/SaveData.h"
 #include "core/save/SaveSystem.h"
 #include "core/ui/SettingsWindow.h"
@@ -400,6 +401,15 @@ namespace mm2hack::core::winapi
         case VK_F5:
             // Handle F5 key press for toggling the menu bar.
             windowManager.UpdateMenuBarState();
+            break;
+
+        case VK_OEM_102:
+            // VK_OEM_102 is the key next to the left Shift key on Japanese keyboards. (backslash key)
+            if (core::overlay::PauseManager::IsPaused())
+            {
+                // One step frame forward and resume if currently paused.
+                apps::sequence::SequenceManager::GetInstance().GetTimeController()->StepOneFrame();
+            }
             break;
 
         default:

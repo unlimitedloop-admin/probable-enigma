@@ -7,6 +7,7 @@
 #include "config/ConfigUIManager.h"
 #include "core/GameState.h"
 #include "core/GameStateManager.h"
+#include "core/winapi/WindowManager.h"
 #include "input/di/DirectInputToken.h"
 #include "input/JoystickManager.h"
 #include "input/Jpbtn.h"
@@ -158,9 +159,13 @@ namespace mm2hack::core::overlay
     void InputConfigOverlay::render() const
     {
         using conf = config::SystemConfig;
+        auto viewerRate = core::winapi::WindowManager::GetInstance().GetViewerRate();
         // Alpha blending.
         SetDrawBlendMode(DX_BLENDMODE_ALPHA, 128);
-        DrawBox(0, 0, conf::kScreenWidth, conf::kScreenHeight, GetColor(0, 0, 0), TRUE);
+        DrawBox(0, 0,
+            static_cast<int>(conf::kScreenWidth * viewerRate),
+            static_cast<int>(conf::kScreenHeight * viewerRate),
+            GetColor(0, 0, 0), TRUE);
         SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
 
         if (_index >= _steps.size())

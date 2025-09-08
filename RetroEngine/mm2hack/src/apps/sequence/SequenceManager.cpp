@@ -7,6 +7,7 @@
 #include "core/GameStateManager.h"
 #include "core/overlay/DebugHud.h"
 #include "core/overlay/InputConfigOverlay.h"
+#include "core/overlay/PauseManager.h"
 #include "DebugSequence.h"
 #include "SequenceType.h"
 #include "StandardSequence.h"
@@ -94,16 +95,27 @@ namespace mm2hack::apps::sequence
         if (_currentSequence)
         {
             _feedbackOverlay.Update();
-            if (gsm.IsRunning()) _currentSequence->Execute();
+            const bool shouldAdvance = gsm.IsRunning() || (_time && _time->DeltaSeconds() > 0.0);
+            if (shouldAdvance)
+            {
+                _currentSequence->Execute();
+            }
         }
     }
 
     void SequenceManager::RenderWorld(int screenHandle, int destW, int destH)
     {
+        using namespace core::overlay;
         using conf = config::SystemConfig;
+
         if (_currentSequence)
         {
             _currentSequence->RenderWorld();
+        }
+
+        if (PauseManager::IsPaused())
+        {
+            PauseManager::DrawOverlay();
         }
 
         // Scale what we draw to fit the viewer rate.

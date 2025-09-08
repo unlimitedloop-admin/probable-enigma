@@ -2,8 +2,6 @@
 
 #include "FeedbackOverlay.h"
 
-#include "core/winapi/WindowManager.h"
-
 namespace mm2hack::core::overlay
 {
     constexpr int GAME_W = 256;
