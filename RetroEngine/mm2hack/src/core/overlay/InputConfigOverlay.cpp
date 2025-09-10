@@ -53,7 +53,7 @@ namespace mm2hack::core::overlay
         _target = &target;
         _steps = std::move(steps);
         _index = 0;
-        _captureKind = apps::deal::GameContext::GetInstance().GetJoystickManager().ActiveDevice();
+        _captureKind = apps::deal::GameContext::GetInstance().Joystick().ActiveDevice();
 
         if (_steps.empty())
         {
@@ -92,7 +92,7 @@ namespace mm2hack::core::overlay
         }
 
         using enum CaptureState;
-        auto& jm = apps::deal::GameContext::GetInstance().GetJoystickManager();
+        auto& jm = apps::deal::GameContext::GetInstance().Joystick();
         switch (_state)
         {
         case Intro:
@@ -148,7 +148,7 @@ namespace mm2hack::core::overlay
         // Whether to save or not, enable saveOnCancel if you want to save when canceled.
         if (committed /*|| saveOnCancel*/)
         {
-            auto& jm = apps::deal::GameContext::GetInstance().GetJoystickManager();
+            auto& jm = apps::deal::GameContext::GetInstance().Joystick();
             config::ConfigUIManager::SaveInputDeviceConfig(jm.GetKeyBinding(), jm.ActiveDevice());
         }
 
@@ -231,7 +231,7 @@ namespace mm2hack::core::overlay
         if (_captureKind == Device::DirectInput)
         {
             const auto jp = _steps[_index].jpbtn;
-            auto& JM = apps::deal::GameContext::GetInstance().GetJoystickManager();
+            auto& JM = apps::deal::GameContext::GetInstance().Joystick();
             switch (jp)
             {
             case mm2hack::JPBTN::UP:

@@ -64,6 +64,7 @@
     <ClCompile Include="src\core\cheats\CheatManager.cpp" />
     <ClCompile Include="src\core\ui\CheatCodeInjectionUI.cpp" />
     <ClCompile Include="src\core\assembly\StandardTimeController.cpp" />
+    <ClCompile Include="src\core\assembly\JoystickInputProviderAdapter.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
@@ -169,6 +170,11 @@
     <ClInclude Include="src\core\ui\CheatCodeInjectionUI.h" />
     <ClInclude Include="src\core\assembly\ITimeController.h" />
     <ClInclude Include="src\core\assembly\StandardTimeController.h" />
+    <ClInclude Include="src\core\assembly\StateProvider.h" />
+    <ClInclude Include="src\core\assembly\InputTypes.h" />
+    <ClInclude Include="src\core\assembly\IInputBackend.h" />
+    <ClInclude Include="src\core\assembly\JoystickInputProviderAdapter.h" />
+    <ClInclude Include="src\core\assembly\ISnapshotProvider.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

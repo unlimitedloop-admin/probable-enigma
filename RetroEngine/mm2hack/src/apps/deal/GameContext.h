@@ -10,12 +10,20 @@
 
 #include "IGameContext.h"
 
+#include <cassert>
 #include <memory>
 #include "apps/supervisor/ResourceManager.h"
+#include "core/assembly/ISnapshotProvider.h"
+#include "core/assembly/ITimeController.h"
+#include "core/assembly/StateProvider.h"
 #include "input/JoystickManager.h"
 
 namespace mm2hack::apps::deal
 {
+    using namespace core::assembly;
+    using namespace input;
+    using namespace supervisor;
+
     // GameContext class that implements IGameContext, providing access to game resources and input management
     class GameContext final : public IGameContext
     {
@@ -33,9 +41,15 @@ namespace mm2hack::apps::deal
         // GameContext is a singleton, so we delete the copy and move constructors and assignment operators.
 
         // Assumes the game is running: Retrieves the instance of the resource manager
-        supervisor::ResourceManager& GetResourceManager() override { return *_resourceManager; }
-        supervisor::ResourceManager* GetResourceManagerPtr() override { return _resourceManager.get(); }
-        input::JoystickManager& GetJoystickManager() override { return *_joystickManager; }
+        ResourceManager& GetResourceManager() override { return *_resourceManager; }
+        ResourceManager* GetResourceManagerPtr() override { return _resourceManager.get(); }
+        ITimeController& Time() override { assert(_time); return *_time; }
+        StateProvider& Input() override { assert(_input); return *_input; }
+        ISnapshotProvider* Snapshot() override { return _snapshot; }
+
+        // Retrieves the instance of the joystick manager for handling gamepad input setup
+        JoystickManager& Joystick() { return *_joystickManager; }
+        const JoystickManager& Joystick() const { return *_joystickManager; }
 
         // Initializes the game context, setting up resources and input management
         void Initialize();
@@ -46,12 +60,17 @@ namespace mm2hack::apps::deal
         // Checks if the game context has been shut down
         bool IsShutdown() const { return !IsInitialized(); }
 
+        // Attaches external services to the game context, such as time controller, input state provider, snapshot provider, and joystick manager
+        void AttachServices(ITimeController* time, StateProvider* input, ISnapshotProvider* snapshot = nullptr) noexcept;
 
     private:
         GameContext() = default;
         ~GameContext() = default;
 
-        std::unique_ptr<supervisor::ResourceManager> _resourceManager;  // SpriteBank, BGTiles, SoundDriver, etc.
-        std::unique_ptr<input::JoystickManager> _joystickManager;       // Joystick input manager for handling gamepad inputs
+        std::unique_ptr<ResourceManager> _resourceManager;  // SpriteBank, BGTiles, SoundDriver, etc.
+        std::unique_ptr<JoystickManager> _joystickManager;  // Joystick manager for handling gamepad inputs (using only for setup)
+        ITimeController* _time{ nullptr };                  // Time controller for managing game time
+        StateProvider* _input{ nullptr };                   // Input state provider for handling user input
+        ISnapshotProvider* _snapshot{ nullptr };            // Snapshot provider for capturing game state snapshots (optional)
     };
 }

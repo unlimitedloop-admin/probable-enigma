@@ -190,6 +190,7 @@
     <ClCompile Include="src\config\ConfigUIManager.cpp" />
     <ClCompile Include="src\config\EnvironmentConfig.cpp" />
     <ClCompile Include="src\config\SystemConfig.cpp" />
+    <ClCompile Include="src\core\assembly\JoystickInputProviderAdapter.cpp" />
     <ClCompile Include="src\core\assembly\ScreenshotManager.cpp" />
     <ClCompile Include="src\core\assembly\StandardTimeController.cpp" />
     <ClCompile Include="src\core\bootstrap.cpp" />
@@ -279,7 +280,12 @@
     <ClInclude Include="src\config\InputLoadResult.h" />
     <ClInclude Include="src\config\SoundConfig.h" />
     <ClInclude Include="src\config\SystemConfig.h" />
+    <ClInclude Include="src\core\assembly\IInputBackend.h" />
+    <ClInclude Include="src\core\assembly\ISnapshotProvider.h" />
+    <ClInclude Include="src\core\assembly\StateProvider.h" />
+    <ClInclude Include="src\core\assembly\InputTypes.h" />
     <ClInclude Include="src\core\assembly\ITimeController.h" />
+    <ClInclude Include="src\core\assembly\JoystickInputProviderAdapter.h" />
     <ClInclude Include="src\core\assembly\ScreenshotManager.h" />
     <ClInclude Include="src\core\assembly\StandardTimeController.h" />
     <ClInclude Include="src\core\bootstrap.h" />

@@ -5,6 +5,8 @@
 #include <exception>
 #include "apps/deal/GameContext.h"
 #include "apps/sequence/SequenceManager.h"
+#include "assembly/ISnapshotProvider.h"
+#include "assembly/JoystickInputProviderAdapter.h"
 #include "assembly/StandardTimeController.h"
 #include "config/ConfigUIManager.h"
 #include "exceptions/CoreException.h"
@@ -36,8 +38,19 @@ namespace mm2hack::core
         // Initialize game context and load input-device(joycard) configuration.
         auto& gcInstance = apps::deal::GameContext::GetInstance();
         gcInstance.Initialize();
-        auto& jm = gcInstance.GetJoystickManager();
+        auto& jm = gcInstance.Joystick();
         config::ConfigUIManager::LoadInputConfigIfMatches(jm.GetKeyBinding(), jm.ActiveDevice());
+
+        auto time = std::make_unique<StandardTimeController>(/*fps=*/nullptr, /*callWait=*/false);
+        auto input = std::make_unique<JoystickInputProviderAdapter>(jm);
+        ISnapshotProvider* snapshot = nullptr;
+
+        // Take over to the GameContext services (time controller, input state provider, snapshot provider).
+        gcInstance.AttachServices(time.get(), input.get(), snapshot);
+
+        // Move ownership to member variables.
+        _time = std::move(time);
+        _input = std::move(input);
     }
 
     void GameLoopManager::Run()
@@ -55,11 +68,7 @@ namespace mm2hack::core
 
         // Load graphics configuration and apply FPS limit if changed.
         auto& fps = FpsManager::GetInstance();
-
-        {
-            auto& seq = apps::sequence::SequenceManager::GetInstance();
-            seq.SetTimeController(_time.get());
-        }
+        auto& seq = apps::sequence::SequenceManager::GetInstance();
 
         try
         {
@@ -67,7 +76,6 @@ namespace mm2hack::core
             {
                 _time->BeginFrame();    // Defines delta time for this frame.
 
-                auto& seq = apps::sequence::SequenceManager::GetInstance();
                 auto destW = static_cast<int>(config::SystemConfig::kScreenWidth * _viewerRate);
                 auto destH = static_cast<int>(config::SystemConfig::kScreenHeight * _viewerRate);
 
@@ -82,6 +90,7 @@ namespace mm2hack::core
                 seq.RenderOverlay(destW, destH);
                 // Render the input configuration overlay if active.
                 seq.HandleJpbtnConfigMode(static_cast<double>(_time->DeltaSeconds()));
+
                 // Pace & Flip the screen.
                 fps.Wait();
                 // VSync control = pseudo FPS with monitor refresh rate.

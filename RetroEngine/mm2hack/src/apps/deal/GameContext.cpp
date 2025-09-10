@@ -5,6 +5,9 @@
 #include "apps/supervisor/ResourceManager.h"
 #include "config/ConfigUIManager.h"
 #include "config/SoundConfig.h"
+#include "core/assembly/ISnapshotProvider.h"
+#include "core/assembly/ITimeController.h"
+#include "core/assembly/StateProvider.h"
 #include "input/JoystickManager.h"
 
 namespace mm2hack::apps::deal
@@ -37,6 +40,13 @@ namespace mm2hack::apps::deal
         {
             _joystickManager.reset();
         }
+    }
+
+    void GameContext::AttachServices(ITimeController* time, StateProvider* input, ISnapshotProvider* snapshot) noexcept
+    {
+        _time = time;
+        _input = input;
+        _snapshot = snapshot;
     }
 
     bool GameContext::IsInitialized() const

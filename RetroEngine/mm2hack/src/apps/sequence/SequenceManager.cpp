@@ -91,14 +91,22 @@ namespace mm2hack::apps::sequence
 
     void SequenceManager::Update()
     {
+        using namespace deal;
         auto& gsm = core::GameStateManager::GetInstance();
         if (_currentSequence)
         {
             _feedbackOverlay.Update();
-            const bool shouldAdvance = gsm.IsRunning() || (_time && _time->DeltaSeconds() > 0.0);
+            auto& time = GameContext::GetInstance().Time();
+            const bool shouldAdvance = gsm.IsRunning() || (time.DeltaSeconds() > 0.0);
             if (shouldAdvance)
             {
+                auto& input = GameContext::GetInstance().Input();
+                // Update input state from the backend.
+                input.BeginTick(time.FrameCounter());
+                // Execute the current sequence logic.(app main)
                 _currentSequence->Execute();
+                // Finalize input state for this tick.
+                input.EndTick();
             }
         }
     }
@@ -151,7 +159,7 @@ namespace mm2hack::apps::sequence
         // If we are in JPBTN configuration mode, update the joystick manager and tick the input config overlay.
         if (GameStateManager::GetInstance().Is(GameState::JpbtnConfig))
         {
-            GameContext::GetInstance().GetJoystickManager().Update();
+            GameContext::GetInstance().Input().UpdateJoystick();
             overlay::InputConfigOverlay::GetInstance().Tick(static_cast<float>(dt));
         }
     }

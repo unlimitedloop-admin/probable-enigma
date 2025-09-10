@@ -236,7 +236,7 @@ namespace mm2hack::core::winapi
 
         case ID_MENU_GAMEPAD_SETTINGS:
         {
-            auto& keyBinding = apps::deal::GameContext::GetInstance().GetJoystickManager().GetKeyBinding();
+            auto& keyBinding = apps::deal::GameContext::GetInstance().Joystick().GetKeyBinding();
             auto steps = overlay::BuildStepsFull16();
             overlay::InputConfigOverlay::GetInstance().Open(keyBinding, steps);
             break;
@@ -307,14 +307,14 @@ namespace mm2hack::core::winapi
         auto& windowManager = WindowManager::GetInstance();
 
         // Handles screenshot key input with consistently high-priority execution.
-        if (!(lParam & (1 << 30)) && wParam == SCREENSHOT_KEY)
+        if (!(lParam & (static_cast<long long>(1) << 30)) && wParam == SCREENSHOT_KEY)
         {
             assembly::ScreenshotManager::CaptureToPng();
             apps::sequence::SequenceManager::GetInstance().SendFeedback(L"Screenshot taken.");
         }
 
         // bit 30 = previous key state (1 = down before this message, 0 = was up before).
-        const bool isFirstPress = !(lParam & (1 << 30));
+        const bool isFirstPress = !(lParam & (static_cast<long long>(1) << 30));
         if (!isFirstPress)
         {
             return;
@@ -408,7 +408,7 @@ namespace mm2hack::core::winapi
             if (core::overlay::PauseManager::IsPaused())
             {
                 // One step frame forward and resume if currently paused.
-                apps::sequence::SequenceManager::GetInstance().GetTimeController()->StepOneFrame();
+                apps::deal::GameContext::GetInstance().Time().StepOneFrame();
             }
             break;
 

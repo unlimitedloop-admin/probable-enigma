@@ -10,7 +10,6 @@
 
 #include <memory>
 #include <string>
-#include "core/assembly/ITimeController.h"
 #include "core/overlay/FeedbackOverlay.h"
 #include "ISequence.h"
 #include "SequenceType.h"
@@ -65,11 +64,6 @@ namespace mm2hack::apps::sequence
             return _sequenceType;
         }
 
-        // Sets the time controller, which is used for managing game time and frame updates
-        void SetTimeController(core::assembly::ITimeController* time) noexcept { _time = time; }
-        // Gets the time controller
-        core::assembly::ITimeController* GetTimeController() const noexcept { return _time; }
-
         // Handles the configuration mode for joystick button mapping
         void HandleJpbtnConfigMode(double dt);
         // Sends feedback to the user, typically used for displaying messages or notifications
@@ -81,7 +75,6 @@ namespace mm2hack::apps::sequence
 
         std::unique_ptr<ISequence> _currentSequence = nullptr;          // Pointer to the current sequence object
         SequenceType _sequenceType = SequenceType::None;                // Current sequence type, indicating the mode of the game
-        core::assembly::ITimeController* _time = nullptr;               // Pointer to the time controller, used for managing game time
         core::overlay::FeedbackOverlay _feedbackOverlay;                // Overlay for displaying feedback messages to the user
     };
 }
