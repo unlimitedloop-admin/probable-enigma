@@ -3,6 +3,7 @@
 #include "DebugHud.h"
 
 #include <cstdio>
+#include "apps/deal/GameContext.h"
 #include "config/ConfigUIManager.h"
 #include "utils/FpsManager.h"
 
@@ -10,12 +11,35 @@ namespace mm2hack::core::overlay
 {
     void DebugHud::Draw() const
     {
-        if (!config::ConfigUIManager::GetCurrentHudConfig().showFps)
+        const auto& hud = config::ConfigUIManager::GetCurrentHudConfig();
+        if (!hud.showFps && !hud.showFrameTime)
             return;
 
-        auto& fps = utils::FpsManager::GetInstance();
-        wchar_t buffer[64];
-        swprintf(buffer, 64, L"FPS: %.1f", fps.GetActualFps());
-        DxLib::DrawString(10, 10, buffer, DxLib::GetColor(255, 255, 255));
+        const int x = 10;
+        int y = 10;
+        const int color = DxLib::GetColor(255, 255, 255);
+
+        if (hud.showFrameTime)
+        {
+            auto& time = apps::deal::GameContext::GetInstance().Time();
+            const auto pf = time.GetPlayFrameCounter();
+            wchar_t buf[64];
+            if (pf == 0) {
+                swprintf(buf, 64, L"PlayFrame: none");
+            } else {
+                swprintf(buf, 64, L"PlayFrame: %llu", static_cast<unsigned long long>(pf));
+            }
+            DxLib::DrawString(x, y, buf, color);
+            y += 18;
+        }
+
+        if (hud.showFps)
+        {
+            auto& fps = utils::FpsManager::GetInstance();
+            TCHAR buffer[64];
+            swprintf(buffer, 64, L"FPS: %.1f", fps.GetActualFps());
+            DxLib::DrawString(x, y, buffer, color);
+            y += 18;
+        }
     }
 }

@@ -26,7 +26,7 @@ INT APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
     RunWindowManager(hInstance, lpCmdLine, nCmdShow);
 
     // Clean up resources before exiting.
-    CleanUp();
+    CleanUp(lpCmdLine);
 
     return EXIT_SUCCESS;
 }

@@ -3,7 +3,7 @@
 //  Project: mm2hack
 //  JoystickInputProviderAdapter.h
 // 
-//  ** Descriptions **
+//  Joystick input provider adapter for handling joystick input states.
 // 
 //==============================================================================
 #pragma once
@@ -18,10 +18,11 @@
 
 namespace mm2hack::core::assembly
 {
+    // Adapter class for joystick input provider using abstract class StateProvider
     class JoystickInputProviderAdapter final : public StateProvider
     {
     public:
-        explicit JoystickInputProviderAdapter(::mm2hack::input::JoystickManager& jm) noexcept
+        explicit JoystickInputProviderAdapter(input::JoystickManager& jm) noexcept
             : _jm(jm)
         {
         }
@@ -51,7 +52,7 @@ namespace mm2hack::core::assembly
         }
 
     private:
-        ::mm2hack::input::JoystickManager& _jm; // External
+        input::JoystickManager& _jm; // External
         std::array<KeyFrameState, static_cast<size_t>(Key16::JPBTN_COUNT)> _state{};
         std::uint64_t _tick{ 0 };
     };

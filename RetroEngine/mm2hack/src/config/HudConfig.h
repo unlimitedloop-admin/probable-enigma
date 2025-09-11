@@ -14,5 +14,6 @@ namespace mm2hack::config
     struct HudConfig
     {
         bool showFps;           // Show FPS in the HUD
+        bool showFrameTime;     // Show frame time in milliseconds
     };
 }

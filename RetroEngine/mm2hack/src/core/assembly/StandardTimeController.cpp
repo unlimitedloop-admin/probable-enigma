@@ -133,6 +133,21 @@ namespace mm2hack::core::assembly
         _advancedFrames = 0;
     }
 
+    void StandardTimeController::ResetPlayFrameCounter() noexcept
+    {
+        _playFrameCounter = 0;
+    }
+
+    void StandardTimeController::IncrementPlayFrameCounter() noexcept
+    {
+        ++_playFrameCounter;
+    }
+
+    [[nodiscard]] std::uint64_t StandardTimeController::GetPlayFrameCounter() const noexcept
+    {
+        return _playFrameCounter;
+    }
+
     void StandardTimeController::SyncFromFpsTargetIfNeeded() noexcept
     {
         if (!_fps || !_followFps) return;

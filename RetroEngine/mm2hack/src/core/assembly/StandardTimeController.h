@@ -51,12 +51,18 @@ namespace mm2hack::core::assembly
         [[nodiscard]] FSeconds DeltaSeconds() const noexcept override;
         [[nodiscard]] std::uint64_t FrameCounter() const noexcept override;
 
+        // Follow the target FPS of the Fps instance
         void EnableFollowFps(bool enabled) noexcept override;
         [[nodiscard]] bool IsFollowFpsEnabled() const noexcept override;
         // Reset internal state
         void Reset() noexcept override;
         // Case whether to call Fps::Wait() in BeginFrame()
         void SetCallWaitInBeginFrame(bool enabled) noexcept { _callWait = enabled; }
+
+        // Play frame counter management
+        void ResetPlayFrameCounter() noexcept override;
+        void IncrementPlayFrameCounter() noexcept override;
+        [[nodiscard]] std::uint64_t GetPlayFrameCounter() const noexcept override;
 
     private:
         mm2hack::utils::Fps* _fps;                  // External Fps pointer
@@ -68,6 +74,7 @@ namespace mm2hack::core::assembly
         FSeconds _scale{ 1.0 };                     // Time scale factor
         bool _stepOnce{ false };                    // Whether to step one frame when paused
         std::uint64_t _advancedFrames{ 0 };         // Count of frames that have advanced
+        std::uint64_t _playFrameCounter{ 0 };       // Count of frames played (not paused)
 
         void SyncFromFpsTargetIfNeeded() noexcept;  // Sync fixed delta time from FPS target if _followFps is true
     };

@@ -30,6 +30,7 @@ namespace mm2hack::core
         _vSync(context.vSync)
     {
         using namespace assembly;
+
         // Set up time controller.
         auto& fps = utils::FpsManager::GetInstance();
         _time = std::make_unique<StandardTimeController>(nullptr, false);
@@ -41,11 +42,10 @@ namespace mm2hack::core
         auto& jm = gcInstance.Joystick();
         config::ConfigUIManager::LoadInputConfigIfMatches(jm.GetKeyBinding(), jm.ActiveDevice());
 
+        // Take over to the GameContext services (time controller, input state provider, snapshot provider).
         auto time = std::make_unique<StandardTimeController>(/*fps=*/nullptr, /*callWait=*/false);
         auto input = std::make_unique<JoystickInputProviderAdapter>(jm);
         ISnapshotProvider* snapshot = nullptr;
-
-        // Take over to the GameContext services (time controller, input state provider, snapshot provider).
         gcInstance.AttachServices(time.get(), input.get(), snapshot);
 
         // Move ownership to member variables.
@@ -83,7 +83,7 @@ namespace mm2hack::core
                 PauseManager::SetPaused(GameStateManager::GetInstance().Is(GameState::Paused));
 
                 // Update the main sequence.
-                seq.Update();
+                seq.Update();   // !Go game logic update.
                 // Render the game content.
                 seq.RenderWorld(_screenHandle, destW, destH);
                 // Render the overlay content (e.g., HUD, debug information).

@@ -91,22 +91,26 @@ namespace mm2hack::apps::sequence
 
     void SequenceManager::Update()
     {
+        using namespace core;
         using namespace deal;
-        auto& gsm = core::GameStateManager::GetInstance();
+
         if (_currentSequence)
         {
             _feedbackOverlay.Update();
+
             auto& time = GameContext::GetInstance().Time();
-            const bool shouldAdvance = gsm.IsRunning() || (time.DeltaSeconds() > 0.0);
+            const bool running = GameStateManager::GetInstance().IsRunning();
+            const bool shouldAdvance = running || (time.DeltaSeconds() > 0.0);
+
             if (shouldAdvance)
             {
                 auto& input = GameContext::GetInstance().Input();
-                // Update input state from the backend.
                 input.BeginTick(time.FrameCounter());
-                // Execute the current sequence logic.(app main)
-                _currentSequence->Execute();
-                // Finalize input state for this tick.
+                
+                _currentSequence->Execute();    // !Execute the main game logic.
+                
                 input.EndTick();
+                time.IncrementPlayFrameCounter();
             }
         }
     }
@@ -149,6 +153,9 @@ namespace mm2hack::apps::sequence
         {
             _currentSequence.reset();
             _sequenceType = SequenceType::None;
+
+            auto& time = deal::GameContext::GetInstance().Time();
+            time.ResetPlayFrameCounter();
         }
     }
 

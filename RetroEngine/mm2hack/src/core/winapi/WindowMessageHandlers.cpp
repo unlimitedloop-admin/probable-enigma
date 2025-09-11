@@ -54,6 +54,9 @@ namespace mm2hack::core::winapi
     {
         HMENU hMenu = GetMenu(hWnd);
         CheckMenuItem(hMenu, ID_SLOT_0, MF_BYCOMMAND | MF_CHECKED); // Set the first slot as checked by default.
+        CheckMenuItem(hMenu, ID_HUD_FRAMECOUNTER,
+            config::ConfigUIManager::GetCurrentHudConfig().showFrameTime ? MF_BYCOMMAND | MF_CHECKED : MF_BYCOMMAND | MF_UNCHECKED
+        );  // Set the frame time display state based on the HUD configuration.
         CheckMenuItem(hMenu, ID_HUD_FPS,
             config::ConfigUIManager::GetCurrentHudConfig().showFps ? MF_BYCOMMAND | MF_CHECKED : MF_BYCOMMAND | MF_UNCHECKED
         );  // Set the FPS display state based on the HUD configuration.
@@ -251,6 +254,20 @@ namespace mm2hack::core::winapi
             // Open the sound settings window.
             SettingsWindow::OpenTab(hWnd, SettingsWindow::Tab::Sound);
             break;
+
+        case ID_HUD_FRAMECOUNTER:
+        {
+            using confUI = config::ConfigUIManager;
+            auto& hudConfig = confUI::GetCurrentHudConfig();
+            config::HudConfig newConfig = hudConfig;
+            newConfig.showFrameTime = !newConfig.showFrameTime;
+            confUI::SetCurrentHudConfig(newConfig);
+
+            // Add check/uncheck the HUD => Frame Counter menu item.
+            HMENU hMenu = GetMenu(hWnd);
+            CheckMenuItem(hMenu, ID_HUD_FRAMECOUNTER, MF_BYCOMMAND | (newConfig.showFrameTime ? MF_CHECKED : MF_UNCHECKED));
+            break;
+        }
 
         case ID_HUD_FPS:
         {

@@ -14,5 +14,5 @@ namespace mm2hack::core
 {
     void Bootstrapper(LPWSTR lpCmdLine);
     void RunWindowManager(HINSTANCE hInstance, LPWSTR lpCmdLine, int nCmdShow);
-    void CleanUp();
+    void CleanUp(LPWSTR lpCmdLine);
 }

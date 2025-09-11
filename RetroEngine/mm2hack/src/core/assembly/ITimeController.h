@@ -72,5 +72,10 @@ namespace mm2hack::core::assembly
 
         /// Reset (initializes pause state, counters, step requests, etc.).
         virtual void Reset() noexcept = 0;
+
+        // Play frame counter management (only increments when enabled sequence instance)
+        virtual void ResetPlayFrameCounter() noexcept = 0;
+        virtual void IncrementPlayFrameCounter() noexcept = 0;
+        [[nodiscard]] virtual std::uint64_t GetPlayFrameCounter() const noexcept = 0;
     };
 }
