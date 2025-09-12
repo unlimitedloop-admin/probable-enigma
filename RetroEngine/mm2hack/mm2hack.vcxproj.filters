@@ -65,6 +65,7 @@
     <ClCompile Include="src\core\ui\CheatCodeInjectionUI.cpp" />
     <ClCompile Include="src\core\assembly\StandardTimeController.cpp" />
     <ClCompile Include="src\core\assembly\JoystickInputProviderAdapter.cpp" />
+    <ClCompile Include="src\core\assembly\StandardWatchRegistry.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
@@ -175,6 +176,10 @@
     <ClInclude Include="src\core\assembly\IInputBackend.h" />
     <ClInclude Include="src\core\assembly\JoystickInputProviderAdapter.h" />
     <ClInclude Include="src\core\assembly\ISnapshotProvider.h" />
+    <ClInclude Include="src\core\assembly\IWatchRegistry.h" />
+    <ClInclude Include="src\core\assembly\StandardWatchRegistry.h" />
+    <ClInclude Include="src\core\assembly\NullWatchRegistry.h" />
+    <ClInclude Include="src\core\assembly\WATCH_MACROS.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

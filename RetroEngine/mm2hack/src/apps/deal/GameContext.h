@@ -15,6 +15,7 @@
 #include "apps/supervisor/ResourceManager.h"
 #include "core/assembly/ISnapshotProvider.h"
 #include "core/assembly/ITimeController.h"
+#include "core/assembly/IWatchRegistry.h"
 #include "core/assembly/StateProvider.h"
 #include "input/JoystickManager.h"
 
@@ -46,6 +47,7 @@ namespace mm2hack::apps::deal
         ITimeController& Time() override { assert(_time); return *_time; }
         StateProvider& Input() override { assert(_input); return *_input; }
         ISnapshotProvider* Snapshot() override { return _snapshot; }
+        IWatchRegistry& Watch() override;
 
         // Retrieves the instance of the joystick manager for handling gamepad input setup
         JoystickManager& Joystick() { return *_joystickManager; }
@@ -61,7 +63,7 @@ namespace mm2hack::apps::deal
         bool IsShutdown() const { return !IsInitialized(); }
 
         // Attaches external services to the game context, such as time controller, input state provider, snapshot provider, and joystick manager
-        void AttachServices(ITimeController* time, StateProvider* input, ISnapshotProvider* snapshot = nullptr) noexcept;
+        void AttachServices(ITimeController* time, StateProvider* input, ISnapshotProvider* snapshot = nullptr, IWatchRegistry* watch = nullptr) noexcept;
 
     private:
         GameContext() = default;
@@ -72,5 +74,6 @@ namespace mm2hack::apps::deal
         ITimeController* _time{ nullptr };                  // Time controller for managing game time
         StateProvider* _input{ nullptr };                   // Input state provider for handling user input
         ISnapshotProvider* _snapshot{ nullptr };            // Snapshot provider for capturing game state snapshots (optional)
+        IWatchRegistry* _watch{ nullptr };                  // Watch registry for monitoring game variables (optional)
     };
 }
