@@ -11,8 +11,8 @@
 #include "apps/supervisor/ResourceManager.h"
 #include "core/assembly/ISnapshotProvider.h"
 #include "core/assembly/ITimeController.h"
-#include "core/assembly/IWatchRegistry.h"
 #include "core/assembly/StateProvider.h"
+#include "core/diagnostics/IWatchRegistry.h"
 
 namespace mm2hack::apps::deal
 {
@@ -32,7 +32,7 @@ namespace mm2hack::apps::deal
         // Retrieves the instance of the snapshot provider for capturing game state snapshots
         virtual core::assembly::ISnapshotProvider* Snapshot() = 0;
         // Retrieves the instance of the watch registry for monitoring game variables
-        virtual core::assembly::IWatchRegistry& Watch() = 0;
+        virtual core::diagnostics::IWatchRegistry& Watch() = 0;
         // Checks if the game context has been initialized
         virtual bool IsInitialized() const = 0;
     };

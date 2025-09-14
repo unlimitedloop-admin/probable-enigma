@@ -8,11 +8,12 @@
 //==============================================================================
 #pragma once
 
-#include <string>
-#include <vector>
 #include "IWatchRegistry.h"
 
-namespace mm2hack::core::assembly
+#include <string>
+#include <vector>
+
+namespace mm2hack::core::diagnostics
 {
     // NullWatchRegistry class that implements IWatchRegistry with empty methods
     class NullWatchRegistry final : public IWatchRegistry

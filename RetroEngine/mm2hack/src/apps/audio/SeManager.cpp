@@ -30,8 +30,8 @@ namespace mm2hack::apps::audio
         for (size_t i = 0; i < se.filepaths.size(); ++i)
         {
             _seChannels.Load(static_cast<int>(i), se.filepaths[i]);
-            int baseVol = (i < se.volumes.size()) ? se.volumes[i] : 255;
-            int adjustedVol = ((overrideVolume >= 0 ? overrideVolume : baseVol) * _masterVolume) / 255;
+            int baseVol = (i < se.volumes.size()) ? se.volumes[i] : MAX_VOLUME;
+            int adjustedVol = ((overrideVolume >= 0 ? overrideVolume : baseVol) * _masterVolume) / MAX_VOLUME;
             _seChannels.SetVolume(static_cast<int>(i), adjustedVol);
             DxLib::SetSoundCurrentPosition(0, _seChannels.GetHandle(static_cast<int>(i)));
         }
@@ -107,15 +107,15 @@ namespace mm2hack::apps::audio
 
     void SeManager::SetMasterVolume(int volume)
     {
-        _masterVolume = std::clamp(volume, 0, 255);
+        _masterVolume = std::clamp(volume, 0, MAX_VOLUME);
 
         for (auto& [bgmCh, activeSe] : _activeSeChannels)
         {
             const auto& se = _seData[activeSe.seName];
             for (size_t i = 0; i < se.filepaths.size(); ++i)
             {
-                int baseVol = (i < se.volumes.size()) ? se.volumes[i] : 255;
-                int adjustedVol = (baseVol * _masterVolume) / 255;
+                int baseVol = (i < se.volumes.size()) ? se.volumes[i] : MAX_VOLUME;
+                int adjustedVol = (baseVol * _masterVolume) / MAX_VOLUME;
                 _seChannels.SetVolume(activeSe.seChannelIndex, adjustedVol);
             }
         }

@@ -22,10 +22,7 @@ namespace mm2hack::core::assembly
     class JoystickInputProviderAdapter final : public StateProvider
     {
     public:
-        explicit JoystickInputProviderAdapter(input::JoystickManager& jm) noexcept
-            : _jm(jm)
-        {
-        }
+        explicit JoystickInputProviderAdapter(input::JoystickManager& jm) noexcept : _jm(jm) {/* Undefined */}
 
         // Called at the start of each tick. Backend polling -> logical state update
         void BeginTick(std::uint64_t tick) noexcept override;
@@ -33,18 +30,15 @@ namespace mm2hack::core::assembly
         void EndTick() noexcept override {}
         // Indirectly update the joystick state (the actual update is done externally)
         bool UpdateJoystick() noexcept override { return _jm.Update(); }
-        // Get snapshot (value copy)
-        [[nodiscard]]
-        InputSnapshot GetSnapshot() const override;
+        // Get snapshot (value copy), Used for Input-driven replay features etc...
+        [[nodiscard]] InputSnapshot GetSnapshot() const override;
 
+        // ---- Single item query ----
         const KeyFrameState& Get(Key16 k) const noexcept override { return _state[static_cast<size_t>(k)]; }
         bool IsPressed(Key16 k) const noexcept override { return Get(k).pressed; }
         bool JustPressed(Key16 k) const noexcept override { auto& s = Get(k); return s.changed && s.pressed; }
         bool JustReleased(Key16 k) const noexcept override { auto& s = Get(k); return s.changed && !s.pressed; }
-        std::int32_t Frames(Key16 k) const noexcept
-        {
-            return _state[static_cast<size_t>(k)].frames;
-        }
+        std::int32_t Frames(Key16 k) const noexcept { return _state[static_cast<size_t>(k)].frames; }
 
         void SetBindings(const std::vector<LogicalBinding>&) override
         {
@@ -52,8 +46,8 @@ namespace mm2hack::core::assembly
         }
 
     private:
-        input::JoystickManager& _jm; // External
-        std::array<KeyFrameState, static_cast<size_t>(Key16::JPBTN_COUNT)> _state{};
-        std::uint64_t _tick{ 0 };
+        input::JoystickManager& _jm;    // External joystick manager reference
+        std::array<KeyFrameState, static_cast<size_t>(Key16::JPBTN_COUNT)> _state{};    // Current state of all buttons
+        std::uint64_t _tick{ 0 };   // Current simulation tick number
     };
 }

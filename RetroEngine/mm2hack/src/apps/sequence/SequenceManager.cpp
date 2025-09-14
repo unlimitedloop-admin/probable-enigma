@@ -102,14 +102,18 @@ namespace mm2hack::apps::sequence
             const bool running = GameStateManager::GetInstance().IsRunning();
             const bool shouldAdvance = running || (time.DeltaSeconds() > 0.0);
 
+            // Is the game running or are we in frame advance mode?
             if (shouldAdvance)
             {
                 auto& input = GameContext::GetInstance().Input();
+                // Advance the input state for this frame.
                 input.BeginTick(time.FrameCounter());
                 
                 _currentSequence->Execute();    // !Execute the main game logic.
                 
+                // Finalize the input state for this frame.
                 input.EndTick();
+                // Increment the play frame counter if the game is running. (use in HUD overlays)
                 time.IncrementPlayFrameCounter();
             }
         }
@@ -154,8 +158,10 @@ namespace mm2hack::apps::sequence
             _currentSequence.reset();
             _sequenceType = SequenceType::None;
 
-            auto& time = deal::GameContext::GetInstance().Time();
-            time.ResetPlayFrameCounter();
+            if (auto* time = deal::GameContext::GetInstance().TryTime())
+            {
+                time->ResetPlayFrameCounter();
+            }
         }
     }
 

@@ -3,7 +3,7 @@
 //  Project: mm2hack
 //  IWatchRegistry.h
 // 
-//  ** Descriptions **
+//  Memory watch function for monitoring game content in real time.
 // 
 //==============================================================================
 #pragma once
@@ -14,7 +14,7 @@
 #include <type_traits>
 #include <vector>
 
-namespace mm2hack::core::assembly
+namespace mm2hack::core::diagnostics
 {
     using WatchSupplier = std::function<std::wstring()>;
     struct WatchEntry { std::wstring name; std::wstring value; };
@@ -38,8 +38,7 @@ namespace mm2hack::core::assembly
         virtual void Clear() = 0;
     };
 
-    // Utility functions to convert various types to std::wstring
-    // TODO: Move functions to the string_converter.h of utils directory ;)
+    // Utility functions to convert various types -> std::wstring
     inline std::wstring ToWString(const std::wstring& v) { return v; }
     inline std::wstring ToWString(const std::string& v) { return std::wstring(v.begin(), v.end()); }
     inline std::wstring ToWString(const wchar_t* v) { return v ? std::wstring(v) : L""; }

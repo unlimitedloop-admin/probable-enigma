@@ -14,7 +14,7 @@
 #if defined(_DEBUG) || defined(ENABLE_WATCH)
 #define WATCH_ADD(name, expr) \
         mm2hack::apps::deal::GameContext::GetInstance().Watch().Register((name), [&](){ \
-            using mm2hack::core::assembly::ToWString; \
+            using mm2hack::core::diagnostics::ToWString; \
             return ToWString((expr)); })
 
 #define WATCH_REMOVE(name) \

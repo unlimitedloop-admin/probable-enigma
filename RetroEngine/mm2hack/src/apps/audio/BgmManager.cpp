@@ -32,8 +32,8 @@ namespace mm2hack::apps::audio
                 _channels.AddChannel();
 
             _channels.Load(static_cast<int>(i), config.filepaths[i]);
-            int baseVol = (i < config.volumes.size()) ? config.volumes[i] : 255;
-            int adjustedVol = (baseVol * _masterVolume) / 255;
+            int baseVol = (i < config.volumes.size()) ? config.volumes[i] : MAX_VOLUME;
+            int adjustedVol = (baseVol * _masterVolume) / MAX_VOLUME;
             _channels.SetVolume(static_cast<int>(i), adjustedVol);
             SetSoundCurrentPosition(0, _channels.GetHandle(static_cast<int>(i)));
         }
@@ -78,21 +78,21 @@ namespace mm2hack::apps::audio
     void BgmManager::FadeIn(int durationFrames)
     {
         _isFading = true;
-        _fadeTarget = 255;
+        _fadeTarget = MAX_VOLUME;
         _fadeFramesRemaining = std::max(1, durationFrames);
         _fadeStep = (_fadeTarget - _masterVolume) / _fadeFramesRemaining;
     }
 
     void BgmManager::SetMasterVolume(int volume)
     {
-        _masterVolume = std::clamp(volume, 0, 255);
+        _masterVolume = std::clamp(volume, 0, MAX_VOLUME);
         if (_bgmData.find(_currentBgm) == _bgmData.end()) return;
         const auto& config = _bgmData[_currentBgm];
 
         for (size_t i = 0; i < config.filepaths.size(); ++i)
         {
-            int baseVol = (i < config.volumes.size()) ? config.volumes[i] : 255;
-            int adjustedVol = (baseVol * _masterVolume) / 255;
+            int baseVol = (i < config.volumes.size()) ? config.volumes[i] : MAX_VOLUME;
+            int adjustedVol = (baseVol * _masterVolume) / MAX_VOLUME;
             _channels.SetVolume(static_cast<int>(i), adjustedVol);
             utils::debug_log(L"change BGM vol: {}, at channel: {}", adjustedVol, i);
         }

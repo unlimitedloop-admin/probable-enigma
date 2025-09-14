@@ -62,8 +62,10 @@ namespace mm2hack::core
 
         ScopeGuard finally([]
             {
-                apps::deal::GameContext::GetInstance().Shutdown();
-                apps::sequence::SequenceManager::GetInstance().Release();
+                auto& seq = apps::sequence::SequenceManager::GetInstance();
+                seq.Release();
+                auto& ctx = apps::deal::GameContext::GetInstance();
+                ctx.Shutdown();
             });
 
         // Load graphics configuration and apply FPS limit if changed.

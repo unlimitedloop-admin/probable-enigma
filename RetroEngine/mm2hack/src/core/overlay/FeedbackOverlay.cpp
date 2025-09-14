@@ -4,8 +4,8 @@
 
 namespace mm2hack::core::overlay
 {
-    constexpr int GAME_W = 256;
-    constexpr int GAME_H = 240;
+    constexpr int GAME_W = config::SystemConfig::kScreenWidth;
+    constexpr int GAME_H = config::SystemConfig::kScreenHeight;
     constexpr int SCALE = 4;
     constexpr int VIRTUAL_W = GAME_W * SCALE;
     constexpr int VIRTUAL_H = GAME_H * SCALE;

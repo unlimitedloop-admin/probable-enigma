@@ -12,6 +12,7 @@
 
 #include <string>
 #include <Windows.h>
+#include "config/SystemConfig.h"
 
 namespace mm2hack::apps::audio
 {
@@ -56,19 +57,23 @@ namespace mm2hack::apps::audio
         // Update every frame (for fade processing, etc.)
         void Update() override;
 
+        // Set and get sound chip info
         void SetChipInfo(SoundChip chip, int index);
         ChannelInfo GetChipInfo() const;
 
+        // Get the handle of the sound channel (for external use)
         int GetNativeHandle() const override { return _handle; }
 
     private:
+        const int MAX_VOLUME = config::SystemConfig::kAudioMaxVolume;
+
         int _handle = -1;
-        int _volume = 255;
+        int _volume = MAX_VOLUME;
         LONGLONG _pausedPos = 0;
         bool _wasPaused = false;
 
         // Additional fade control variables
-        int _fade_target = 255;
+        int _fade_target = MAX_VOLUME;
         int _fade_step = 0;
         int _fade_frames_remaining = 0;
 

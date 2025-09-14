@@ -11,6 +11,8 @@
 #include "BgmManager.h"
 #include "SeManager.h"
 
+#include "config/SystemConfig.h"
+
 namespace mm2hack::apps::audio
 {
     // AudioMixer is responsible for mixing BGM and SE volumes
@@ -41,9 +43,11 @@ namespace mm2hack::apps::audio
         void Update();
 
     private:
-        int _masterVolume = 255;
-        int _bgmVolume = 255;
-        int _seVolume = 255;
+        const int MAX_VOLUME = config::SystemConfig::kAudioMaxVolume;
+
+        int _masterVolume = MAX_VOLUME;
+        int _bgmVolume = MAX_VOLUME;
+        int _seVolume = MAX_VOLUME;
         bool _enabled = true;
 
         BgmManager& _bgm;
@@ -51,7 +55,7 @@ namespace mm2hack::apps::audio
 
         // Fade management
         bool _fading = false;
-        int _fadeTarget = 255;
+        int _fadeTarget = MAX_VOLUME;
         int _fadeStep = 0;
         int _fadeFramesRemaining = 0;
 

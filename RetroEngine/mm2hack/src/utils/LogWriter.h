@@ -3,7 +3,7 @@
 //  Project: mm2hack
 //  LogWriter.h
 // 
-//  Write log messages to a file with a timestamp and log level.
+//  Output a message to a log file.
 // 
 //==============================================================================
 #pragma once
@@ -12,7 +12,7 @@
 
 namespace mm2hack::utils
 {
-    // Write log messages to a file with a timestamp and log level
+    // Write the specified string, log level and timestamp to a log file
     class LogWriter final
     {
     public:
@@ -32,7 +32,7 @@ namespace mm2hack::utils
         static void Shutdown();
 
     private:
-        static std::wstring _logFilePath;
-        static bool _initialized;
+        static std::wstring _logFilePath;   // Path to the log file
+        static bool _initialized;           // Indicates if the logger has been initialized
     };
 }

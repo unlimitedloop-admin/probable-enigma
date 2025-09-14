@@ -11,6 +11,7 @@ namespace mm2hack::apps::audio
 {
     bool AudioConfigLoader::LoadFromFile(const std::wstring& filepath)
     {
+        const int MAX_VOLUME = config::SystemConfig::kAudioMaxVolume;
         using namespace utils;
 
         _bgmConfigs.clear();
@@ -36,7 +37,7 @@ namespace mm2hack::apps::audio
                     {
                         BgmChannelConfig chConfig;
                         chConfig.file = utf8_to_wstring(ch.value("file", ""));
-                        chConfig.volume = ch.value("volume", 255);
+                        chConfig.volume = ch.value("volume", MAX_VOLUME);
                         bgmConfig.channels.push_back(chConfig);
                     }
                 }
@@ -65,7 +66,7 @@ namespace mm2hack::apps::audio
                     {
                         SeChannelConfig chConfig;
                         chConfig.file = utf8_to_wstring(ch.value("file", ""));
-                        chConfig.volume = ch.value("volume", 255);
+                        chConfig.volume = ch.value("volume", MAX_VOLUME);
                         chConfig.target_bgm_channels = ch.value("target_bgm_channels", -1);
                         seConfig.channels.push_back(chConfig);
                     }
@@ -75,7 +76,7 @@ namespace mm2hack::apps::audio
                 {
                     SeChannelConfig chConfig;
                     chConfig.file = utf8_to_wstring(seJson.value("file", ""));
-                    chConfig.volume = seJson.value("volume", 255);
+                    chConfig.volume = seJson.value("volume", MAX_VOLUME);
                     chConfig.target_bgm_channels = seJson.value("target_bgm_channels", -1);
                     seConfig.channels.push_back(chConfig);
                 }

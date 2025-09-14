@@ -34,8 +34,8 @@ namespace mm2hack::core::ui
         std::vector<std::wstring> GetEnabledCodes() const;
 
         // Hooks for reading/writing existing settings (framework only)
-        void LoadFromConfig();     // TODO: Work In Progress
-        void SaveToConfig() const; // TODO: Work In Progress
+        void LoadFromConfig();
+        void SaveToConfig() const;
 
     private:
         // Represents a single cheat code entry in the UI
@@ -79,7 +79,7 @@ namespace mm2hack::core::ui
         std::vector<CheatRow> _rows;    // The list of cheat rows
 
     private:
-        // Utilities
+        // ---- Utilities ----
         void AddFromEdit();
         void RemoveSelected();
         void ClearAll();
@@ -88,7 +88,7 @@ namespace mm2hack::core::ui
         void SetAllEnabled(bool enabled);
         void UpdateStatus(const std::wstring& text) const;
 
-        // ListView
+        // ---- ListView ----
         void CreateListView();
         void RebuildListView();
         void InsertListViewColumns() const;
@@ -97,7 +97,7 @@ namespace mm2hack::core::ui
         void SyncCheckStatesFromListView(); // UI to _rows
         void SyncCheckStatesToListView();   // _rows to UI
 
-        // Labels and Types (heuristic)
+        // ---- Labels and Types (heuristic) ----
         static std::wstring GuessType(const std::wstring& code);
         static std::wstring GuessLabel(const std::wstring& code);
         static bool ContainsFreeze(const std::wstring& code);

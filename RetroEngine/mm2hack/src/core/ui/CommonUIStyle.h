@@ -12,7 +12,8 @@
 
 namespace mm2hack::core::ui
 {
-    struct WindowProperties
+    // Properties for a standard window
+    struct SettingTabLayout
     {
         const wchar_t* tab;
         int width;

@@ -71,7 +71,7 @@ namespace mm2hack::apps::audio
 
     void SoundChannel::SetVolume(int volume)
     {
-        _volume = std::clamp(volume, 0, 255);
+        _volume = std::clamp(volume, 0, MAX_VOLUME);
         if (_handle != -1)
         {
             auto i = DxLib::ChangeVolumeSoundMem(_volume, _handle);
@@ -103,7 +103,7 @@ namespace mm2hack::apps::audio
 
     void SoundChannel::StartFade(int targetVolume, int durationFrames)
     {
-        _fade_target = std::clamp(targetVolume, 0, 255);
+        _fade_target = std::clamp(targetVolume, 0, MAX_VOLUME);
         _fade_frames_remaining = std::max(1, durationFrames);
         int diff = _fade_target - _volume;
         _fade_step = diff / _fade_frames_remaining;

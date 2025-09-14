@@ -4,7 +4,7 @@
 
 #include "IWatchRegistry.h"
 
-namespace mm2hack::core::assembly
+namespace mm2hack::core::diagnostics
 {
     void StandardWatchRegistry::Register(const std::wstring& name, WatchSupplier s)
     {

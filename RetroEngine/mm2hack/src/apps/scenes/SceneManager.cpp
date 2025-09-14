@@ -14,17 +14,16 @@ namespace mm2hack::apps::scenes
     void SceneManager::Update()
     {
         using namespace core::overlay;
-
         if (_currentScene)
         {
             if (!PauseManager::IsPaused())
             {
-                _currentScene->Update();
+                _currentScene->Update();        // !Execute the main game logic.
             }
 
             if (PauseManager::IsPaused())
             {
-                PauseManager::DrawOverlay();
+                PauseManager::DrawOverlay();    // Draw a "PAUSED" overlay.
             }
         }
     }
@@ -42,6 +41,7 @@ namespace mm2hack::apps::scenes
         using namespace core::overlay;
         if (_currentScene)
         {
+            // It's drawn after RenderWorld, so it appears on top of everything else.
             _currentScene->RenderOverlay();
         }
     }
@@ -63,7 +63,6 @@ namespace mm2hack::apps::scenes
     void SceneManager::RequestSceneChange(SceneID nextScene, const parameters::Parameters& params)
     {
         auto next = SceneFactory::CreateScene(nextScene);
-
         if (next)
         {
             next->Initialize(params);

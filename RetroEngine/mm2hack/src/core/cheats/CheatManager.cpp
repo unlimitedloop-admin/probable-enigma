@@ -102,7 +102,7 @@ namespace mm2hack::core::cheats
 
     void CheatManager::OnPreUpdate()
     {
-        // For future: queued one-shots can be executed here.
+        // TODO: queued one-shots can be executed here.
     }
 
     void CheatManager::OnLateUpdate()

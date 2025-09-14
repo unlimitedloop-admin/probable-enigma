@@ -21,6 +21,7 @@ namespace mm2hack::apps::parameters
     public:
         Parameters() = default;
 
+        // Add or update a parameter(key-value pair)
         template<typename T>
         Parameters& With(const std::wstring& key, const T& value)
         {
@@ -28,6 +29,7 @@ namespace mm2hack::apps::parameters
             return *this;
         }
 
+        // Retrieve a parameter by key, returning std::optional<T>
         template<typename T>
         std::optional<T> Get(const std::wstring& key) const
         {
@@ -55,6 +57,6 @@ namespace mm2hack::apps::parameters
             T value;
         };
 
-        std::unordered_map<std::wstring, std::shared_ptr<IHolder>> _data;
+        std::unordered_map<std::wstring, std::shared_ptr<IHolder>> _data;   // Key-value storage
     };
 }

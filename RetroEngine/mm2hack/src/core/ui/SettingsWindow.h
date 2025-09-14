@@ -28,7 +28,7 @@ namespace mm2hack::core::ui
             Cheats
         };
 
-        static constexpr WindowProperties kWindowProps[] = {
+        static constexpr SettingTabLayout kWindowProps[] = {
             { L"Graphics", 350, 320,  80, 240, 170, 240, 240, 240 },
             { L"Sound",    400, 380, 130, 300, 220, 300, 290, 300 },
             { L"Cheats",   860, 600, 590, 520, 680, 520, 750, 520 }

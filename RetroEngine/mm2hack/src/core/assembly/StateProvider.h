@@ -3,7 +3,7 @@
 //  Project: mm2hack
 //  StateProvider.h
 // 
-//  Input state provider interface for handling user input.
+//  Input state provider abstract class for handling user input.
 // 
 //==============================================================================
 #pragma once

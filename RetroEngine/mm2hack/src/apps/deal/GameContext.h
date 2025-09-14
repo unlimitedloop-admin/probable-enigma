@@ -15,13 +15,14 @@
 #include "apps/supervisor/ResourceManager.h"
 #include "core/assembly/ISnapshotProvider.h"
 #include "core/assembly/ITimeController.h"
-#include "core/assembly/IWatchRegistry.h"
 #include "core/assembly/StateProvider.h"
+#include "core/diagnostics/IWatchRegistry.h"
 #include "input/JoystickManager.h"
 
 namespace mm2hack::apps::deal
 {
     using namespace core::assembly;
+    using namespace core::diagnostics;
     using namespace input;
     using namespace supervisor;
 
@@ -45,7 +46,9 @@ namespace mm2hack::apps::deal
         ResourceManager& GetResourceManager() override { return *_resourceManager; }
         ResourceManager* GetResourceManagerPtr() override { return _resourceManager.get(); }
         ITimeController& Time() override { assert(_time); return *_time; }
+        ITimeController* TryTime() { return _time; }    // Fail safe version
         StateProvider& Input() override { assert(_input); return *_input; }
+        StateProvider* TryInput() { return _input; }    // Fail safe version
         ISnapshotProvider* Snapshot() override { return _snapshot; }
         IWatchRegistry& Watch() override;
 

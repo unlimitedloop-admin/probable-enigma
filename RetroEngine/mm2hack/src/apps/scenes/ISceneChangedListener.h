@@ -18,6 +18,8 @@ namespace mm2hack::apps::scenes
     {
     public:
         virtual ~ISceneChangedListener() = default;
+
+        // Request a scene change
         virtual void RequestSceneChange(SceneID nextScene, const parameters::Parameters& params) = 0;
     };
 }

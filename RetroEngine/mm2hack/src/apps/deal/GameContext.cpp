@@ -7,16 +7,16 @@
 #include "config/SoundConfig.h"
 #include "core/assembly/ISnapshotProvider.h"
 #include "core/assembly/ITimeController.h"
-#include "core/assembly/IWatchRegistry.h"
-#include "core/assembly/NullWatchRegistry.h"
 #include "core/assembly/StateProvider.h"
+#include "core/diagnostics/IWatchRegistry.h"
+#include "core/diagnostics/NullWatchRegistry.h"
 #include "input/JoystickManager.h"
 
 namespace mm2hack::apps::deal
 {
     IWatchRegistry& GameContext::Watch()
     {
-        static mm2hack::core::assembly::NullWatchRegistry s_null;   // Fallback for uninitialized case
+        static mm2hack::core::diagnostics::NullWatchRegistry s_null;   // Fallback for uninitialized case
         return _watch ? *_watch : s_null;
     }
 

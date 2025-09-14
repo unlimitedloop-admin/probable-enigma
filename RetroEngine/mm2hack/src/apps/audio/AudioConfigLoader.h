@@ -11,6 +11,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include "config/SystemConfig.h"
 
 namespace mm2hack::apps::audio
 {
@@ -18,7 +19,7 @@ namespace mm2hack::apps::audio
     struct BgmChannelConfig
     {
         std::wstring file;
-        int volume = 255;
+        int volume = config::SystemConfig::kAudioMaxVolume; // Volume level (0-255)
     };
 
     // Configuration structure for BGM, which includes multiple channels and loop points
@@ -32,7 +33,7 @@ namespace mm2hack::apps::audio
     struct SeChannelConfig
     {
         std::wstring file;
-        int volume = 255;
+        int volume = config::SystemConfig::kAudioMaxVolume; // Volume level (0-255)
         int target_bgm_channels = -1; // Channel to restore BGM volume after SE playback, -1 means no specific channel
     };
 

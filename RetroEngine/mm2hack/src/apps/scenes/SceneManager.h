@@ -26,7 +26,9 @@ namespace mm2hack::apps::scenes
 
         // Updates the currentScene instance, standard game program execution procedures
         void Update();
+        // Renders the currentScene instance
         void RenderWorld();
+        // Renders the overlay of the application (e.g., HUD, menus)
         void RenderOverlay();
 
         // Releases the currentScene
@@ -37,9 +39,8 @@ namespace mm2hack::apps::scenes
         void RequestSceneChange(SceneID nextScene, const parameters::Parameters& params = {}) override;
 
     private:
-        std::unique_ptr<IBaseScene> _currentScene;      // Manage the main part of the game program
+        std::unique_ptr<IBaseScene> _currentScene;                  // Manage the main part of the game program
 
-        // Transition to a new scene, releasing the current one if necessary (concept of state-pattern)
-        void ChangeScene(std::unique_ptr<IBaseScene> newScene);
+        void ChangeScene(std::unique_ptr<IBaseScene> newScene);     // Transition to a new scene, releasing the current one if necessary(concept of state-pattern)
     };
 }

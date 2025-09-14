@@ -8,7 +8,6 @@
 #include <utility>
 #include "apps/NES/NESPalette.h"
 #include "exceptions/CoreException.h"
-#include "utils/string_converter.h"
 
 namespace mm2hack::apps::graphics
 {
