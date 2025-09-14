@@ -2,6 +2,7 @@
 
 #include "bootstrap.h"
 
+#define _CRTDBG_MAP_ALLOC
 #include <crtdbg.h>
 #include <cstdlib>
 #include <d3d9.h>
@@ -13,6 +14,7 @@
 #include "exceptions/ErrorHandler.h"
 #include "exceptions/ErrorLevel.h"
 #include "winapi/WindowManager.h"
+
 
 namespace mm2hack::core
 {
@@ -123,6 +125,9 @@ namespace mm2hack::core
         if (isDebugMode)
         {
             _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+            _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);
+            _CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_DEBUG);
+            _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_DEBUG);
 
             if (passSystemCheck)
             {
@@ -139,7 +144,7 @@ namespace mm2hack::core
         }
     }
 
-    void RunMainProcess(HINSTANCE hInstance, LPWSTR lpCmdLine, int nCmdShow)
+    void RunWindowManager(HINSTANCE hInstance, LPWSTR lpCmdLine, int nCmdShow)
     {
         std::wstring windowTitle = config::EnvironmentConfig::Get(L"WINDOW_TEXT", L"mm2hack.demo") + L" " +
             config::EnvironmentConfig::Get(L"MM2HACK_VERSION");
@@ -154,8 +159,7 @@ namespace mm2hack::core
         windowManager.Shutdown();
     }
 
-    void CleanUp()
+    void CleanUp(LPWSTR lpCmdLine)
     {
-
     }
 }

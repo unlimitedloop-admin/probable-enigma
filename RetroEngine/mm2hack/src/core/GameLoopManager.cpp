@@ -5,6 +5,9 @@
 #include <exception>
 #include "apps/deal/GameContext.h"
 #include "apps/sequence/SequenceManager.h"
+#include "assembly/ISnapshotProvider.h"
+#include "assembly/JoystickInputProviderAdapter.h"
+#include "assembly/StandardTimeController.h"
 #include "config/ConfigUIManager.h"
 #include "exceptions/CoreException.h"
 #include "exceptions/ErrorHandler.h"
@@ -12,6 +15,7 @@
 #include "GameState.h"
 #include "GameStateManager.h"
 #include "overlay/PauseManager.h"
+#include "utils/Fps.h"
 #include "utils/FpsManager.h"
 #include "utils/ScopeGuard.h"
 #include "utils/string_converter.h"
@@ -25,10 +29,28 @@ namespace mm2hack::core
         _screenHandle(context.screenHandle),
         _vSync(context.vSync)
     {
+        using namespace assembly;
+
+        // Set up time controller.
+        auto& fps = utils::FpsManager::GetInstance();
+        _time = std::make_unique<StandardTimeController>(nullptr, false);
+        _time->EnableFollowFps(false);  // Disable follow FPS by default.
+
+        // Initialize game context and load input-device(joycard) configuration.
         auto& gcInstance = apps::deal::GameContext::GetInstance();
         gcInstance.Initialize();
-        auto& jm = gcInstance.GetJoystickManager();
+        auto& jm = gcInstance.Joystick();
         config::ConfigUIManager::LoadInputConfigIfMatches(jm.GetKeyBinding(), jm.ActiveDevice());
+
+        // Take over to the GameContext services (time controller, input state provider, snapshot provider).
+        auto time = std::make_unique<StandardTimeController>(/*fps=*/nullptr, /*callWait=*/false);
+        auto input = std::make_unique<JoystickInputProviderAdapter>(jm);
+        ISnapshotProvider* snapshot = nullptr;
+        gcInstance.AttachServices(time.get(), input.get(), snapshot);
+
+        // Move ownership to member variables.
+        _time = std::move(time);
+        _input = std::move(input);
     }
 
     void GameLoopManager::Run()
@@ -40,18 +62,22 @@ namespace mm2hack::core
 
         ScopeGuard finally([]
             {
-                apps::deal::GameContext::GetInstance().Shutdown();
-                apps::sequence::SequenceManager::GetInstance().Release();
+                auto& seq = apps::sequence::SequenceManager::GetInstance();
+                seq.Release();
+                auto& ctx = apps::deal::GameContext::GetInstance();
+                ctx.Shutdown();
             });
 
         // Load graphics configuration and apply FPS limit if changed.
         auto& fps = FpsManager::GetInstance();
+        auto& seq = apps::sequence::SequenceManager::GetInstance();
 
         try
         {
             while (!DxLib::ProcessMessage() && !DxLib::SetDrawScreen(_screenHandle) && !DxLib::ClearDrawScreen())
             {
-                auto& seq = apps::sequence::SequenceManager::GetInstance();
+                _time->BeginFrame();    // Defines delta time for this frame.
+
                 auto destW = static_cast<int>(config::SystemConfig::kScreenWidth * _viewerRate);
                 auto destH = static_cast<int>(config::SystemConfig::kScreenHeight * _viewerRate);
 
@@ -59,19 +85,22 @@ namespace mm2hack::core
                 PauseManager::SetPaused(GameStateManager::GetInstance().Is(GameState::Paused));
 
                 // Update the main sequence.
-                seq.Update();
+                seq.Update();   // !Go game logic update.
                 // Render the game content.
                 seq.RenderWorld(_screenHandle, destW, destH);
                 // Render the overlay content (e.g., HUD, debug information).
                 seq.RenderOverlay(destW, destH);
                 // Render the input configuration overlay if active.
-                seq.HandleJpbtnConfigMode(fps.GetDeltaSeconds());
+                seq.HandleJpbtnConfigMode(static_cast<double>(_time->DeltaSeconds()));
+
                 // Pace & Flip the screen.
                 fps.Wait();
                 // VSync control = pseudo FPS with monitor refresh rate.
                 if (_vSync) DxLib::WaitVSync(1);
                 // Screen flip to present the rendered frame of the back buffer.
                 DxLib::ScreenFlip();
+
+                _time->EndFrame();      // End of frame processing.
             }
         }
         catch (const CoreException& ex)

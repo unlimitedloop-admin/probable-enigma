@@ -19,7 +19,8 @@ namespace mm2hack::apps::scenes
     {
     public:
         virtual ~IBaseScene() = default;
-
+        
+        // === Lifecycle ===
         virtual void Initialize(const parameters::Parameters& params) = 0;
         virtual void Finalize() = 0;
 
@@ -32,7 +33,7 @@ namespace mm2hack::apps::scenes
         // Draw to back buffer as overlay (not scaled).
         virtual void RenderOverlay() = 0;
         
-
+        // === Scene identification ===
         virtual SceneID GetSceneID() const = 0;
         virtual std::wstring GetSceneName() const = 0;
     };

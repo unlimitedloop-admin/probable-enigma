@@ -11,8 +11,8 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <Windows.h>
 #include "ChannelManager.h"
+#include "config/SystemConfig.h"
 
 namespace mm2hack::apps::audio
 {
@@ -45,9 +45,11 @@ namespace mm2hack::apps::audio
         // Get the current master volume (0-255)
         int GetMasterVolume() const { return _masterVolume; }
 
+        // Update the BGM manager (handle fading and looping)
         void Update();
-
+        // Check if a BGM is currently playing
         bool IsPlaying() const { return _isPlaying; }
+        // Get the name of the currently playing BGM
         std::wstring GetCurrentBgmName() const { return _currentBgm; }
 
     private:
@@ -58,6 +60,8 @@ namespace mm2hack::apps::audio
             double loopStart = 0.0;
             double loopEnd = 0.0;
         };
+
+        const int MAX_VOLUME = config::SystemConfig::kAudioMaxVolume;
 
         ChannelManager& _channels;
         std::unordered_map<std::wstring, BgmData> _bgmData;
@@ -71,12 +75,12 @@ namespace mm2hack::apps::audio
 
         // Fade parameters
         bool _isFading = false;
-        int _fadeTarget = 255;
+        int _fadeTarget = MAX_VOLUME;
         int _fadeStep = 0;
         int _fadeFramesRemaining = 0;
-        int _masterVolume = 255;
+        int _masterVolume = MAX_VOLUME;
 
-        void ApplyFade();
-        void CheckAndApplyLoop();
+        void ApplyFade();           // Apply fade effect if active
+        void CheckAndApplyLoop();   // Check and apply loop points if necessary
     };
 }

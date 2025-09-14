@@ -54,7 +54,7 @@ namespace mm2hack::exceptions
                 utf8_to_wstring(ex.what());
 
             LogWriter::Write(fullMessage, levelStr);
-            MessageBoxW(nullptr, fullMessage.c_str(), L"Application Error", MB_OK | MB_ICONERROR);
+            MessageBox(nullptr, fullMessage.c_str(), L"Application Error", MB_OK | MB_ICONERROR);
 
             // Exit if fatal
             if (ex.GetErrorLevel() == ErrorLevel::FatalError)
@@ -92,7 +92,7 @@ namespace mm2hack::exceptions
             // Show message box for errors and fatal errors.
             if (level != ErrorLevel::Info && level != ErrorLevel::Warning)
             {
-                MessageBoxW(nullptr, fullMessage.c_str(), L"Application Error", MB_OK | MB_ICONERROR);
+                MessageBox(nullptr, fullMessage.c_str(), L"Application Error", MB_OK | MB_ICONERROR);
             }
 
             // Exit if fatal.

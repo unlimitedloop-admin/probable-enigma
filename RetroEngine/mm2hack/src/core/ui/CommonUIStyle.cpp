@@ -4,8 +4,7 @@
 
 namespace mm2hack::core::ui
 {
-    CommonUIStyle::CommonUIStyle()
-        : _font(nullptr)
+    CommonUIStyle::CommonUIStyle() : _font(nullptr)
     {
         LOGFONT lf{};
         lf.lfHeight = -14;

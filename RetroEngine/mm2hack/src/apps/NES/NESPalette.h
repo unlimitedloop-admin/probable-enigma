@@ -30,7 +30,7 @@ namespace mm2hack::apps::NES
         NESPalette(NESPalette&&) = delete;
         NESPalette& operator=(NESPalette&&) = delete;
         ~NESPalette() = delete;
-        // This class is not copyable or movable (static class)
+        // This class is not copyable or movable (static member defined only)
 
         // Load palette data from external text file
         static bool LoadPaletteFromFile(const std::wstring& file_path);
@@ -40,6 +40,6 @@ namespace mm2hack::apps::NES
         static const RGB& GetColor(size_t index);
 
     private:
-        static inline std::array<RGB, 64> _palette_data{};
+        static inline std::array<RGB, 64> _palette_data{};      // NES 64-color background palette data
     };
 }

@@ -27,6 +27,7 @@ namespace mm2hack::config
 
         // Load configuration from a file
         static void LoadFromFile(const std::wstring& filePath);
+
         // Get configuration values
         static std::wstring Get(const std::wstring& key, const std::wstring& defaultValue = L"");
         static int GetInt(const std::wstring& key, int defaultValue = 0);

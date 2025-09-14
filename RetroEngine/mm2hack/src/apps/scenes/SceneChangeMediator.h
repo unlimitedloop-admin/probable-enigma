@@ -19,10 +19,12 @@ namespace mm2hack::apps::scenes
     class SceneChangeMediator final
     {
     public:
+        // Registers a listener to handle scene change requests
         void RegisterListener(ISceneChangedListener* listener);
+        // Requests a scene change through the registered listener
         void RequestChange(SceneID scene, const parameters::Parameters& params = {});
 
     private:
-        ISceneChangedListener* _listener = nullptr;
+        ISceneChangedListener* _listener = nullptr;     // Pointer to the registered listener
     };
 }

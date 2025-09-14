@@ -2,6 +2,9 @@
 
 #include "string_converter.h"
 
+#include <stringapiset.h>
+#include <WinNls.h>
+
 namespace mm2hack::utils
 {
     // Convert a UTF-8 string to a wide string (UTF-16)

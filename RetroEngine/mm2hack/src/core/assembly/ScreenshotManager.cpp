@@ -13,7 +13,7 @@ namespace mm2hack::core::assembly
 {
     void ScreenshotManager::CaptureToPng()
     {
-        auto& windowManager = mm2hack::core::winapi::WindowManager::GetInstance();
+        auto& windowManager = winapi::WindowManager::GetInstance();
         const int width = windowManager.GetScreenWidth();
         const int height = windowManager.GetScreenHeight();
 

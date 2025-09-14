@@ -7,6 +7,7 @@
 #include "config/ConfigUIManager.h"
 #include "core/GameState.h"
 #include "core/GameStateManager.h"
+#include "core/winapi/WindowManager.h"
 #include "input/di/DirectInputToken.h"
 #include "input/JoystickManager.h"
 #include "input/Jpbtn.h"
@@ -52,7 +53,7 @@ namespace mm2hack::core::overlay
         _target = &target;
         _steps = std::move(steps);
         _index = 0;
-        _captureKind = apps::deal::GameContext::GetInstance().GetJoystickManager().ActiveDevice();
+        _captureKind = apps::deal::GameContext::GetInstance().Joystick().ActiveDevice();
 
         if (_steps.empty())
         {
@@ -91,7 +92,7 @@ namespace mm2hack::core::overlay
         }
 
         using enum CaptureState;
-        auto& jm = apps::deal::GameContext::GetInstance().GetJoystickManager();
+        auto& jm = apps::deal::GameContext::GetInstance().Joystick();
         switch (_state)
         {
         case Intro:
@@ -147,7 +148,7 @@ namespace mm2hack::core::overlay
         // Whether to save or not, enable saveOnCancel if you want to save when canceled.
         if (committed /*|| saveOnCancel*/)
         {
-            auto& jm = apps::deal::GameContext::GetInstance().GetJoystickManager();
+            auto& jm = apps::deal::GameContext::GetInstance().Joystick();
             config::ConfigUIManager::SaveInputDeviceConfig(jm.GetKeyBinding(), jm.ActiveDevice());
         }
 
@@ -158,9 +159,13 @@ namespace mm2hack::core::overlay
     void InputConfigOverlay::render() const
     {
         using conf = config::SystemConfig;
+        auto viewerRate = core::winapi::WindowManager::GetInstance().GetViewerRate();
         // Alpha blending.
         SetDrawBlendMode(DX_BLENDMODE_ALPHA, 128);
-        DrawBox(0, 0, conf::kScreenWidth, conf::kScreenHeight, GetColor(0, 0, 0), TRUE);
+        DrawBox(0, 0,
+            static_cast<int>(conf::kScreenWidth * viewerRate),
+            static_cast<int>(conf::kScreenHeight * viewerRate),
+            GetColor(0, 0, 0), TRUE);
         SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
 
         if (_index >= _steps.size())
@@ -226,7 +231,7 @@ namespace mm2hack::core::overlay
         if (_captureKind == Device::DirectInput)
         {
             const auto jp = _steps[_index].jpbtn;
-            auto& JM = apps::deal::GameContext::GetInstance().GetJoystickManager();
+            auto& JM = apps::deal::GameContext::GetInstance().Joystick();
             switch (jp)
             {
             case mm2hack::JPBTN::UP:

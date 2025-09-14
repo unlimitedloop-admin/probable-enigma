@@ -22,24 +22,6 @@ namespace mm2hack::exceptions
     public:
         // Error message, class name, and method name
         CoreException(
-            const std::string& message,
-            const std::wstring& className,
-            const char* methodName,
-            const ErrorLevel& errorLevel = ErrorLevel::Error,
-            const char* file = "",
-            int line = 0
-        )
-            : std::runtime_error(message),
-            _className(className),
-            _methodName(methodName ? std::wstring(methodName, methodName + strlen(methodName)) : L""),
-            _errorLevel(errorLevel),
-            _file(file),
-            _line(line)
-        {
-        }
-
-        // Wide string constructor
-        CoreException(
             const std::wstring& message,
             const std::wstring& className,
             const char* methodName,

@@ -38,6 +38,7 @@ namespace mm2hack::utils
         double fpsElapsed = std::chrono::duration<double, std::milli>(_lastTime - _fpsTime).count();
         if (fpsElapsed >= 1000.0)
         {
+            // When processing time exceeds 1 second, calculate the actual FPS.
             _actualFps = (_frameCount * 1000.0) / fpsElapsed;
             _frameCount = 0;
             _fpsTime = _lastTime;

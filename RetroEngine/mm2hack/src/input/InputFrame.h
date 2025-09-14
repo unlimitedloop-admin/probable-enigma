@@ -3,41 +3,35 @@
 //  Project: mm2hack
 //  InputFrame.h
 // 
-//  Frame tracking for input states in the game.
-// 
+//  The key has been pressed or released.
+//
 //==============================================================================
 #pragma once
 
-#include <cstdint>
-
 namespace mm2hack::input
 {
-    // Tracks the state of an input frame, including the number of frames
+    // State of a single key for the current frame
     struct InputFrame
     {
-        int64_t pressed_frame = 0;
-        int64_t released_frame = 0;
+        bool is_pressed = false;
 
         // Update the pressed and released frames based on the current state
         void Update(bool is_pressed)
         {
             if (is_pressed)
             {
-                ++pressed_frame;
-                released_frame = 0;
+                this->is_pressed = true;
             }
             else
             {
-                ++released_frame;
-                pressed_frame = 0;
+                this->is_pressed = false;
             }
         }
 
         // Reset the frame counters
         void Reset()
         {
-            pressed_frame = 0;
-            released_frame = 0;
+            is_pressed = false;
         }
     };
 }

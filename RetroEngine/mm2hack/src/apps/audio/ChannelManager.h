@@ -60,7 +60,7 @@ namespace mm2hack::apps::audio
 
         // Get the handle of the specified channel (for external use)
         int GetHandle(int channelIndex) const;
-
+        // Clear all channels
         void Clear();
 
     private:

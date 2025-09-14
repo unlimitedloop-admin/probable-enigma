@@ -12,6 +12,7 @@
 #include <unordered_map>
 #include <vector>
 #include "ChannelManager.h"
+#include "config/SystemConfig.h"
 
 namespace mm2hack::apps::audio
 {
@@ -21,7 +22,6 @@ namespace mm2hack::apps::audio
         Normal, // Normal priority SE, will not be interrupted by lower priority SE
         High    // High priority SE, will interrupt any currently playing SE
     };
-
 
     // Sound Effect (SE) Manager
     class SeManager
@@ -60,12 +60,14 @@ namespace mm2hack::apps::audio
             int seChannelIndex;                     // SE channel index
         };
 
+        const int MAX_VOLUME = config::SystemConfig::kAudioMaxVolume;
+
         ChannelManager _seChannels;                                 // SE channels manager
         ChannelManager& _bgmChannels;                               // BGM channels reference (for mute control)
         std::unordered_map<std::wstring, SeData> _seData;           // Name -> SE data
         std::unordered_map<int, ActiveSeChannel> _activeSeChannels; // Active SE channels (index -> SE name and channel index)
         std::vector<int> _bgmVolumeBackup;                          // Backup for restoring BGM channel volume after SE playback
 
-        int _masterVolume = 255;
+        int _masterVolume = MAX_VOLUME;
     };
 }

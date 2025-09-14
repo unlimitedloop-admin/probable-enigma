@@ -85,10 +85,10 @@ namespace mm2hack::core::winapi
 
         if (EnvironmentConfig::GetBool(L"OUTPUT_LOG_ENABLE"))
         {
+            LogWriter::Initialize(conf::kLogFilePath);
             DxLib::SetApplicationLogSaveDirectory(conf::kLogFilePath.c_str());
             DxLib::SetApplicationLogFileName(conf::kDxLibLogFileName.c_str());
             DxLib::SetOutApplicationLogValidFlag(TRUE);
-            LogWriter::Initialize(conf::kLogFilePath);
         }
         else
         {

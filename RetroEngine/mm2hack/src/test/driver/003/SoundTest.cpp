@@ -3,6 +3,7 @@
 #include "SoundTest.h"
 
 #include "apps/deal/GameContext.h"
+#include "core/assembly/InputTypes.h"
 #include "input/Jpbtn.h"
 
 namespace mm2hack::apps::scenes
@@ -16,13 +17,14 @@ namespace mm2hack::apps::scenes
 
     void SoundTest::Update()
     {
+        using namespace core::assembly;
         // Update audio systems, handle input for playing/stopping sounds, etc.
-        auto& joystick = deal::GameContext::GetInstance().GetJoystickManager();
+        auto& joystick = deal::GameContext::GetInstance().Joystick();
         joystick.Update();
-
+        auto& input = deal::GameContext::GetInstance().Input();
         auto& audio = deal::GameContext::GetInstance().GetResourceManager().GetAudioManager();
 
-        if (joystick.GetButtonState(JPBTN::START).pressed_frame == 1)
+        if (input.PressedFrames(Key16::START) == 1)
         {
             if (_isPlayThisTrack)
             {
@@ -36,12 +38,12 @@ namespace mm2hack::apps::scenes
             }
         }
 
-        if (joystick.GetButtonState(JPBTN::A).pressed_frame == 1)
+        if (input.PressedFrames(Key16::A) == 1)
         {
             audio.PlaySe(L"1up");
         }
 
-        if (joystick.GetButtonState(JPBTN::B).pressed_frame == 1)
+        if (input.PressedFrames(Key16::B) == 1)
         {
             audio.PlaySe(L"icarus_block");
         }

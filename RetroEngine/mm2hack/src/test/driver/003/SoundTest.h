@@ -3,7 +3,7 @@
 //  Project: mm2hack
 //  SoundTest.h
 // 
-//  ** Descriptions **
+//  Sound test scene for testing sound functionalities.
 // 
 //==============================================================================
 #pragma once

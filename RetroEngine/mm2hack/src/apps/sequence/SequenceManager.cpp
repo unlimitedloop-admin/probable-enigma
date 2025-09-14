@@ -7,6 +7,7 @@
 #include "core/GameStateManager.h"
 #include "core/overlay/DebugHud.h"
 #include "core/overlay/InputConfigOverlay.h"
+#include "core/overlay/PauseManager.h"
 #include "DebugSequence.h"
 #include "SequenceType.h"
 #include "StandardSequence.h"
@@ -90,20 +91,47 @@ namespace mm2hack::apps::sequence
 
     void SequenceManager::Update()
     {
-        auto& gsm = core::GameStateManager::GetInstance();
+        using namespace core;
+        using namespace deal;
+
         if (_currentSequence)
         {
             _feedbackOverlay.Update();
-            if (gsm.IsRunning()) _currentSequence->Execute();
+
+            auto& time = GameContext::GetInstance().Time();
+            const bool running = GameStateManager::GetInstance().IsRunning();
+            const bool shouldAdvance = running || (time.DeltaSeconds() > 0.0);
+
+            // Is the game running or are we in frame advance mode?
+            if (shouldAdvance)
+            {
+                auto& input = GameContext::GetInstance().Input();
+                // Advance the input state for this frame.
+                input.BeginTick(time.FrameCounter());
+                
+                _currentSequence->Execute();    // !Execute the main game logic.
+                
+                // Finalize the input state for this frame.
+                input.EndTick();
+                // Increment the play frame counter if the game is running. (use in HUD overlays)
+                time.IncrementPlayFrameCounter();
+            }
         }
     }
 
     void SequenceManager::RenderWorld(int screenHandle, int destW, int destH)
     {
+        using namespace core::overlay;
         using conf = config::SystemConfig;
+
         if (_currentSequence)
         {
             _currentSequence->RenderWorld();
+        }
+
+        if (PauseManager::IsPaused())
+        {
+            PauseManager::DrawOverlay();
         }
 
         // Scale what we draw to fit the viewer rate.
@@ -129,6 +157,11 @@ namespace mm2hack::apps::sequence
         {
             _currentSequence.reset();
             _sequenceType = SequenceType::None;
+
+            if (auto* time = deal::GameContext::GetInstance().TryTime())
+            {
+                time->ResetPlayFrameCounter();
+            }
         }
     }
 
@@ -139,7 +172,7 @@ namespace mm2hack::apps::sequence
         // If we are in JPBTN configuration mode, update the joystick manager and tick the input config overlay.
         if (GameStateManager::GetInstance().Is(GameState::JpbtnConfig))
         {
-            GameContext::GetInstance().GetJoystickManager().Update();
+            GameContext::GetInstance().Input().UpdateJoystick();
             overlay::InputConfigOverlay::GetInstance().Tick(static_cast<float>(dt));
         }
     }

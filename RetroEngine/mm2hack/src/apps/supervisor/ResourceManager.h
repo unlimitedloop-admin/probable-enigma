@@ -27,7 +27,7 @@ namespace mm2hack::apps::supervisor
         graphics::BGTileManager& GetBGTileManager() { return _bgTileManager; }
         // Gets the AudioManager instance for managing audio playback
         audio::AudioManager& GetAudioManager() { return _audioManager; }
-
+        // Releases all resources managed by the ResourceManager
         void Release();
 
     private:

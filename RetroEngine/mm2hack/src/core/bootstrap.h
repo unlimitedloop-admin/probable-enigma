@@ -13,6 +13,6 @@
 namespace mm2hack::core
 {
     void Bootstrapper(LPWSTR lpCmdLine);
-    void RunMainProcess(HINSTANCE hInstance, LPWSTR lpCmdLine, int nCmdShow);
-    void CleanUp();
+    void RunWindowManager(HINSTANCE hInstance, LPWSTR lpCmdLine, int nCmdShow);
+    void CleanUp(LPWSTR lpCmdLine);
 }

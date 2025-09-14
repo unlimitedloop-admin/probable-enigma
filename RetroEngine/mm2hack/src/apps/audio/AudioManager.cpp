@@ -106,6 +106,6 @@ namespace mm2hack::apps::audio
     int AudioManager::ToDxVolume(int uiVolume)
     {
         uiVolume = std::clamp(uiVolume, 0, 100);
-        return (uiVolume * 255 + 50) / 100;     // Convert 0-100 to 0-255 range (50 is for rounding)
+        return (uiVolume * config::SystemConfig::kAudioMaxVolume + 50) / 100;     // Convert 0-100 to 0-255 range (50 is for rounding)
     }
 }

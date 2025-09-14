@@ -60,7 +60,7 @@ namespace mm2hack::apps::audio
 
         // Every updates
         void Update();
-
+        // Release all resources, stop all sounds
         void Release();
 
         // Callbacks for sound events (e.g., when BGM starts/stops)
@@ -70,6 +70,7 @@ namespace mm2hack::apps::audio
         std::function<void(const std::wstring&)> OnSeStopped;
 
     private:
+        // Sound engine components
         ChannelManager _bgmChannels;
         ChannelManager _seChannels;
         BgmManager _bgmManager;
@@ -81,7 +82,6 @@ namespace mm2hack::apps::audio
 
         std::set<std::pair<SoundChip, int>> _mutedChannels; // Set of muted channels (chip, index)
 
-        // Convert volume from 0-100 range to 0-255 range used by the audio system
-        int ToDxVolume(int uiVolume);
+        int ToDxVolume(int uiVolume);   // Convert volume from 0-100 range to 0-255 range used by the audio system
     };
 }

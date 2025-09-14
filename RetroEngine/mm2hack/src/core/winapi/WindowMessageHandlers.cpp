@@ -14,6 +14,7 @@
 #include "core/GameState.h"
 #include "core/GameStateManager.h"
 #include "core/overlay/InputConfigOverlay.h"
+#include "core/overlay/PauseManager.h"
 #include "core/save/SaveData.h"
 #include "core/save/SaveSystem.h"
 #include "core/ui/SettingsWindow.h"
@@ -53,6 +54,9 @@ namespace mm2hack::core::winapi
     {
         HMENU hMenu = GetMenu(hWnd);
         CheckMenuItem(hMenu, ID_SLOT_0, MF_BYCOMMAND | MF_CHECKED); // Set the first slot as checked by default.
+        CheckMenuItem(hMenu, ID_HUD_FRAMECOUNTER,
+            config::ConfigUIManager::GetCurrentHudConfig().showFrameTime ? MF_BYCOMMAND | MF_CHECKED : MF_BYCOMMAND | MF_UNCHECKED
+        );  // Set the frame time display state based on the HUD configuration.
         CheckMenuItem(hMenu, ID_HUD_FPS,
             config::ConfigUIManager::GetCurrentHudConfig().showFps ? MF_BYCOMMAND | MF_CHECKED : MF_BYCOMMAND | MF_UNCHECKED
         );  // Set the FPS display state based on the HUD configuration.
@@ -173,7 +177,7 @@ namespace mm2hack::core::winapi
             }
             else
             {
-                THROW_EXCEPTION_EX("Cannot load while the game is running.", L"WindowManager", exceptions::ErrorLevel::Info);
+                THROW_EXCEPTION_EX(L"Cannot load while the game is running.", L"WindowManager", exceptions::ErrorLevel::Info);
             }
             break;
 
@@ -235,7 +239,7 @@ namespace mm2hack::core::winapi
 
         case ID_MENU_GAMEPAD_SETTINGS:
         {
-            auto& keyBinding = apps::deal::GameContext::GetInstance().GetJoystickManager().GetKeyBinding();
+            auto& keyBinding = apps::deal::GameContext::GetInstance().Joystick().GetKeyBinding();
             auto steps = overlay::BuildStepsFull16();
             overlay::InputConfigOverlay::GetInstance().Open(keyBinding, steps);
             break;
@@ -251,6 +255,20 @@ namespace mm2hack::core::winapi
             SettingsWindow::OpenTab(hWnd, SettingsWindow::Tab::Sound);
             break;
 
+        case ID_HUD_FRAMECOUNTER:
+        {
+            using confUI = config::ConfigUIManager;
+            auto& hudConfig = confUI::GetCurrentHudConfig();
+            config::HudConfig newConfig = hudConfig;
+            newConfig.showFrameTime = !newConfig.showFrameTime;
+            confUI::SetCurrentHudConfig(newConfig);
+
+            // Add check/uncheck the HUD => Frame Counter menu item.
+            HMENU hMenu = GetMenu(hWnd);
+            CheckMenuItem(hMenu, ID_HUD_FRAMECOUNTER, MF_BYCOMMAND | (newConfig.showFrameTime ? MF_CHECKED : MF_UNCHECKED));
+            break;
+        }
+
         case ID_HUD_FPS:
         {
             using confUI = config::ConfigUIManager;
@@ -264,6 +282,10 @@ namespace mm2hack::core::winapi
             CheckMenuItem(hMenu, ID_HUD_FPS, MF_BYCOMMAND | (newConfig.showFps ? MF_CHECKED : MF_UNCHECKED));
             break;
         }
+
+        case ID_INSERT_CHEATS:
+            SettingsWindow::OpenTab(hWnd, SettingsWindow::Tab::Cheats);
+            break;
 
         case ID_SCRIPT_001:
             seq.StartTestSequence(1);
@@ -302,14 +324,14 @@ namespace mm2hack::core::winapi
         auto& windowManager = WindowManager::GetInstance();
 
         // Handles screenshot key input with consistently high-priority execution.
-        if (!(lParam & (1 << 30)) && wParam == SCREENSHOT_KEY)
+        if (!(lParam & (static_cast<long long>(1) << 30)) && wParam == SCREENSHOT_KEY)
         {
             assembly::ScreenshotManager::CaptureToPng();
             apps::sequence::SequenceManager::GetInstance().SendFeedback(L"Screenshot taken.");
         }
 
         // bit 30 = previous key state (1 = down before this message, 0 = was up before).
-        const bool isFirstPress = !(lParam & (1 << 30));
+        const bool isFirstPress = !(lParam & (static_cast<long long>(1) << 30));
         if (!isFirstPress)
         {
             return;
@@ -396,6 +418,15 @@ namespace mm2hack::core::winapi
         case VK_F5:
             // Handle F5 key press for toggling the menu bar.
             windowManager.UpdateMenuBarState();
+            break;
+
+        case VK_OEM_102:
+            // VK_OEM_102 is the key next to the left Shift key on Japanese keyboards. (backslash key)
+            if (core::overlay::PauseManager::IsPaused())
+            {
+                // One step frame forward and resume if currently paused.
+                apps::deal::GameContext::GetInstance().Time().StepOneFrame();
+            }
             break;
 
         default:

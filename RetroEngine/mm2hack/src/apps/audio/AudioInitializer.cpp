@@ -17,7 +17,7 @@ namespace mm2hack::apps::audio
             return false;
         }
 
-        // Registration of BGM
+        // Registration of BGM.
         for (const auto& [name, config] : loader.GetBgmConfigs())
         {
             std::vector<std::wstring> filepaths;
@@ -29,7 +29,7 @@ namespace mm2hack::apps::audio
             }
             bgmManager.RegisterBgm(name, filepaths, volumes, config.loopStart, config.loopEnd);
 
-            // Initial volume settings
+            // Initial volume settings.
             for (size_t i = 0; i < config.channels.size(); ++i)
             {
                 if (i < static_cast<size_t>(bgmChannels.GetChannelCount()))
@@ -39,7 +39,7 @@ namespace mm2hack::apps::audio
             }
         }
 
-        // Registration of SE
+        // Registration of SE.
         for (const auto& [name, config] : loader.GetSeConfigs())
         {
             std::vector<std::wstring> filepaths;
@@ -53,7 +53,7 @@ namespace mm2hack::apps::audio
             }
             seManager.LoadSe(name, filepaths, volumes, targetBgmChannels);
 
-            // Initial volume settings
+            // Initial volume settings.
             for (size_t i = 0; i < config.channels.size(); ++i)
             {
                 if (i < static_cast<size_t>(seChannels.GetChannelCount()))
