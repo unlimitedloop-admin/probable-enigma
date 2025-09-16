@@ -1,0 +1,9 @@
+
+■ Installation Instructions
+In a nutshell, this software is non-installable. Just download and unzip it, then run the executable file.
+Here are the detailed steps to below:
+1. Download the latest release from the https://github.com/unlimitedloop-admin/probable-enigma/releases page.
+2. Extract the downloaded ZIP file to a folder of your choice.
+3. Run the `APP_START.exe`.
+  - Follow the platform-specific instructions below for your operating system.
+  - Refer to the attached `readme.txt` for more details.

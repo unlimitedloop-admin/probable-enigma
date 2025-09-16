@@ -61,3 +61,29 @@ Examples:
 - `[core] Implemented sequencer branching logic`
 - `[apps] Refactored scene component state transitions`
 - `[input] Converted input controller to singleton`
+
+
+# Coding Standards and Guidelines
+This document outlines the coding standards and guidelines for the RetroEngine project. Adhering to these standards ensures code consistency, readability, and maintainability across the project.
+
+## General Guidelines
+- Follow the established folder structure.
+- Keep code DRY (Don't Repeat Yourself).
+- Write clear and descriptive commit messages.
+- Use meaningful names for variables, functions, and classes.
+- Include comments and documentation where necessary.
+
+## Code Style
+- Use 4 spaces for indentation (no tabs).
+- Limit line length to 80 characters.
+- Use camelCase for variable and function names.
+- Use PascalCase for class names.
+- Place opening braces on the same line as the declaration.
+
+## Documentation
+- Update documentation for any public API changes.
+- Include usage examples in the documentation.
+- Keep README files up to date with the latest information.
+
+## Coding Guidelines
+- Reference the coding guidelines in the `docs/【ゲーム開発】romhacking_PG-001_コーディング規約.md` file for detailed coding practices. (in Japanese)

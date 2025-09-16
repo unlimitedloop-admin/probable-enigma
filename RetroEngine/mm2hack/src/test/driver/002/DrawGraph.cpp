@@ -32,9 +32,9 @@ namespace mm2hack::apps::scenes
 
         // Load the background tile graph.
         bgTileManager.SetDivSettings(L"SAMPLESTAGE1", 16, 16, 16, 8);
-        bgTileManager.Load(L"SAMPLESTAGE1", L"src\\resources\\exams\\bg\\demostage1tiles.png");
+        bgTileManager.Load(L"SAMPLESTAGE1", L"assets\\exams\\bg\\demostage1tiles.png");
         // Load map data
-        bgTileManager.LoadMapData(L"src\\resources\\exams\\bg\\SAMPLESTAGE1.bin");
+        bgTileManager.LoadMapData(L"assets\\exams\\bg\\SAMPLESTAGE1.bin");
 
         return true;
     }
