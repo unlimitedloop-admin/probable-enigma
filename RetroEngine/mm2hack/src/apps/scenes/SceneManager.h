@@ -8,13 +8,39 @@
 //==============================================================================
 #pragma once
 
+#include "ISceneChangedListener.h"
+
+#include <memory>
+#include "apps/parameters/Parameters.h"
+#include "IBaseScene.h"
+#include "SceneID.h"
+
 namespace mm2hack::apps::scenes
 {
-    // Scene management class (sample)
-    class SceneManager final
+    // SceneManager is responsible for managing the current scene in the application
+    class SceneManager final : public ISceneChangedListener
     {
     public:
+        SceneManager() = default;
+        ~SceneManager() override = default;
+
+        // Updates the currentScene instance, standard game program execution procedures
         void Update();
+        // Renders the currentScene instance
+        void RenderWorld();
+        // Renders the overlay of the application (e.g., HUD, menus)
+        void RenderOverlay();
+
+        // Releases the currentScene
         void Release();
+        // Retrieves the current scene ID as a integer
+        int GetCurrentSceneID() const;
+        // The role is to switch to a specified scene through an intermediary
+        void RequestSceneChange(SceneID nextScene, const parameters::Parameters& params = {}) override;
+
+    private:
+        std::unique_ptr<IBaseScene> _currentScene;                  // Manage the main part of the game program
+
+        void ChangeScene(std::unique_ptr<IBaseScene> newScene);     // Transition to a new scene, releasing the current one if necessary(concept of state-pattern)
     };
 }

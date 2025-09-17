@@ -1,13 +1,11 @@
+#include "pch.h"
+
 #include "LogWriter.h"
 
-#include <chrono>
 #include <corecrt.h>
 #include <ctime>
 #include <filesystem>
-#include <fstream>
 #include <ios>
-#include <string>
-#include "config/SystemConfig.h"
 #include "string_converter.h"
 
 namespace fs = std::filesystem;
@@ -47,10 +45,8 @@ namespace mm2hack::utils
 
         char timeBuf[64];
         std::strftime(timeBuf, sizeof(timeBuf), "%Y-%m-%d %H:%M:%S", &local_tm);
-
-        std::string finalLog =
-            "[" + std::string(timeBuf) + "][" + utf8Level + "] " + utf8Message + "\n";
-
+        // Ex: [2024-01-01 12:00:00][INFO] Message
+        std::string finalLog = "[" + std::string(timeBuf) + "][" + utf8Level + "] " + utf8Message + "\n";
         ofs.write(finalLog.c_str(), static_cast<std::streamsize>(finalLog.size()));
     }
 

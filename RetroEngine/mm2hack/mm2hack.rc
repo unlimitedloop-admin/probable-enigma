@@ -51,8 +51,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,0,0,16
- PRODUCTVERSION 0,0,0,16
+ FILEVERSION 0,0,0,66
+ PRODUCTVERSION 0,0,0,66
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -69,12 +69,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Sirius X"
             VALUE "FileDescription", "mm2hack"
-            VALUE "FileVersion", "0.0.0.16"
+            VALUE "FileVersion", "0.0.0.66"
             VALUE "InternalName", "mm2hack.exe"
             VALUE "LegalCopyright", "Copyright (C) 2025"
             VALUE "OriginalFilename", "mm2hack.exe"
             VALUE "ProductName", "mm2hack project"
-            VALUE "ProductVersion", "0.0.0.16"
+            VALUE "ProductVersion", "0.0.0.66"
         END
     END
     BLOCK "VarFileInfo"
@@ -98,7 +98,77 @@ BEGIN
         MENUITEM "ゲーム停止 (&C)",                  ID_FILE_STOP
         MENUITEM "デバッグモードで起動 (&D)\tShift+F1",   ID_FILE_START_DEBUG
         MENUITEM SEPARATOR
-        MENUITEM "終了 (&X)\tAlt+F4",             ID_APP_EXIT
+        MENUITEM "ステートセーブ (&S)\tCtrl+S",        ID_FILE_SAVE
+        MENUITEM "ステートロード (&L)\tCtrl+L",        ID_FILE_LOAD
+        POPUP "ステートセーブスロット (&F)"
+        BEGIN
+            MENUITEM "次のスロット (&N)",                 ID_SLOT_NEXT
+            MENUITEM "前のスロット (&P)",                 ID_SLOT_PREVIOUS
+            MENUITEM SEPARATOR
+            MENUITEM "スロット 0 (&0)",                 ID_SLOT_0
+            MENUITEM "スロット 1 (&1)",                 ID_SLOT_1
+            MENUITEM "スロット 2 (&2)",                 ID_SLOT_2
+            MENUITEM "スロット 3 (&3)",                 ID_SLOT_3
+            MENUITEM "スロット 4 (&4)",                 ID_SLOT_4
+            MENUITEM "スロット 5 (&5)",                 ID_SLOT_5
+            MENUITEM "スロット 6 (&6)",                 ID_SLOT_6
+            MENUITEM "スロット 7 (&7)",                 ID_SLOT_7
+            MENUITEM "スロット 8 (&8)",                 ID_SLOT_8
+            MENUITEM "スロット 9 (&9)",                 ID_SLOT_9
+            MENUITEM "空きスロットを選択 (&E)",              ID_SLOT_EMPTY
+        END
+        MENUITEM SEPARATOR
+        POPUP "リプレイ記録 (&O)"
+        BEGIN
+            MENUITEM "再生... (&P)",                  ID_PLAYREC_PLAYING, GRAYED
+            MENUITEM "記録... (&R)",                  ID_PLAYREC_RECORDING, GRAYED
+            MENUITEM "追記... (&C)",                  ID_PLAYREC_CONTINUATION, GRAYED
+            MENUITEM "停止 (&S)",                     ID_PLAYREC_STOP, GRAYED
+            MENUITEM SEPARATOR
+            MENUITEM "情報 (&I)",                     ID_PLAYREC_INFOMATION, GRAYED
+            MENUITEM "プロパティ... (&E)",               ID_PLAYREC_ELICIT, GRAYED
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "終了 (&X)\tCtrl+Shift+Q",       ID_APP_EXIT
+    END
+    POPUP "設定 (&C)"
+    BEGIN
+        POPUP "ウィンドウサイズ (&W)"
+        BEGIN
+            MENUITEM "1x (&1)",                     ID_SCREEN_1X
+            MENUITEM "2x (&2)",                     ID_SCREEN_2X
+            MENUITEM "4x (&4)",                     ID_SCREEN_4X
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "キーコンフィグ (&I)",                ID_MENU_GAMEPAD_SETTINGS
+        MENUITEM "グラフィック設定... (&G)",            ID_MENU_GRAPHICS_SETTINGS
+        MENUITEM "サウンド設定... (&M)",              ID_MENU_SOUND_SETTINGS
+    END
+    POPUP "ツール (&T)"
+    BEGIN
+        POPUP "HUD (&H)"
+        BEGIN
+            MENUITEM "フレームカウンター (&T)",              ID_HUD_FRAMECOUNTER
+            MENUITEM "FPS (&F)",                    ID_HUD_FPS
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "チートコード... (&C)",              ID_INSERT_CHEATS
+    END
+    POPUP "Debug (&D)"
+    BEGIN
+        POPUP "Script (&S)"
+        BEGIN
+            MENUITEM "キー入力テスト",                     ID_SCRIPT_001
+            MENUITEM "テクスチャ描画テスト",                  ID_SCRIPT_002
+            MENUITEM "オーディオテスト",                    ID_SCRIPT_003
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "Memory Watch... (&M)",        ID_DEBUG_MEMORYWATCH, GRAYED
+        MENUITEM "Sprite/BG Viewer... (&G)",    ID_DEBUG_SPRITEBGVIEWER, GRAYED
+    END
+    POPUP "ヘルプ (&H)"
+    BEGIN
+        MENUITEM "このアプリについて (&A)",              ID_ABOUT_IT
     END
 END
 

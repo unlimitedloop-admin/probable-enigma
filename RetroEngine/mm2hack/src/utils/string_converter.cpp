@@ -1,7 +1,9 @@
+#include "pch.h"
+
 #include "string_converter.h"
 
-#include <string>
-#include <Windows.h>
+#include <stringapiset.h>
+#include <WinNls.h>
 
 namespace mm2hack::utils
 {

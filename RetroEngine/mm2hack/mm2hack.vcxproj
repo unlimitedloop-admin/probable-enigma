@@ -74,6 +74,12 @@
     <Import Project="mm2hack.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <TargetName>$(ProjectName)_x86</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <TargetName>$(ProjectName)_x86</TargetName>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -81,14 +87,19 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)src\;D:\Lib\DxLib_VC\Include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)src\;D:\Lib\DxLib_VC\Include\;$(ProjectDir)src\libs\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <TreatAngleIncludeAsExternal>true</TreatAngleIncludeAsExternal>
+      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
+      <DisableAnalyzeExternal>true</DisableAnalyzeExternal>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>D:\Lib\DxLib_VC\Include\</AdditionalLibraryDirectories>
-      <AdditionalDependencies>d3d9.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d9.lib;Comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -100,14 +111,19 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)src\;D:\Lib\DxLib_VC\Include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)src\;D:\Lib\DxLib_VC\Include\;$(ProjectDir)src\libs\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <TreatAngleIncludeAsExternal>true</TreatAngleIncludeAsExternal>
+      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
+      <DisableAnalyzeExternal>true</DisableAnalyzeExternal>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>D:\Lib\DxLib_VC\Include\</AdditionalLibraryDirectories>
-      <AdditionalDependencies>d3d9.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d9.lib;Comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -117,14 +133,19 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)src\;D:\Lib\DxLib_VC\Include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)src\;D:\Lib\DxLib_VC\Include\;$(ProjectDir)src\libs\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <TreatAngleIncludeAsExternal>true</TreatAngleIncludeAsExternal>
+      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
+      <DisableAnalyzeExternal>true</DisableAnalyzeExternal>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>D:\Lib\DxLib_VC\Include\</AdditionalLibraryDirectories>
-      <AdditionalDependencies>d3d9.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d9.lib;Comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -136,28 +157,88 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)src\;D:\Lib\DxLib_VC\Include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)src\;D:\Lib\DxLib_VC\Include\;$(ProjectDir)src\libs\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <TreatAngleIncludeAsExternal>true</TreatAngleIncludeAsExternal>
+      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
+      <DisableAnalyzeExternal>true</DisableAnalyzeExternal>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>D:\Lib\DxLib_VC\Include\</AdditionalLibraryDirectories>
-      <AdditionalDependencies>d3d9.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d9.lib;Comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\apps\audio\AudioConfigLoader.cpp" />
+    <ClCompile Include="src\apps\audio\AudioInitializer.cpp" />
+    <ClCompile Include="src\apps\audio\AudioManager.cpp" />
+    <ClCompile Include="src\apps\audio\AudioMixer.cpp" />
+    <ClCompile Include="src\apps\audio\BgmManager.cpp" />
+    <ClCompile Include="src\apps\audio\ChannelManager.cpp" />
+    <ClCompile Include="src\apps\audio\SeManager.cpp" />
+    <ClCompile Include="src\apps\audio\SoundChannel.cpp" />
+    <ClCompile Include="src\apps\deal\GameContext.cpp" />
+    <ClCompile Include="src\apps\graphics\BGTileManager.cpp" />
+    <ClCompile Include="src\apps\graphics\SpriteManager.cpp" />
+    <ClCompile Include="src\apps\NES\NESPalette.cpp" />
+    <ClCompile Include="src\apps\scenes\SceneChangeMediator.cpp" />
+    <ClCompile Include="src\apps\scenes\SceneFactory.cpp" />
     <ClCompile Include="src\apps\scenes\SceneManager.cpp" />
+    <ClCompile Include="src\apps\scenes\sub-scenes\LaunchingGame.cpp" />
     <ClCompile Include="src\apps\sequence\DebugSequence.cpp" />
     <ClCompile Include="src\apps\sequence\SequenceManager.cpp" />
     <ClCompile Include="src\apps\sequence\StandardSequence.cpp" />
+    <ClCompile Include="src\apps\supervisor\ResourceManager.cpp" />
+    <ClCompile Include="src\config\ConfigUIManager.cpp" />
     <ClCompile Include="src\config\EnvironmentConfig.cpp" />
     <ClCompile Include="src\config\SystemConfig.cpp" />
+    <ClCompile Include="src\core\assembly\JoystickInputProviderAdapter.cpp" />
+    <ClCompile Include="src\core\assembly\ScreenshotManager.cpp" />
+    <ClCompile Include="src\core\assembly\StandardTimeController.cpp" />
+    <ClCompile Include="src\core\diagnostics\StandardWatchRegistry.cpp" />
     <ClCompile Include="src\core\bootstrap.cpp" />
+    <ClCompile Include="src\core\cheats\CheatManager.cpp" />
+    <ClCompile Include="src\core\cheats\FreezePatchEffect.cpp" />
+    <ClCompile Include="src\core\cheats\OnceWriteEffect.cpp" />
+    <ClCompile Include="src\core\cheats\ParCodeParser.cpp" />
+    <ClCompile Include="src\core\cheats\SymbolicCodeParser.cpp" />
     <ClCompile Include="src\core\GameLoopManager.cpp" />
+    <ClCompile Include="src\core\GameStateManager.cpp" />
+    <ClCompile Include="src\core\overlay\DebugHud.cpp" />
+    <ClCompile Include="src\core\overlay\FeedbackOverlay.cpp" />
+    <ClCompile Include="src\core\overlay\InputConfigOverlay.cpp" />
+    <ClCompile Include="src\core\overlay\PauseManager.cpp" />
+    <ClCompile Include="src\core\save\SaveSystem.cpp" />
+    <ClCompile Include="src\core\ui\CheatCodeInjectionUI.cpp" />
+    <ClCompile Include="src\core\ui\CommonUIStyle.cpp" />
+    <ClCompile Include="src\core\ui\GraphicsSettingsUI.cpp" />
+    <ClCompile Include="src\core\ui\SettingsWindow.cpp" />
+    <ClCompile Include="src\core\ui\SoundSettingsUI.cpp" />
     <ClCompile Include="src\core\winapi\WindowManager.cpp" />
     <ClCompile Include="src\core\winapi\WindowMessageHandlers.cpp" />
+    <ClCompile Include="src\input\C16ButtonState.cpp" />
+    <ClCompile Include="src\input\DirectInputProvider.cpp" />
+    <ClCompile Include="src\input\JoystickManager.cpp" />
+    <ClCompile Include="src\input\KeyBinding.cpp" />
+    <ClCompile Include="src\input\KeyboardInputProvider.cpp" />
+    <ClCompile Include="src\input\KeyboardsIn.cpp" />
+    <ClCompile Include="src\input\RawInputPoller.cpp" />
+    <ClCompile Include="src\input\XInputProvider.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\pch.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="src\test\driver\001\PressKeyCommand.cpp" />
+    <ClCompile Include="src\test\driver\002\DrawGraph.cpp" />
+    <ClCompile Include="src\test\driver\003\SoundTest.cpp" />
+    <ClCompile Include="src\test\TestSequence.cpp" />
     <ClCompile Include="src\utils\Fps.cpp" />
     <ClCompile Include="src\utils\LogWriter.cpp" />
     <ClCompile Include="src\utils\output_debug.cpp" />
@@ -166,25 +247,112 @@
   <ItemGroup>
     <None Include="mm2hack.props" />
     <None Include="mm2hack.env" />
+    <None Include="src\resources\exams\bg\SAMPLESTAGE1.bin" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
+    <ClInclude Include="src\apps\audio\AudioConfigLoader.h" />
+    <ClInclude Include="src\apps\audio\AudioInitializer.h" />
+    <ClInclude Include="src\apps\audio\AudioManager.h" />
+    <ClInclude Include="src\apps\audio\AudioMixer.h" />
+    <ClInclude Include="src\apps\audio\BgmManager.h" />
+    <ClInclude Include="src\apps\audio\ChannelManager.h" />
+    <ClInclude Include="src\apps\audio\ISoundChannel.h" />
+    <ClInclude Include="src\apps\audio\SeManager.h" />
+    <ClInclude Include="src\apps\audio\SoundChannel.h" />
+    <ClInclude Include="src\apps\deal\GameContext.h" />
+    <ClInclude Include="src\apps\deal\IGameContext.h" />
+    <ClInclude Include="src\apps\graphics\BGTileManager.h" />
+    <ClInclude Include="src\apps\graphics\ITextureObject.h" />
+    <ClInclude Include="src\apps\graphics\SpriteManager.h" />
+    <ClInclude Include="src\apps\NES\NESPalette.h" />
+    <ClInclude Include="src\apps\parameters\Parameters.h" />
+    <ClInclude Include="src\apps\scenes\IBaseScene.h" />
+    <ClInclude Include="src\apps\scenes\ISceneChangedListener.h" />
+    <ClInclude Include="src\apps\scenes\SceneChangeMediator.h" />
+    <ClInclude Include="src\apps\scenes\SceneFactory.h" />
+    <ClInclude Include="src\apps\scenes\SceneID.h" />
     <ClInclude Include="src\apps\scenes\SceneManager.h" />
+    <ClInclude Include="src\apps\scenes\sub-scenes\LaunchingGame.h" />
     <ClInclude Include="src\apps\sequence\DebugSequence.h" />
     <ClInclude Include="src\apps\sequence\ISequence.h" />
     <ClInclude Include="src\apps\sequence\SequenceManager.h" />
     <ClInclude Include="src\apps\sequence\SequenceType.h" />
     <ClInclude Include="src\apps\sequence\StandardSequence.h" />
+    <ClInclude Include="src\apps\supervisor\ResourceManager.h" />
+    <ClInclude Include="src\config\ConfigUIManager.h" />
     <ClInclude Include="src\config\EnvironmentConfig.h" />
+    <ClInclude Include="src\config\GraphicsConfig.h" />
+    <ClInclude Include="src\config\HudConfig.h" />
+    <ClInclude Include="src\config\InputLoadResult.h" />
+    <ClInclude Include="src\config\SoundConfig.h" />
     <ClInclude Include="src\config\SystemConfig.h" />
+    <ClInclude Include="src\core\assembly\IInputBackend.h" />
+    <ClInclude Include="src\core\assembly\ISnapshotProvider.h" />
+    <ClInclude Include="src\core\diagnostics\IWatchRegistry.h" />
+    <ClInclude Include="src\core\diagnostics\NullWatchRegistry.h" />
+    <ClInclude Include="src\core\diagnostics\StandardWatchRegistry.h" />
+    <ClInclude Include="src\core\assembly\StateProvider.h" />
+    <ClInclude Include="src\core\assembly\InputTypes.h" />
+    <ClInclude Include="src\core\assembly\ITimeController.h" />
+    <ClInclude Include="src\core\assembly\JoystickInputProviderAdapter.h" />
+    <ClInclude Include="src\core\assembly\ScreenshotManager.h" />
+    <ClInclude Include="src\core\assembly\StandardTimeController.h" />
+    <ClInclude Include="src\core\diagnostics\WATCH_MACROS.h" />
     <ClInclude Include="src\core\bootstrap.h" />
+    <ClInclude Include="src\core\cheats\CheatManager.h" />
+    <ClInclude Include="src\core\cheats\FreezePatchEffect.h" />
+    <ClInclude Include="src\core\cheats\ICheatEffect.h" />
+    <ClInclude Include="src\core\cheats\ICheatMemoryMap.h" />
+    <ClInclude Include="src\core\cheats\ICodeParser.h" />
+    <ClInclude Include="src\core\cheats\OnceWriteEffect.h" />
+    <ClInclude Include="src\core\cheats\ParCodeParser.h" />
+    <ClInclude Include="src\core\cheats\SymbolicCodeParser.h" />
     <ClInclude Include="src\core\GameLoopManager.h" />
+    <ClInclude Include="src\core\GameState.h" />
+    <ClInclude Include="src\core\GameStateManager.h" />
+    <ClInclude Include="src\core\overlay\DebugHud.h" />
+    <ClInclude Include="src\core\overlay\FeedbackOverlay.h" />
+    <ClInclude Include="src\core\overlay\InputConfigOverlay.h" />
+    <ClInclude Include="src\core\overlay\PauseManager.h" />
+    <ClInclude Include="src\core\save\SaveData.h" />
+    <ClInclude Include="src\core\save\SaveSystem.h" />
+    <ClInclude Include="src\core\ui\CheatCodeInjectionUI.h" />
+    <ClInclude Include="src\core\ui\CommonUIStyle.h" />
+    <ClInclude Include="src\core\ui\GraphicsSettingsUI.h" />
+    <ClInclude Include="src\core\ui\SettingsWindow.h" />
+    <ClInclude Include="src\core\ui\SoundSettingsUI.h" />
+    <ClInclude Include="src\core\winapi\WindowContext.h" />
     <ClInclude Include="src\core\winapi\WindowManager.h" />
     <ClInclude Include="src\core\winapi\WindowMessageHandlers.h" />
     <ClInclude Include="src\exceptions\CoreException.h" />
     <ClInclude Include="src\exceptions\ErrorHandler.h" />
     <ClInclude Include="src\exceptions\ErrorLevel.h" />
+    <ClInclude Include="src\input\C16ButtonState.h" />
+    <ClInclude Include="src\input\DefaultKeyArray.h" />
+    <ClInclude Include="src\input\DirectInputProvider.h" />
+    <ClInclude Include="src\input\di\DirectInputToken.h" />
+    <ClInclude Include="src\input\IInputProvider.h" />
+    <ClInclude Include="src\input\InputFrame.h" />
+    <ClInclude Include="src\input\JoystickManager.h" />
+    <ClInclude Include="src\input\Jpbtn.h" />
+    <ClInclude Include="src\input\KeyBinding.h" />
+    <ClInclude Include="src\input\KeyboardInputProvider.h" />
+    <ClInclude Include="src\input\KeyboardsIn.h" />
+    <ClInclude Include="src\input\KeyToken.h" />
+    <ClInclude Include="src\input\RawInputEvent.h" />
+    <ClInclude Include="src\input\RawInputPoller.h" />
+    <ClInclude Include="src\input\XInputProvider.h" />
+    <ClInclude Include="src\input\xi\XInputToken.h" />
+    <ClInclude Include="src\libs\json.hpp" />
+    <ClInclude Include="src\pch.h" />
+    <ClInclude Include="src\test\driver\001\PressKeyCommand.h" />
+    <ClInclude Include="src\test\driver\002\DrawGraph.h" />
+    <ClInclude Include="src\test\driver\003\SoundTest.h" />
+    <ClInclude Include="src\test\driver\ITestDriver.h" />
+    <ClInclude Include="src\test\TestSequence.h" />
     <ClInclude Include="src\utils\Fps.h" />
+    <ClInclude Include="src\utils\FpsManager.h" />
     <ClInclude Include="src\utils\LogWriter.h" />
     <ClInclude Include="src\utils\output_debug.h" />
     <ClInclude Include="src\utils\ScopeGuard.h" />
@@ -198,6 +366,11 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="mm2hack.ico" />
+    <Image Include="src\resources\exams\bg\default-windowsize-picture.png" />
+    <Image Include="src\resources\exams\bg\demostage1tiles.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="assets\system\nes_palette.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

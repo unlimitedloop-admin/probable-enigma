@@ -9,6 +9,8 @@
 #pragma once
 
 #include <memory>
+#include <string>
+#include "core/overlay/FeedbackOverlay.h"
 #include "ISequence.h"
 #include "SequenceType.h"
 
@@ -30,29 +32,49 @@ namespace mm2hack::apps::sequence
         SequenceManager& operator=(SequenceManager&&) = delete;
         // SequenceManager is a singleton, so we delete the copy and move constructors and assignment operators.
 
+        // Starts the standard sequence, which is the default game mode
         void StartStandardSequence();
         void StartDebugSequence();
+        void StartTestSequence(const int no);
+        // Ends the current sequence, cleaning up resources
         void StopCurrentSequence();
+        // Reboots the current sequence, resetting it to its initial state
         void RebootCurrentSequence();
+        // Loads a specific sequence type, such as standard or debug, using when the loading save data
+        void LoadSequence(const SequenceType type);
+
+        // Executes the current sequence, which is responsible for running the game logic
         void Update();
+        // Renders the graphics for the current sequence
+        void RenderWorld(int screenHandle, int destW, int destH);
+        // Renders the overlay for the current sequence, typically used for UI elements
+        void RenderOverlay(int destW, int destH);
+        // Releases the current sequence, cleaning up resources
         void Release();
 
+        // Gets the current sequence object, which can be used to access sequence-specific methods
         ISequence* GetCurrentSequence() const
         {
             return _currentSequence.get();
         }
 
+        // Gets the current sequence type, which indicates the mode of the game (e.g., standard, debug)
         SequenceType GetCurrentSequenceType() const
         {
             return _sequenceType;
         }
 
+        // Handles the configuration mode for joystick button mapping
+        void HandleJpbtnConfigMode(double dt);
+        // Sends feedback to the user, typically used for displaying messages or notifications
+        void SendFeedback(const std::wstring& message);
+
     private:
         SequenceManager() = default;
         ~SequenceManager() = default;
 
-        std::unique_ptr<ISequence> _currentSequence = nullptr;
-        SequenceType _sequenceType = SequenceType::None;
-        // HACK: core::overlay::FeedbackOverlay _feedbackOverlay;
+        std::unique_ptr<ISequence> _currentSequence = nullptr;  // Pointer to the current sequence object
+        SequenceType _sequenceType = SequenceType::None;        // Current sequence type, indicating the mode of the game
+        core::overlay::FeedbackOverlay _feedbackOverlay;        // Overlay for displaying feedback messages to the user
     };
 }

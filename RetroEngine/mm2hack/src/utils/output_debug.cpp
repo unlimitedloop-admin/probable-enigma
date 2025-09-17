@@ -1,7 +1,8 @@
+#include "pch.h"
+
 #include "output_debug.h"
 
-#include <string>
-#include <Windows.h>
+#include <debugapi.h>
 
 namespace mm2hack::utils
 {

@@ -1,15 +1,20 @@
+#include "pch.h"
+
 #include "bootstrap.h"
 
+#define _CRTDBG_MAP_ALLOC
 #include <crtdbg.h>
 #include <cstdlib>
 #include <d3d9.h>
-#include <string>
+#include <d3d9caps.h>
+#include <d3d9types.h>
+#include <sysinfoapi.h>
 #include <VersionHelpers.h>
-#include <Windows.h>
 #include "config/EnvironmentConfig.h"
 #include "exceptions/ErrorHandler.h"
 #include "exceptions/ErrorLevel.h"
 #include "winapi/WindowManager.h"
+
 
 namespace mm2hack::core
 {
@@ -120,23 +125,26 @@ namespace mm2hack::core
         if (isDebugMode)
         {
             _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+            _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);
+            _CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_DEBUG);
+            _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_DEBUG);
 
             if (passSystemCheck)
             {
-                MessageBoxW(nullptr,
+                MessageBox(nullptr,
                     L"System check passed. Your system meets the minimum requirements for running mm2hack.",
                     L"System Check", MB_OK | MB_ICONINFORMATION);
             }
             else
             {
-                MessageBoxW(nullptr,
+                MessageBox(nullptr,
                     L"System check failed. Please see the log for details.",
                     L"System Check", MB_OK | MB_ICONERROR);
             }
         }
     }
 
-    void RunMainProcess(HINSTANCE hInstance, LPWSTR lpCmdLine, int nCmdShow)
+    void RunWindowManager(HINSTANCE hInstance, LPWSTR lpCmdLine, int nCmdShow)
     {
         std::wstring windowTitle = config::EnvironmentConfig::Get(L"WINDOW_TEXT", L"mm2hack.demo") + L" " +
             config::EnvironmentConfig::Get(L"MM2HACK_VERSION");
@@ -144,15 +152,14 @@ namespace mm2hack::core
         winapi::WindowManager& windowManager = winapi::WindowManager::GetInstance();
         if (!windowManager.Initialize(hInstance, lpCmdLine, nCmdShow, windowTitle))
         {
-            MessageBoxW(nullptr, L"Failed to initialize window manager.", L"Error", MB_OK | MB_ICONERROR);
+            MessageBox(nullptr, L"Failed to initialize window manager.", L"Error", MB_OK | MB_ICONERROR);
             exit(EXIT_FAILURE);
         }
         windowManager.RunMainLoop();
         windowManager.Shutdown();
     }
 
-    void CleanUp()
+    void CleanUp(LPWSTR lpCmdLine)
     {
-
     }
 }
