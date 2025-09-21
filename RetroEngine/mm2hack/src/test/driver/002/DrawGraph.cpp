@@ -3,6 +3,7 @@
 #include "DrawGraph.h"
 
 #include "apps/deal/GameContext.h"
+#include "apps/graphics/SpriteManager.h"
 
 namespace mm2hack::apps::scenes
 {
@@ -22,18 +23,21 @@ namespace mm2hack::apps::scenes
         auto& spriteLoader = GameContext::GetInstance().GetResourceManager().GetSpriteManager();
 
         // Load the graph from the resource manager.
-        spriteLoader.SetDivSettings(L"Player", 32, 32, 20, 10);
-        if (!spriteLoader.Load(L"Player", L"assets\\sprite\\MegaManAllTiles.png"))
+        _playerId = spriteLoader.Load(L"Player",
+            L"assets\\sprites\\avatar\\normal\\PLAYER_N0_ALL_PATTERN.png",
+            L"assets\\sprites\\avatar\\normal\\PLAYER_N0_ALL_PATTERN.json");
+        if (_playerId == graphics::SpriteManager::Id(-1))
         {
-            return false;   // Failed to load the sprite.
+            return false;
         }
+        spriteLoader.SetGlobalVariant(0); // Default palette variant
 
         auto& bgTileManager = GameContext::GetInstance().GetResourceManager().GetBGTileManager();
 
         // Load the background tile graph.
         bgTileManager.SetDivSettings(L"SAMPLESTAGE1", 16, 16, 16, 8);
         bgTileManager.Load(L"SAMPLESTAGE1", L"assets\\exams\\bg\\demostage1tiles.png");
-        // Load map data
+        // Load map data.
         bgTileManager.LoadMapData(L"assets\\exams\\bg\\SAMPLESTAGE1.bin");
 
         return true;
@@ -47,7 +51,7 @@ namespace mm2hack::apps::scenes
 
         // Draw the graph from the resource manager.
         bgTileManager.DrawMap(L"SAMPLESTAGE1", 0, 0);
-        spriteDrawer.Use(L"Player", 1, 0, 0);
+        spriteDrawer.UseById(_playerId, 1, 0, 0);
     }
 
     void DrawGraph::Finalize()
@@ -55,7 +59,6 @@ namespace mm2hack::apps::scenes
         using namespace deal;
         // Test only?
         if (GameContext::GetInstance().IsShutdown()) return;
-        GameContext::GetInstance().GetResourceManager().GetSpriteManager().Remove(L"Player");
         GameContext::GetInstance().GetResourceManager().GetBGTileManager().Remove(L"SAMPLESTAGE1");
     }
 }

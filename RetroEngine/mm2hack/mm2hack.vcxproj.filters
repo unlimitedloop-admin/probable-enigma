@@ -66,6 +66,8 @@
     <ClCompile Include="src\core\assembly\StandardTimeController.cpp" />
     <ClCompile Include="src\core\assembly\JoystickInputProviderAdapter.cpp" />
     <ClCompile Include="src\core\diagnostics\StandardWatchRegistry.cpp" />
+    <ClCompile Include="src\apps\graphics\SpriteAtlas.cpp" />
+    <ClCompile Include="src\apps\graphics\SpriteCatalog.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
@@ -130,7 +132,6 @@
     <ClInclude Include="src\config\ConfigUIManager.h" />
     <ClInclude Include="src\core\ui\SettingsWindow.h" />
     <ClInclude Include="src\core\ui\SoundSettingsUI.h" />
-    <ClInclude Include="src\apps\graphics\ITextureObject.h" />
     <ClInclude Include="src\apps\graphics\SpriteManager.h" />
     <ClInclude Include="src\apps\supervisor\ResourceManager.h" />
     <ClInclude Include="src\apps\graphics\BGTileManager.h" />
@@ -180,6 +181,8 @@
     <ClInclude Include="src\core\diagnostics\StandardWatchRegistry.h" />
     <ClInclude Include="src\core\diagnostics\NullWatchRegistry.h" />
     <ClInclude Include="src\core\diagnostics\WATCH_MACROS.h" />
+    <ClInclude Include="src\apps\graphics\SpriteAtlas.h" />
+    <ClInclude Include="src\apps\graphics\SpriteCatalog.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

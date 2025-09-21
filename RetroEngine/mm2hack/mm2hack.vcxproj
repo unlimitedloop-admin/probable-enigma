@@ -183,6 +183,8 @@
     <ClCompile Include="src\apps\audio\SoundChannel.cpp" />
     <ClCompile Include="src\apps\deal\GameContext.cpp" />
     <ClCompile Include="src\apps\graphics\BGTileManager.cpp" />
+    <ClCompile Include="src\apps\graphics\SpriteAtlas.cpp" />
+    <ClCompile Include="src\apps\graphics\SpriteCatalog.cpp" />
     <ClCompile Include="src\apps\graphics\SpriteManager.cpp" />
     <ClCompile Include="src\apps\NES\NESPalette.cpp" />
     <ClCompile Include="src\apps\scenes\SceneChangeMediator.cpp" />
@@ -263,7 +265,8 @@
     <ClInclude Include="src\apps\deal\GameContext.h" />
     <ClInclude Include="src\apps\deal\IGameContext.h" />
     <ClInclude Include="src\apps\graphics\BGTileManager.h" />
-    <ClInclude Include="src\apps\graphics\ITextureObject.h" />
+    <ClInclude Include="src\apps\graphics\SpriteAtlas.h" />
+    <ClInclude Include="src\apps\graphics\SpriteCatalog.h" />
     <ClInclude Include="src\apps\graphics\SpriteManager.h" />
     <ClInclude Include="src\apps\NES\NESPalette.h" />
     <ClInclude Include="src\apps\parameters\Parameters.h" />

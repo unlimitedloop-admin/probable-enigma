@@ -8,8 +8,6 @@
 //==============================================================================
 #pragma once
 
-#include "ITextureObject.h"
-
 #include <cstdint>
 #include <string>
 #include <unordered_map>
@@ -18,15 +16,15 @@
 namespace mm2hack::apps::graphics
 {
     // Manages background tile textures and their properties
-    class BGTileManager : public ITextureObject
+    class BGTileManager
     {
     public:
         // Load a BG tile group from a file, identified by its name
-        bool Load(const std::wstring& name, const std::wstring& filepath) override;
+        bool Load(const std::wstring& name, const std::wstring& filepath);
         // Use a background tile texture at a specific position
-        void Use(const std::wstring& name, int index, int x, int y) override;
+        void Use(const std::wstring& name, int index, int x, int y);
         // Remove a background tile texture and its handles
-        void Remove(const std::wstring& name) override;
+        void Remove(const std::wstring& name);
 
         // Sets the division settings for a BG tile group, defining how the BG tileset is divided into tiles
         void SetDivSettings(const std::wstring& name, int tileWidth, int tileHeight, int tilesX, int tilesY);

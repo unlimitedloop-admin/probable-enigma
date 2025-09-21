@@ -2,135 +2,78 @@
 
 #include "SpriteManager.h"
 
-#include <cstdlib>
-#include <utility>
-#include "apps/NES/NESPalette.h"
 #include "exceptions/CoreException.h"
-#include "utils/string_converter.h"
 
 namespace mm2hack::apps::graphics
 {
-    bool SpriteManager::Load(const std::wstring& name, const std::wstring& filepath)
+    SpriteManager::Id SpriteManager::Load(const std::wstring& name, const std::wstring& png_path, const std::wstring& json_path)
     {
-        // Check if the loading parameters of sprite are set for specified name (If not, an error will occur).
-        auto it = _divSettings.find(name);
-        if (it == _divSettings.end())
-        {
-            THROW_EXCEPTION(L"Div settings not set for sprite: " + name, L"SpriteManager");
-        }
-
-        int soft = DxLib::LoadSoftImage(filepath.c_str());
-        if (soft == -1)
-        {
-            THROW_EXCEPTION(L"Failed to load sprite texture: " + filepath, L"SpriteManager");
-        }
-        _softImageHandles[name] = soft;
-
-        return CreateSpriteGraphs(name);
+        return _catalog.Load(name, png_path, json_path);
     }
 
-    void SpriteManager::Use(const std::wstring& name, int index, int x, int y)
+    void SpriteManager::UseById(Id id, int frame, int x, int y) const noexcept
     {
-        // Check if the sprite is loaded and the index is valid
-        auto it = _spriteHandles.find(name);
-        if (it != _spriteHandles.end() && index >= 0 && index < static_cast<int>(it->second.size()))
-        {
-            DxLib::DrawGraph(x, y, it->second[index], TRUE);
-        }
+        if (!_catalog.IsValid(id)) { return; }
+        const auto& atlas = _catalog.GetAtlas(id);
+        const int v = _global_variant;
+        atlas.Draw(v, frame, x, y);
     }
 
-    void SpriteManager::Remove(const std::wstring& name)
+    void SpriteManager::UseByIdVariant(Id id, int variant, int frame, int x, int y) const noexcept
     {
-        auto it = _spriteHandles.find(name);
-        if (it != _spriteHandles.end())
-        {
-            for (int handle : it->second)
-            {
-                DxLib::DeleteGraph(handle);
-            }
-            _spriteHandles.erase(it);
-        }
-
-        auto softIt = _softImageHandles.find(name);
-        if (softIt != _softImageHandles.end())
-        {
-            DxLib::DeleteSoftImage(softIt->second);
-            _softImageHandles.erase(softIt);
-        }
+        if (!_catalog.IsValid(id)) { return; }
+        const auto& atlas = _catalog.GetAtlas(id);
+        atlas.Draw(variant, frame, x, y);
     }
 
-    void SpriteManager::SetDivSettings(const std::wstring& name, int tileWidth, int tileHeight, int tilesX, int tilesY)
+    void SpriteManager::Use(const std::wstring& name, int frame, int x, int y)
     {
-        // Set various parameters used when loading graphics in advance
-        // For example, tile width, height, number of tiles in the X and Y directions, etc.
-        _divSettings[name] = { tileWidth, tileHeight, tilesX, tilesY };
+        const Id id = CacheId_(name);
+        if (id == kInvalidId) { return; }
+        UseById(id, frame, x, y);
     }
 
-    void SpriteManager::ReplacePaletteColor(const std::wstring& name, int targetPaletteIndex, int sourcePaletteIndex)
+    void SpriteManager::ReleaseById(Id id)
     {
-        using NES::NESPalette;
-        auto it = _softImageHandles.find(name);
-        if (it == _softImageHandles.end())
+        // drop any cached name entries pointing to this id
+        for (auto it = _name_cache.begin(); it != _name_cache.end();)
         {
-            THROW_EXCEPTION(L"Soft image not found for sprite: " + name, L"SpriteManager");
+            if (it->second == id) it = _name_cache.erase(it); else ++it;
         }
+        _catalog.Remove(id);
+    }
 
-        const auto& rgb = NESPalette::GetColor(targetPaletteIndex);
-        if (DxLib::SetPaletteSoftImage(it->second, sourcePaletteIndex, rgb.red, rgb.green, rgb.blue, 255) != 0)
+    void SpriteManager::ReleaseByName(const std::wstring& name)
+    {
+        if (auto it = _name_cache.find(name); it != _name_cache.end())
         {
-            THROW_EXCEPTION(L"Failed to set palette for sprite: " + name, L"SpriteManager");
+            _name_cache.erase(it);
         }
-
-        if (!CreateSpriteGraphs(name))
+        if (auto opt = _catalog.TryGetId(name))
         {
-            THROW_EXCEPTION(L"Failed to rebuild sprite graphs after palette change: " + name, L"SpriteManager");
+            _catalog.Remove(*opt);
         }
     }
 
-    void SpriteManager::ApplyRandomColorFilter(const std::wstring& name)
+    void SpriteManager::ReleaseAll()
     {
-        auto it = _spriteHandles.find(name);
-        if (it == _spriteHandles.end()) return;
-
-        // -128 to 127
-        int r = rand() % 0x100 - 0x80;
-
-        for (int handle : it->second)
-        {
-            DxLib::GraphFilter(handle, DX_GRAPH_FILTER_HSB, 0, r, 0, 0);    // Apply a random color filter that only the hue is changed.
-        }
+        _catalog.Clear();
+        _name_cache.clear();
+        _global_variant = 0;
     }
 
-    int SpriteManager::GetSpriteHandle(const std::wstring& name, int index) const
+    SpriteManager::Id SpriteManager::CacheId_(const std::wstring& name)
     {
-        auto it = _spriteHandles.find(name);
-        if (it != _spriteHandles.end() && index >= 0 && index < static_cast<int>(it->second.size()))
+        if (const auto it = _name_cache.find(name); it != _name_cache.end())
         {
-            return it->second[index];
+            return it->second;
         }
-        return -1;      // Invalid handle
-    }
-
-    bool SpriteManager::CreateSpriteGraphs(const std::wstring& name)
-    {
-        auto itSetting = _divSettings.find(name);
-        auto itSoft = _softImageHandles.find(name);
-        if (itSetting == _divSettings.end() || itSoft == _softImageHandles.end())
+        if (auto opt = _catalog.TryGetId(name))
         {
-            return false;       // Not found.
+            const Id id = *opt;
+            _name_cache.emplace(name, id);
+            return id;
         }
-
-        const DivSettings& settings = itSetting->second;
-        int soft = itSoft->second;
-        int totalCount = settings.tilesX * settings.tilesY;
-        std::vector<int> handles(totalCount);
-        if (DxLib::CreateDivGraphFromSoftImage(soft, totalCount, settings.tilesX, settings.tilesY,
-            settings.tileWidth, settings.tileHeight, handles.data()) != 0)
-        {
-            return false;       // Failed to create div graph.
-        }
-
-        _spriteHandles[name] = std::move(handles);
-        return true;
+        return kInvalidId;
     }
 }
