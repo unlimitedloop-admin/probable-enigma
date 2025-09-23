@@ -2,13 +2,16 @@
 
 #include "SpriteManager.h"
 
-#include "exceptions/CoreException.h"
+#include <string_view>
 
 namespace mm2hack::apps::graphics
 {
-    SpriteManager::Id SpriteManager::Load(const std::wstring& name, const std::wstring& png_path, const std::wstring& json_path)
+    SpriteManager::Id SpriteManager::Load(const std::wstring& name, const std::wstring_view png_path, const std::wstring_view json_path)
     {
-        return _catalog.Load(name, png_path, json_path);
+        const std::wstring png = std::wstring(png_path);
+        const std::wstring json = std::wstring(json_path);
+
+        return _catalog.Load(name, png, json);
     }
 
     void SpriteManager::UseById(Id id, int frame, int x, int y) const noexcept

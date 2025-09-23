@@ -4,6 +4,7 @@
 
 #include "apps/deal/GameContext.h"
 #include "apps/graphics/SpriteManager.h"
+#include "config/GameAssets.h"
 
 namespace mm2hack::apps::scenes
 {
@@ -23,9 +24,7 @@ namespace mm2hack::apps::scenes
         auto& spriteLoader = GameContext::GetInstance().GetResourceManager().GetSpriteManager();
 
         // Load the graph from the resource manager.
-        _playerId = spriteLoader.Load(L"Player",
-            L"assets\\sprites\\avatar\\normal\\PLAYER_N0_ALL_PATTERN.png",
-            L"assets\\sprites\\avatar\\normal\\PLAYER_N0_ALL_PATTERN.json");
+        _playerId = spriteLoader.Load(L"Player", MM2H_GRAPHICS(Player), MM2H_PROPERTIES(Player));
         if (_playerId == graphics::SpriteManager::Id(-1))
         {
             return false;

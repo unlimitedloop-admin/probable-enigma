@@ -73,6 +73,7 @@
     <None Include="mm2hack.props" />
     <None Include="mm2hack.env" />
     <None Include="src\resources\exams\bg\SAMPLESTAGE1.bin" />
+    <None Include="src\config\AssetsPortfolio.def" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -183,6 +184,8 @@
     <ClInclude Include="src\core\diagnostics\WATCH_MACROS.h" />
     <ClInclude Include="src\apps\graphics\SpriteAtlas.h" />
     <ClInclude Include="src\apps\graphics\SpriteCatalog.h" />
+    <ClInclude Include="src\config\AssetPaths.h" />
+    <ClInclude Include="src\config\GameAssets.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

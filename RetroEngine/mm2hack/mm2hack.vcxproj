@@ -247,6 +247,7 @@
     <ClCompile Include="src\utils\string_converter.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="src\config\AssetsPortfolio.def" />
     <None Include="mm2hack.props" />
     <None Include="mm2hack.env" />
     <None Include="src\resources\exams\bg\SAMPLESTAGE1.bin" />
@@ -283,8 +284,10 @@
     <ClInclude Include="src\apps\sequence\SequenceType.h" />
     <ClInclude Include="src\apps\sequence\StandardSequence.h" />
     <ClInclude Include="src\apps\supervisor\ResourceManager.h" />
+    <ClInclude Include="src\config\AssetPaths.h" />
     <ClInclude Include="src\config\ConfigUIManager.h" />
     <ClInclude Include="src\config\EnvironmentConfig.h" />
+    <ClInclude Include="src\config\GameAssets.h" />
     <ClInclude Include="src\config\GraphicsConfig.h" />
     <ClInclude Include="src\config\HudConfig.h" />
     <ClInclude Include="src\config\InputLoadResult.h" />

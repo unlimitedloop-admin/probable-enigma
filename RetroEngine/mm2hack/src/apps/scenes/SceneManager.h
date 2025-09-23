@@ -26,6 +26,7 @@ namespace mm2hack::apps::scenes
 
         // Updates the currentScene instance, standard game program execution procedures
         void Update();
+        inline void DoExecute() { Update(); }   // Alias for Update
         // Renders the currentScene instance
         void RenderWorld();
         // Renders the overlay of the application (e.g., HUD, menus)

@@ -3,7 +3,7 @@
 //  Project: mm2hack
 //  SpriteCatalog.h
 // 
-//  ** Descriptions **
+//  The collection of sprite atlases.
 // 
 //==============================================================================
 #pragma once

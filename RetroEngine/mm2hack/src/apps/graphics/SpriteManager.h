@@ -10,6 +10,7 @@
 
 #include <limits>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <utility>
 #include "SpriteCatalog.h"
@@ -26,7 +27,7 @@ namespace mm2hack::apps::graphics
         ~SpriteManager() = default;
 
         // Load a sprite atlas from PNG + JSON metadata (div settings, optional palette variants)
-        Id Load(const std::wstring& name, const std::wstring& png_path, const std::wstring& json_path);
+        Id Load(const std::wstring& name, const std::wstring_view png_path, const std::wstring_view json_path);
         // Fast path: draw sprite by Id (O(1))
         void UseById(Id id, int frame, int x, int y) const noexcept;
         // Fast path: draw sprite by Id (Per-call variant override)

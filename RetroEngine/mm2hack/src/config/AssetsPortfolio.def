@@ -1,0 +1,3 @@
+//Symbol,      BaseDir,       PNG_rel,                                                JSON_rel
+X(Player,      SpritesDir,    LR"(avatar\normal\PLAYER_N0_ALL_PATTERN.png)",          LR"(avatar\normal\PLAYER_N0_ALL_PATTERN.json)")
+// 例：X(EnemyBat,  SpritesDir,    LR"(enemies\bat.png)",                              LR"(enemies\bat.json)")
