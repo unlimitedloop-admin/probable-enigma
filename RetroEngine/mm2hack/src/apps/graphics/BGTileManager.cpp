@@ -5,177 +5,122 @@
 #include <cstdint>
 #include <fstream>
 #include <iterator>
-#include <utility>
-#include "apps/NES/NESPalette.h"
-#include "exceptions/CoreException.h"
+#include <string_view>
 
 namespace mm2hack::apps::graphics
 {
-    bool BGTileManager::Load(const std::wstring& name, const std::wstring& filepath)
+    BGTileManager::Id BGTileManager::LoadTileset(const std::wstring& name, std::wstring_view png_path, std::wstring_view json_path)
     {
-        // Check if the loading parameters of tile are set for specified name (If not, an error will occur)
-        auto it = _divSettings.find(name);
-        if (it == _divSettings.end())
-        {
-            THROW_EXCEPTION(L"Div settings not set for BG tile: " + name, L"BGTileManager");
-        }
-
-        int soft = DxLib::LoadSoftImage(filepath.c_str());
-        if (soft == -1)
-        {
-            THROW_EXCEPTION(L"Failed to load BG tile image: " + filepath, L"BGTileManager");
-        }
-
-        _softImageHandles[name] = soft;
-        if (!CreateBGTileGraphs(name))
-        {
-            DxLib::DeleteSoftImage(soft);
-            _softImageHandles.erase(name);
-            THROW_EXCEPTION(L"Failed to create divided BG graph from soft image: " + filepath, L"BGTileManager");
-        }
-
-        return true;
+        return _catalog.Load(name, png_path, json_path);
     }
 
-    void BGTileManager::Use(const std::wstring& name, int index, int x, int y)
+    void BGTileManager::RemoveTilesetById(Id id)
     {
-        // Check if the tile is loaded and the index is valid
-        auto it = _tileHandles.find(name);
-        if (it != _tileHandles.end() && index >= 0 && index < static_cast<int>(it->second.size()))
+        _catalog.Remove(id);
+    }
+
+    void BGTileManager::RemoveTilesetByName(const std::wstring& name)
+    {
+        if (auto opt = _catalog.TryGetId(name))
         {
-            DxLib::DrawGraph(x, y, it->second[index], TRUE);
+            _catalog.Remove(*opt);
         }
     }
 
-    void BGTileManager::Remove(const std::wstring& name)
+    void BGTileManager::ClearTilesets()
     {
-        auto it = _tileHandles.find(name);
-        if (it != _tileHandles.end())
-        {
-            for (int handle : it->second)
-            {
-                DxLib::DeleteGraph(handle);
-            }
-            _tileHandles.erase(it);
-        }
-
-        auto softIt = _softImageHandles.find(name);
-        if (softIt != _softImageHandles.end())
-        {
-            DxLib::DeleteSoftImage(softIt->second);
-            _softImageHandles.erase(softIt);
-        }
+        _catalog.Clear();
     }
 
-    void BGTileManager::SetDivSettings(const std::wstring& name, int tileWidth, int tileHeight, int tilesX, int tilesY)
+    void BGTileManager::DrawTileById(Id id, int tile_index, int x, int y) const noexcept
     {
-        _divSettings[name] = { tileWidth, tileHeight, tilesX, tilesY };
+        if (!_catalog.IsValid(id)) return;
+        
+        _catalog.GetAtlas(id).DrawTile(_global_variant, tile_index, x, y);
     }
 
-    void BGTileManager::ReplacePaletteColor(const std::wstring& name, int targetPaletteIndex, int sourcePaletteIndex)
+    void BGTileManager::DrawTileVariantById(Id id, int variant, int tile_index, int x, int y) const noexcept
     {
-        using namespace NES;
-        auto it = _softImageHandles.find(name);
-        if (it == _softImageHandles.end())
-        {
-            THROW_EXCEPTION(L"Soft image not found for BG tile: " + name, L"BGTileManager");
-        }
-
-        const auto& rgb = NESPalette::GetColor(targetPaletteIndex);
-        if (DxLib::SetPaletteSoftImage(it->second, sourcePaletteIndex, rgb.red, rgb.green, rgb.blue, 255) != 0)
-        {
-            THROW_EXCEPTION(L"Failed to set palette for BG tile: " + name, L"BGTileManager");
-        }
-
-        if (!CreateBGTileGraphs(name))
-        {
-            THROW_EXCEPTION(L"Failed to rebuild BG tile graphs after palette change: " + name, L"BGTileManager");
-        }
+        if (!_catalog.IsValid(id)) return;
+        
+        _catalog.GetAtlas(id).DrawTile(variant, tile_index, x, y);
     }
 
-    void BGTileManager::LoadMapData(const std::wstring& mapFile)
+    void BGTileManager::SetMapSize(int width, int height)
     {
-        std::ifstream file(mapFile, std::ios::binary);
-        if (!file)
-        {
-            THROW_EXCEPTION(L"Failed to open map file: " + mapFile, L"BGTileManager");
-        }
+        _map_w = width;
+        _map_h = height;
+        
+        _tile_map.assign(_map_w * _map_h, 0);
+    }
 
+    void BGTileManager::LoadMapBinary(std::wstring_view map_file, int offset)
+    {
+        std::ifstream file(std::wstring(map_file), std::ios::binary);
+        if (!file) return; // optionally throw
         file.unsetf(std::ios::skipws);
-        std::vector<uint8_t> rawData(std::istream_iterator<uint8_t>{file}, {});
-        if (rawData.size() < 0x100)
-        {
-            THROW_EXCEPTION(L"Map file is too small: " + mapFile, L"BGTileManager");
-        }
 
-        _tileMap.assign(rawData.begin() + 0x10, rawData.begin() + 0x10 + (_mapWidth * _mapHeight));
+        std::vector<std::uint8_t> raw(std::istream_iterator<std::uint8_t>{file}, {});
+        const int need = _map_w * _map_h;
+        if ((int)raw.size() < offset + need) return; // optionally throw
+
+        _tile_map.assign(raw.begin() + offset, raw.begin() + offset + need);
     }
 
-    void BGTileManager::DrawMap(const std::wstring& tilesetName, int offsetX, int offsetY)
+    void BGTileManager::SetTile(int x, int y, std::uint8_t id)
     {
-        // Check if the tileset is loaded
-        auto it = _tileHandles.find(tilesetName);
-        if (it == _tileHandles.end()) return;
-
-        const int tileXSize = config::SystemConfig::kTileSizeWidth;
-        const int tileYSize = config::SystemConfig::kTileSizeHeight;
-
-        const auto& handles = it->second;
-        for (int y = 0; y < _mapHeight; ++y)
-        {
-            for (int x = 0; x < _mapWidth; ++x)
-            {
-                int index = y * _mapWidth + x;
-                uint8_t tileId = _tileMap[index];
-                if (tileId < handles.size())
-                {
-                    // Render the tile at the calculated position using its associated graphic handle.
-                    DxLib::DrawGraph(x * tileXSize + offsetX, y * tileYSize + offsetY, handles[tileId], TRUE);
-                }
-            }
-        }
+        if (x < 0 || y < 0 || x >= _map_w || y >= _map_h) return;
+        _tile_map[y * _map_w + x] = id;
     }
 
-    void BGTileManager::SetTileAttribute(uint8_t tileId, uint8_t attr)
+    std::uint8_t BGTileManager::GetTile(int x, int y) const
     {
-        if (_tileAttributes.size() <= tileId)
-        {
-            _tileAttributes.resize(tileId + 1);
-        }
-        _tileAttributes[tileId] = attr;
+        if (x < 0 || y < 0 || x >= _map_w || y >= _map_h) return 0;
+        return _tile_map[y * _map_w + x];
     }
 
-    uint8_t BGTileManager::GetTileAttribute(int x, int y) const
+    void BGTileManager::SetTileAttribute(std::uint8_t tile_id, std::uint8_t attr)
     {
-        if (x < 0 || x >= _mapWidth || y < 0 || y >= _mapHeight) return 0;
-        uint8_t tileId = _tileMap[y * _mapWidth + x];
-        if (tileId < _tileAttributes.size())
+        if (_tile_attr.size() <= tile_id)
         {
-            return _tileAttributes[tileId];
+            _tile_attr.resize(tile_id + 1);
         }
+        _tile_attr[tile_id] = attr;
+    }
+    std::uint8_t BGTileManager::GetTileAttribute(int x, int y) const
+    {
+        if (x < 0 || y < 0 || x >= _map_w || y >= _map_h)
+        {
+            return 0;
+        }
+
+        const std::uint8_t id = _tile_map[y * _map_w + x];
+        if (id < _tile_attr.size())
+        {
+            return _tile_attr[id];
+        }
+
         return 0;
     }
 
-    bool BGTileManager::CreateBGTileGraphs(const std::wstring& name)
+    void BGTileManager::DrawMapByName(const std::wstring& tileset_name, int tile_px_w, int tile_px_h, int offset_x, int offset_y) const
     {
-        auto itSetting = _divSettings.find(name);
-        auto itSoft = _softImageHandles.find(name);
-        if (itSetting == _divSettings.end() || itSoft == _softImageHandles.end())
+        auto opt = _catalog.TryGetId(tileset_name);
+        if (!opt)
         {
-            return false;   // Not found.
+            return;
         }
-
-        const DivSettings& settings = itSetting->second;
-        int soft = itSoft->second;
-        int totalCount = settings.tilesX * settings.tilesY;
-        std::vector<int> handles(totalCount);
-        if (DxLib::CreateDivGraphFromSoftImage(soft, totalCount, settings.tilesX, settings.tilesY,
-            settings.tileWidth, settings.tileHeight, handles.data()) != 0)
+        
+        const Id id = *opt;
+        const auto& atlas = _catalog.GetAtlas(id);
+        for (int y = 0; y < _map_h; ++y)
         {
-            return false;   // Failed to create div graph.
+            for (int x = 0; x < _map_w; ++x)
+            {
+                const int idx = y * _map_w + x;
+                const int tile_id = static_cast<int>(_tile_map[idx]);
+                atlas.DrawTile(_global_variant, tile_id, x * tile_px_w + offset_x, y * tile_px_h + offset_y);
+            }
         }
-
-        _tileHandles[name] = std::move(handles);
-        return true;
     }
 }

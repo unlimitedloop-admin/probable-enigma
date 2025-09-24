@@ -70,7 +70,7 @@ namespace mm2hack::apps::graphics
         const int handle = frames[static_cast<std::size_t>(frame)];
         if (handle != -1)
         {
-            DxLib::DrawGraph(x, y, handle, TRUE);
+            ::DxLib::DrawGraph(x, y, handle, TRUE);
         }
     }
 
@@ -82,7 +82,7 @@ namespace mm2hack::apps::graphics
             {
                 if (h != -1)
                 {
-                    DxLib::DeleteGraph(h);
+                    ::DxLib::DeleteGraph(h);
                 }
             }
             frames.clear();
@@ -91,7 +91,7 @@ namespace mm2hack::apps::graphics
 
         if (_soft_image != -1)
         {
-            DxLib::DeleteSoftImage(_soft_image);
+            ::DxLib::DeleteSoftImage(_soft_image);
             _soft_image = -1;
         }
     }

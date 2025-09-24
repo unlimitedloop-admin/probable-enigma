@@ -6,7 +6,6 @@
 #include <nlohmann/json.hpp>
 #include <optional>
 #include <utility>
-#include "exceptions/CoreException.h"
 #include "SpriteAtlas.h"
 
 namespace
@@ -163,8 +162,8 @@ namespace mm2hack::apps::graphics
     }
 
     std::unique_ptr<SpriteAtlas> SpriteCatalog::BuildAtlas_(const std::wstring& name,
-        const std::wstring& png_path,
-        const std::wstring& json_path)
+                                                            const std::wstring& png_path,
+                                                            const std::wstring& json_path)
     {
         // Load JSON meta.
         SpriteAtlas::DivSettings div{};

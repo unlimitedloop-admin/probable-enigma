@@ -30,3 +30,10 @@
 // Common Libraries
 // ==========================
 #include "config/SystemConfig.h"
+
+// ==========================
+// Exception throwing macro
+// ==========================
+#include "exceptions/CoreException.h"
+#include "exceptions/ErrorHandler.h"
+#include "exceptions/ErrorLevel.h"

@@ -18,8 +18,6 @@
 #include "core/save/SaveData.h"
 #include "core/save/SaveSystem.h"
 #include "core/ui/SettingsWindow.h"
-#include "exceptions/CoreException.h"
-#include "exceptions/ErrorLevel.h"
 #include "WindowManager.h"
 
 // VC F12 is reserved for use by the debugger, so we use F11 in debug mode.

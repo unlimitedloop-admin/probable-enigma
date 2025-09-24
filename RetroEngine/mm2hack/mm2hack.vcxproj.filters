@@ -68,12 +68,15 @@
     <ClCompile Include="src\core\diagnostics\StandardWatchRegistry.cpp" />
     <ClCompile Include="src\apps\graphics\SpriteAtlas.cpp" />
     <ClCompile Include="src\apps\graphics\SpriteCatalog.cpp" />
+    <ClCompile Include="src\apps\graphics\BGTileAtlas.cpp" />
+    <ClCompile Include="src\apps\graphics\BGTileCatalog.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
     <None Include="mm2hack.env" />
     <None Include="src\resources\exams\bg\SAMPLESTAGE1.bin" />
     <None Include="src\config\AssetsPortfolio.def" />
+    <None Include="assets\exams\bg\demostage1tiles.json" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -186,6 +189,8 @@
     <ClInclude Include="src\apps\graphics\SpriteCatalog.h" />
     <ClInclude Include="src\config\AssetPaths.h" />
     <ClInclude Include="src\config\GameAssets.h" />
+    <ClInclude Include="src\apps\graphics\BGTileAtlas.h" />
+    <ClInclude Include="src\apps\graphics\BGTileCatalog.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

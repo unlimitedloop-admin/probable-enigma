@@ -3,6 +3,7 @@
 #include "DrawGraph.h"
 
 #include "apps/deal/GameContext.h"
+#include "apps/graphics/BGTileManager.h"
 #include "apps/graphics/SpriteManager.h"
 #include "config/GameAssets.h"
 
@@ -34,11 +35,15 @@ namespace mm2hack::apps::scenes
         auto& bgTileManager = GameContext::GetInstance().GetResourceManager().GetBGTileManager();
 
         // Load the background tile graph.
-        bgTileManager.SetDivSettings(L"SAMPLESTAGE1", 16, 16, 16, 8);
-        bgTileManager.Load(L"SAMPLESTAGE1", L"assets\\exams\\bg\\demostage1tiles.png");
+        _bgTileId = bgTileManager.LoadTileset(kMapName, MM2H_GRAPHICS(SampleStage), MM2H_PROPERTIES(SampleStage));
+        if (_bgTileId == graphics::BGTileManager::Id(-1))
+        {
+            return false;
+        }
+        bgTileManager.SetMapSize(16, 15); // 16x15 tiles
         // Load map data.
-        bgTileManager.LoadMapData(L"assets\\exams\\bg\\SAMPLESTAGE1.bin");
-
+        bgTileManager.LoadMapBinary(L"assets\\exams\\bg\\SAMPLESTAGE1.bin", 0x10);
+        bgTileManager.SetGlobalVariant(0); // Default palette variant
         return true;
     }
 
@@ -49,15 +54,13 @@ namespace mm2hack::apps::scenes
         auto& bgTileManager = GameContext::GetInstance().GetResourceManager().GetBGTileManager();
 
         // Draw the graph from the resource manager.
-        bgTileManager.DrawMap(L"SAMPLESTAGE1", 0, 0);
+        bgTileManager.DrawMapByName(kMapName, 16, 16, 0, 0);
         spriteDrawer.UseById(_playerId, 1, 0, 0);
     }
 
     void DrawGraph::Finalize()
     {
         using namespace deal;
-        // Test only?
         if (GameContext::GetInstance().IsShutdown()) return;
-        GameContext::GetInstance().GetResourceManager().GetBGTileManager().Remove(L"SAMPLESTAGE1");
     }
 }

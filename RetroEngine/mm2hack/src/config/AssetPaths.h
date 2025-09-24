@@ -39,6 +39,8 @@ namespace mm2hack::config
     inline constexpr wchar_t EffectsDir[] = LR"(assets\effects\)";
     inline constexpr wchar_t FontsDir[]   = LR"(assets\fonts\)";
 
+    inline constexpr wchar_t ExamsDir[]   = LR"(assets\exams\)";
+
 #define MM2H_MAKE_WPATH(Name, Base, RelLiteral)                          \
     inline constexpr auto Name##Arr = wconcat_all(Base, RelLiteral);     \
     inline constexpr std::wstring_view Name{                             \
