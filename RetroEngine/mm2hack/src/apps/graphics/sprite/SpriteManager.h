@@ -15,7 +15,7 @@
 #include <utility>
 #include "SpriteCatalog.h"
 
-namespace mm2hack::apps::graphics
+namespace mm2hack::apps::graphics::sprite
 {
     // Top-level sprite manager that uses SpriteCatalog for loading and caching
     class SpriteManager

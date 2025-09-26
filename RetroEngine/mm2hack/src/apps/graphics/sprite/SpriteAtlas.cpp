@@ -4,7 +4,7 @@
 
 #include <utility>
 
-namespace mm2hack::apps::graphics
+namespace mm2hack::apps::graphics::sprite
 {
     SpriteAtlas::SpriteAtlas(std::wstring name,
                              DivSettings div,

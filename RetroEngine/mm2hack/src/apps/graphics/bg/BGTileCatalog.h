@@ -1,9 +1,9 @@
 //==============================================================================
 // 
 //  Project: mm2hack
-//  ***.h
+//  BGTileCatalog.h
 // 
-//  ** Descriptions **
+//  The collection of BG tile atlases.
 // 
 //==============================================================================
 #pragma once
@@ -17,10 +17,9 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
-
 #include "BGTileAtlas.h"
 
-namespace mm2hack::apps::graphics
+namespace mm2hack::apps::graphics::bg
 {
     // Catalog of BG tile atlases
     class BGTileCatalog
@@ -46,17 +45,22 @@ namespace mm2hack::apps::graphics
         // Load BG tileset from PNG+JSON
         Id Load(const std::wstring& name, std::wstring_view png_path, std::wstring_view json_path);
 
+        // Utilities
         [[nodiscard]] bool Has(const std::wstring& name) const;
         [[nodiscard]] Id GetId(const std::wstring& name) const;                 // throws if missing
         [[nodiscard]] std::optional<Id> TryGetId(const std::wstring& name) const noexcept; // nullopt
 
+        // Access by Id (no bounds check)
         [[nodiscard]] const BGTileAtlas& GetAtlas(Id id) const noexcept;
         [[nodiscard]] BGTileAtlas& GetAtlas(Id id) noexcept;
         [[nodiscard]] bool IsValid(Id id) const noexcept;
 
+        // Remove by Id
         void Remove(Id id);
+        // Clear all
         void Clear();
 
+        // Count
         [[nodiscard]] std::size_t Size() const noexcept { return _atlases.size(); }
 
     private:

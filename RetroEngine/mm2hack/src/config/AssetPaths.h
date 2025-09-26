@@ -3,7 +3,7 @@
 //  Project: mm2hack
 //  AssetPaths.h
 // 
-//  ** Descriptions **
+//  This file contains the definitions for the asset paths used in the project.
 // 
 //==============================================================================
 #pragma once

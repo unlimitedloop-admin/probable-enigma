@@ -9,8 +9,8 @@
 #pragma once
 
 #include "apps/audio/AudioManager.h"
-#include "apps/graphics/BGTileManager.h"
-#include "apps/graphics/SpriteManager.h"
+#include "apps/graphics/bg/BGTileManager.h"
+#include "apps/graphics/sprite/SpriteManager.h"
 
 namespace mm2hack::apps::supervisor
 {
@@ -18,21 +18,30 @@ namespace mm2hack::apps::supervisor
     class ResourceManager
     {
     public:
+        // --- type aliases (short names only inside this class) ---
+        using SpriteManager = graphics::sprite::SpriteManager;
+        using BGTileManager = graphics::bg::BGTileManager;
+        using AudioManager  = audio::AudioManager;
+
         ResourceManager() = default;
         ~ResourceManager() = default;
 
-        // Gets the SpriteManager instance for managing sprite textures
-        graphics::SpriteManager& GetSpriteManager() { return _spriteManager; }
-        // Gets the BGTileManager instance for managing background tile textures
-        graphics::BGTileManager& GetBGTileManager() { return _bgTileManager; }
-        // Gets the AudioManager instance for managing audio playback
-        audio::AudioManager& GetAudioManager() { return _audioManager; }
+        // Getters
+        SpriteManager& GetSpriteManager() noexcept { return _spriteManager; }
+        const SpriteManager& GetSpriteManager() const noexcept { return _spriteManager; }
+
+        BGTileManager& GetBGTileManager() noexcept { return _bgTileManager; }
+        const BGTileManager& GetBGTileManager() const noexcept { return _bgTileManager; }
+
+        AudioManager& GetAudioManager() noexcept { return _audioManager; }
+        const AudioManager& GetAudioManager() const noexcept { return _audioManager; }
+
         // Releases all resources managed by the ResourceManager
         void Release();
 
     private:
-        graphics::SpriteManager _spriteManager;     // Instance of SpriteManager
-        graphics::BGTileManager _bgTileManager;     // Instance of BGTileManager
-        audio::AudioManager _audioManager;          // Instance of AudioManager
+        SpriteManager _spriteManager; // Instance of SpriteManager
+        BGTileManager _bgTileManager; // Instance of BGTileManager
+        AudioManager  _audioManager;  // Instance of AudioManager
     };
 }

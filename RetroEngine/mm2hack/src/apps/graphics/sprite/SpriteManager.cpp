@@ -4,7 +4,7 @@
 
 #include <string_view>
 
-namespace mm2hack::apps::graphics
+namespace mm2hack::apps::graphics::sprite
 {
     SpriteManager::Id SpriteManager::Load(const std::wstring& name, const std::wstring_view png_path, const std::wstring_view json_path)
     {

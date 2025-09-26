@@ -3,7 +3,7 @@
 //  Project: mm2hack
 //  BGTileAtlas.h
 // 
-//  ** Descriptions **
+//  Mapping and drawing BG tiles.
 // 
 //==============================================================================
 #pragma once
@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-namespace mm2hack::apps::graphics
+namespace mm2hack::apps::graphics::bg
 {
     // Tile atlas for background graphics
     class BGTileAtlas final
@@ -41,6 +41,7 @@ namespace mm2hack::apps::graphics
         BGTileAtlas(BGTileAtlas&&) noexcept;
         BGTileAtlas& operator=(BGTileAtlas&&) noexcept;
 
+        // Properties
         [[nodiscard]] const std::wstring& Name() const noexcept { return _name; }
         [[nodiscard]] DivSettings GetDiv() const noexcept { return _div; }
         [[nodiscard]] int VariantCount() const noexcept { return static_cast<int>(_graphs_by_variant.size()); }
@@ -56,6 +57,6 @@ namespace mm2hack::apps::graphics
         std::wstring _name{};
         DivSettings _div{};
         int _soft_image{ -1 };
-        std::vector<std::vector<int>> _graphs_by_variant; // [variant][tile_index]
+        std::vector<std::vector<int>> _graphs_by_variant;   // [variant][tile_index]
     };
 }

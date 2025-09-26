@@ -2,7 +2,6 @@
 
 #include "BGTileCatalog.h"
 
-#include <DxLib.h>
 #include <limits>
 #include <nlohmann/json.hpp>
 #include <optional>
@@ -25,7 +24,7 @@ namespace
     }
 }
 
-namespace mm2hack::apps::graphics
+namespace mm2hack::apps::graphics::bg
 {
     BGTileCatalog::~BGTileCatalog()
     {

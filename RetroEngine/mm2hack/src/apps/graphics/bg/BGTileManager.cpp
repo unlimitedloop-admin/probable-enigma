@@ -3,11 +3,10 @@
 #include "BGTileManager.h"
 
 #include <cstdint>
-#include <fstream>
 #include <iterator>
 #include <string_view>
 
-namespace mm2hack::apps::graphics
+namespace mm2hack::apps::graphics::bg
 {
     BGTileManager::Id BGTileManager::LoadTileset(const std::wstring& name, std::wstring_view png_path, std::wstring_view json_path)
     {
@@ -57,12 +56,18 @@ namespace mm2hack::apps::graphics
     void BGTileManager::LoadMapBinary(std::wstring_view map_file, int offset)
     {
         std::ifstream file(std::wstring(map_file), std::ios::binary);
-        if (!file) return; // optionally throw
+        if (!file)
+        {
+            THROW_EXCEPTION(L"Failed to open map file: " + std::wstring(map_file), L"BGTileManager");
+        }
         file.unsetf(std::ios::skipws);
 
         std::vector<std::uint8_t> raw(std::istream_iterator<std::uint8_t>{file}, {});
         const int need = _map_w * _map_h;
-        if ((int)raw.size() < offset + need) return; // optionally throw
+        if ((int)raw.size() < offset + need)
+        {
+            THROW_EXCEPTION(L"Map file is too small: " + std::wstring(map_file), L"BGTileManager");
+        }
 
         _tile_map.assign(raw.begin() + offset, raw.begin() + offset + need);
     }

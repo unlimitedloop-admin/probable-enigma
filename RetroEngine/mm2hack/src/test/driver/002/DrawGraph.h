@@ -9,8 +9,9 @@
 #pragma once
 
 #include <string>
-#include "apps/graphics/BGTileManager.h"
-#include "apps/graphics/SpriteManager.h"
+#include <string_view>
+#include "apps/graphics/bg/BGTileManager.h"
+#include "apps/graphics/sprite/SpriteManager.h"
 #include "test/driver/ITestDriver.h"
 
 namespace mm2hack::apps::scenes
@@ -31,8 +32,9 @@ namespace mm2hack::apps::scenes
     private:
         const std::wstring kClassName{ L"DrawGraph" };
         const std::wstring kMapName{ L"SAMPLESTAGE1" };
+        const std::wstring_view kStageMapBinary{ L"assets\\exams\\bg\\SAMPLESTAGE1.bin" };
 
-        graphics::SpriteManager::Id _playerId{ static_cast<graphics::SpriteManager::Id>(-1) };
-        graphics::BGTileManager::Id _bgTileId{ static_cast<graphics::BGTileManager::Id>(-1) };
+        graphics::sprite::SpriteManager::Id _playerId{ static_cast<graphics::sprite::SpriteManager::Id>(-1) };
+        graphics::bg::BGTileManager::Id _bgTileId{ static_cast<graphics::bg::BGTileManager::Id>(-1) };
     };
 }

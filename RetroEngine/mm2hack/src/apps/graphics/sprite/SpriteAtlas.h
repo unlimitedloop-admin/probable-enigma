@@ -14,7 +14,7 @@
 // Forward declare to avoid header include of DxLib in all translation units
 struct tagSOFTIMAGE; // DxLib's SoftImage opaque type (we only hold handle int)
 
-namespace mm2hack::apps::graphics
+namespace mm2hack::apps::graphics::sprite
 {
     // A sprite atlas is a collection of related sprites (frames) arranged in a grid
     class SpriteAtlas final

@@ -3,7 +3,7 @@
 //  Project: mm2hack
 //  GameAssets.h
 // 
-//  ** Descriptions **
+//  This file contains the definitions for the game asset paths used in the project.
 // 
 //==============================================================================
 #pragma once
@@ -21,4 +21,5 @@ namespace mm2hack::config
 
 // "Macros to access the paths"
 #define MM2H_GRAPHICS(sym)   (::mm2hack::config::sym##SpritePath)
+// "Macros to access the paths"
 #define MM2H_PROPERTIES(sym) (::mm2hack::config::sym##SpriteMeta)

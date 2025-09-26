@@ -18,7 +18,7 @@
 #include <vector>
 #include "SpriteAtlas.h"
 
-namespace mm2hack::apps::graphics
+namespace mm2hack::apps::graphics::sprite
 {
     // Manages multiple sprite atlases, identified by name and Id
     class SpriteCatalog

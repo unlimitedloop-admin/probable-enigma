@@ -2,10 +2,9 @@
 
 #include "BGTileAtlas.h"
 
-#include <DxLib.h>
 #include <utility>
 
-namespace mm2hack::apps::graphics
+namespace mm2hack::apps::graphics::bg
 {
     BGTileAtlas::BGTileAtlas(std::wstring name,
         DivSettings div,

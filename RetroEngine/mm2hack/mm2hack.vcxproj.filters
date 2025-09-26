@@ -40,8 +40,8 @@
     <ClCompile Include="src\config\ConfigUIManager.cpp" />
     <ClCompile Include="src\core\ui\SettingsWindow.cpp" />
     <ClCompile Include="src\core\ui\SoundSettingsUI.cpp" />
-    <ClCompile Include="src\apps\graphics\SpriteManager.cpp" />
-    <ClCompile Include="src\apps\graphics\BGTileManager.cpp" />
+    <ClCompile Include="src\apps\graphics\sprite\SpriteManager.cpp" />
+    <ClCompile Include="src\apps\graphics\bg\BGTileManager.cpp" />
     <ClCompile Include="src\apps\deal\GameContext.cpp" />
     <ClCompile Include="src\apps\audio\SoundChannel.cpp" />
     <ClCompile Include="src\pch.cpp" />
@@ -66,10 +66,10 @@
     <ClCompile Include="src\core\assembly\StandardTimeController.cpp" />
     <ClCompile Include="src\core\assembly\JoystickInputProviderAdapter.cpp" />
     <ClCompile Include="src\core\diagnostics\StandardWatchRegistry.cpp" />
-    <ClCompile Include="src\apps\graphics\SpriteAtlas.cpp" />
-    <ClCompile Include="src\apps\graphics\SpriteCatalog.cpp" />
-    <ClCompile Include="src\apps\graphics\BGTileAtlas.cpp" />
-    <ClCompile Include="src\apps\graphics\BGTileCatalog.cpp" />
+    <ClCompile Include="src\apps\graphics\sprite\SpriteAtlas.cpp" />
+    <ClCompile Include="src\apps\graphics\sprite\SpriteCatalog.cpp" />
+    <ClCompile Include="src\apps\graphics\bg\BGTileAtlas.cpp" />
+    <ClCompile Include="src\apps\graphics\bg\BGTileCatalog.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
@@ -136,9 +136,9 @@
     <ClInclude Include="src\config\ConfigUIManager.h" />
     <ClInclude Include="src\core\ui\SettingsWindow.h" />
     <ClInclude Include="src\core\ui\SoundSettingsUI.h" />
-    <ClInclude Include="src\apps\graphics\SpriteManager.h" />
+    <ClInclude Include="src\apps\graphics\sprite\SpriteManager.h" />
     <ClInclude Include="src\apps\supervisor\ResourceManager.h" />
-    <ClInclude Include="src\apps\graphics\BGTileManager.h" />
+    <ClInclude Include="src\apps\graphics\bg\BGTileManager.h" />
     <ClInclude Include="src\apps\deal\IGameContext.h" />
     <ClInclude Include="src\apps\deal\GameContext.h" />
     <ClInclude Include="src\apps\audio\ISoundChannel.h" />
@@ -185,12 +185,12 @@
     <ClInclude Include="src\core\diagnostics\StandardWatchRegistry.h" />
     <ClInclude Include="src\core\diagnostics\NullWatchRegistry.h" />
     <ClInclude Include="src\core\diagnostics\WATCH_MACROS.h" />
-    <ClInclude Include="src\apps\graphics\SpriteAtlas.h" />
-    <ClInclude Include="src\apps\graphics\SpriteCatalog.h" />
+    <ClInclude Include="src\apps\graphics\sprite\SpriteAtlas.h" />
+    <ClInclude Include="src\apps\graphics\sprite\SpriteCatalog.h" />
     <ClInclude Include="src\config\AssetPaths.h" />
     <ClInclude Include="src\config\GameAssets.h" />
-    <ClInclude Include="src\apps\graphics\BGTileAtlas.h" />
-    <ClInclude Include="src\apps\graphics\BGTileCatalog.h" />
+    <ClInclude Include="src\apps\graphics\bg\BGTileAtlas.h" />
+    <ClInclude Include="src\apps\graphics\bg\BGTileCatalog.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

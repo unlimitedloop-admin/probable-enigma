@@ -16,7 +16,7 @@
 #include <vector>
 #include "BGTileCatalog.h"
 
-namespace mm2hack::apps::graphics
+namespace mm2hack::apps::graphics::bg
 {
     // Manages background tile textures and their properties
     class BGTileManager
