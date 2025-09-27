@@ -27,6 +27,7 @@ namespace mm2hack::apps::graphics::sprite
         ~SpriteManager() = default;
 
         // Load a sprite atlas from PNG + JSON metadata (div settings, optional palette variants)
+        // The asset files are defined in config/AssetPortfolio.def
         Id Load(const std::wstring& name, const std::wstring_view png_path, const std::wstring_view json_path);
         // Fast path: draw sprite by Id (O(1))
         void UseById(Id id, int frame, int x, int y) const noexcept;
@@ -38,6 +39,13 @@ namespace mm2hack::apps::graphics::sprite
         // Variant (palette step) controls
         void SetGlobalVariant(int variant) noexcept { _global_variant = variant; }
         [[nodiscard]] int GlobalVariant() const noexcept { return _global_variant; }
+
+        // Palette color replacement (for NES-style palette swaps)
+        bool ReplacePaletteColorByName(const std::wstring& name, int targetPaletteIndex, int sourcePaletteIndex, int variant = 0);
+        bool ReplacePaletteColorById(Id id, int targetPaletteIndex, int sourcePaletteIndex, int variant = 0);
+        bool ApplyRandomColorFilterByName(const std::wstring& name, int variant = 0);
+        bool ApplyRandomColorFilterById(Id id, int variant = 0);
+        bool ApplyHSBFilterById(Id id, int variant, int hueAdd, int satAdd, int briAdd);
 
         // Event monitoring
         void SetEvents(SpriteCatalog::Events events) { _catalog.SetEvents(std::move(events)); }

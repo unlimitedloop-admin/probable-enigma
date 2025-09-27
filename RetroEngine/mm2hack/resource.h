@@ -47,13 +47,14 @@
 #define ID_PLAYREC_STOP                 40041
 #define ID_PLAYREC_INFOMATION           40042
 #define ID_PLAYREC_ELICIT               40043
+#define ID_SCRIPT_004                   40044
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        103
-#define _APS_NEXT_COMMAND_VALUE         40044
+#define _APS_NEXT_COMMAND_VALUE         40045
 #define _APS_NEXT_CONTROL_VALUE         1001
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

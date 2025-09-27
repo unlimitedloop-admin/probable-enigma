@@ -31,7 +31,7 @@ namespace mm2hack::config
 
     // === base dirs (End mark '\\') ===
     inline constexpr wchar_t SpritesDir[] = LR"(assets\sprites\)";
-    inline constexpr wchar_t BgTilesDir[] = LR"(assets\bgtiles\)";
+    inline constexpr wchar_t BgsDir[]     = LR"(assets\BGs\)";
     inline constexpr wchar_t MapDataDir[] = LR"(assets\mapdata\)";
     inline constexpr wchar_t SoundsDir[]  = LR"(assets\sounds\)";
     inline constexpr wchar_t MusicDir[]   = LR"(assets\music\)";
@@ -39,7 +39,7 @@ namespace mm2hack::config
     inline constexpr wchar_t EffectsDir[] = LR"(assets\effects\)";
     inline constexpr wchar_t FontsDir[]   = LR"(assets\fonts\)";
 
-    inline constexpr wchar_t ExamsDir[]   = LR"(assets\exams\)";
+    inline constexpr wchar_t ExamsDir[]   = LR"(assets\_exams\)";   // test only
 
 #define MM2H_MAKE_WPATH(Name, Base, RelLiteral)                          \
     inline constexpr auto Name##Arr = wconcat_all(Base, RelLiteral);     \

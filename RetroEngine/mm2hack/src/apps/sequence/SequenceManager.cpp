@@ -108,9 +108,9 @@ namespace mm2hack::apps::sequence
                 auto& input = GameContext::GetInstance().Input();
                 // Advance the input state for this frame.
                 input.BeginTick(time.FrameCounter());
-                
+
                 _currentSequence->Execute();    // !Execute the main game logic.
-                
+
                 // Finalize the input state for this frame.
                 input.EndTick();
                 // Increment the play frame counter if the game is running. (use in HUD overlays)

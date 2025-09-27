@@ -55,7 +55,17 @@ namespace mm2hack::apps::graphics::sprite
         // Draw specified frame with specified color-variant
         void Draw(int variant, int frame, int x, int y) const noexcept;
 
+        // Replace a color in the palette for all variants
+        bool ReplacePaletteColorIndex(int variant, int targetPaletteIndex, int sourcePaletteIndex) noexcept;
+        // Replace a color in the palette for all variants (RGB match)
+        bool ReplacePaletteColorRGB(int variant, unsigned char r, unsigned char g, unsigned char b, int sourcePaletteIndex) noexcept;
+        // Apply a random hue shift to the specified variant
+        bool ApplyRandomHueToVariant(int variant) noexcept;
+        // Apply HSB adjustments to the specified variant
+        bool ApplyHSBToVariant(int variant, int hueAdd, int satAdd, int briAdd) noexcept;
+
     private:
+        bool RebuildVariantFromSoftImage_(int variant) noexcept;    // rebuild graphs for the variant from SoftImage
         void Dispose() noexcept;    // release SoftImage and graphs
 
     private:

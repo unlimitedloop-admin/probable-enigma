@@ -1,0 +1,10 @@
+{
+    "Loader": {
+        "tileWidth": 8,
+        "tileHeight": 8,
+        "tilesX": 4,
+        "tilesY": 4,
+        "paletteVariants": 4,
+        "nesFadeStep": 16
+    }
+}

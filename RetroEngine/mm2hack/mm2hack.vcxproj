@@ -197,6 +197,10 @@
     <ClCompile Include="src\apps\sequence\SequenceManager.cpp" />
     <ClCompile Include="src\apps\sequence\StandardSequence.cpp" />
     <ClCompile Include="src\apps\supervisor\ResourceManager.cpp" />
+    <ClCompile Include="src\apps\vfx\stareffects\BgStarField.cpp" />
+    <ClCompile Include="src\apps\vfx\stareffects\FixedStar.cpp" />
+    <ClCompile Include="src\apps\vfx\stareffects\ShootingStar.cpp" />
+    <ClCompile Include="src\apps\vfx\stareffects\Star.cpp" />
     <ClCompile Include="src\config\ConfigUIManager.cpp" />
     <ClCompile Include="src\config\EnvironmentConfig.cpp" />
     <ClCompile Include="src\config\SystemConfig.cpp" />
@@ -242,6 +246,7 @@
     <ClCompile Include="src\test\driver\001\PressKeyCommand.cpp" />
     <ClCompile Include="src\test\driver\002\DrawGraph.cpp" />
     <ClCompile Include="src\test\driver\003\SoundTest.cpp" />
+    <ClCompile Include="src\test\driver\004\OuterSpaceBG.cpp" />
     <ClCompile Include="src\test\TestSequence.cpp" />
     <ClCompile Include="src\utils\Fps.cpp" />
     <ClCompile Include="src\utils\LogWriter.cpp" />
@@ -289,6 +294,11 @@
     <ClInclude Include="src\apps\sequence\SequenceType.h" />
     <ClInclude Include="src\apps\sequence\StandardSequence.h" />
     <ClInclude Include="src\apps\supervisor\ResourceManager.h" />
+    <ClInclude Include="src\apps\vfx\stareffects\BgStarField.h" />
+    <ClInclude Include="src\apps\vfx\stareffects\FixedStar.h" />
+    <ClInclude Include="src\apps\vfx\stareffects\ShootingStar.h" />
+    <ClInclude Include="src\apps\vfx\stareffects\Star.h" />
+    <ClInclude Include="src\apps\vfx\stareffects\StarState.h" />
     <ClInclude Include="src\config\AssetPaths.h" />
     <ClInclude Include="src\config\ConfigUIManager.h" />
     <ClInclude Include="src\config\EnvironmentConfig.h" />
@@ -360,6 +370,7 @@
     <ClInclude Include="src\test\driver\001\PressKeyCommand.h" />
     <ClInclude Include="src\test\driver\002\DrawGraph.h" />
     <ClInclude Include="src\test\driver\003\SoundTest.h" />
+    <ClInclude Include="src\test\driver\004\OuterSpaceBG.h" />
     <ClInclude Include="src\test\driver\ITestDriver.h" />
     <ClInclude Include="src\test\TestSequence.h" />
     <ClInclude Include="src\utils\Fps.h" />

@@ -36,6 +36,45 @@ namespace mm2hack::apps::graphics::sprite
         UseById(id, frame, x, y);
     }
 
+    bool SpriteManager::ReplacePaletteColorByName(const std::wstring& name, int targetPaletteIndex, int sourcePaletteIndex, int variant)
+    {
+        if (auto it = _name_cache.find(name); it != _name_cache.end())
+        {
+            return _catalog.GetAtlas(it->second).ReplacePaletteColorIndex(variant, targetPaletteIndex, sourcePaletteIndex);
+        }
+        if (auto opt = _catalog.TryGetId(name))
+        {
+            _name_cache.emplace(name, *opt);
+            return _catalog.GetAtlas(*opt).ReplacePaletteColorIndex(variant, targetPaletteIndex, sourcePaletteIndex);
+        }
+        return false;
+    }
+
+    bool SpriteManager::ReplacePaletteColorById(Id id, int targetPaletteIndex, int sourcePaletteIndex, int variant)
+    {
+        if (!_catalog.IsValid(id)) return false;
+        return _catalog.GetAtlas(id).ReplacePaletteColorIndex(variant, targetPaletteIndex, sourcePaletteIndex);
+    }
+
+    bool SpriteManager::ApplyRandomColorFilterByName(const std::wstring& name, int variant)
+    {
+        const Id id = CacheId_(name);
+        if (id == kInvalidId || !_catalog.IsValid(id)) return false;
+        return _catalog.GetAtlas(id).ApplyRandomHueToVariant(variant);
+    }
+
+    bool SpriteManager::ApplyRandomColorFilterById(Id id, int variant)
+    {
+        if (!_catalog.IsValid(id)) return false;
+        return _catalog.GetAtlas(id).ApplyRandomHueToVariant(variant);
+    }
+
+    bool SpriteManager::ApplyHSBFilterById(Id id, int variant, int hueAdd, int satAdd, int briAdd)
+    {
+        if (!_catalog.IsValid(id)) return false;
+        return _catalog.GetAtlas(id).ApplyHSBToVariant(variant, hueAdd, satAdd, briAdd);
+    }
+
     void SpriteManager::ReleaseById(Id id)
     {
         // drop any cached name entries pointing to this id

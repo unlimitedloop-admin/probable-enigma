@@ -55,7 +55,6 @@ namespace mm2hack::apps::scenes
 
     void DrawGraph::Finalize()
     {
-        using namespace deal;
-        if (GameContext::GetInstance().IsShutdown()) return;
+        // No special finalization needed
     }
 }
