@@ -13,6 +13,7 @@
 #include <memory>
 #include "apps/parameters/Parameters.h"
 #include "IBaseScene.h"
+#include "SceneChangeMediator.h"
 #include "SceneID.h"
 
 namespace mm2hack::apps::scenes
@@ -38,8 +39,11 @@ namespace mm2hack::apps::scenes
         int GetCurrentSceneID() const;
         // The role is to switch to a specified scene through an intermediary
         void RequestSceneChange(SceneID nextScene, const parameters::Parameters& params = {}) override;
+        // Sets the mediator for scene changes
+        void SetMediator(SceneChangeMediator* mediator) { _mediator = mediator; }
 
     private:
+        SceneChangeMediator* _mediator = nullptr;                   // Intermediary for scene changes
         std::unique_ptr<IBaseScene> _currentScene;                  // Manage the main part of the game program
 
         void ChangeScene(std::unique_ptr<IBaseScene> newScene);     // Transition to a new scene, releasing the current one if necessary(concept of state-pattern)

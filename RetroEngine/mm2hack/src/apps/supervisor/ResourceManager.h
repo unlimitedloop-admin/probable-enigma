@@ -10,6 +10,7 @@
 
 #include "apps/audio/AudioManager.h"
 #include "apps/graphics/bg/BGTileManager.h"
+#include "apps/graphics/fonts/FontTileManager.h"
 #include "apps/graphics/sprite/SpriteManager.h"
 
 namespace mm2hack::apps::supervisor
@@ -21,6 +22,7 @@ namespace mm2hack::apps::supervisor
         // --- type aliases (short names only inside this class) ---
         using SpriteManager = graphics::sprite::SpriteManager;
         using BGTileManager = graphics::bg::BGTileManager;
+        using FontTileManager = graphics::fonts::FontTileManager;
         using AudioManager  = audio::AudioManager;
 
         ResourceManager() = default;
@@ -33,6 +35,9 @@ namespace mm2hack::apps::supervisor
         BGTileManager& GetBGTileManager() noexcept { return _bgTileManager; }
         const BGTileManager& GetBGTileManager() const noexcept { return _bgTileManager; }
 
+        FontTileManager& GetFontTileManager() noexcept { return _fontTileManager; }
+        const FontTileManager& GetFontTileManager() const noexcept { return _fontTileManager; }
+
         AudioManager& GetAudioManager() noexcept { return _audioManager; }
         const AudioManager& GetAudioManager() const noexcept { return _audioManager; }
 
@@ -40,8 +45,9 @@ namespace mm2hack::apps::supervisor
         void Release();
 
     private:
-        SpriteManager _spriteManager; // Instance of SpriteManager
-        BGTileManager _bgTileManager; // Instance of BGTileManager
-        AudioManager  _audioManager;  // Instance of AudioManager
+        SpriteManager _spriteManager;     // Instance of SpriteManager
+        BGTileManager _bgTileManager;     // Instance of BGTileManager
+        FontTileManager _fontTileManager; // Instance of FontTileManager
+        AudioManager  _audioManager;      // Instance of AudioManager
     };
 }

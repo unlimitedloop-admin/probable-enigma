@@ -10,6 +10,7 @@
 
 #include <memory>
 #include "IBaseScene.h"
+#include "SceneChangeMediator.h"
 #include "SceneID.h"
 
 namespace mm2hack::apps::scenes
@@ -18,6 +19,6 @@ namespace mm2hack::apps::scenes
     class SceneFactory
     {
     public:
-        static std::unique_ptr<IBaseScene> CreateScene(SceneID id);
+        static std::unique_ptr<IBaseScene> CreateScene(SceneID id, SceneChangeMediator* mediator);
     };
 }

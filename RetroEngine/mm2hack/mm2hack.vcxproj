@@ -185,6 +185,7 @@
     <ClCompile Include="src\apps\graphics\bg\BGTileAtlas.cpp" />
     <ClCompile Include="src\apps\graphics\bg\BGTileCatalog.cpp" />
     <ClCompile Include="src\apps\graphics\bg\BGTileManager.cpp" />
+    <ClCompile Include="src\apps\graphics\fonts\FontTileManager.cpp" />
     <ClCompile Include="src\apps\graphics\sprite\SpriteAtlas.cpp" />
     <ClCompile Include="src\apps\graphics\sprite\SpriteCatalog.cpp" />
     <ClCompile Include="src\apps\graphics\sprite\SpriteManager.cpp" />
@@ -192,6 +193,7 @@
     <ClCompile Include="src\apps\scenes\SceneChangeMediator.cpp" />
     <ClCompile Include="src\apps\scenes\SceneFactory.cpp" />
     <ClCompile Include="src\apps\scenes\SceneManager.cpp" />
+    <ClCompile Include="src\apps\scenes\sub-scenes\90-debugging\BackdoorMenu.cpp" />
     <ClCompile Include="src\apps\scenes\sub-scenes\LaunchingGame.cpp" />
     <ClCompile Include="src\apps\sequence\DebugSequence.cpp" />
     <ClCompile Include="src\apps\sequence\SequenceManager.cpp" />
@@ -276,6 +278,7 @@
     <ClInclude Include="src\apps\graphics\bg\BGTileAtlas.h" />
     <ClInclude Include="src\apps\graphics\bg\BGTileCatalog.h" />
     <ClInclude Include="src\apps\graphics\bg\BGTileManager.h" />
+    <ClInclude Include="src\apps\graphics\fonts\FontTileManager.h" />
     <ClInclude Include="src\apps\graphics\sprite\SpriteAtlas.h" />
     <ClInclude Include="src\apps\graphics\sprite\SpriteCatalog.h" />
     <ClInclude Include="src\apps\graphics\sprite\SpriteManager.h" />
@@ -287,6 +290,7 @@
     <ClInclude Include="src\apps\scenes\SceneFactory.h" />
     <ClInclude Include="src\apps\scenes\SceneID.h" />
     <ClInclude Include="src\apps\scenes\SceneManager.h" />
+    <ClInclude Include="src\apps\scenes\sub-scenes\90-debugging\BackdoorMenu.h" />
     <ClInclude Include="src\apps\scenes\sub-scenes\LaunchingGame.h" />
     <ClInclude Include="src\apps\sequence\DebugSequence.h" />
     <ClInclude Include="src\apps\sequence\ISequence.h" />

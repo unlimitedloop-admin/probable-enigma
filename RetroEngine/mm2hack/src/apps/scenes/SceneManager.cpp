@@ -62,7 +62,7 @@ namespace mm2hack::apps::scenes
 
     void SceneManager::RequestSceneChange(SceneID nextScene, const parameters::Parameters& params)
     {
-        auto next = SceneFactory::CreateScene(nextScene);
+        auto next = SceneFactory::CreateScene(nextScene, _mediator);
         if (next)
         {
             next->Initialize(params);

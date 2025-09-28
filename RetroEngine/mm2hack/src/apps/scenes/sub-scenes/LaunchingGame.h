@@ -11,6 +11,7 @@
 #include <string>
 #include "apps/parameters/Parameters.h"
 #include "apps/scenes/IBaseScene.h"
+#include "apps/scenes/SceneChangeMediator.h"
 #include "apps/scenes/SceneID.h"
 
 namespace mm2hack::apps::scenes
@@ -19,7 +20,7 @@ namespace mm2hack::apps::scenes
     class LaunchingGame : public IBaseScene
     {
     public:
-        LaunchingGame();
+        LaunchingGame(SceneChangeMediator* mediator);
         LaunchingGame(const LaunchingGame&) = delete;
         LaunchingGame& operator=(const LaunchingGame&) = delete;
         LaunchingGame(LaunchingGame&&) = default;
@@ -33,13 +34,19 @@ namespace mm2hack::apps::scenes
         // Update the scene logic for each frame
         void Update() override;
         // Render the main game world, draw the sprites and BGs
-        void RenderWorld() override;
+        void RenderWorld() override {}
         // Render the overlay, draw the HUD and menus
-        void RenderOverlay() override;
+        void RenderOverlay() override {}
 
         // Get the unique identifier for this scene
-        SceneID GetSceneID() const override;
+        SceneID GetSceneID() const override { return SceneID::LaunchingGame; }
         // Get the name of this scene as a wstring
-        std::wstring GetSceneName() const override;
+        std::wstring GetSceneName() const override { return kClassName; }
+
+    private:
+        const std::wstring kClassName = L"LaunchingGame";
+
+        SceneChangeMediator* _mediator{ nullptr };      // Mediator for scene changes
+        SceneID _subsequentScene{ SceneID::None };      // The scene to transition to after launching
     };
 }

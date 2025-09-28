@@ -106,6 +106,8 @@ namespace mm2hack::apps::sequence
             if (shouldAdvance)
             {
                 auto& input = GameContext::GetInstance().Input();
+                // Update the joystick state.
+                input.UpdateJoystick();
                 // Advance the input state for this frame.
                 input.BeginTick(time.FrameCounter());
 

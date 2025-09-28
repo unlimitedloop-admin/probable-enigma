@@ -34,10 +34,8 @@ namespace mm2hack::config
     inline constexpr wchar_t BgsDir[]     = LR"(assets\BGs\)";
     inline constexpr wchar_t MapDataDir[] = LR"(assets\mapdata\)";
     inline constexpr wchar_t SoundsDir[]  = LR"(assets\sounds\)";
-    inline constexpr wchar_t MusicDir[]   = LR"(assets\music\)";
     inline constexpr wchar_t UiDir[]      = LR"(assets\ui\)";
-    inline constexpr wchar_t EffectsDir[] = LR"(assets\effects\)";
-    inline constexpr wchar_t FontsDir[]   = LR"(assets\fonts\)";
+    inline constexpr wchar_t SystemDir[]  = LR"(assets\system\)";
 
     inline constexpr wchar_t ExamsDir[]   = LR"(assets\_exams\)";   // test only
 
