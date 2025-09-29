@@ -52,6 +52,13 @@ namespace mm2hack::apps::scenes
     void BackdoorMenu::RenderWorld()
     {
         // Render the game world for the backdoor menu
+        using namespace apps::deal;
+        if (_currentPhase == Phase::Credit)
+        {
+            auto& fonts = GameContext::GetInstance().GetResourceManager().GetFontTileManager();
+            fonts.DrawTextImage(L"BACKDOOR MENU", 76, 56);
+            fonts.DrawTextImage(L" PRESS START ", 76, 96);
+        }
     }
 
     void BackdoorMenu::RenderOverlay()
@@ -85,9 +92,15 @@ namespace mm2hack::apps::scenes
         utils::debug_log(kClassName + L" initialized.");
 
         using namespace apps::deal;
-        GameContext::GetInstance().GetResourceManager().GetFontTileManager().SetUp();
+        auto& resource = GameContext::GetInstance().GetResourceManager();
+        auto& font = resource.GetFontTileManager();
+        font.SetUp();
 
         NES::NESPalette::SetBackgroundFor(13U); // Innocent black
+
+        const int vmax = std::max(0, font.MaxVariant());
+        font.SetGlobalVariant(vmax); // Full bright
+        resource.FadeInFont(20);
 
         _currentPhase = Phase::Credit;
         _starField.InitStars();
@@ -98,7 +111,7 @@ namespace mm2hack::apps::scenes
         utils::debug_log(kClassName + L" finalized.");
 
         using namespace apps::deal;
-        GameContext::GetInstance().GetResourceManager().GetFontTileManager().Shutdown();
+        GameContext::GetInstance().GetResourceManager().GetFontTileManager().ShutDown();
     }
 
     void BackdoorMenu::HandleCreditPhase()
@@ -106,12 +119,12 @@ namespace mm2hack::apps::scenes
         // Handle the credit phase logic
         using namespace apps::deal;
         using namespace core::assembly;
-
+        
+        auto& resource = GameContext::GetInstance().GetResourceManager();
         auto& input = GameContext::GetInstance().Input();
         auto startPressed = input.JustPressed(JPBTN::START) || input.JustPressed(JPBTN::A);
-        auto& fonts = GameContext::GetInstance().GetResourceManager().GetFontTileManager();
-        fonts.DrawTextImage(L"BACKDOOR MENU", 76, 56);
-        fonts.DrawTextImage(L" PRESS START ", 76, 96);
+
+        resource.UpdateEffects();
 
         if (startPressed)
         {

@@ -128,4 +128,23 @@ namespace mm2hack::apps::graphics::bg
             }
         }
     }
+
+    int BGTileManager::VariantCountByName(const std::wstring& tileset_name) const
+    {
+        if (auto id = _catalog.TryGetId(tileset_name)) return _catalog.GetAtlas(*id).VariantCount();
+        return 0;
+    }
+
+    int BGTileManager::VariantCountById(Id id) const
+    {
+        if (!_catalog.IsValid(id)) return 0;
+        return _catalog.GetAtlas(id).VariantCount();
+    }
+
+    void BGTileManager::SetGlobalVariantClamped(int v) noexcept
+    {
+        const int mv = MaxVariant();
+        _global_variant = std::max(0, std::min(v, mv));
+    }
+
 }

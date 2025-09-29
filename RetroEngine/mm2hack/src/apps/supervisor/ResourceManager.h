@@ -8,10 +8,14 @@
 //==============================================================================
 #pragma once
 
+#include <algorithm>
+#include <optional>
 #include "apps/audio/AudioManager.h"
 #include "apps/graphics/bg/BGTileManager.h"
+#include "apps/graphics/effects/FadeIOTexture.h"
 #include "apps/graphics/fonts/FontTileManager.h"
 #include "apps/graphics/sprite/SpriteManager.h"
+#include "apps/supervisor/ResourceFadeBindings.h"
 
 namespace mm2hack::apps::supervisor
 {
@@ -24,9 +28,20 @@ namespace mm2hack::apps::supervisor
         using BGTileManager = graphics::bg::BGTileManager;
         using FontTileManager = graphics::fonts::FontTileManager;
         using AudioManager  = audio::AudioManager;
+        using FadeIOTexture = graphics::effects::FadeIOTexture;
 
-        ResourceManager() = default;
+        ResourceManager()
+            : _fades(_spriteManager, _bgTileManager, _fontTileManager, /*fallbackSpriteMax*/3, /*fallbackBGMax*/3, /*fallbackFontMax*/3) {}
         ~ResourceManager() = default;
+
+        void UpdateEffects() { _fades.Update(); }
+
+        void FadeOutBG(int frames, std::optional<int> to = std::nullopt) { _fades.FadeOutBG(frames, to); }
+        void FadeInBG(int frames) { _fades.FadeInBG(frames); }
+        void FadeOutSprite(int frames, std::optional<int> to = std::nullopt) { _fades.FadeOutSprite(frames, to); }
+        void FadeInSprite(int frames) { _fades.FadeInSprite(frames); }
+        void FadeOutFont(int frames, std::optional<int> to = std::nullopt) { _fades.FadeOutFont(frames, to); }
+        void FadeInFont(int frames) { _fades.FadeInFont(frames); }
 
         // Getters
         SpriteManager& GetSpriteManager() noexcept { return _spriteManager; }
@@ -45,9 +60,11 @@ namespace mm2hack::apps::supervisor
         void Release();
 
     private:
-        SpriteManager _spriteManager;     // Instance of SpriteManager
-        BGTileManager _bgTileManager;     // Instance of BGTileManager
-        FontTileManager _fontTileManager; // Instance of FontTileManager
-        AudioManager  _audioManager;      // Instance of AudioManager
+        SpriteManager _spriteManager;       // Instance of SpriteManager
+        BGTileManager _bgTileManager;       // Instance of BGTileManager
+        FontTileManager _fontTileManager;   // Instance of FontTileManager
+        AudioManager  _audioManager;        // Instance of AudioManager
+
+        ResourceFadeBindings _fades;        // Manages fade-in/out effects for sprites and BG tiles
     };
 }

@@ -36,10 +36,6 @@ namespace mm2hack::apps::graphics::sprite
         // Compatibility: draw by name (internally cached after first use)
         void Use(const std::wstring& name, int frame, int x, int y);
 
-        // Variant (palette step) controls
-        void SetGlobalVariant(int variant) noexcept { _global_variant = variant; }
-        [[nodiscard]] int GlobalVariant() const noexcept { return _global_variant; }
-
         // Palette color replacement (for NES-style palette swaps)
         bool ReplacePaletteColorByName(const std::wstring& name, int targetPaletteIndex, int sourcePaletteIndex, int variant = 0);
         bool ReplacePaletteColorById(Id id, int targetPaletteIndex, int sourcePaletteIndex, int variant = 0);
@@ -51,8 +47,17 @@ namespace mm2hack::apps::graphics::sprite
         void SetEvents(SpriteCatalog::Events events) { _catalog.SetEvents(std::move(events)); }
 
         // Utilities
-        [[nodiscard]] bool Has(const std::wstring& name) const { return _catalog.Has(name); }
-        [[nodiscard]] Id GetId(const std::wstring& name) const { return _catalog.GetId(name); }
+        [[nodiscard]] inline bool Has(const std::wstring& name) const { return _catalog.Has(name); }
+        [[nodiscard]] inline Id GetId(const std::wstring& name) const { return _catalog.GetId(name); }
+        // Variant info
+        [[nodiscard]] inline int MaxVariant() const noexcept { return _catalog.MaxVariantAcross(); }
+        [[nodiscard]] int VariantCountByName(const std::wstring& sprite_name) const;
+        [[nodiscard]] int VariantCountById(Id id) const;
+        void SetGlobalVariantClamped(int v) noexcept;
+
+        // Variant (palette step) controls
+        void SetGlobalVariant(int variant) noexcept { _global_variant = variant; }
+        [[nodiscard]] int GlobalVariant() const noexcept { return _global_variant; }
 
         // --- Release / Remove APIs ---
         void ReleaseById(Id id);

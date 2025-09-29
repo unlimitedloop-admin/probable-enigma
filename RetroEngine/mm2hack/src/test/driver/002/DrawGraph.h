@@ -32,7 +32,7 @@ namespace mm2hack::apps::scenes
     private:
         const std::wstring kClassName{ L"DrawGraph" };
         const std::wstring kMapName{ L"SAMPLESTAGE1" };
-        const std::wstring_view kStageMapBinary{ L"assets\\exams\\bg\\SAMPLESTAGE1.bin" };
+        const std::wstring_view kStageMapBinary{ L"assets\\_exams\\bg\\SAMPLESTAGE1.bin" };
 
         graphics::sprite::SpriteManager::Id _playerId{ static_cast<graphics::sprite::SpriteManager::Id>(-1) };
         graphics::bg::BGTileManager::Id _bgTileId{ static_cast<graphics::bg::BGTileManager::Id>(-1) };

@@ -75,6 +75,23 @@ namespace mm2hack::apps::graphics::sprite
         return _catalog.GetAtlas(id).ApplyHSBToVariant(variant, hueAdd, satAdd, briAdd);
     }
 
+    int SpriteManager::VariantCountByName(const std::wstring& sprite_name) const
+    {
+        if (auto id = _catalog.TryGetId(sprite_name)) return _catalog.GetAtlas(*id).VariantCount();
+        return 0;
+    }
+
+    int SpriteManager::VariantCountById(Id id) const
+    {
+        if (!_catalog.IsValid(id)) return 0; return _catalog.GetAtlas(id).VariantCount();
+    }
+
+    void SpriteManager::SetGlobalVariantClamped(int v) noexcept
+    {
+        const int mv = MaxVariant();
+        _global_variant = std::max(0, std::min(v, mv));
+    }
+
     void SpriteManager::ReleaseById(Id id)
     {
         // drop any cached name entries pointing to this id

@@ -156,6 +156,18 @@ namespace mm2hack::apps::graphics::sprite
         _name_to_id.clear();
     }
 
+    int SpriteCatalog::MaxVariantAcross() const noexcept
+    {
+        int result = -1;
+        for (const auto& p : _atlases)
+        {
+            if (!p) continue;
+            const int mv = std::max(0, p->VariantCount() - 1);
+            result = (result < 0) ? mv : std::min(result, mv);
+        }
+        return std::max(0, result);
+    }
+
     SpriteCatalog::Id SpriteCatalog::NextId_() const noexcept
     {
         return static_cast<Id>(_atlases.size());

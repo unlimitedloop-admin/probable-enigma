@@ -63,6 +63,8 @@ namespace mm2hack::apps::graphics::bg
         // Count
         [[nodiscard]] std::size_t Size() const noexcept { return _atlases.size(); }
 
+        [[nodiscard]] int MaxVariantAcross() const noexcept;
+
     private:
         Id NextId_() const noexcept;
         std::unique_ptr<BGTileAtlas> BuildAtlas_(const std::wstring& name, const std::wstring& png, const std::wstring& json);

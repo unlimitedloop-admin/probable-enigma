@@ -278,6 +278,7 @@
     <ClInclude Include="src\apps\graphics\bg\BGTileAtlas.h" />
     <ClInclude Include="src\apps\graphics\bg\BGTileCatalog.h" />
     <ClInclude Include="src\apps\graphics\bg\BGTileManager.h" />
+    <ClInclude Include="src\apps\graphics\effects\FadeIOTexture.h" />
     <ClInclude Include="src\apps\graphics\fonts\FontTileManager.h" />
     <ClInclude Include="src\apps\graphics\sprite\SpriteAtlas.h" />
     <ClInclude Include="src\apps\graphics\sprite\SpriteCatalog.h" />
@@ -297,6 +298,7 @@
     <ClInclude Include="src\apps\sequence\SequenceManager.h" />
     <ClInclude Include="src\apps\sequence\SequenceType.h" />
     <ClInclude Include="src\apps\sequence\StandardSequence.h" />
+    <ClInclude Include="src\apps\supervisor\ResourceFadeBindings.h" />
     <ClInclude Include="src\apps\supervisor\ResourceManager.h" />
     <ClInclude Include="src\apps\vfx\stareffects\BgStarField.h" />
     <ClInclude Include="src\apps\vfx\stareffects\FixedStar.h" />

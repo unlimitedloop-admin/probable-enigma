@@ -2,6 +2,7 @@
 
 #include "BGTileCatalog.h"
 
+#include <array>
 #include <limits>
 #include <nlohmann/json.hpp>
 #include <optional>
@@ -12,15 +13,48 @@ namespace
 {
     [[nodiscard]] int mul_safe(int a, int b)
     {
-        long long v = static_cast<long long>(a) * static_cast<long long>(b);
+        long long v = 1LL * a * b;
         if (v > std::numeric_limits<int>::max()) return std::numeric_limits<int>::max();
-        if (v < 0) return 0; return static_cast<int>(v);
+        if (v < 0) return 0;
+        return (int)v;
     }
 
-    // TODO: Implement palette-variant generation on SoftImage (same stub as sprites)
-    int make_palette_variant_softimage(int base_soft, int /*variant_index*/, int /*fade_step*/)
+    struct RGBA8 { unsigned char r, g, b, a; };
+
+    // CAUTION: modifies the original soft image's palette!
+    bool GetPalette256(int soft, std::array<RGBA8, 256>& out)
     {
-        return base_soft; // stub: reuse base
+        for (int i = 0; i < 256; ++i)
+        {
+            int r = 0, g = 0, b = 0, a = 255;
+            if (::DxLib::GetPaletteSoftImage(soft, i, &r, &g, &b, &a) != 0) return false;
+            out[(size_t)i] = RGBA8{ (unsigned char)r,(unsigned char)g,(unsigned char)b,(unsigned char)a };
+        }
+        return true;
+    }
+
+    void SetPalette256(int soft, const std::array<RGBA8, 256>& pal)
+    {
+        for (int i = 0; i < 256; ++i)
+        {
+            const auto& c = pal[(size_t)i];
+            ::DxLib::SetPaletteSoftImage(soft, i, c.r, c.g, c.b, c.a);
+        }
+    }
+
+    // NES style fade variant soft image
+    void MakeFadeVariantFromBase(const std::array<RGBA8, 256>& base,
+        int variantIndex, int fadeStep,
+        std::array<RGBA8, 256>& out)
+    {
+        const int delta = std::max(0, variantIndex) * std::max(0, fadeStep);
+        for (size_t i = 0; i < 256; ++i)
+        {
+            int r = (int)base[i].r - delta; if (r < 0) r = 0;
+            int g = (int)base[i].g - delta; if (g < 0) g = 0;
+            int b = (int)base[i].b - delta; if (b < 0) b = 0;
+            out[i] = RGBA8{ (unsigned char)r,(unsigned char)g,(unsigned char)b, base[i].a };
+        }
     }
 }
 
@@ -68,11 +102,6 @@ namespace mm2hack::apps::graphics::bg
         return id < _atlases.size() && static_cast<bool>(_atlases[id]);
     }
 
-    BGTileCatalog::Id BGTileCatalog::NextId_() const noexcept
-    {
-        return static_cast<Id>(_atlases.size());
-    }
-
     BGTileCatalog::Id BGTileCatalog::Load(const std::wstring& name, std::wstring_view png_path, std::wstring_view json_path)
     {
         if (auto it = _name_to_id.find(name); it != _name_to_id.end()) return it->second;
@@ -110,6 +139,23 @@ namespace mm2hack::apps::graphics::bg
         }
         _atlases.clear();
         _name_to_id.clear();
+    }
+
+    int BGTileCatalog::MaxVariantAcross() const noexcept
+    {
+        int result = -1;
+        for (const auto& p : _atlases)
+        {
+            if (!p) continue;
+            const int mv = std::max(0, p->VariantCount() - 1);
+            result = (result < 0) ? mv : std::min(result, mv);
+        }
+        return std::max(0, result);
+    }
+
+    BGTileCatalog::Id BGTileCatalog::NextId_() const noexcept
+    {
+        return static_cast<Id>(_atlases.size());
     }
 
     std::unique_ptr<BGTileAtlas> BGTileCatalog::BuildAtlas_(const std::wstring& name, const std::wstring& png, const std::wstring& json)
@@ -152,18 +198,33 @@ namespace mm2hack::apps::graphics::bg
         std::vector<std::vector<int>> graphs_by_variant;
         graphs_by_variant.reserve(static_cast<std::size_t>(pal.variant_count));
 
+        std::array<RGBA8, 256> basePal{}, workPal{};
+        const bool hasPal = GetPalette256(soft, basePal);
+
         for (int v = 0; v < pal.variant_count; ++v)
         {
-            const int src_soft = make_palette_variant_softimage(soft, v, pal.nes_fade_step);
+            //const int src_soft = make_palette_variant_softimage(soft, v, pal.nes_fade_step);
+            if (hasPal)
+            {
+                MakeFadeVariantFromBase(basePal, v, pal.nes_fade_step, workPal);
+                SetPalette256(soft, workPal);
+            }
+
             std::vector<int> handles(static_cast<std::size_t>(total), -1);
-            // DxLib signature: (SI, AllNum, XNum, YNum, XSize, YSize, out[])
-            const int res = ::DxLib::CreateDivGraphFromSoftImage(src_soft, total, div.tiles_x, div.tiles_y, div.tile_w, div.tile_h, handles.data());
+            const int res = ::DxLib::CreateDivGraphFromSoftImage(soft, total, div.tiles_x, div.tiles_y, div.tile_w, div.tile_h, handles.data());
             if (res != 0)
             {
                 // TODO: fallback per-tile creation if needed
             }
             graphs_by_variant.emplace_back(std::move(handles));
         }
+
+        if (hasPal)
+        {
+            // restore original palette
+            SetPalette256(soft, basePal);
+        }
+
         return std::make_unique<BGTileAtlas>(name, div, soft, std::move(graphs_by_variant));
     }
 }

@@ -59,7 +59,10 @@ namespace mm2hack::apps::graphics::sprite
         void Remove(Id id);
         void Clear();
 
-        std::size_t Size() const noexcept { return _atlases.size(); }
+        // Count
+        [[nodiscard]] std::size_t Size() const noexcept { return _atlases.size(); }
+
+        [[nodiscard]] int MaxVariantAcross() const noexcept;
 
     private:
         Id NextId_() const noexcept;                                                // next available Id (dense array index)
