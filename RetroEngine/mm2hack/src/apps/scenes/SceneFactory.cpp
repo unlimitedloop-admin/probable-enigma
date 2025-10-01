@@ -10,7 +10,7 @@
 // Add more sub-scenes here...
 #include "sub-scenes/LaunchingGame.h"
 
-#include "sub-scenes/90-debugging/BackdoorMenu.h"
+#include "sub-scenes/90-BackdoorMenu/BackdoorMenu.h"
 
 namespace mm2hack::apps::scenes
 {

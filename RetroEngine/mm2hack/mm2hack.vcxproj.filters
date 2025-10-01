@@ -75,8 +75,9 @@
     <ClCompile Include="src\apps\vfx\stareffects\ShootingStar.cpp" />
     <ClCompile Include="src\apps\vfx\stareffects\Star.cpp" />
     <ClCompile Include="src\test\driver\004\OuterSpaceBG.cpp" />
-    <ClCompile Include="src\apps\scenes\sub-scenes\90-debugging\BackdoorMenu.cpp" />
+    <ClCompile Include="src\apps\scenes\sub-scenes\90-BackdoorMenu\BackdoorMenu.cpp" />
     <ClCompile Include="src\apps\graphics\fonts\FontTileManager.cpp" />
+    <ClCompile Include="src\apps\scenes\sub-scenes\90-BackdoorMenu\BackdoorMenuPhase.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
@@ -204,10 +205,11 @@
     <ClInclude Include="src\apps\vfx\stareffects\Star.h" />
     <ClInclude Include="src\apps\vfx\stareffects\StarState.h" />
     <ClInclude Include="src\test\driver\004\OuterSpaceBG.h" />
-    <ClInclude Include="src\apps\scenes\sub-scenes\90-debugging\BackdoorMenu.h" />
+    <ClInclude Include="src\apps\scenes\sub-scenes\90-BackdoorMenu\BackdoorMenu.h" />
     <ClInclude Include="src\apps\graphics\fonts\FontTileManager.h" />
     <ClInclude Include="src\apps\graphics\effects\FadeIOTexture.h" />
     <ClInclude Include="src\apps\supervisor\ResourceFadeBindings.h" />
+    <ClInclude Include="src\apps\scenes\sub-scenes\90-BackdoorMenu\BackdoorMenuPhase.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

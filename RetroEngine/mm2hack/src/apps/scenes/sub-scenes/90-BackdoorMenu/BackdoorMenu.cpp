@@ -3,14 +3,13 @@
 #include "BackdoorMenu.h"
 
 #include <istream>
-#include <map>
 #include <ostream>
 #include "apps/deal/GameContext.h"
 #include "apps/NES/NESPalette.h"
 #include "apps/parameters/Parameters.h"
 #include "apps/scenes/SceneChangeMediator.h"
 #include "apps/scenes/SceneID.h"
-#include "input/Jpbtn.h"
+#include "BackdoorMenuPhase.h"
 #include "utils/output_debug.h"
 
 namespace mm2hack::apps::scenes
@@ -20,12 +19,6 @@ namespace mm2hack::apps::scenes
     {
         // Initialize the backdoor menu, load resources, etc.
         utils::debug_log(kClassName + L" constructor called.");
-
-        _phaseHandlers = {
-            { Phase::Credit, &BackdoorMenu::HandleCreditPhase },
-            { Phase::TopMenu, &BackdoorMenu::HandleTopMenuPhase },
-            { Phase::InsideMenu, &BackdoorMenu::HandleInsideMenuPhase },
-        };
     }
 
     BackdoorMenu::~BackdoorMenu()
@@ -37,39 +30,29 @@ namespace mm2hack::apps::scenes
 
     void BackdoorMenu::Update()
     {
-        // Backdoor menu main game logic execution
-        if (auto it = _phaseHandlers.find(_currentPhase); it != _phaseHandlers.end())
-        {
-            (this->*it->second)();  // Call the appropriate phase handler
-        }
-        else
-        {
-            // Next Scene
-            _mediator->RequestChange(SceneID::None, {});
-        }
+        if (_phase) { _phase->Update(); }
+        else { _mediator->RequestChange(SceneID::None, {}); }
     }
 
     void BackdoorMenu::RenderWorld()
     {
-        // Render the game world for the backdoor menu
-        using namespace apps::deal;
-        if (_currentPhase == Phase::Credit)
-        {
-            auto& fonts = GameContext::GetInstance().GetResourceManager().GetFontTileManager();
-            fonts.DrawTextImage(L"BACKDOOR MENU", 76, 56);
-            fonts.DrawTextImage(L" PRESS START ", 76, 96);
-        }
+        if (_phase) { _phase->RenderWorld(); }
     }
 
     void BackdoorMenu::RenderOverlay()
     {
-        // Render any overlays for the backdoor menu
+        if (_phase) { _phase->RenderOverlay(); }
+    }
+
+    void BackdoorMenu::SetPhase(std::unique_ptr<IBackdoorMenuPhase> next)
+    {
+        _phase = std::move(next);
     }
 
     void BackdoorMenu::Save(std::ostream& out)
     {
         // TODO: Save scene state to a file
-        int phase = static_cast<int>(_currentPhase);
+        int phase = static_cast<int>(_phaseId);
         out.write(reinterpret_cast<const char*>(&phase), sizeof(phase));
         // Save other necessary data
         // e.g., background stars, current selection, etc.
@@ -81,7 +64,7 @@ namespace mm2hack::apps::scenes
         // TODO: Load scene state from a file
         int phase = 0;
         in.read(reinterpret_cast<char*>(&phase), sizeof(phase));
-        _currentPhase = static_cast<Phase>(phase);
+        _phaseId = static_cast<PhaseId>(phase);
         // Load other necessary data
         // e.g., background stars, current selection, etc.
         _starField.Load(in);    // Load background stars state
@@ -102,41 +85,32 @@ namespace mm2hack::apps::scenes
         font.SetGlobalVariant(vmax); // Full bright
         resource.FadeInFont(20);
 
-        _currentPhase = Phase::Credit;
+        _phaseId = PhaseId::Credit;
+        _phase = MakePhase(_phaseId, *this);
         _starField.InitStars();
+        _resource = GameContext::GetInstance().GetResourceManagerPtr();
+        _input = &GameContext::GetInstance().Input();
     }
 
     void BackdoorMenu::Finalize()
     {
-        utils::debug_log(kClassName + L" finalized.");
-
         using namespace apps::deal;
         GameContext::GetInstance().GetResourceManager().GetFontTileManager().ShutDown();
+        _phase.reset();
+
+        utils::debug_log(kClassName + L" finalized.");
     }
 
-    void BackdoorMenu::HandleCreditPhase()
+    std::unique_ptr<IBackdoorMenuPhase> BackdoorMenu::MakePhase(PhaseId id, BackdoorMenu& owner)
     {
-        // Handle the credit phase logic
-        using namespace apps::deal;
-        using namespace core::assembly;
-        
-        auto& resource = GameContext::GetInstance().GetResourceManager();
-        auto& input = GameContext::GetInstance().Input();
-        auto startPressed = input.JustPressed(JPBTN::START) || input.JustPressed(JPBTN::A);
-
-        resource.UpdateEffects();
-
-        if (startPressed)
+        using namespace BackdoorMenu_;
+        switch (id)
         {
-            _currentPhase = Phase::TopMenu; // Transition to the next phase for demonstration
+        case PhaseId::Credit:     return std::make_unique<CreditPhase>(owner);
+        case PhaseId::TopMenu:    return std::make_unique<TopMenuPhase>(owner);
+        case PhaseId::InsideMenu: return std::make_unique<InsideMenuPhase>(owner);
         }
-    }
-
-    void BackdoorMenu::HandleTopMenuPhase()
-    {
-    }
-
-    void BackdoorMenu::HandleInsideMenuPhase()
-    {
+        // Safety fallback
+        return std::make_unique<CreditPhase>(owner);
     }
 }

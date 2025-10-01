@@ -2,6 +2,7 @@
 
 #include "FontTileManager.h"
 
+#include <array>
 #include <cctype>
 #include <cmath>
 #include <cstdint>
@@ -44,9 +45,7 @@ namespace
         }
     }
 
-    void MakeFadeVariantFromBase_(const std::array<RGBA8, 256>& base,
-        int variantIndex, int variantCount,
-        std::array<RGBA8, 256>& out)
+    void MakeFadeVariantFromBase_(const std::array<RGBA8, 256>& base, int variantIndex, int variantCount, std::array<RGBA8, 256>& out)
     {
         // variantCount=1 のときは s=1（元の色）
         const int V = std::max(variantCount - 1, 1);
