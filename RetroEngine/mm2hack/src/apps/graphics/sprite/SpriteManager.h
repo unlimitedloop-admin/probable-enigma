@@ -34,7 +34,7 @@ namespace mm2hack::apps::graphics::sprite
         // Fast path: draw sprite by Id (Per-call variant override)
         void UseByIdVariant(Id id, int variant, int frame, int x, int y) const noexcept;
         // Compatibility: draw by name (internally cached after first use)
-        void Use(const std::wstring& name, int frame, int x, int y);
+        void UseByName(const std::wstring& name, int frame, int x, int y);
 
         // Palette color replacement (for NES-style palette swaps)
         bool ReplacePaletteColorByName(const std::wstring& name, int targetPaletteIndex, int sourcePaletteIndex, int variant = 0);
@@ -69,8 +69,8 @@ namespace mm2hack::apps::graphics::sprite
 
     private:
         static constexpr Id kInvalidId = std::numeric_limits<Id>::max();
-        SpriteCatalog _catalog{};
-        mutable std::unordered_map<std::wstring, Id> _name_cache{};
-        int _global_variant{ 0 };
+        SpriteCatalog _catalog{};   // underlying catalog
+        mutable std::unordered_map<std::wstring, Id> _name_cache{};     // name -> Id cache for fast lookup
+        int _global_variant{ 0 };   // global variant index for UseById/UseByName
     };
 }

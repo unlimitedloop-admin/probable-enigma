@@ -10,7 +10,6 @@ namespace mm2hack::apps::graphics::sprite
     {
         const std::wstring png = std::wstring(png_path);
         const std::wstring json = std::wstring(json_path);
-
         return _catalog.Load(name, png, json);
     }
 
@@ -29,7 +28,7 @@ namespace mm2hack::apps::graphics::sprite
         atlas.Draw(variant, frame, x, y);
     }
 
-    void SpriteManager::Use(const std::wstring& name, int frame, int x, int y)
+    void SpriteManager::UseByName(const std::wstring& name, int frame, int x, int y)
     {
         const Id id = CacheId_(name);
         if (id == kInvalidId) { return; }
@@ -88,6 +87,7 @@ namespace mm2hack::apps::graphics::sprite
 
     void SpriteManager::SetGlobalVariantClamped(int v) noexcept
     {
+        // clamp to [0, MaxVariant()]
         const int mv = MaxVariant();
         _global_variant = std::max(0, std::min(v, mv));
     }

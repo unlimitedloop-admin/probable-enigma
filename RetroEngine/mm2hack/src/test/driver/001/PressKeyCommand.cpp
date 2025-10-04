@@ -15,8 +15,9 @@ namespace mm2hack::apps::scenes
 
     void PressKeyCommand::Update()
     {
-        auto& joystick = apps::deal::GameContext::GetInstance().Input();
-        joystick.UpdateJoystick();
+        //auto& joystick = apps::deal::GameContext::GetInstance().Input();
+        //joystick.UpdateJoystick();
+        // deleted. The update is done in the SequenceManager.
     }
 
     void PressKeyCommand::RenderWorld()

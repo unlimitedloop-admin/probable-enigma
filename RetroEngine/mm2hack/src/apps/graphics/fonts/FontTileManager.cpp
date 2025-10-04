@@ -15,28 +15,20 @@
 
 namespace
 {
-    // 簡易 UTF8→UTF16
-    static std::wstring Utf8ToW_(const std::string& s)
-    {
-        std::wstring ws; ws.reserve(s.size());
-        for (unsigned char c : s) ws.push_back(static_cast<wchar_t>(c));
-        return ws;
-    }
-
     struct RGBA8 { unsigned char r, g, b, a; };
 
-    bool GetPalette256_(int soft, std::array<RGBA8, 256>& out)
+    bool get_palette_256(int soft, std::array<RGBA8, 256>& out)
     {
         for (int i = 0; i < 256; ++i)
         {
             int r = 0, g = 0, b = 0, a = 255;
             if (::DxLib::GetPaletteSoftImage(soft, i, &r, &g, &b, &a) != 0) return false;
-            out[(size_t)i] = RGBA8{ (unsigned char)r,(unsigned char)g,(unsigned char)b,(unsigned char)a };
+            out[(size_t)i] = RGBA8{ (unsigned char)r, (unsigned char)g, (unsigned char)b, (unsigned char)a };
         }
         return true;
     }
 
-    void SetPalette256_(int soft, const std::array<RGBA8, 256>& pal)
+    void set_palette_256(int soft, const std::array<RGBA8, 256>& pal)
     {
         for (int i = 0; i < 256; ++i)
         {
@@ -45,11 +37,11 @@ namespace
         }
     }
 
-    void MakeFadeVariantFromBase_(const std::array<RGBA8, 256>& base, int variantIndex, int variantCount, std::array<RGBA8, 256>& out)
+    void make_fade_variant_from_base(const std::array<RGBA8, 256>& base, int variantIndex, int variantCount, std::array<RGBA8, 256>& out)
     {
-        // variantCount=1 のときは s=1（元の色）
+        // Only one variant (no fade)
         const int V = std::max(variantCount - 1, 1);
-        // v=0 → s=1.0（最明） / v=V → s=0.0（最暗=黒）
+        // v=0 -> s=1.0 (brightest) / v=V -> s=0.0 (darkest = black)
         const float s = 1.0f - (std::clamp(variantIndex, 0, V) / float(V));
 
         for (size_t i = 0; i < 256; ++i)
@@ -83,14 +75,12 @@ namespace mm2hack::apps::graphics::fonts
         ParsedMeta meta = ParseMeta_(std::wstring(jsonPath), name);
         if (!pngPath.empty()) meta.pngPath = std::wstring(pngPath);
         if (meta.pngPath.empty()) meta.pngPath = DerivePngFromJsonPath_(std::wstring(jsonPath));
-        if (meta.pngPath.empty()) throw std::runtime_error("FontTileManager: PNG path is not specified");
+        if (meta.pngPath.empty()) THROW_EXCEPTION(L"PNG path is not specified", kClassName);
 
-        // SoftImage をロード
         const int soft = ::DxLib::LoadSoftImage(meta.pngPath.c_str());
-        if (soft == -1) throw std::runtime_error("FontTileManager: LoadSoftImage failed");
+        if (soft == -1) THROW_EXCEPTION(L"LoadSoftImage failed", kClassName);
 
-        CreateFontGraphs_(name, soft, meta.tile_w, meta.tile_h, meta.tiles_x, meta.tiles_y,
-            meta.charToIndex, meta.variant_count, meta.nes_fade_step);
+        CreateFontGraphs_(name, soft, meta.tile_w, meta.tile_h, meta.tiles_x, meta.tiles_y, meta.charToIndex, meta.variant_count, meta.nes_fade_step);
     }
 
     void FontTileManager::Load(const std::wstring& name, std::wstring_view jsonPath)
@@ -235,7 +225,7 @@ namespace mm2hack::apps::graphics::fonts
             auto get_png = [&](const nlohmann::json& obj)->std::wstring
                 {
                     if (auto it = obj.find("png"); it != obj.end() && it->is_string())
-                        return Utf8ToW_(it->get<std::string>());
+                        return utils::utf8_to_wstring(it->get<std::string>());
                     return L"";
                 };
             std::wstring pngW;
@@ -258,6 +248,7 @@ namespace mm2hack::apps::graphics::fonts
 
         if (out.charToIndex.empty())
         {
+            // Probably so... (If you change the graphics, you will need to review this)
             if (setName == L"alphabet")
             {
                 for (int i = 0; i < 26; ++i) out.charToIndex['A' + i] = i;
@@ -301,11 +292,11 @@ namespace mm2hack::apps::graphics::fonts
         set.variantCount = variant_count;
         set.charToIndex = charIndexMap;
 
-        // パレット取得（失敗したらフォールバックへ）
+        // Get palette (fallback if failed)
         std::array<RGBA8, 256> basePal{}, workPal{};
-        const bool hasPal = GetPalette256_(softImage, basePal);
+        const bool hasPal = get_palette_256(softImage, basePal);
 
-        // まず v=0..N-1 でバリアントを生成
+        // First, generate variants for v=0..N-1
         set.graphsByVariant.resize((size_t)variant_count);
         for (int v = 0; v < variant_count; ++v)
         {
@@ -313,15 +304,15 @@ namespace mm2hack::apps::graphics::fonts
 
             if (hasPal)
             {
-                // パレット適用 → 一括分割
-                MakeFadeVariantFromBase_(basePal, v, variant_count, workPal);
-                SetPalette256_(softImage, workPal);
+                // Apply palette -> batch split
+                make_fade_variant_from_base(basePal, v, variant_count, workPal);
+                set_palette_256(softImage, workPal);
 
                 const int total = tiles_x * tiles_y;
                 std::vector<int> tmp(total, -1);
                 const int res = ::DxLib::CreateDivGraphFromSoftImage(
                     softImage, total, tiles_x, tiles_y, tile_w, tile_h, tmp.data());
-                if (res != 0) throw std::runtime_error("FontTileManager: CreateDivGraphFromSoftImage failed");
+                if (res != 0) THROW_EXCEPTION(L"CreateDivGraphFromSoftImage failed", kClassName);
                 handles = std::move(tmp);
             }
             else
@@ -335,7 +326,7 @@ namespace mm2hack::apps::graphics::fonts
                     if (h != -1 && variant_count > 1)
                     {
                         const int V = variant_count - 1;
-                        // v=0 → bri=0（最明）/ v=V → bri=-255（完全黒）
+                        // v=0 -> bri=0 (brightest) / v=V -> bri=-255 (darkest = black)
                         const int bri = (V > 0) ? -int(std::lround((v / float(V)) * 255.0f)) : 0;
                         if (bri != 0) ::DxLib::GraphFilter(h, DX_GRAPH_FILTER_HSB, 0, 0, 0, bri);
                     }
@@ -343,7 +334,6 @@ namespace mm2hack::apps::graphics::fonts
                 }
             }
 
-            // char -> handle map を構築
             auto& gv = set.graphsByVariant[(size_t)v];
             for (const auto& [ch, idx] : charIndexMap)
             {
@@ -352,8 +342,8 @@ namespace mm2hack::apps::graphics::fonts
             }
         }
 
-        // パレットを元に戻す
-        if (hasPal) SetPalette256_(softImage, basePal);
+        // Restore palette
+        if (hasPal) set_palette_256(softImage, basePal);
 
         _fontSets[name] = std::move(set);
     }

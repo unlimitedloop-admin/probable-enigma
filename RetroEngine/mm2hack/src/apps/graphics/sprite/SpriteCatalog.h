@@ -53,6 +53,7 @@ namespace mm2hack::apps::graphics::sprite
         const SpriteAtlas& GetAtlas(Id id) const noexcept;
         SpriteAtlas& GetAtlas(Id id) noexcept;
 
+        // Check if the atlas is valid
         bool IsValid(Id id) const noexcept;
 
         // release atlas and its graphs
@@ -61,16 +62,18 @@ namespace mm2hack::apps::graphics::sprite
 
         // Count
         [[nodiscard]] std::size_t Size() const noexcept { return _atlases.size(); }
-
+        // Maximum variant count across all loaded atlases
         [[nodiscard]] int MaxVariantAcross() const noexcept;
 
     private:
-        Id NextId_() const noexcept;                                                // next available Id (dense array index)
+        Id NextId_() const noexcept;        // next available Id (dense array index)
         std::unique_ptr<SpriteAtlas> BuildAtlas_(const std::wstring& name,
                                                  const std::wstring& png_path,
                                                  const std::wstring& json_path);    // Load to memory and build sprite graphics
 
     private:
+        const std::wstring kClassName{ L"SpriteCatalog" };
+
         std::unordered_map<std::wstring, Id> _name_to_id{};     // name -> Id
         std::vector<std::unique_ptr<SpriteAtlas>> _atlases{};   // dense array; index==Id
         Events _events{};                                       // event callbacks (optional)

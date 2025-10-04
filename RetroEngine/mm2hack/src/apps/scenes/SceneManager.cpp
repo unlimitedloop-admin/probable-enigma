@@ -3,6 +3,7 @@
 #include "SceneManager.h"
 
 #include <utility>
+#include "apps/deal/GameContext.h"
 #include "apps/parameters/Parameters.h"
 #include "core/overlay/PauseManager.h"
 #include "IBaseScene.h"
@@ -16,7 +17,8 @@ namespace mm2hack::apps::scenes
         using namespace core::overlay;
         if (_currentScene)
         {
-            if (!PauseManager::IsPaused())
+            auto& time = deal::GameContext::GetInstance().Time();
+            if (!PauseManager::IsPaused() || (time.DeltaSeconds() > 0.0))   // No-op if paused and not stepping one frame
             {
                 _currentScene->Update();        // !Execute the main game logic.
             }

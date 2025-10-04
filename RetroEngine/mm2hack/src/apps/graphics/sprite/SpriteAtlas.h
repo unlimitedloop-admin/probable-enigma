@@ -35,11 +35,8 @@ namespace mm2hack::apps::graphics::sprite
             int nes_fade_step{ 16 };    // +16/-16 offset rule
         };
 
-        SpriteAtlas(std::wstring name,
-                    DivSettings div,
-                    int soft_image_handle,
-                    std::vector<std::vector<int>> graphs_by_variant) noexcept;
-
+        SpriteAtlas(std::wstring name, DivSettings div,
+                    int soft_image_handle, std::vector<std::vector<int>> graphs_by_variant) noexcept;
         ~SpriteAtlas();
         SpriteAtlas(const SpriteAtlas&) = delete;
         SpriteAtlas& operator=(const SpriteAtlas&) = delete;
@@ -72,6 +69,6 @@ namespace mm2hack::apps::graphics::sprite
         std::wstring _name{};       // unique name identifier
         DivSettings _div{};         // division settings
         int _soft_image{ -1 };      // keep if needed (palette rebuild), otherwise -1
-        std::vector<std::vector<int>> _graphs_by_variant;   // [variant][frame] -> graph handle
+        std::vector<std::vector<int>> _graphs_by_variant;   // [variant][frame] -> graph handle, variant for palette swaps
     };
 }

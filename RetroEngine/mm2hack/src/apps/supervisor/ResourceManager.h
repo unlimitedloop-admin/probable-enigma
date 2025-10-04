@@ -46,13 +46,10 @@ namespace mm2hack::apps::supervisor
         // Getters
         SpriteManager& GetSpriteManager() noexcept { return _spriteManager; }
         const SpriteManager& GetSpriteManager() const noexcept { return _spriteManager; }
-
         BGTileManager& GetBGTileManager() noexcept { return _bgTileManager; }
         const BGTileManager& GetBGTileManager() const noexcept { return _bgTileManager; }
-
         FontTileManager& GetFontTileManager() noexcept { return _fontTileManager; }
         const FontTileManager& GetFontTileManager() const noexcept { return _fontTileManager; }
-
         AudioManager& GetAudioManager() noexcept { return _audioManager; }
         const AudioManager& GetAudioManager() const noexcept { return _audioManager; }
 

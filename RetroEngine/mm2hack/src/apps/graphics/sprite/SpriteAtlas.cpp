@@ -8,10 +8,8 @@
 
 namespace mm2hack::apps::graphics::sprite
 {
-    SpriteAtlas::SpriteAtlas(std::wstring name,
-                             DivSettings div,
-                             int soft_image_handle,
-                             std::vector<std::vector<int>> graphs_by_variant) noexcept
+    SpriteAtlas::SpriteAtlas(std::wstring name, DivSettings div,
+                             int soft_image_handle, std::vector<std::vector<int>> graphs_by_variant) noexcept
         : _name(std::move(name))
         , _div(div)
         , _soft_image(soft_image_handle)
@@ -79,17 +77,19 @@ namespace mm2hack::apps::graphics::sprite
     bool SpriteAtlas::ReplacePaletteColorIndex(int variant, int targetPaletteIndex, int sourcePaletteIndex) noexcept
     {
         using NES::NESPalette;
+
+        constexpr auto ToU8 = [](int value) noexcept -> unsigned char
+            {
+                return static_cast<unsigned char>(value);
+            };
+
         const auto& c = NESPalette::GetColor(targetPaletteIndex);
-        return ReplacePaletteColorRGB(variant,
-            static_cast<unsigned char>(c.red),
-            static_cast<unsigned char>(c.green),
-            static_cast<unsigned char>(c.blue),
-            sourcePaletteIndex);
+        return ReplacePaletteColorRGB(variant, ToU8(c.red), ToU8(c.green), ToU8(c.blue), sourcePaletteIndex);
     }
 
     bool SpriteAtlas::ReplacePaletteColorRGB(int variant,
-        unsigned char r, unsigned char g, unsigned char b,
-        int sourcePaletteIndex) noexcept
+                                             unsigned char r, unsigned char g, unsigned char b,
+                                             int sourcePaletteIndex) noexcept
     {
         if (_soft_image == -1) return false;
 

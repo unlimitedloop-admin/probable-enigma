@@ -12,7 +12,7 @@
 #### **2. ファイル構成と命名規則**
 
 - `src/` フォルダ内に以下のディレクトリを作成し、各機能ごとに整理する：
-  - `apps/`: ゲームプログラム本体 (`graphics`, `scenes`, `audio` など)
+  - `apps/`: ゲームプログラム本体 (`graphics`, `scenes`, `vfx` など)
   - `config/`: 設定ファイルや定数の定義
   - `core/`: アプリケーション中枢機能 (WinAPI ハンドリング、ウィンドウプロシージャ)
   - `exceptions/`: 例外クラスとエラーハンドリング
@@ -53,10 +53,21 @@
 
 - **クラス名**: `PascalCase` (`GameEngine`, `AudioManager`)
 - **メンバ関数名**: `PascalCase` (`Initialize()`, `RenderScene()`)
+  - 以下は任意ですが、統一することを推奨
+  - public/protected メンバ関数: `PascalCase` (`LoadLevel()`, `SaveGame()`)
+  - private メンバ関数: `camelCase__` (`updatePosition_()`, `checkCollision_()`)
+  - 非クラス関数名（無名名前空間など）: `snake_case` (`load_texture()`, `play_sound()`)
 - **メンバ変数**: `_` + `snake_case` (`_window_handle`, `_frame_rate`)
 - **グローバル変数**: 全て大文字 + アンダースコア (`MAX_FPS`, `WINDOW_WIDTH`)
 - **定数**: `k` + `PascalCase` (`kMaxPlayers`, `kDefaultVolume`)
 - **名前空間**: 小文字 + アンダースコア (`core`, `graphics`)
+
+##### **3.3 その他特記事項**
+
+- グローバル変数：**全て大文字 + アンダースコア**（例：`WINDOW_WIDTH`, `MAX_FPS`）
+- グローバル構造体インスタンス（読み取り専用）：接頭辞 `g_` + スネークケース（例：`g_settings`）
+- グローバル名前空間修飾子（スコープ解決演算子）については、**必要な場合にのみ使用**し、省略可能な場合は省略する。
+  - 特例として、**名前の衝突を避けるために必要な場合は明示的に使用することを推奨**する。（::DxLib など）
 
 ---
 
@@ -145,11 +156,6 @@
 
 - `extern` 変数での状態共有は**禁止**とし、代わりに **アクセサ関数（例：**`**）や **`\*\* クラス\*\* などで制御する。
 - グローバル定数は、`config/Constants.h` 等の専用ファイルに `inline constexpr` で定義し、インクルードで利用すること。
-
-##### **命名規則**
-
-- グローバル変数：**全て大文字 + アンダースコア**（例：`WINDOW_WIDTH`, `MAX_FPS`）
-- グローバル構造体インスタンス（読み取り専用）：接頭辞 `g_` + スネークケース（例：`g_settings`）
 
 ---
 

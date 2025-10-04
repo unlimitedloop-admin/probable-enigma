@@ -20,7 +20,7 @@ namespace mm2hack::apps::vfx::stareffects
     {
         auto& context = deal::GameContext::GetInstance();
         auto& sprites = context.GetResourceManager().GetSpriteManager();
-        sprites.Use(std::wstring(kStarSpriteName), _tileIndex, static_cast<int>(_x), static_cast<int>(_y));
+        sprites.UseByName(std::wstring(kStarSpriteName), _tileIndex, static_cast<int>(_x), static_cast<int>(_y));
     }
 
     FixedStarState FixedStar::ToState() const

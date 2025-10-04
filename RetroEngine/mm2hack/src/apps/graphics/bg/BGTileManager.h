@@ -76,6 +76,8 @@ namespace mm2hack::apps::graphics::bg
         void SetGlobalVariantClamped(int v) noexcept;
 
     private:
+        const std::wstring kClassName{ L"BGTileManager" };
+
         BGTileCatalog _catalog{};   // manages tile groups
         int _global_variant{ 0 };   // global palette variant for drawing
 

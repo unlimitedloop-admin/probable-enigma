@@ -11,6 +11,7 @@
 #include <iostream>
 #include <istream>
 #include <memory>
+#include <string>
 #include <vector>
 #include "FixedStar.h"
 #include "Star.h"
@@ -36,6 +37,7 @@ namespace mm2hack::apps::vfx::stareffects
         void Load(std::istream& in);
 
     private:
+        const std::wstring kClassName = L"BgStarField";
         std::vector<std::unique_ptr<Star>> _stars;              // Moving stars (shooting stars)
         std::vector<std::unique_ptr<FixedStar>> _fixedStars;    // Fixed stars
     };

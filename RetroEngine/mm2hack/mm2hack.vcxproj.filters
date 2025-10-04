@@ -78,6 +78,7 @@
     <ClCompile Include="src\apps\scenes\sub-scenes\90-BackdoorMenu\BackdoorMenu.cpp" />
     <ClCompile Include="src\apps\graphics\fonts\FontTileManager.cpp" />
     <ClCompile Include="src\apps\scenes\sub-scenes\90-BackdoorMenu\BackdoorMenuPhase.cpp" />
+    <ClCompile Include="src\apps\graphics\effects\FadeIOTexture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />

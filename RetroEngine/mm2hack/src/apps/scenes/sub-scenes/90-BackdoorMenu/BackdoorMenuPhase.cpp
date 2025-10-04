@@ -57,6 +57,8 @@ namespace mm2hack::apps::scenes
         void TopMenuPhase::RenderWorld()
         {
             owner.StarField().DrawStars();
+
+            // TODO: Implement top menu list rendering here.
         }
 
         void TopMenuPhase::RenderOverlay()

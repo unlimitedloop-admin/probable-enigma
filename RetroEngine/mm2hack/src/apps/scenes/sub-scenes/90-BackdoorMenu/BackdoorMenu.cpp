@@ -82,7 +82,7 @@ namespace mm2hack::apps::scenes
         NES::NESPalette::SetBackgroundFor(13U); // Innocent black
 
         const int vmax = std::max(0, font.MaxVariant());
-        font.SetGlobalVariant(vmax); // Full bright
+        font.SetGlobalVariant(vmax);    // Max contrast
         resource.FadeInFont(20);
 
         _phaseId = PhaseId::Credit;

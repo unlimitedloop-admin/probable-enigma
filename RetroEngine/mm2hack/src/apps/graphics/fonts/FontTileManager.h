@@ -17,15 +17,16 @@
 
 namespace mm2hack::apps::graphics::fonts
 {
+    // NES style bitmap font manager
     class FontTileManager final
     {
     public:
         FontTileManager() = default;
         ~FontTileManager();
 
-        // JSONパスのみ（PNGはJSONに記載 or JSONと同名.png を推測）
+        // JSON path only (PNG is described in JSON or inferred from JSON with the same name)
         void Load(const std::wstring& name, std::wstring_view jsonPath);
-        // PNG/JSONを別々に指定（PNG優先）
+        // Specify PNG/JSON separately (PNG takes precedence)
         void Load(const std::wstring& name, std::wstring_view pngPath, std::wstring_view jsonPath);
         void Remove(const std::wstring& name);
 
@@ -36,11 +37,11 @@ namespace mm2hack::apps::graphics::fonts
         void ShutDown();
 
         // --- FadeIO hooks ---
-        void SetGlobalVariant(int v) noexcept { _globalVariant = v; }
-        [[nodiscard]] int GlobalVariant() const noexcept { return _globalVariant; }
-        [[nodiscard]] int MaxVariant() const noexcept;              // sets の最小 (variantCount-1)
-        void SetGlobalVariantClamped(int v) noexcept;               // 0..Max に丸めて設定
-        [[nodiscard]] int VariantCountByName(const std::wstring& setName) const; // セット単位の段数
+        void SetGlobalVariant(int v) noexcept { _globalVariant = v; }               // Set current global variant index (no clamping)
+        [[nodiscard]] int GlobalVariant() const noexcept { return _globalVariant; } // Current global variant index
+        [[nodiscard]] int MaxVariant() const noexcept;                              // Maximum variant index
+        void SetGlobalVariantClamped(int v) noexcept;                               // Clamp and set to 0..Max
+        [[nodiscard]] int VariantCountByName(const std::wstring& setName) const;    // Number of variants for a set
 
     private:
         struct FontSet
@@ -55,17 +56,14 @@ namespace mm2hack::apps::graphics::fonts
             std::vector<std::map<char, int>> graphsByVariant;      // [variant] : char -> graph handle
         };
 
-        std::map<std::wstring, FontSet> _fontSets; // setName -> FontSet
-        int _globalVariant{ 0 };
-
-        // JSONを解釈してメタ情報を返す
+        // Interpret JSON and return meta information
         struct ParsedMeta
         {
-            std::wstring pngPath;  // JSON記述 or JSONと同名 .png 推測
+            std::wstring pngPath;  // JSON description or inferred from JSON with the same name
             int tile_w{ 8 }, tile_h{ 8 }, tiles_x{ 16 }, tiles_y{ 2 };
             int variant_count{ 1 };
             int nes_fade_step{ 16 };
-            std::map<char, int> charToIndex; // 任意（無ければデフォルト生成）
+            std::map<char, int> charToIndex; // Optional (default generated if not present)
         };
 
         static ParsedMeta ParseMeta_(const std::wstring& jsonPath, const std::wstring& setName);
@@ -73,8 +71,14 @@ namespace mm2hack::apps::graphics::fonts
         static std::wstring ConcatPath_(const std::filesystem::path& baseDir, const std::wstring& rel);
 
         void CreateFontGraphs_(const std::wstring& name, int softImage,
-                               int tile_w, int tile_h, int tiles_x, int tiles_y,
-                               const std::map<char, int>& charIndexMap,
-                               int variant_count, int fade_step);
+            int tile_w, int tile_h, int tiles_x, int tiles_y,
+            const std::map<char, int>& charIndexMap,
+            int variant_count, int fade_step);
+
+    private:
+        const std::wstring kClassName{ L"FontTileManager" };
+
+        std::map<std::wstring, FontSet> _fontSets; // setName -> FontSet
+        int _globalVariant{ 0 };
     };
 }
