@@ -3,7 +3,7 @@
         "tileWidth": 8,
         "tileHeight": 8,
         "tilesX": 16,
-        "tilesY": 2,
+        "tilesY": 3,
         "paletteVariants": 4,
         "nesFadeStep": 16
     },
@@ -39,6 +39,7 @@
         "W": 22,
         "X": 23,
         "Y": 24,
-        "Z": 25
+        "Z": 25,
+        "-": 32
     }
 }

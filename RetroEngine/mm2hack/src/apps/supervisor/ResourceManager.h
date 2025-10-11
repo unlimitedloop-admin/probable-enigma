@@ -8,7 +8,6 @@
 //==============================================================================
 #pragma once
 
-#include <algorithm>
 #include <optional>
 #include "apps/audio/AudioManager.h"
 #include "apps/graphics/bg/BGTileManager.h"

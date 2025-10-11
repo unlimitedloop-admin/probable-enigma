@@ -79,6 +79,7 @@
     <ClCompile Include="src\apps\graphics\fonts\FontTileManager.cpp" />
     <ClCompile Include="src\apps\scenes\sub-scenes\90-BackdoorMenu\BackdoorMenuPhase.cpp" />
     <ClCompile Include="src\apps\graphics\effects\FadeIOTexture.cpp" />
+    <ClCompile Include="src\apps\scenes\PhaseFadeController.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
@@ -211,6 +212,7 @@
     <ClInclude Include="src\apps\graphics\effects\FadeIOTexture.h" />
     <ClInclude Include="src\apps\supervisor\ResourceFadeBindings.h" />
     <ClInclude Include="src\apps\scenes\sub-scenes\90-BackdoorMenu\BackdoorMenuPhase.h" />
+    <ClInclude Include="src\apps\scenes\PhaseFadeController.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

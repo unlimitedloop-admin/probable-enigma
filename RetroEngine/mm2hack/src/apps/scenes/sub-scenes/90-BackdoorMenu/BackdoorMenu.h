@@ -15,6 +15,7 @@
 #include <ostream>
 #include <string>
 #include "apps/parameters/Parameters.h"
+#include "apps/scenes/PhaseFadeController.h"
 #include "apps/scenes/SceneChangeMediator.h"
 #include "apps/scenes/SceneID.h"
 #include "apps/supervisor/ResourceManager.h"
@@ -23,6 +24,14 @@
 
 namespace mm2hack::apps::scenes
 {
+    // Identifiers for different phases within the BackdoorMenu
+    enum class PhaseId : int
+    {
+        Credit,
+        TopMenu,
+        InsideMenu
+    };
+
     // Interface for different phases of the BackdoorMenu class
     class IBackdoorMenuPhase
     {
@@ -34,8 +43,8 @@ namespace mm2hack::apps::scenes
         virtual void RenderWorld() = 0;
         // Render the phase-specific elements
         virtual void RenderOverlay() = 0;
-        // Check if the phase is complete and ready to transition
-        virtual bool IsComplete() const = 0;
+        // Get owner phase id
+        virtual PhaseId Id() const noexcept = 0;
     };
 
     // Backdoor menu for debugging purposes only (A list of selectable scenes)
@@ -57,17 +66,10 @@ namespace mm2hack::apps::scenes
         // Get the scene name (i.e. class name)
         std::wstring GetSceneName() const override { return kClassName; }
         // Change child phase of the this scene
-        void SetPhase(std::unique_ptr<IBackdoorMenuPhase> next);
+        void QueuePhase(std::unique_ptr<IBackdoorMenuPhase> next, PhaseFadePlan nextPlan);
 
         void Save(std::ostream& out);
         void Load(std::istream& in);
-
-        enum class PhaseId : int
-        {
-            Credit,
-            TopMenu,
-            InsideMenu
-        };
 
         auto& StarField() noexcept { return _starField; }
         const auto& StarField() const noexcept { return _starField; }
@@ -78,7 +80,10 @@ namespace mm2hack::apps::scenes
 
         PhaseId CurrentPhase() const noexcept { return _phaseId; }
 
-        std::unique_ptr<IBackdoorMenuPhase> MakePhase(PhaseId id, BackdoorMenu& owner);
+        PhaseFadeController& Fader() noexcept { return _fader; }
+
+        // TODO: Can you remove this?
+        //std::unique_ptr<IBackdoorMenuPhase> MakePhase(PhaseId id, BackdoorMenu& owner);
 
     private:
         void Initialize(const parameters::Parameters& params) override; // Initialize the backdoor menu
@@ -90,6 +95,9 @@ namespace mm2hack::apps::scenes
         SceneChangeMediator* _mediator{ nullptr };          // Mediator for scene changes
         std::unique_ptr<IBackdoorMenuPhase> _phase;         // Current phase of the backdoorMenu
         PhaseId _phaseId{ PhaseId::Credit };                // Current phase identifier
+        PhaseFadeController _fader;                         // Fade controller for scene transitions
+        std::unique_ptr<IBackdoorMenuPhase> _pendingPhase;  // Pending phase to switch to
+        PhaseFadePlan _pendingPlan{};                       // Pending fade plan for the next phase
 
         vfx::stareffects::BgStarField _starField;           // Background star field effect
         supervisor::ResourceManager* _resource{ nullptr };  // Reference to the resource manager

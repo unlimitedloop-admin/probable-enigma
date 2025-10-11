@@ -22,7 +22,7 @@ namespace mm2hack::apps::scenes
             void Update() override;
             void RenderWorld() override;
             void RenderOverlay() override;
-            bool IsComplete() const override;
+            PhaseId Id() const noexcept override;
 
         private:
             BackdoorMenu& owner;
@@ -36,7 +36,7 @@ namespace mm2hack::apps::scenes
             void Update() override;
             void RenderWorld() override;
             void RenderOverlay() override;
-            bool IsComplete() const override;
+            PhaseId Id() const noexcept override;
 
         private:
             BackdoorMenu& owner;
@@ -51,7 +51,7 @@ namespace mm2hack::apps::scenes
             void Update() override;
             void RenderWorld() override;
             void RenderOverlay() override;
-            bool IsComplete() const override;
+            PhaseId Id() const noexcept override;
 
         private:
             BackdoorMenu& owner;

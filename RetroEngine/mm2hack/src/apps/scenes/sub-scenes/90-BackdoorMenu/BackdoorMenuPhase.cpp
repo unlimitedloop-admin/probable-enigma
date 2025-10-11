@@ -2,6 +2,8 @@
 
 #include "BackdoorMenuPhase.h"
 
+#include "apps/scenes/PhaseFadeController.h"
+#include "BackdoorMenu.h"
 #include "input/Jpbtn.h"
 
 namespace mm2hack::apps::scenes
@@ -15,23 +17,30 @@ namespace mm2hack::apps::scenes
         //==============================================================================
         void CreditPhase::Update()
         {
-            auto& resource = owner.Resource();
             auto& input = owner.Input();
             auto startPressed = input->JustPressed(JPBTN::START) || input->JustPressed(JPBTN::A);
 
-            resource->UpdateEffects();   // Update fade effects
-
             if (startPressed)
             {
-                owner.SetPhase(std::make_unique<TopMenuPhase>(owner));
+                PhaseFadePlan next(
+                    5,   // preBlackHold
+                    20,  // fadeInFrames
+                    0,   // preFadeOutHold
+                    20,  // fadeOutFrames
+                    0,   // postBlackHold
+                    FadeLayerMask::BG | FadeLayerMask::Sprite // layers
+                );
+                owner.QueuePhase(std::make_unique<TopMenuPhase>(owner), next);
             }
         }
 
         void CreditPhase::RenderWorld()
         {
             auto& fonts = owner.Resource()->GetFontTileManager();
-            fonts.DrawTextImage(L"BACKDOOR MENU", 76, 56);
-            fonts.DrawTextImage(L" PRESS START ", 76, 96);
+            fonts.DrawTextImage(L"   MM2HACK DEMO   ", 60, 46);
+            fonts.DrawTextImage(L"2024-2026 SIRIUS X", 60, 66);
+            fonts.DrawTextImage(L"  BACKDOOR MENU   ", 60, 106);
+            fonts.DrawTextImage(L" PRESS START KEY  ", 60, 136);
         }
 
         void CreditPhase::RenderOverlay()
@@ -39,9 +48,9 @@ namespace mm2hack::apps::scenes
             // Nothing to render in overlay for this phase.
         }
 
-        bool CreditPhase::IsComplete() const
+        PhaseId CreditPhase::Id() const noexcept
         {
-            return false; // Always returns false; phase completion is handled externally.
+            return PhaseId::Credit;
         }
 
         //==============================================================================
@@ -66,9 +75,9 @@ namespace mm2hack::apps::scenes
             // Nothing to render in overlay for this phase.
         }
 
-        bool TopMenuPhase::IsComplete() const
+        PhaseId TopMenuPhase::Id() const noexcept
         {
-            return false; // Always returns false; phase completion is handled externally.
+            return PhaseId::TopMenu;
         }
 
         //==============================================================================
@@ -89,9 +98,9 @@ namespace mm2hack::apps::scenes
             // Nothing to render in overlay for this phase.
         }
 
-        bool InsideMenuPhase::IsComplete() const
+        PhaseId InsideMenuPhase::Id() const noexcept
         {
-            return false; // Always returns false; phase completion is handled externally.
+            return PhaseId::InsideMenu;
         }
     }
 }

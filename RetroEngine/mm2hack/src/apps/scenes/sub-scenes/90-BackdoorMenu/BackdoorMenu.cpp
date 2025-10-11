@@ -7,6 +7,7 @@
 #include "apps/deal/GameContext.h"
 #include "apps/NES/NESPalette.h"
 #include "apps/parameters/Parameters.h"
+#include "apps/scenes/PhaseFadeController.h"
 #include "apps/scenes/SceneChangeMediator.h"
 #include "apps/scenes/SceneID.h"
 #include "BackdoorMenuPhase.h"
@@ -30,8 +31,25 @@ namespace mm2hack::apps::scenes
 
     void BackdoorMenu::Update()
     {
+        using namespace apps::deal;
+        auto& res = GameContext::GetInstance().GetResourceManager();
+
+        // Proceed with fade process.
+        _fader.Update(res);
+        res.UpdateEffects();
+
+        // Update with current phase logic, if not _phase then next scene.
         if (_phase) { _phase->Update(); }
-        else { _mediator->RequestChange(SceneID::None, {}); }
+        else { _mediator->RequestChange(SceneID::None, {}); }   // TODO: Set next scene ID. (optional parameters)
+
+        if (_pendingPhase && _fader.ReadyToSwitchPhase())
+        {
+            _phase = std::move(_pendingPhase);
+            _phaseId = _phase->Id();
+            _fader.BeginPhase(_pendingPlan, res);
+            _pendingPlan = {};
+            utils::debug_log(kClassName + L" switched to new phase.");
+        }
     }
 
     void BackdoorMenu::RenderWorld()
@@ -44,9 +62,19 @@ namespace mm2hack::apps::scenes
         if (_phase) { _phase->RenderOverlay(); }
     }
 
-    void BackdoorMenu::SetPhase(std::unique_ptr<IBackdoorMenuPhase> next)
+    void BackdoorMenu::QueuePhase(std::unique_ptr<IBackdoorMenuPhase> next, PhaseFadePlan nextPlan)
     {
-        _phase = std::move(next);
+        // NOTE: A method that actually has the function of switching phases.
+        _pendingPhase = std::move(next);
+        _pendingPlan = nextPlan;
+
+        if (_fader.Current() == PhaseFadeController::State::Interactive)
+        {
+            if (_resource != nullptr) {
+                _fader.RequestFadeOut(*_resource);
+            }
+        }
+        // Already fading out or in transition, will switch when ready.
     }
 
     void BackdoorMenu::Save(std::ostream& out)
@@ -81,12 +109,19 @@ namespace mm2hack::apps::scenes
 
         NES::NESPalette::SetBackgroundFor(13U); // Innocent black
 
-        const int vmax = std::max(0, font.MaxVariant());
-        font.SetGlobalVariant(vmax);    // Max contrast
-        resource.FadeInFont(20);
+        _phase = std::make_unique<BackdoorMenu_::CreditPhase>(*this);
+        _phaseId = _phase->Id();
 
-        _phaseId = PhaseId::Credit;
-        _phase = MakePhase(_phaseId, *this);
+        PhaseFadePlan first(
+            20, // preBlackHold
+            20, // fadeInFrames
+            0,  // preFadeOutHold
+            12, // fadeOutFrames
+            20,  // postBlackHold
+            FadeLayerMask::BG | FadeLayerMask::Font // layers
+        );
+        _fader.BeginPhase(first, resource);
+
         _starField.InitStars();
         _resource = GameContext::GetInstance().GetResourceManagerPtr();
         _input = &GameContext::GetInstance().Input();
@@ -101,16 +136,17 @@ namespace mm2hack::apps::scenes
         utils::debug_log(kClassName + L" finalized.");
     }
 
-    std::unique_ptr<IBackdoorMenuPhase> BackdoorMenu::MakePhase(PhaseId id, BackdoorMenu& owner)
-    {
-        using namespace BackdoorMenu_;
-        switch (id)
-        {
-        case PhaseId::Credit:     return std::make_unique<CreditPhase>(owner);
-        case PhaseId::TopMenu:    return std::make_unique<TopMenuPhase>(owner);
-        case PhaseId::InsideMenu: return std::make_unique<InsideMenuPhase>(owner);
-        }
-        // Safety fallback
-        return std::make_unique<CreditPhase>(owner);
-    }
+    // TODO: Check if this is used anywhere, if not, remove it.
+    //std::unique_ptr<IBackdoorMenuPhase> BackdoorMenu::MakePhase(PhaseId id, BackdoorMenu& owner)
+    //{
+    //    using namespace BackdoorMenu_;
+    //    switch (id)
+    //    {
+    //    case PhaseId::Credit:     return std::make_unique<CreditPhase>(owner);
+    //    case PhaseId::TopMenu:    return std::make_unique<TopMenuPhase>(owner);
+    //    case PhaseId::InsideMenu: return std::make_unique<InsideMenuPhase>(owner);
+    //    }
+    //    // Safety fallback
+    //    return std::make_unique<CreditPhase>(owner);
+    //}
 }
