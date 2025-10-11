@@ -263,6 +263,7 @@
     <None Include="src\config\AssetsPortfolio.def" />
     <None Include="mm2hack.props" />
     <None Include="mm2hack.env" />
+    <None Include="src\config\PropertiesPortfolio.def" />
     <None Include="src\resources\exams\bg\SAMPLESTAGE1.bin" />
   </ItemGroup>
   <ItemGroup>
@@ -317,6 +318,7 @@
     <ClInclude Include="src\config\GraphicsConfig.h" />
     <ClInclude Include="src\config\HudConfig.h" />
     <ClInclude Include="src\config\InputLoadResult.h" />
+    <ClInclude Include="src\config\PathDefsJsonProps.h" />
     <ClInclude Include="src\config\SoundConfig.h" />
     <ClInclude Include="src\config\SystemConfig.h" />
     <ClInclude Include="src\core\assembly\IInputBackend.h" />

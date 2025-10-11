@@ -87,6 +87,7 @@
     <None Include="src\resources\exams\bg\SAMPLESTAGE1.bin" />
     <None Include="src\config\AssetsPortfolio.def" />
     <None Include="assets\exams\bg\demostage1tiles.json" />
+    <None Include="src\config\PropertiesPortfolio.def" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -213,6 +214,7 @@
     <ClInclude Include="src\apps\supervisor\ResourceFadeBindings.h" />
     <ClInclude Include="src\apps\scenes\sub-scenes\90-BackdoorMenu\BackdoorMenuPhase.h" />
     <ClInclude Include="src\apps\scenes\PhaseFadeController.h" />
+    <ClInclude Include="src\config\PathDefsJsonProps.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

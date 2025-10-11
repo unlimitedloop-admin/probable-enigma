@@ -1,5 +1,6 @@
 #include "pch.h"
 
+#include <string_view>
 #include "AudioInitializer.h"
 #include "AudioManager.h"
 #include "ChannelManager.h"
@@ -18,6 +19,11 @@ namespace mm2hack::apps::audio
     bool AudioManager::Initialize(const std::wstring& configPath)
     {
         return AudioInitializer::InitializeAudio(configPath, _bgmManager, _seManager, _bgmChannels, _seChannels);
+    }
+
+    bool AudioManager::Initialize(const std::wstring_view configPath)
+    {
+        return Initialize(std::wstring(configPath));
     }
 
     void AudioManager::PlayBgm(const std::wstring& name)

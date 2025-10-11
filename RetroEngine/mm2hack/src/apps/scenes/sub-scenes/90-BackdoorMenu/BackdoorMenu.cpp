@@ -11,6 +11,7 @@
 #include "apps/scenes/SceneChangeMediator.h"
 #include "apps/scenes/SceneID.h"
 #include "BackdoorMenuPhase.h"
+#include "config/PathDefsJsonProps.h"
 #include "utils/output_debug.h"
 
 namespace mm2hack::apps::scenes
@@ -106,6 +107,9 @@ namespace mm2hack::apps::scenes
         auto& resource = GameContext::GetInstance().GetResourceManager();
         auto& font = resource.GetFontTileManager();
         font.SetUp();
+
+        auto& audio = resource.GetAudioManager();
+        audio.Initialize(MM2H_PROPERTY(BackdoorMenuSoundProperty));
 
         NES::NESPalette::SetBackgroundFor(13U); // Innocent black
 

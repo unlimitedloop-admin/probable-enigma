@@ -11,6 +11,7 @@
 #include <functional>
 #include <set>
 #include <string>
+#include <string_view>
 #include <utility>
 #include "AudioConfigLoader.h"
 #include "AudioMixer.h"
@@ -30,6 +31,7 @@ namespace mm2hack::apps::audio
         ~AudioManager() = default;
 
         bool Initialize(const std::wstring& configPath);
+        bool Initialize(const std::wstring_view configPath);
 
         // Controlling BGM
         void PlayBgm(const std::wstring& name);

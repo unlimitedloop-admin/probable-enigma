@@ -56,6 +56,7 @@ namespace mm2hack::apps::scenes
         private:
             BackdoorMenu& owner;
             int cursorPos{ 0 };
+            int topItemIndex{ 0 };
         };
     }
 }

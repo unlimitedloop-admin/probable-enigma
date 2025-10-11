@@ -22,13 +22,16 @@ namespace mm2hack::apps::scenes
 
             if (startPressed)
             {
+                auto& audio = owner.Resource()->GetAudioManager();
+                audio.PlaySe(L"enter_ring");
+
                 PhaseFadePlan next(
                     5,   // preBlackHold
                     20,  // fadeInFrames
                     0,   // preFadeOutHold
                     20,  // fadeOutFrames
                     0,   // postBlackHold
-                    FadeLayerMask::BG | FadeLayerMask::Sprite // layers
+                    FadeLayerMask::All // layers
                 );
                 owner.QueuePhase(std::make_unique<TopMenuPhase>(owner), next);
             }

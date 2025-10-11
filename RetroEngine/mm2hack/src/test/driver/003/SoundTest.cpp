@@ -12,7 +12,7 @@ namespace mm2hack::apps::scenes
     {
         // Initialize audio systems here
         auto& audio = deal::GameContext::GetInstance().GetResourceManager().GetAudioManager();
-        return audio.Initialize(L"assets\\exams\\audio\\json\\audio_config.json");
+        return audio.Initialize(std::wstring(L"assets\\exams\\audio\\json\\audio_config.json"));
     }
 
     void SoundTest::Update()
