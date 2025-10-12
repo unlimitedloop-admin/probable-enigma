@@ -21,7 +21,7 @@ namespace mm2hack::apps::scenes
         auto& resource = GameContext::GetInstance().GetResourceManager();
         // Load the graph from the resource manager.
         auto& spriteLoader = resource.GetSpriteManager();
-        _playerId = spriteLoader.Load(L"Player", MM2H_GRAPHICS(Player), MM2H_PROPERTIES(Player));
+        _playerId = spriteLoader.Load(L"Player", MM2H_GRAPHICS(Player), MM2H_GRAPHPROPS(Player));
         if (_playerId == graphics::sprite::SpriteManager::Id(-1))
         {
             return false;
@@ -32,7 +32,7 @@ namespace mm2hack::apps::scenes
 
         // Load the background tile graph.
         auto& bgTileManager = resource.GetBGTileManager();
-        _bgTileId = bgTileManager.LoadTileset(kMapName, MM2H_GRAPHICS(SampleStage), MM2H_PROPERTIES(SampleStage));
+        _bgTileId = bgTileManager.LoadTileset(kMapName, MM2H_GRAPHICS(SampleStage), MM2H_GRAPHPROPS(SampleStage));
         if (_bgTileId == graphics::bg::BGTileManager::Id(-1))
         {
             return false;

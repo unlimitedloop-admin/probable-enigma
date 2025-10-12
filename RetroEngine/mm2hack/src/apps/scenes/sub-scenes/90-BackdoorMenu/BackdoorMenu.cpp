@@ -3,6 +3,7 @@
 #include "BackdoorMenu.h"
 
 #include <istream>
+#include <iterator>
 #include <ostream>
 #include "apps/deal/GameContext.h"
 #include "apps/NES/NESPalette.h"
@@ -10,7 +11,9 @@
 #include "apps/scenes/PhaseFadeController.h"
 #include "apps/scenes/SceneChangeMediator.h"
 #include "apps/scenes/SceneID.h"
+#include "apps/vfx/cursor/TwinkleCursorAnimator.h"
 #include "BackdoorMenuPhase.h"
+#include "config/GameAssets.h"
 #include "config/PathDefsJsonProps.h"
 #include "utils/output_debug.h"
 
@@ -18,6 +21,7 @@ namespace mm2hack::apps::scenes
 {
     BackdoorMenu::BackdoorMenu(SceneChangeMediator* mediator)
         : _mediator(mediator)
+        , _cursor(deal::GameContext::GetInstance().GetResourceManager().GetSpriteManager(), 16, 16)
     {
         // Initialize the backdoor menu, load resources, etc.
         utils::debug_log(kClassName + L" constructor called.");
@@ -126,6 +130,13 @@ namespace mm2hack::apps::scenes
         );
         _fader.BeginPhase(first, resource);
 
+        _cursor.Load(L"Cursor", MM2H_GRAPHICS(FlatCursor), MM2H_GRAPHPROPS(FlatCursor));
+        _cursor.SetBaseTileDuration(40); // Slower twinkle
+        vfx::cursor::TwinkleCursorAnimator::Step customLoop[] = {
+            {0, 40}, {1, 6}, {2, 6}, {3, 6}, {2, 6}, {1, 6}, {0, 15}
+        };
+        _cursor.SetLoop(customLoop, std::size(customLoop));
+
         _starField.InitStars();
         _resource = GameContext::GetInstance().GetResourceManagerPtr();
         _input = &GameContext::GetInstance().Input();
@@ -139,18 +150,4 @@ namespace mm2hack::apps::scenes
 
         utils::debug_log(kClassName + L" finalized.");
     }
-
-    // TODO: Check if this is used anywhere, if not, remove it.
-    //std::unique_ptr<IBackdoorMenuPhase> BackdoorMenu::MakePhase(PhaseId id, BackdoorMenu& owner)
-    //{
-    //    using namespace BackdoorMenu_;
-    //    switch (id)
-    //    {
-    //    case PhaseId::Credit:     return std::make_unique<CreditPhase>(owner);
-    //    case PhaseId::TopMenu:    return std::make_unique<TopMenuPhase>(owner);
-    //    case PhaseId::InsideMenu: return std::make_unique<InsideMenuPhase>(owner);
-    //    }
-    //    // Safety fallback
-    //    return std::make_unique<CreditPhase>(owner);
-    //}
 }

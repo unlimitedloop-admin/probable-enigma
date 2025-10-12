@@ -184,8 +184,8 @@ namespace mm2hack::apps::graphics::fonts
 
     void FontTileManager::SetUp()
     {
-        Load(L"alphabet", MM2H_GRAPHICS(Alphabet), MM2H_PROPERTIES(Alphabet));
-        Load(L"numbers", MM2H_GRAPHICS(Numbers), MM2H_PROPERTIES(Numbers));
+        Load(L"alphabet", MM2H_GRAPHICS(Alphabet), MM2H_GRAPHPROPS(Alphabet));
+        Load(L"numbers", MM2H_GRAPHICS(Numbers), MM2H_GRAPHPROPS(Numbers));
     }
 
     void FontTileManager::ShutDown()

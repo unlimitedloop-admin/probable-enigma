@@ -202,6 +202,7 @@
     <ClCompile Include="src\apps\sequence\SequenceManager.cpp" />
     <ClCompile Include="src\apps\sequence\StandardSequence.cpp" />
     <ClCompile Include="src\apps\supervisor\ResourceManager.cpp" />
+    <ClCompile Include="src\apps\vfx\cursor\TwinkleCursorAnimator.cpp" />
     <ClCompile Include="src\apps\vfx\stareffects\BgStarField.cpp" />
     <ClCompile Include="src\apps\vfx\stareffects\FixedStar.cpp" />
     <ClCompile Include="src\apps\vfx\stareffects\ShootingStar.cpp" />
@@ -268,6 +269,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
+    <ClInclude Include="src\apps\algorithm\universal\MenuCursorController.h" />
     <ClInclude Include="src\apps\audio\AudioConfigLoader.h" />
     <ClInclude Include="src\apps\audio\AudioInitializer.h" />
     <ClInclude Include="src\apps\audio\AudioManager.h" />
@@ -297,6 +299,7 @@
     <ClInclude Include="src\apps\scenes\SceneID.h" />
     <ClInclude Include="src\apps\scenes\SceneManager.h" />
     <ClInclude Include="src\apps\scenes\sub-scenes\90-BackdoorMenu\BackdoorMenu.h" />
+    <ClInclude Include="src\apps\scenes\sub-scenes\90-BackdoorMenu\BackdoorMenuCatalog.h" />
     <ClInclude Include="src\apps\scenes\sub-scenes\90-BackdoorMenu\BackdoorMenuPhase.h" />
     <ClInclude Include="src\apps\scenes\sub-scenes\LaunchingGame.h" />
     <ClInclude Include="src\apps\sequence\DebugSequence.h" />
@@ -306,6 +309,7 @@
     <ClInclude Include="src\apps\sequence\StandardSequence.h" />
     <ClInclude Include="src\apps\supervisor\ResourceFadeBindings.h" />
     <ClInclude Include="src\apps\supervisor\ResourceManager.h" />
+    <ClInclude Include="src\apps\vfx\cursor\TwinkleCursorAnimator.h" />
     <ClInclude Include="src\apps\vfx\stareffects\BgStarField.h" />
     <ClInclude Include="src\apps\vfx\stareffects\FixedStar.h" />
     <ClInclude Include="src\apps\vfx\stareffects\ShootingStar.h" />

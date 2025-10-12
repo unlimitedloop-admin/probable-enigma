@@ -19,6 +19,7 @@
 #include "apps/scenes/SceneChangeMediator.h"
 #include "apps/scenes/SceneID.h"
 #include "apps/supervisor/ResourceManager.h"
+#include "apps/vfx/cursor/TwinkleCursorAnimator.h"
 #include "apps/vfx/stareffects/BgStarField.h"
 #include "core/assembly/StateProvider.h"
 
@@ -68,9 +69,13 @@ namespace mm2hack::apps::scenes
         // Change child phase of the this scene
         void QueuePhase(std::unique_ptr<IBackdoorMenuPhase> next, PhaseFadePlan nextPlan);
 
+        // === Save/Load state ===
         void Save(std::ostream& out);
         void Load(std::istream& in);
 
+        // === Getters for internal components ===
+        auto& Cursor() noexcept { return _cursor; }
+        const auto& Cursor() const noexcept { return _cursor; }
         auto& StarField() noexcept { return _starField; }
         const auto& StarField() const noexcept { return _starField; }
         auto& Resource() noexcept { return _resource; }
@@ -78,12 +83,11 @@ namespace mm2hack::apps::scenes
         auto& Input() noexcept { return _input; }
         const auto& Input() const noexcept { return _input; }
 
+        // Get the current phase identifier
         PhaseId CurrentPhase() const noexcept { return _phaseId; }
 
+        // Access the fade controller for scene transitions
         PhaseFadeController& Fader() noexcept { return _fader; }
-
-        // TODO: Can you remove this?
-        //std::unique_ptr<IBackdoorMenuPhase> MakePhase(PhaseId id, BackdoorMenu& owner);
 
     private:
         void Initialize(const parameters::Parameters& params) override; // Initialize the backdoor menu
@@ -92,15 +96,16 @@ namespace mm2hack::apps::scenes
     private:
         const std::wstring kClassName = L"BackdoorMenu";
 
-        SceneChangeMediator* _mediator{ nullptr };          // Mediator for scene changes
-        std::unique_ptr<IBackdoorMenuPhase> _phase;         // Current phase of the backdoorMenu
-        PhaseId _phaseId{ PhaseId::Credit };                // Current phase identifier
-        PhaseFadeController _fader;                         // Fade controller for scene transitions
-        std::unique_ptr<IBackdoorMenuPhase> _pendingPhase;  // Pending phase to switch to
-        PhaseFadePlan _pendingPlan{};                       // Pending fade plan for the next phase
+        SceneChangeMediator* _mediator{ nullptr };                      // Mediator for scene changes
+        std::unique_ptr<IBackdoorMenuPhase> _phase;                     // Current phase of the backdoorMenu
+        PhaseId _phaseId{ PhaseId::Credit };                            // Current phase identifier
+        PhaseFadeController _fader;                                     // Fade controller for scene transitions
+        std::unique_ptr<IBackdoorMenuPhase> _pendingPhase;              // Pending phase to switch to
+        PhaseFadePlan _pendingPlan{};                                   // Pending fade plan for the next phase
 
-        vfx::stareffects::BgStarField _starField;           // Background star field effect
-        supervisor::ResourceManager* _resource{ nullptr };  // Reference to the resource manager
-        core::assembly::StateProvider* _input{ nullptr };   // Reference to the state provider
+        vfx::cursor::TwinkleCursorAnimator _cursor;                     // Twinkling cursor animator
+        vfx::stareffects::BgStarField _starField;                       // Background star field effect
+        supervisor::ResourceManager* _resource{ nullptr };              // Reference to the resource manager
+        core::assembly::StateProvider* _input{ nullptr };               // Reference to the state provider
     };
 }

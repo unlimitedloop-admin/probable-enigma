@@ -80,6 +80,7 @@
     <ClCompile Include="src\apps\scenes\sub-scenes\90-BackdoorMenu\BackdoorMenuPhase.cpp" />
     <ClCompile Include="src\apps\graphics\effects\FadeIOTexture.cpp" />
     <ClCompile Include="src\apps\scenes\PhaseFadeController.cpp" />
+    <ClCompile Include="src\apps\vfx\cursor\TwinkleCursorAnimator.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
@@ -215,6 +216,9 @@
     <ClInclude Include="src\apps\scenes\sub-scenes\90-BackdoorMenu\BackdoorMenuPhase.h" />
     <ClInclude Include="src\apps\scenes\PhaseFadeController.h" />
     <ClInclude Include="src\config\PathDefsJsonProps.h" />
+    <ClInclude Include="src\apps\vfx\cursor\TwinkleCursorAnimator.h" />
+    <ClInclude Include="src\apps\algorithm\universal\MenuCursorController.h" />
+    <ClInclude Include="src\apps\scenes\sub-scenes\90-BackdoorMenu\BackdoorMenuCatalog.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

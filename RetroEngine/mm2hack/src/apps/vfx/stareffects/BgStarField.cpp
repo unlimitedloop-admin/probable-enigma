@@ -18,7 +18,7 @@ namespace mm2hack::apps::vfx::stareffects
     {
         srand(static_cast<unsigned int>(time(nullptr)));
         auto& sprites = deal::GameContext::GetInstance().GetResourceManager().GetSpriteManager();
-        sprites.Load(std::wstring(kStarSpriteName), MM2H_GRAPHICS(FlashStar), MM2H_PROPERTIES(FlashStar));
+        sprites.Load(std::wstring(kStarSpriteName), MM2H_GRAPHICS(FlashStar), MM2H_GRAPHPROPS(FlashStar));
 
         // Change the color for the stars.
         auto throwImageDataException = [&](const wchar_t* msg) {
