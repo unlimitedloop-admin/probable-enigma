@@ -11,6 +11,8 @@
 #include "BackdoorMenu.h"   // Including IBackdoorMenuPhase
 
 #include <array>
+#include <string_view>
+#include <vector>
 #include "apps/algorithm/universal/MenuCursorController.h"
 #include "apps/vfx/cursor/TwinkleCursorAnimator.h"
 #include "BackdoorMenuCatalog.h"
@@ -58,10 +60,9 @@ namespace mm2hack::apps::scenes
             vfx::cursor::TwinkleCursorAnimator& cursorAnim_;
         };
 
-
         static consteval std::size_t TopItemCount() noexcept { return kTopMenuTitles.size(); }
 
-        // Inside menu phase - displays detailed settings for the item selected in the top menu
+        // Inside menu phase - displays detailed options for the selected top menu item
         class InsideMenuPhase : public IBackdoorMenuPhase
         {
         public:
@@ -73,6 +74,28 @@ namespace mm2hack::apps::scenes
             PhaseId Id() const noexcept override;
 
         private:
+            using DrawHandler = void (InsideMenuPhase::*)() const;
+            using ActHandler = void (InsideMenuPhase::*)() noexcept;
+
+            struct MenuEntry
+            {
+                std::wstring_view label;
+                bool selectable;
+                ActHandler onActivate;
+                int advanceLines;       // Next entry is this many lines below (for spacing)
+            };
+
+            struct Page
+            {
+                int cursorX{ 16 };
+                int firstY{ 16 };
+                int lineH{ 10 };
+                std::vector<MenuEntry> entries;
+                std::vector<int>       selectableRows;  // Indices of selectable entries
+                std::vector<int>       rowYs;           // Y positions of all entries
+            };
+
+            // InsideMenu page metadata for each top menu item
             void CompleteArsenalDisplay_() const;
             void ParameterConfigurationDisplay_() const;
             void ViewerModeDisplay_() const;
@@ -82,10 +105,8 @@ namespace mm2hack::apps::scenes
             void SpriteTestDisplay_() const;
             void ResetParameterDisplay_() const;
 
-            using Handler = void (InsideMenuPhase::*)() const;
-
-            // NOTE: Ensure the order matches kTopMenuTitles in BackdoorMenuCatalog.h!
-            static constexpr std::array<Handler, TopItemCount()> kHandlers{
+            // NOTE: These must match the order of kTopMenuTitles
+            static constexpr std::array<DrawHandler, TopItemCount()> kDrawHandlers{
                 &InsideMenuPhase::CompleteArsenalDisplay_,
                 &InsideMenuPhase::ParameterConfigurationDisplay_,
                 &InsideMenuPhase::ViewerModeDisplay_,
@@ -96,28 +117,21 @@ namespace mm2hack::apps::scenes
                 &InsideMenuPhase::ResetParameterDisplay_
             };
 
-            struct PageMeta { int cursorX; int firstY; int lineH; int selectableCount; };
+            // Page construction and reflection
+            void BuildPageModel_();
+            void ApplyPageLayout_();
 
-            static constexpr PageMeta kPageMetas[] = {
-                {16, 36, 10, 1},  // Complete Arsenal
-                {30, 16, 10, 0},  // Parameter Configuration
-                {30, 16, 10, 0},  // Viewer Mode
-                {30, 16, 10, 0},  // Stages
-                {30, 16, 10, 0},  // Regular Boot
-                {30, 16, 10, 0},  // Sound Test Mode
-                {30, 16, 10, 0},  // Sprite Test
-                {30, 16, 10, 0}   // Reset Parameter
-            };
-
-            void DispatchSelected_() const noexcept;
+            // Input actions
+            void ActivateCurrent_() noexcept; // A/START
+            void GoBackToTop_() noexcept;     // B/BACK or deciding on BACK item
 
         private:
             BackdoorMenu& owner;
-            int cursorPos_{ 0 };
-            int topItemIndex_{ 0 };
-            algorithm::universal::MenuCursorController cursorCtl_{ {16, 16, 10}, 1 };   // Dummy initialization
+            int  cursorPos_{ 0 };     // Selection index (index of selectableRows)
+            int  topItemIndex_{ 0 };  // Top menu item index
+            algorithm::universal::MenuCursorController cursorCtl_{ {16, 16, 10}, 1 };   // Will be configured per page
             vfx::cursor::TwinkleCursorAnimator& cursorAnim_;
-            int frameCounter_{ -1 };    // Unused.
+            Page page_;     // Current page data
         };
     }
 }
