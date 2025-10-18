@@ -81,6 +81,9 @@
     <ClCompile Include="src\apps\graphics\effects\FadeIOTexture.cpp" />
     <ClCompile Include="src\apps\scenes\PhaseFadeController.cpp" />
     <ClCompile Include="src\apps\vfx\cursor\TwinkleCursorAnimator.cpp" />
+    <ClCompile Include="src\apps\algorithm\scrolling\effect\BgWobble2D.cpp" />
+    <ClCompile Include="src\test\driver\005\LissajousCurveBG.cpp" />
+    <ClCompile Include="src\apps\algorithm\scrolling\effect\BgWobblePass.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
@@ -219,6 +222,9 @@
     <ClInclude Include="src\apps\vfx\cursor\TwinkleCursorAnimator.h" />
     <ClInclude Include="src\apps\algorithm\universal\MenuCursorController.h" />
     <ClInclude Include="src\apps\scenes\sub-scenes\90-BackdoorMenu\BackdoorMenuCatalog.h" />
+    <ClInclude Include="src\apps\algorithm\scrolling\effect\BgWobble2D.h" />
+    <ClInclude Include="src\apps\algorithm\scrolling\effect\BgWobblePass.h" />
+    <ClInclude Include="src\test\driver\005\LissajousCurveBG.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

@@ -83,38 +83,38 @@ namespace mm2hack::core::winapi
         if (EnvironmentConfig::GetBool(L"OUTPUT_LOG_ENABLE"))
         {
             LogWriter::Initialize(conf::kLogFilePath);
-            DxLib::SetApplicationLogSaveDirectory(conf::kLogFilePath.c_str());
-            DxLib::SetApplicationLogFileName(conf::kDxLibLogFileName.c_str());
-            DxLib::SetOutApplicationLogValidFlag(TRUE);
+            ::DxLib::SetApplicationLogSaveDirectory(conf::kLogFilePath.c_str());
+            ::DxLib::SetApplicationLogFileName(conf::kDxLibLogFileName.c_str());
+            ::DxLib::SetOutApplicationLogValidFlag(TRUE);
         }
         else
         {
-            DxLib::SetOutApplicationLogValidFlag(FALSE);
+            ::DxLib::SetOutApplicationLogValidFlag(FALSE);
         }
 
         const BOOL isAlwaysRun = EnvironmentConfig::GetBool(L"WINDOW_ALWAYS_RUN_ENABLE") ? TRUE : FALSE;
 
         // Create the main window.
-        if (DxLib::SetDoubleStartValidFlag(FALSE) != 0 ||
-            DxLib::SetWaitVSyncFlag(FALSE) != 0 ||
-            DxLib::SetAlwaysRunFlag(isAlwaysRun) != 0 ||
-            DxLib::SetUseASyncChangeWindowModeFunction(FALSE, nullptr, nullptr) != 0 ||
-            DxLib::SetWindowUserCloseEnableFlag(TRUE) != 0 ||
-            DxLib::SetDxLibEndPostQuitMessageFlag(TRUE) != 0 ||
-            DxLib::ChangeWindowMode(TRUE) != DX_CHANGESCREEN_OK ||
-            DxLib::SetGraphMode(
+        if (::DxLib::SetDoubleStartValidFlag(FALSE) != 0 ||
+            ::DxLib::SetWaitVSyncFlag(FALSE) != 0 ||
+            ::DxLib::SetAlwaysRunFlag(isAlwaysRun) != 0 ||
+            ::DxLib::SetUseASyncChangeWindowModeFunction(FALSE, nullptr, nullptr) != 0 ||
+            ::DxLib::SetWindowUserCloseEnableFlag(TRUE) != 0 ||
+            ::DxLib::SetDxLibEndPostQuitMessageFlag(TRUE) != 0 ||
+            ::DxLib::ChangeWindowMode(TRUE) != DX_CHANGESCREEN_OK ||
+            ::DxLib::SetGraphMode(
                 static_cast<int>(conf::kScreenWidth * conf::kScreenScaleMax),
                 static_cast<int>(conf::kScreenHeight * conf::kScreenScaleMax),
                 conf::kScreenColorDepth) != 0 ||
-            DxLib::SetWindowSizeChangeEnableFlag(FALSE, FALSE) != 0 ||
-            DxLib::SetWindowSize(
+            ::DxLib::SetWindowSizeChangeEnableFlag(FALSE, FALSE) != 0 ||
+            ::DxLib::SetWindowSize(
                 static_cast<int>(conf::kScreenWidth * _viewerRate),
                 static_cast<int>(conf::kScreenHeight * _viewerRate)) != 0 ||
-            DxLib::SetWindowSizeExtendRate(1.0f) != 0 ||
-            DxLib::SetMainWindowText(_windowTitle.c_str()) != 0 ||
-            DxLib::SetWindowIconID(IDI_WNDICON) != 0 ||
-            DxLib::LoadMenuResource(IDR_MAINMENU) != 0 ||
-            DxLib::SetWindowInitPosition(0, 0) != 0)
+            ::DxLib::SetWindowSizeExtendRate(1.0f) != 0 ||
+            ::DxLib::SetMainWindowText(_windowTitle.c_str()) != 0 ||
+            ::DxLib::SetWindowIconID(IDI_WNDICON) != 0 ||
+            ::DxLib::LoadMenuResource(IDR_MAINMENU) != 0 ||
+            ::DxLib::SetWindowInitPosition(0, 0) != 0)
         {
             return reportInitError(L"Failed to initialize the window.");
         }
@@ -123,7 +123,7 @@ namespace mm2hack::core::winapi
         UpdateMenuBarState();
 
         // DxLib initialization.
-        if (DxLib::DxLib_Init() == -1)
+        if (::DxLib::DxLib_Init() == -1)
         {
             return reportInitError(L"Failed to initialize DxLib.");
         }
@@ -135,10 +135,10 @@ namespace mm2hack::core::winapi
         InitCommonControlsEx(&iccex);
         ui::SettingsWindow::RegisterWindowClass(hInstance);
 
-        _mainWindowHandle = DxLib::GetMainWindowHandle();
+        _mainWindowHandle = ::DxLib::GetMainWindowHandle();
         if (_mainWindowHandle == nullptr)
         {
-            DxLib::DxLib_End();
+            ::DxLib::DxLib_End();
             return reportInitError(L"Unable to obtain window handle.");
         }
 
@@ -149,17 +149,17 @@ namespace mm2hack::core::winapi
         if (!apps::NES::NESPalette::LoadPaletteFromFile(conf::kNESPaletteFilepath))
         {
             // If palette loading fails, handle the error
-            DxLib::DxLib_End();
+            ::DxLib::DxLib_End();
             return reportInitError(L"Failed to load NES palette.");
         }
         apps::NES::NESPalette::SetBackgroundFor(conf::kDefaultNESPaletteIndex);
-        DxLib::ChangeFont(L"Segoe UI");
+        ::DxLib::ChangeFont(L"Segoe UI");
 
-        _screenHandle = DxLib::MakeScreen(conf::kScreenWidth, conf::kScreenHeight, FALSE);  // Create a screen for drawing
+        _screenHandle = ::DxLib::MakeScreen(conf::kScreenWidth, conf::kScreenHeight, FALSE);  // Create a screen for drawing
         if (_screenHandle == -1)
         {
-            DxLib::DxLib_End();
-            return reportInitError(L"The SetDrawScreen(DX_SCREEN_BACK) function failed.");
+            ::DxLib::DxLib_End();
+            return reportInitError(L"Make back screen for drawing failed.");
         }
 
         // Load the HUD configuration from the ini file.
@@ -188,7 +188,7 @@ namespace mm2hack::core::winapi
 
     void WindowManager::Shutdown()
     {
-        DxLib::DxLib_End();
+        ::DxLib::DxLib_End();
         _hInstance = nullptr;
         _mainWindowHandle = nullptr;
         _windowTitle.clear();
@@ -286,7 +286,7 @@ namespace mm2hack::core::winapi
 
     bool WindowManager::IsMainWindowActive()
     {
-        return static_cast<bool>(DxLib::GetWindowActiveFlag());
+        return static_cast<bool>(::DxLib::GetWindowActiveFlag());
     }
 
     int WindowManager::GetScreenHandle() const

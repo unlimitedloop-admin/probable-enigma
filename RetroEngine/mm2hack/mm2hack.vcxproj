@@ -173,6 +173,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\apps\algorithm\scrolling\effect\BgWobble2D.cpp" />
+    <ClCompile Include="src\apps\algorithm\scrolling\effect\BgWobblePass.cpp" />
     <ClCompile Include="src\apps\audio\AudioConfigLoader.cpp" />
     <ClCompile Include="src\apps\audio\AudioInitializer.cpp" />
     <ClCompile Include="src\apps\audio\AudioManager.cpp" />
@@ -253,6 +255,7 @@
     <ClCompile Include="src\test\driver\002\DrawGraph.cpp" />
     <ClCompile Include="src\test\driver\003\SoundTest.cpp" />
     <ClCompile Include="src\test\driver\004\OuterSpaceBG.cpp" />
+    <ClCompile Include="src\test\driver\005\LissajousCurveBG.cpp" />
     <ClCompile Include="src\test\TestSequence.cpp" />
     <ClCompile Include="src\utils\Fps.cpp" />
     <ClCompile Include="src\utils\LogWriter.cpp" />
@@ -269,6 +272,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
+    <ClInclude Include="src\apps\algorithm\scrolling\effect\BgWobble2D.h" />
+    <ClInclude Include="src\apps\algorithm\scrolling\effect\BgWobblePass.h" />
     <ClInclude Include="src\apps\algorithm\universal\MenuCursorController.h" />
     <ClInclude Include="src\apps\audio\AudioConfigLoader.h" />
     <ClInclude Include="src\apps\audio\AudioInitializer.h" />
@@ -388,6 +393,7 @@
     <ClInclude Include="src\test\driver\002\DrawGraph.h" />
     <ClInclude Include="src\test\driver\003\SoundTest.h" />
     <ClInclude Include="src\test\driver\004\OuterSpaceBG.h" />
+    <ClInclude Include="src\test\driver\005\LissajousCurveBG.h" />
     <ClInclude Include="src\test\driver\ITestDriver.h" />
     <ClInclude Include="src\test\TestSequence.h" />
     <ClInclude Include="src\utils\Fps.h" />

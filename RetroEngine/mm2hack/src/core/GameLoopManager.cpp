@@ -84,7 +84,7 @@ namespace mm2hack::core
 
                 // --- Go game update & rendering ---
                 seq.Update();                                   // Update the main sequence.
-                seq.RenderWorld(_screenHandle, destW, destH);   // Render the game content.
+                seq.RenderWorld(_screenHandle, destW, destH);   // Render the game content, and extended rate scaling.
                 seq.RenderOverlay(destW, destH);                // Render the overlay content (e.g., HUD, debug information).
 
                 // Render the input configuration overlay if active.

@@ -137,8 +137,8 @@ namespace mm2hack::apps::sequence
         }
 
         // Scale what we draw to fit the viewer rate.
-        DxLib::SetDrawScreen(DX_SCREEN_BACK);
-        DxLib::DrawExtendGraph(0, 0, destW, destH, screenHandle, FALSE);
+        ::DxLib::SetDrawScreen(DX_SCREEN_BACK);
+        ::DxLib::DrawExtendGraph(0, 0, destW, destH, screenHandle, FALSE);
     }
 
     void SequenceManager::RenderOverlay(int destW, int destH)

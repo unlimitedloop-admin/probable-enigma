@@ -305,6 +305,11 @@ namespace mm2hack::core::winapi
             setGameState(GameState::Running);
             break;
 
+        case ID_SCRIPT_005:
+            seq.StartTestSequence(5);
+            setGameState(GameState::Running);
+            break;
+
         default:
             break;
         }
@@ -312,12 +317,10 @@ namespace mm2hack::core::winapi
 
     void HandlePaint(HWND hWnd)
     {
-
     }
 
     void HandleSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
     {
-
     }
 
     void HandleKeyDown(HWND hWnd, WPARAM wParam, LPARAM lParam)
@@ -439,6 +442,5 @@ namespace mm2hack::core::winapi
 
     void HandleKeyUp(HWND hWnd, WPARAM wParam)
     {
-
     }
 }
