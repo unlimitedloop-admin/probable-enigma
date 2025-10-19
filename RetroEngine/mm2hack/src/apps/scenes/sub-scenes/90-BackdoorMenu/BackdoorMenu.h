@@ -26,7 +26,7 @@
 namespace mm2hack::apps::scenes
 {
     // Identifiers for different phases within the BackdoorMenu
-    enum class PhaseId : int
+    enum class BackdoorMenuPhaseId : int
     {
         Credit,
         TopMenu,
@@ -45,7 +45,7 @@ namespace mm2hack::apps::scenes
         // Render the phase-specific elements
         virtual void RenderOverlay() = 0;
         // Get owner phase id
-        virtual PhaseId Id() const noexcept = 0;
+        virtual BackdoorMenuPhaseId Id() const noexcept = 0;
     };
 
     // Backdoor menu for debugging purposes only (A list of selectable scenes)
@@ -56,6 +56,8 @@ namespace mm2hack::apps::scenes
         ~BackdoorMenu() override;
 
         // === IBaseScene implementations ===
+        // Initialize the backdoor menu
+        void Initialize(const parameters::Parameters& params) override;
         // Main game logic execution
         void Update() override;
         // Render the game world
@@ -82,26 +84,33 @@ namespace mm2hack::apps::scenes
         const auto& Resource() const noexcept { return _resource; }
         auto& Input() noexcept { return _input; }
         const auto& Input() const noexcept { return _input; }
+        auto IsLeaving() const noexcept { return _leaving; }
+        void MarkLeaving() noexcept { _leaving = true; }
 
         // Get the current phase identifier
-        PhaseId CurrentPhase() const noexcept { return _phaseId; }
+        BackdoorMenuPhaseId CurrentPhase() const noexcept { return _phaseId; }
 
         // Access the fade controller for scene transitions
         PhaseFadeController& Fader() noexcept { return _fader; }
 
-    private:
-        void Initialize(const parameters::Parameters& params) override; // Initialize the backdoor menu
-        void Finalize() override;                                       // Finalize the backdoor menu
+        void SetNextScene(SceneID scene, const parameters::Parameters& params = {});
 
     private:
-        const std::wstring kClassName = L"BackdoorMenu";
+        void Finalize() override;       // Finalize the backdoor menu
+
+    private:
+        const std::wstring kClassName{ L"BackdoorMenu" };
 
         SceneChangeMediator* _mediator{ nullptr };                      // Mediator for scene changes
         std::unique_ptr<IBackdoorMenuPhase> _phase;                     // Current phase of the backdoorMenu
-        PhaseId _phaseId{ PhaseId::Credit };                            // Current phase identifier
+        BackdoorMenuPhaseId _phaseId{ BackdoorMenuPhaseId::Credit };    // Current phase identifier
         PhaseFadeController _fader;                                     // Fade controller for scene transitions
         std::unique_ptr<IBackdoorMenuPhase> _pendingPhase;              // Pending phase to switch to
         PhaseFadePlan _pendingPlan{};                                   // Pending fade plan for the next phase
+
+        SceneID _nextScene{ SceneID::None };                            // Next scene to switch to
+        parameters::Parameters _nextParams{};                           // Reserve the parameters for the next scene
+        bool _leaving{ false };                                         // Flag indicating if leaving the backdoor menu
 
         vfx::cursor::TwinkleCursorAnimator _cursor;                     // Twinkling cursor animator
         vfx::stareffects::BgStarField _starField;                       // Background star field effect

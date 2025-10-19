@@ -3,8 +3,10 @@
 #include "BackdoorMenuPhase.h"
 
 #include <array>
+#include <span>
 #include "apps/algorithm/universal/MenuCursorController.h"
 #include "apps/scenes/PhaseFadeController.h"
+#include "apps/scenes/SceneID.h"
 #include "BackdoorMenu.h"
 #include "BackdoorMenuCatalog.h"
 #include "input/Jpbtn.h"
@@ -20,6 +22,8 @@ namespace mm2hack::apps::scenes
         //==============================================================================
         void CreditPhase::Update()
         {
+            if (!owner.Fader().InputEnabled()) return;
+
             auto& input = owner.Input();
             auto verified = input->JustPressed(JPBTN::START) || input->JustPressed(JPBTN::A);
 
@@ -54,9 +58,9 @@ namespace mm2hack::apps::scenes
             // Nothing to render in overlay for this phase.
         }
 
-        PhaseId CreditPhase::Id() const noexcept
+        BackdoorMenuPhaseId CreditPhase::Id() const noexcept
         {
-            return PhaseId::Credit;
+            return BackdoorMenuPhaseId::Credit;
         }
 
         //==============================================================================
@@ -68,6 +72,8 @@ namespace mm2hack::apps::scenes
         {
             owner.StarField().UpdateStars();
             owner.Cursor().Update();
+
+            if (!owner.Fader().InputEnabled()) return;
 
             auto& input = owner.Input();
             auto verified = input->JustPressed(JPBTN::START) || input->JustPressed(JPBTN::A);
@@ -104,9 +110,9 @@ namespace mm2hack::apps::scenes
             // Nothing to render in overlay for this phase.
         }
 
-        PhaseId TopMenuPhase::Id() const noexcept
+        BackdoorMenuPhaseId TopMenuPhase::Id() const noexcept
         {
-            return PhaseId::TopMenu;
+            return BackdoorMenuPhaseId::TopMenu;
         }
 
         void TopMenuPhase::DrawMenuItems() const
@@ -133,37 +139,90 @@ namespace mm2hack::apps::scenes
             ApplyPageLayout_();
         }
 
+        void InsideMenuPhase::Update()
+        {
+            owner.StarField().UpdateStars();
+            owner.Cursor().Update();
+
+            if (!owner.Fader().InputEnabled()) return;
+
+            auto& input = owner.Input();
+            const bool verified = input->JustPressed(JPBTN::START) || input->JustPressed(JPBTN::A);
+            const bool cancelled = input->JustPressed(JPBTN::B) || input->JustPressed(JPBTN::BACK);
+
+            if (input->JustPressed(JPBTN::DOWN)) { cursorCtl_.Move(+1); }
+            if (input->JustPressed(JPBTN::UP)) { cursorCtl_.Move(-1); }
+            cursorPos_ = cursorCtl_.Index();
+
+            if (verified) { ActivateCurrent_(); return; }
+            if (cancelled) { NavigateBack_(defaultBack_); return; }
+        }
+
+        void InsideMenuPhase::RenderWorld()
+        {
+            owner.StarField().DrawStars();
+
+            // Draw text contents (all entries)
+            auto& fonts = owner.Resource()->GetFontTileManager();
+            for (size_t i = 0; i < page_.entries.size(); ++i)
+            {
+                fonts.DrawTextImage(page_.entries[i].label.data(), 30, page_.rowYs[i]);
+            }
+
+            // Cursor: Reference the "visual row" of the selectable row
+            const int selIdx = cursorCtl_.Index();
+            const int row = page_.selectableRows[selIdx];
+            owner.Cursor().DrawAt(page_.cursorX, page_.rowYs[row]);
+
+            // Additional drawing (only for necessary pages)
+            if (topItemIndex_ >= 0 && topItemIndex_ < static_cast<int>(kDrawHandlers.size()))
+            {
+                const auto fn = kDrawHandlers[static_cast<std::size_t>(topItemIndex_)];
+                (this->*fn)();
+            }
+        }
+
+        void InsideMenuPhase::RenderOverlay() { /* nothing */ }
+
+        BackdoorMenuPhaseId InsideMenuPhase::Id() const noexcept { return BackdoorMenuPhaseId::InsideMenu; }
+
         void InsideMenuPhase::BuildPageModel_()
         {
             page_ = {};
             switch (topItemIndex_)
             {
             case 0: // COMPLETE ARSENAL
-                page_.cursorX = 16;
-                page_.firstY = 16;
-                page_.lineH = 10;
-                page_.entries = {
-                    // Non-selectable text
-                    { L"ALL WEAPONS UNLOCKED.", false, nullptr, 2 },
-                    // Only BACK is selectable, turn back to top menu
-                    { L"BACK",                  true,  &InsideMenuPhase::GoBackToTop_, 1 },
-                };
+                page_.cursorX = 16; page_.firstY = 16; page_.lineH = 10;
+                page_.entries.clear();
+                AppendEntriesFrom_(kInsideMenu_CompleteArsenal);
                 break;
 
-                // TODO: Add other inside menu pages
+            case 3: // STAGES
+            {
+                const int depth = static_cast<int>(insideStack_.size());
+                if (depth == 0)
+                {
+                    page_.cursorX = 16; page_.firstY = 16; page_.lineH = 10;
+                    page_.entries.clear();
+                    AppendEntriesFrom_(kInsideMenu_Stages);
+                }
+                else if (depth == 1 && !insideStack_.empty() && insideStack_.back().subId == 0)
+                {
+                    page_.cursorX = 16; page_.firstY = 16; page_.lineH = 10;
+                    page_.entries.clear();
+                    AppendEntriesFrom_(kInsideMenu_StageEdit);
+                }
+                break;
+            }
+
+            // TODO: Add other inside menu pages
 
             case 7: // RESET PARAMETER
-                page_.cursorX = 16;
-                page_.firstY = 16;
-                page_.lineH = 10;
-                page_.entries = {
-                    // Non-selectable text
-                    { L"RESET ALL PARAMETERS", false, nullptr, 1 },
-                    { L"TO DEFAULT VALUES.",   false, nullptr, 2 },
-                    // Only BACK is selectable, turn back to top menu
-                    { L"BACK",                 true,  &InsideMenuPhase::GoBackToTop_, 1 },
-                };
+                page_.cursorX = 16; page_.firstY = 16; page_.lineH = 10;
+                page_.entries.clear();
+                AppendEntriesFrom_(kInsideMenu_ResetParameter);
                 break;
+
             default:
                 page_.cursorX = 16; page_.firstY = 16; page_.lineH = 10;
                 page_.entries = {
@@ -196,57 +255,12 @@ namespace mm2hack::apps::scenes
 
         void InsideMenuPhase::ApplyPageLayout_()
         {
-            // 選択可能件数だけをカーソルコントローラに伝える
+            // Configure cursor controller
             cursorCtl_.SetLayout({ page_.cursorX, page_.firstY, page_.lineH });
             cursorCtl_.SetItemCount(static_cast<int>(page_.selectableRows.size()));
             cursorCtl_.SetIndex(0);
             cursorPos_ = 0;
         }
-
-        void InsideMenuPhase::Update()
-        {
-            owner.StarField().UpdateStars();
-            owner.Cursor().Update();
-
-            auto& input = owner.Input();
-            const bool verified = input->JustPressed(JPBTN::START) || input->JustPressed(JPBTN::A);
-            const bool cancelled = input->JustPressed(JPBTN::B) || input->JustPressed(JPBTN::BACK);
-
-            if (input->JustPressed(JPBTN::DOWN)) { cursorCtl_.Move(+1); }
-            if (input->JustPressed(JPBTN::UP)) { cursorCtl_.Move(-1); }
-            cursorPos_ = cursorCtl_.Index();
-
-            if (verified) { ActivateCurrent_(); return; }
-            if (cancelled) { GoBackToTop_();     return; }
-        }
-
-        void InsideMenuPhase::RenderWorld()
-        {
-            owner.StarField().DrawStars();
-
-            // ページ本文（entries を順に描画）
-            auto& fonts = owner.Resource()->GetFontTileManager();
-            for (size_t i = 0; i < page_.entries.size(); ++i)
-            {
-                fonts.DrawTextImage(page_.entries[i].label.data(), 30, page_.rowYs[i]);
-            }
-
-            // カーソル：選択可能行の“見た目行”を参照
-            const int selIdx = cursorCtl_.Index();
-            const int row = page_.selectableRows[selIdx];
-            owner.Cursor().DrawAt(page_.cursorX, page_.rowYs[row]);
-
-            // 追加描画（必要なページのみ）
-            if (topItemIndex_ >= 0 && topItemIndex_ < static_cast<int>(kDrawHandlers.size()))
-            {
-                const auto fn = kDrawHandlers[static_cast<std::size_t>(topItemIndex_)];
-                (this->*fn)();
-            }
-        }
-
-        void InsideMenuPhase::RenderOverlay() { /* nothing */ }
-
-        PhaseId InsideMenuPhase::Id() const noexcept { return PhaseId::InsideMenu; }
 
         void InsideMenuPhase::ActivateCurrent_() noexcept
         {
@@ -255,9 +269,17 @@ namespace mm2hack::apps::scenes
 
             const int selIdx = cursorCtl_.Index();
             const int row = page_.selectableRows[selIdx];
-            if (const auto h = page_.entries[row].onActivate)
+            const auto& ent = page_.entries[row];
+
+            if (ent.enterSubId.has_value())
             {
-                (this->*h)(); // 例：BACKなら GoBackToTop_()
+                NavigateInto_(*ent.enterSubId);
+                return;
+            }
+            if (const auto h = ent.onActivate)
+            {
+                (this->*h)();
+                return;
             }
         }
 
@@ -277,33 +299,97 @@ namespace mm2hack::apps::scenes
             owner.QueuePhase(std::make_unique<TopMenuPhase>(owner, topItemIndex_), next);
         }
 
-        // 追加描画例（任意）
-        inline void InsideMenuPhase::CompleteArsenalDisplay_() const
+        // Extra display handlers for each inside menu page.
+        void InsideMenuPhase::CompleteArsenalDisplay_() const {}
+        void InsideMenuPhase::ParameterConfigurationDisplay_() const {}
+        void InsideMenuPhase::ViewerModeDisplay_() const {}
+        void InsideMenuPhase::StagesDisplay_() const {}
+        void InsideMenuPhase::RegularBootDisplay_() const {}
+        void InsideMenuPhase::SoundTestModeDisplay_() const {}
+        void InsideMenuPhase::SpriteTestDisplay_() const {}
+        void InsideMenuPhase::ResetParameterDisplay_() const {}
+
+        InsideMenuPhase::ActHandler InsideMenuPhase::ResolveAction_(Action a) noexcept
         {
-            // ここにページ固有の装飾や補助UIを描く場合に使用（なくてもOK）
-            // entries でラベルを描画しているので必須ではありません。
+            using A = Action;
+            switch (a)
+            {
+            case A::Back: return &InsideMenuPhase::BackOne_;
+            case A::Top: return &InsideMenuPhase::BackToTop_;
+            case A::Enter: return nullptr; // Handled via enterSubId
+            case A::NextScene: return &InsideMenuPhase::JumpToScene_;
+            case A::None:
+            default: return nullptr;
+            }
         }
-        // TODO: Implement these display functions
-        void InsideMenuPhase::ParameterConfigurationDisplay_() const
+
+        void InsideMenuPhase::AppendEntriesFrom_(std::span<const InsideMenuItemDesc> src)
         {
+            for (const auto& d : src)
+            {
+                page_.entries.push_back(MenuEntry{ d.label, d.selectable, ResolveAction_(d.action), d.advanceLines, d.subId });
+            }
         }
-        void InsideMenuPhase::ViewerModeDisplay_() const
+
+        void InsideMenuPhase::NavigateInto_(int subId)
         {
+            insideStack_.push_back(Crumb{ subId, cursorCtl_.Index() });
+            BuildPageModel_();
+            ApplyPageLayout_();
         }
-        void InsideMenuPhase::StagesDisplay_() const
+
+        void InsideMenuPhase::NavigateBack_(BackBehavior mode) noexcept
         {
+            if (mode == BackBehavior::ToTop || insideStack_.empty())
+            {
+                GoBackToTop_();
+                return;
+            }
+            insideStack_.pop_back();
+            BuildPageModel_();
+            ApplyPageLayout_();
         }
-        void InsideMenuPhase::RegularBootDisplay_() const
+
+        void InsideMenuPhase::BackOne_() noexcept
         {
+            auto& audio = owner.Resource()->GetAudioManager();
+            audio.PlaySe(L"plink_ring");
+            NavigateBack_(BackBehavior::Step);
         }
-        void InsideMenuPhase::SoundTestModeDisplay_() const
+
+        void InsideMenuPhase::BackToTop_() noexcept
         {
+            auto& audio = owner.Resource()->GetAudioManager();
+            audio.PlaySe(L"plink_ring");
+            NavigateBack_(BackBehavior::ToTop);
         }
-        void InsideMenuPhase::SpriteTestDisplay_() const
+
+        void InsideMenuPhase::JumpToScene_() noexcept
         {
-        }
-        void InsideMenuPhase::ResetParameterDisplay_() const
-        {
+            auto& audio = owner.Resource()->GetAudioManager();
+            audio.PlaySe(L"plink_ring");
+
+            // Determine which scene to jump to based on the current menu context.
+            if (owner.IsLeaving()) return;
+
+            if (topItemIndex_ == 3) // STAGES
+            {
+                const int depth = static_cast<int>(insideStack_.size());
+                if (depth == 1 && insideStack_[0].subId == 0) // Stage Edit
+                {
+                    owner.SetNextScene(SceneID::DemoStage1);
+                }
+            }
+
+            owner.MarkLeaving();    // Mark as leaving to prevent further input.
+            owner.QueuePhase(nullptr, PhaseFadePlan{
+                5,   // preBlackHold
+                20,  // fadeInFrames
+                0,   // preFadeOutHold
+                20,  // fadeOutFrames
+                0,   // postBlackHold
+                FadeLayerMask::All
+                });
         }
     }
 }

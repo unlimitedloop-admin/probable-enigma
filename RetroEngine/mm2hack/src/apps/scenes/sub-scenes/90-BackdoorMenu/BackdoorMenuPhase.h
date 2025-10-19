@@ -8,9 +8,11 @@
 //==============================================================================
 #pragma once
 
-#include "BackdoorMenu.h"   // Including IBackdoorMenuPhase
+#include "BackdoorMenu.h"
 
 #include <array>
+#include <optional>
+#include <span>
 #include <string_view>
 #include <vector>
 #include "apps/algorithm/universal/MenuCursorController.h"
@@ -29,7 +31,7 @@ namespace mm2hack::apps::scenes
             void Update() override;
             void RenderWorld() override;
             void RenderOverlay() override;
-            PhaseId Id() const noexcept override;
+            BackdoorMenuPhaseId Id() const noexcept override;
 
         private:
             BackdoorMenu& owner;
@@ -48,7 +50,7 @@ namespace mm2hack::apps::scenes
             void Update() override;
             void RenderWorld() override;
             void RenderOverlay() override;
-            PhaseId Id() const noexcept override;
+            BackdoorMenuPhaseId Id() const noexcept override;
 
         private:
             void DrawMenuItems() const;
@@ -56,11 +58,17 @@ namespace mm2hack::apps::scenes
         private:
             BackdoorMenu& owner;
             int cursorPos_{ 0 };
-            algorithm::universal::MenuCursorController cursorCtl_{ {16, 16, 10}, kTopMenuTitles.size() };
+            algorithm::universal::MenuCursorController cursorCtl_{ {16, 16, 10}, static_cast<int>(kTopMenuTitles.size()) };
             vfx::cursor::TwinkleCursorAnimator& cursorAnim_;
         };
 
         static consteval std::size_t TopItemCount() noexcept { return kTopMenuTitles.size(); }
+
+        enum class BackBehavior : unsigned char
+        {
+            Step = 0,   // one step back to the previous menu
+            ToTop,      // back to the top menu
+        };
 
         // Inside menu phase - displays detailed options for the selected top menu item
         class InsideMenuPhase : public IBackdoorMenuPhase
@@ -71,7 +79,7 @@ namespace mm2hack::apps::scenes
             void Update() override;
             void RenderWorld() override;
             void RenderOverlay() override;
-            PhaseId Id() const noexcept override;
+            BackdoorMenuPhaseId Id() const noexcept override;
 
         private:
             using DrawHandler = void (InsideMenuPhase::*)() const;
@@ -83,6 +91,7 @@ namespace mm2hack::apps::scenes
                 bool selectable;
                 ActHandler onActivate;
                 int advanceLines;       // Next entry is this many lines below (for spacing)
+                std::optional<int> enterSubId;
             };
 
             struct Page
@@ -93,6 +102,12 @@ namespace mm2hack::apps::scenes
                 std::vector<MenuEntry> entries;
                 std::vector<int>       selectableRows;  // Indices of selectable entries
                 std::vector<int>       rowYs;           // Y positions of all entries
+            };
+
+            struct Crumb
+            {
+                int subId;
+                int cursor;
             };
 
             // InsideMenu page metadata for each top menu item
@@ -125,10 +140,24 @@ namespace mm2hack::apps::scenes
             void ActivateCurrent_() noexcept; // A/START
             void GoBackToTop_() noexcept;     // B/BACK or deciding on BACK item
 
+            static ActHandler ResolveAction_(Action a) noexcept;
+            void AppendEntriesFrom_(std::span<const InsideMenuItemDesc> src);
+
+            void NavigateInto_(int subId);
+            void NavigateBack_(BackBehavior mode) noexcept;
+            void BackOne_() noexcept;
+            void BackToTop_() noexcept;
+            void JumpToScene_() noexcept;
+
         private:
             BackdoorMenu& owner;
-            int  cursorPos_{ 0 };     // Selection index (index of selectableRows)
-            int  topItemIndex_{ 0 };  // Top menu item index
+            
+            int cursorPos_{ 0 };                // Selection index (index of selectableRows)
+            int topItemIndex_{ 0 };             // Top menu item index
+            std::vector<Crumb> insideStack_;    // Stack of inside menu crumbs for navigation
+
+            BackBehavior defaultBack_{ BackBehavior::Step };
+
             algorithm::universal::MenuCursorController cursorCtl_{ {16, 16, 10}, 1 };   // Will be configured per page
             vfx::cursor::TwinkleCursorAnimator& cursorAnim_;
             Page page_;     // Current page data

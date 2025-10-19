@@ -44,7 +44,7 @@ namespace mm2hack::apps::scenes
         std::wstring GetSceneName() const override { return kClassName; }
 
     private:
-        const std::wstring kClassName = L"LaunchingGame";
+        const std::wstring kClassName{ L"LaunchingGame" };
 
         SceneChangeMediator* _mediator{ nullptr };      // Mediator for scene changes
         SceneID _subsequentScene{ SceneID::None };      // The scene to transition to after launching

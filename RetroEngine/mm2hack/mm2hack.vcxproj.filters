@@ -84,6 +84,7 @@
     <ClCompile Include="src\apps\algorithm\scrolling\effect\BgWobble2D.cpp" />
     <ClCompile Include="src\test\driver\005\LissajousCurveBG.cpp" />
     <ClCompile Include="src\apps\algorithm\scrolling\effect\BgWobblePass.cpp" />
+    <ClCompile Include="src\apps\scenes\sub-scenes\01-DemoStage1\DemoStage1.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
@@ -225,6 +226,7 @@
     <ClInclude Include="src\apps\algorithm\scrolling\effect\BgWobble2D.h" />
     <ClInclude Include="src\apps\algorithm\scrolling\effect\BgWobblePass.h" />
     <ClInclude Include="src\test\driver\005\LissajousCurveBG.h" />
+    <ClInclude Include="src\apps\scenes\sub-scenes\01-DemoStage1\DemoStage1.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

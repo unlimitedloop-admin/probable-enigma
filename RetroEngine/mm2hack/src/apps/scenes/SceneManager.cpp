@@ -74,10 +74,7 @@ namespace mm2hack::apps::scenes
 
     void SceneManager::ChangeScene(std::unique_ptr<IBaseScene> newScene)
     {
-        if (_currentScene)
-        {
-            _currentScene->Finalize();
-        }
+        // HACK: OnExit(), OnEnter() equivalent handling
         _currentScene = std::move(newScene);
     }
 }

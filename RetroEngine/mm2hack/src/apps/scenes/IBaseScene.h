@@ -20,9 +20,8 @@ namespace mm2hack::apps::scenes
     public:
         virtual ~IBaseScene() = default;
         
-        // === Lifecycle ===
+        // === Setup ===
         virtual void Initialize(const parameters::Parameters& params) = 0;
-        virtual void Finalize() = 0;
 
         // === Logic only ===
         virtual void Update() = 0;
@@ -36,5 +35,9 @@ namespace mm2hack::apps::scenes
         // === Scene identification ===
         virtual SceneID GetSceneID() const = 0;
         virtual std::wstring GetSceneName() const = 0;
+
+    protected:
+        // === Shutdown ===
+        virtual void Finalize() = 0;
     };
 }
