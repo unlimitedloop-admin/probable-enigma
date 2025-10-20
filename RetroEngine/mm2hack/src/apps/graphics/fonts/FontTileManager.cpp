@@ -194,6 +194,11 @@ namespace mm2hack::apps::graphics::fonts
         Remove(L"numbers");
     }
 
+    void FontTileManager::DrawFilledRect(int x, int y, int width, int height) const
+    {
+        ::DxLib::DrawBox(x, y, x + width - 1, y + height - 1, ::DxLib::GetColor(255, 255, 255), TRUE);
+    }
+
     // --- helpers ---
     FontTileManager::ParsedMeta FontTileManager::ParseMeta_(const std::wstring& jsonPath, const std::wstring& setName)
     {

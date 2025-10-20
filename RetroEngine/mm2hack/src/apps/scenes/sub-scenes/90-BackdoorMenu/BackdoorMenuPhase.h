@@ -110,6 +110,14 @@ namespace mm2hack::apps::scenes
                 int cursor;
             };
 
+            struct RoomEditState
+            {
+                bool active{ false };
+                int digit{ 1 };      // 1=ones, 0=tens
+                int blink{ 0 };
+                int snapshot{ 0 };
+            };
+
             // InsideMenu page metadata for each top menu item
             void CompleteArsenalDisplay_() const;
             void ParameterConfigurationDisplay_() const;
@@ -149,6 +157,11 @@ namespace mm2hack::apps::scenes
             void BackToTop_() noexcept;
             void JumpToScene_() noexcept;
 
+            void EnterRoomEdit_() noexcept;
+            void UpdateRoomEdit_() noexcept;
+            void DrawRoomLineOverlay_() const;
+            bool ValidateRoom_(int no) const noexcept;
+
         private:
             BackdoorMenu& owner;
             
@@ -161,6 +174,9 @@ namespace mm2hack::apps::scenes
             algorithm::universal::MenuCursorController cursorCtl_{ {16, 16, 10}, 1 };   // Will be configured per page
             vfx::cursor::TwinkleCursorAnimator& cursorAnim_;
             Page page_;     // Current page data
+
+            int roomNo_{ 0 };       // Stage edit room number
+            RoomEditState roomEdit_;
         };
     }
 }

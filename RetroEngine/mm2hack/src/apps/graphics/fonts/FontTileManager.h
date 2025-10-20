@@ -36,6 +36,8 @@ namespace mm2hack::apps::graphics::fonts
         void SetUp();
         void ShutDown();
 
+        void DrawFilledRect(int x, int y, int width, int height) const;
+
         // --- FadeIO hooks ---
         void SetGlobalVariant(int v) noexcept { _globalVariant = v; }               // Set current global variant index (no clamping)
         [[nodiscard]] int GlobalVariant() const noexcept { return _globalVariant; } // Current global variant index

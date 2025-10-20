@@ -3,6 +3,7 @@
 #include <array>
 #include <optional>
 #include <string_view>
+#include "apps/scenes/SceneID.h"
 
 namespace mm2hack::apps::scenes
 {
@@ -26,6 +27,7 @@ namespace mm2hack::apps::scenes
             Top,
             Enter,
             NextScene,
+            EditRoomNo,
         };
 
         struct InsideMenuItemDesc
@@ -35,7 +37,7 @@ namespace mm2hack::apps::scenes
             Action action;              // Action to perform on activation
             int advanceLines;           // Next entry is this many lines below (for spacing)
             std::optional<int> subId;   // Sub-menu ID to enter (if applicable)
-            //TODO: [InsideMenuItemDesc] std::optional<int> value;   // Parameter value (if applicable)
+            std::optional<int> value;   // Parameter value (if applicable)
         };
 
         inline constexpr std::array<InsideMenuItemDesc, 2> kInsideMenu_CompleteArsenal
@@ -47,16 +49,16 @@ namespace mm2hack::apps::scenes
         inline constexpr std::array<InsideMenuItemDesc, 3> kInsideMenu_Stages
         {
             InsideMenuItemDesc{ L"DEMO STAGE 1", true, Action::Enter, 1, 0 },
-            InsideMenuItemDesc{ L"DEMO STAGE 2", true, Action::Enter, 2, 0 },
+            InsideMenuItemDesc{ L"DEMO STAGE 2", true, Action::Enter, 2, 1 },
             InsideMenuItemDesc{ L"BACK",         true, Action::Back,  1, std::nullopt },
         };
 
         inline constexpr std::array<InsideMenuItemDesc, 4> kInsideMenu_StageEdit
         {
-            InsideMenuItemDesc{ L"ROOM NO. 00", true,  Action::None,      1, std::nullopt },
-            InsideMenuItemDesc{ L"BEGIN",       true,  Action::NextScene, 1, std::nullopt },
-            InsideMenuItemDesc{ L"BACK",        true,  Action::Back,      1, std::nullopt },
-            InsideMenuItemDesc{ L"GO TO TOP",   true,  Action::Top,       1, std::nullopt },
+            InsideMenuItemDesc{ L"ROOM NO. 00", true,  Action::EditRoomNo, 1, std::nullopt },
+            InsideMenuItemDesc{ L"BEGIN",       true,  Action::NextScene,  1, std::nullopt },
+            InsideMenuItemDesc{ L"BACK",        true,  Action::Back,       1, std::nullopt },
+            InsideMenuItemDesc{ L"GO TO TOP",   true,  Action::Top,        1, std::nullopt },
         };
 
         inline constexpr std::array<InsideMenuItemDesc, 3> kInsideMenu_ResetParameter
@@ -66,8 +68,16 @@ namespace mm2hack::apps::scenes
             InsideMenuItemDesc{ L"BACK",                 true,  Action::Back, 1, std::nullopt },
         };
 
-
         // ========= Jump to Any Scene Parameter =========
-
+        // Maps integer parameter values to SceneID enum values
+        inline SceneID GetSceneIDForJumpParameter(int value) noexcept
+        {
+            switch (value)
+            {
+            case 0: return SceneID::DemoStage1;
+            //case 1: return SceneID::DemoStage2;
+            default: return SceneID::None;
+            }
+        }
     }
 }

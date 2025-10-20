@@ -62,7 +62,7 @@ namespace mm2hack::apps::algorithm::scrolling::effect
 
         const int stripes = static_cast<int>(_offx.size());
         const float base_t = _phase;
-        const float phi = std::numbers::pi_v<float> *1.0f; // default: π (8-shaped)
+        const float phi = std::numbers::pi_v<float> *1.0f; // default: PI (8-shaped)
 
         // Number of bands when the screen is divided into vertical stripes (0 means no delay)
         const int band_h = (_band_h_px > 0) ? _band_h_px : _logical_h; // invalid = whole area 1 band

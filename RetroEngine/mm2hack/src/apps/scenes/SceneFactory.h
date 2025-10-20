@@ -19,6 +19,7 @@ namespace mm2hack::apps::scenes
     class SceneFactory
     {
     public:
+        // Creates a scene instance based on the given SceneID and mediator
         static std::unique_ptr<IBaseScene> CreateScene(SceneID id, SceneChangeMediator* mediator);
     };
 }
