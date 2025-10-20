@@ -12,15 +12,13 @@ namespace mm2hack::apps::scenes
     {
         // Initialize audio systems here
         auto& audio = deal::GameContext::GetInstance().GetResourceManager().GetAudioManager();
-        return audio.Initialize(L"assets\\exams\\audio\\json\\audio_config.json");
+        return audio.Initialize(std::wstring(L"assets\\_exams\\audio\\json\\audio_config.json"));
     }
 
     void SoundTest::Update()
     {
         using namespace core::assembly;
         // Update audio systems, handle input for playing/stopping sounds, etc.
-        auto& joystick = deal::GameContext::GetInstance().Joystick();
-        joystick.Update();
         auto& input = deal::GameContext::GetInstance().Input();
         auto& audio = deal::GameContext::GetInstance().GetResourceManager().GetAudioManager();
 

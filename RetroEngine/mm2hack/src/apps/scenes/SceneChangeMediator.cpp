@@ -13,7 +13,7 @@ namespace mm2hack::apps::scenes
         _listener = listener;
     }
 
-    void SceneChangeMediator::RequestChange(SceneID scene, const parameters::Parameters& params)
+    void SceneChangeMediator::RequestChange(SceneID scene, parameters::Parameters params)
     {
         if (_listener)
         {

@@ -45,7 +45,7 @@ namespace mm2hack::apps::NES
         }
 
         const RGB& color = _palette_data[palette_no];
-        DxLib::SetBackgroundColor(color.red, color.green, color.blue);
+        ::DxLib::SetBackgroundColor(color.red, color.green, color.blue);
     }
 
     // Get the color from external palette text file (0-63)

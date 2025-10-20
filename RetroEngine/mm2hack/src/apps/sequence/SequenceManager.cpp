@@ -106,11 +106,13 @@ namespace mm2hack::apps::sequence
             if (shouldAdvance)
             {
                 auto& input = GameContext::GetInstance().Input();
+                // Update the joystick state.
+                input.UpdateJoystick();
                 // Advance the input state for this frame.
                 input.BeginTick(time.FrameCounter());
-                
+
                 _currentSequence->Execute();    // !Execute the main game logic.
-                
+
                 // Finalize the input state for this frame.
                 input.EndTick();
                 // Increment the play frame counter if the game is running. (use in HUD overlays)
@@ -135,8 +137,8 @@ namespace mm2hack::apps::sequence
         }
 
         // Scale what we draw to fit the viewer rate.
-        DxLib::SetDrawScreen(DX_SCREEN_BACK);
-        DxLib::DrawExtendGraph(0, 0, destW, destH, screenHandle, FALSE);
+        ::DxLib::SetDrawScreen(DX_SCREEN_BACK);
+        ::DxLib::DrawExtendGraph(0, 0, destW, destH, screenHandle, FALSE);
     }
 
     void SequenceManager::RenderOverlay(int destW, int destH)

@@ -3,6 +3,7 @@
 #include "SceneManager.h"
 
 #include <utility>
+#include "apps/deal/GameContext.h"
 #include "apps/parameters/Parameters.h"
 #include "core/overlay/PauseManager.h"
 #include "IBaseScene.h"
@@ -16,7 +17,8 @@ namespace mm2hack::apps::scenes
         using namespace core::overlay;
         if (_currentScene)
         {
-            if (!PauseManager::IsPaused())
+            auto& time = deal::GameContext::GetInstance().Time();
+            if (!PauseManager::IsPaused() || (time.DeltaSeconds() > 0.0))   // No-op if paused and not stepping one frame
             {
                 _currentScene->Update();        // !Execute the main game logic.
             }
@@ -62,7 +64,7 @@ namespace mm2hack::apps::scenes
 
     void SceneManager::RequestSceneChange(SceneID nextScene, const parameters::Parameters& params)
     {
-        auto next = SceneFactory::CreateScene(nextScene);
+        auto next = SceneFactory::CreateScene(nextScene, _mediator);
         if (next)
         {
             next->Initialize(params);
@@ -72,10 +74,7 @@ namespace mm2hack::apps::scenes
 
     void SceneManager::ChangeScene(std::unique_ptr<IBaseScene> newScene)
     {
-        if (_currentScene)
-        {
-            _currentScene->Finalize();
-        }
+        // HACK: OnExit(), OnEnter() equivalent handling
         _currentScene = std::move(newScene);
     }
 }

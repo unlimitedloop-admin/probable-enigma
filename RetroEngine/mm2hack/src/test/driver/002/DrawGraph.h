@@ -24,7 +24,7 @@ namespace mm2hack::apps::scenes
 
         bool Initialize() override;
         bool InitializeResources();
-        void Update() override {}
+        void Update() override;
         void RenderWorld() override;
         void RenderOverlay() override {};
         void Finalize() override;
@@ -32,7 +32,9 @@ namespace mm2hack::apps::scenes
     private:
         const std::wstring kClassName{ L"DrawGraph" };
         const std::wstring kMapName{ L"SAMPLESTAGE1" };
-        const std::wstring_view kStageMapBinary{ L"assets\\exams\\bg\\SAMPLESTAGE1.bin" };
+        const std::wstring_view kStageMapBinary{ L"assets\\_exams\\bg\\SAMPLESTAGE1.bin" };
+
+        const int fadeDurationFrames{ 16 };
 
         graphics::sprite::SpriteManager::Id _playerId{ static_cast<graphics::sprite::SpriteManager::Id>(-1) };
         graphics::bg::BGTileManager::Id _bgTileId{ static_cast<graphics::bg::BGTileManager::Id>(-1) };

@@ -48,7 +48,6 @@ namespace mm2hack::apps::graphics::bg
     int BGTileAtlas::TilesPerVariant() const noexcept
     {
         if (_graphs_by_variant.empty()) return 0;
-
         return static_cast<int>(_graphs_by_variant.front().size());
     }
 

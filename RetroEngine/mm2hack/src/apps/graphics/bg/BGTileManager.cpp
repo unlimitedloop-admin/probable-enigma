@@ -10,7 +10,9 @@ namespace mm2hack::apps::graphics::bg
 {
     BGTileManager::Id BGTileManager::LoadTileset(const std::wstring& name, std::wstring_view png_path, std::wstring_view json_path)
     {
-        return _catalog.Load(name, png_path, json_path);
+        const std::wstring png = std::wstring(png_path);
+        const std::wstring json = std::wstring(json_path);
+        return _catalog.Load(name, png, json);
     }
 
     void BGTileManager::RemoveTilesetById(Id id)
@@ -34,14 +36,12 @@ namespace mm2hack::apps::graphics::bg
     void BGTileManager::DrawTileById(Id id, int tile_index, int x, int y) const noexcept
     {
         if (!_catalog.IsValid(id)) return;
-        
         _catalog.GetAtlas(id).DrawTile(_global_variant, tile_index, x, y);
     }
 
     void BGTileManager::DrawTileVariantById(Id id, int variant, int tile_index, int x, int y) const noexcept
     {
         if (!_catalog.IsValid(id)) return;
-        
         _catalog.GetAtlas(id).DrawTile(variant, tile_index, x, y);
     }
 
@@ -49,7 +49,6 @@ namespace mm2hack::apps::graphics::bg
     {
         _map_w = width;
         _map_h = height;
-        
         _tile_map.assign(_map_w * _map_h, 0);
     }
 
@@ -58,7 +57,7 @@ namespace mm2hack::apps::graphics::bg
         std::ifstream file(std::wstring(map_file), std::ios::binary);
         if (!file)
         {
-            THROW_EXCEPTION(L"Failed to open map file: " + std::wstring(map_file), L"BGTileManager");
+            THROW_EXCEPTION(L"Failed to open map file: " + std::wstring(map_file), kClassName);
         }
         file.unsetf(std::ios::skipws);
 
@@ -66,7 +65,7 @@ namespace mm2hack::apps::graphics::bg
         const int need = _map_w * _map_h;
         if ((int)raw.size() < offset + need)
         {
-            THROW_EXCEPTION(L"Map file is too small: " + std::wstring(map_file), L"BGTileManager");
+            THROW_EXCEPTION(L"Map file is too small: " + std::wstring(map_file), kClassName);
         }
 
         _tile_map.assign(raw.begin() + offset, raw.begin() + offset + need);
@@ -128,4 +127,23 @@ namespace mm2hack::apps::graphics::bg
             }
         }
     }
+
+    int BGTileManager::VariantCountByName(const std::wstring& tileset_name) const
+    {
+        if (auto id = _catalog.TryGetId(tileset_name)) return _catalog.GetAtlas(*id).VariantCount();
+        return 0;
+    }
+
+    int BGTileManager::VariantCountById(Id id) const
+    {
+        if (!_catalog.IsValid(id)) return 0;
+        return _catalog.GetAtlas(id).VariantCount();
+    }
+
+    void BGTileManager::SetGlobalVariantClamped(int v) noexcept
+    {
+        const int mv = MaxVariant();
+        _global_variant = std::max(0, std::min(v, mv));
+    }
+
 }

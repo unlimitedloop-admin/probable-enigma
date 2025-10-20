@@ -57,10 +57,6 @@ namespace mm2hack::apps::graphics::bg
         // Draw map with the specified tileset name
         void DrawMapByName(const std::wstring& tileset_name, int tile_px_w, int tile_px_h, int offset_x = 0, int offset_y = 0) const;
 
-        // Variant (global palette step) control
-        inline void SetGlobalVariant(int v) noexcept { _global_variant = v; }
-        [[nodiscard]] inline int GlobalVariant() const noexcept { return _global_variant; }
-
         // Events passthrough
         inline void SetEvents(BGTileCatalog::Events e) { _catalog.SetEvents(std::move(e)); }
 
@@ -68,7 +64,20 @@ namespace mm2hack::apps::graphics::bg
         [[nodiscard]] inline std::optional<Id> TryGetId(const std::wstring& name) const { return _catalog.TryGetId(name); }
         [[nodiscard]] inline bool Has(const std::wstring& name) const { return _catalog.Has(name); }
 
+        // Variant (global palette step) control
+        inline void SetGlobalVariant(int v) noexcept { _global_variant = v; }
+        [[nodiscard]] inline int GlobalVariant() const noexcept { return _global_variant; }
+        // Variant info
+        [[nodiscard]] inline int MaxVariant() const noexcept { return _catalog.MaxVariantAcross(); }
+        [[nodiscard]] int VariantCountByName(const std::wstring& tileset_name) const;
+        [[nodiscard]] int VariantCountById(Id id) const;
+
+        // Set global variant, clamped to valid range
+        void SetGlobalVariantClamped(int v) noexcept;
+
     private:
+        const std::wstring kClassName{ L"BGTileManager" };
+
         BGTileCatalog _catalog{};   // manages tile groups
         int _global_variant{ 0 };   // global palette variant for drawing
 

@@ -63,11 +63,17 @@ namespace mm2hack::apps::graphics::bg
         // Count
         [[nodiscard]] std::size_t Size() const noexcept { return _atlases.size(); }
 
-    private:
-        Id NextId_() const noexcept;
-        std::unique_ptr<BGTileAtlas> BuildAtlas_(const std::wstring& name, const std::wstring& png, const std::wstring& json);
+        [[nodiscard]] int MaxVariantAcross() const noexcept;
 
     private:
+        Id NextId_() const noexcept;        // next available Id (dense array index)
+        std::unique_ptr<BGTileAtlas> BuildAtlas_(const std::wstring& name,
+                                                 const std::wstring& png_path,
+                                                 const std::wstring& json_path);    // Load to memory and build BG tile graphics
+
+    private:
+        const std::wstring kClassName{ L"BGTileCatalog" };
+
         std::unordered_map<std::wstring, Id> _name_to_id{};
         std::vector<std::unique_ptr<BGTileAtlas>> _atlases{}; // dense: index==Id
         Events _events{};

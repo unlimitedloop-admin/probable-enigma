@@ -56,8 +56,8 @@ namespace mm2hack::apps::audio
 
         struct ActiveSeChannel
         {
-            std::wstring seName;                    // SE name being played
-            int seChannelIndex;                     // SE channel index
+            std::wstring seName;        // SE name being played
+            int seChannelIndex = 0;     // SE channel index
         };
 
         const int MAX_VOLUME = config::SystemConfig::kAudioMaxVolume;

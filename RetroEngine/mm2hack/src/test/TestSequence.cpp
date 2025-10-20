@@ -8,6 +8,8 @@
 #include "driver/001/PressKeyCommand.h"
 #include "driver/002/DrawGraph.h"
 #include "driver/003/SoundTest.h"
+#include "driver/004/OuterSpaceBG.h"
+#include "driver/005/LissajousCurveBG.h"
 
 namespace mm2hack::apps::sequence
 {
@@ -23,6 +25,12 @@ namespace mm2hack::apps::sequence
             break;
         case 3:
             _driver = std::make_unique<scenes::SoundTest>();
+            break;
+        case 4:
+            _driver = std::make_unique<scenes::OuterSpaceBG>();
+            break;
+        case 5:
+            _driver = std::make_unique<scenes::LissajousCurveBG>();
             break;
         default:
             throw std::invalid_argument("Invalid script number");

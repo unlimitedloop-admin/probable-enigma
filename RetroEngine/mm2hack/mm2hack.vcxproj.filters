@@ -70,6 +70,21 @@
     <ClCompile Include="src\apps\graphics\sprite\SpriteCatalog.cpp" />
     <ClCompile Include="src\apps\graphics\bg\BGTileAtlas.cpp" />
     <ClCompile Include="src\apps\graphics\bg\BGTileCatalog.cpp" />
+    <ClCompile Include="src\apps\vfx\stareffects\BgStarField.cpp" />
+    <ClCompile Include="src\apps\vfx\stareffects\FixedStar.cpp" />
+    <ClCompile Include="src\apps\vfx\stareffects\ShootingStar.cpp" />
+    <ClCompile Include="src\apps\vfx\stareffects\Star.cpp" />
+    <ClCompile Include="src\test\driver\004\OuterSpaceBG.cpp" />
+    <ClCompile Include="src\apps\scenes\sub-scenes\90-BackdoorMenu\BackdoorMenu.cpp" />
+    <ClCompile Include="src\apps\graphics\fonts\FontTileManager.cpp" />
+    <ClCompile Include="src\apps\scenes\sub-scenes\90-BackdoorMenu\BackdoorMenuPhase.cpp" />
+    <ClCompile Include="src\apps\graphics\effects\FadeIOTexture.cpp" />
+    <ClCompile Include="src\apps\scenes\PhaseFadeController.cpp" />
+    <ClCompile Include="src\apps\vfx\cursor\TwinkleCursorAnimator.cpp" />
+    <ClCompile Include="src\apps\algorithm\scrolling\effect\BgWobble2D.cpp" />
+    <ClCompile Include="src\test\driver\005\LissajousCurveBG.cpp" />
+    <ClCompile Include="src\apps\algorithm\scrolling\effect\BgWobblePass.cpp" />
+    <ClCompile Include="src\apps\scenes\sub-scenes\01-DemoStage1\DemoStage1.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
@@ -77,6 +92,7 @@
     <None Include="src\resources\exams\bg\SAMPLESTAGE1.bin" />
     <None Include="src\config\AssetsPortfolio.def" />
     <None Include="assets\exams\bg\demostage1tiles.json" />
+    <None Include="src\config\PropertiesPortfolio.def" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -191,6 +207,26 @@
     <ClInclude Include="src\config\GameAssets.h" />
     <ClInclude Include="src\apps\graphics\bg\BGTileAtlas.h" />
     <ClInclude Include="src\apps\graphics\bg\BGTileCatalog.h" />
+    <ClInclude Include="src\apps\vfx\stareffects\BgStarField.h" />
+    <ClInclude Include="src\apps\vfx\stareffects\FixedStar.h" />
+    <ClInclude Include="src\apps\vfx\stareffects\ShootingStar.h" />
+    <ClInclude Include="src\apps\vfx\stareffects\Star.h" />
+    <ClInclude Include="src\apps\vfx\stareffects\StarState.h" />
+    <ClInclude Include="src\test\driver\004\OuterSpaceBG.h" />
+    <ClInclude Include="src\apps\scenes\sub-scenes\90-BackdoorMenu\BackdoorMenu.h" />
+    <ClInclude Include="src\apps\graphics\fonts\FontTileManager.h" />
+    <ClInclude Include="src\apps\graphics\effects\FadeIOTexture.h" />
+    <ClInclude Include="src\apps\supervisor\ResourceFadeBindings.h" />
+    <ClInclude Include="src\apps\scenes\sub-scenes\90-BackdoorMenu\BackdoorMenuPhase.h" />
+    <ClInclude Include="src\apps\scenes\PhaseFadeController.h" />
+    <ClInclude Include="src\config\PathDefsJsonProps.h" />
+    <ClInclude Include="src\apps\vfx\cursor\TwinkleCursorAnimator.h" />
+    <ClInclude Include="src\apps\algorithm\universal\MenuCursorController.h" />
+    <ClInclude Include="src\apps\scenes\sub-scenes\90-BackdoorMenu\BackdoorMenuCatalog.h" />
+    <ClInclude Include="src\apps\algorithm\scrolling\effect\BgWobble2D.h" />
+    <ClInclude Include="src\apps\algorithm\scrolling\effect\BgWobblePass.h" />
+    <ClInclude Include="src\test\driver\005\LissajousCurveBG.h" />
+    <ClInclude Include="src\apps\scenes\sub-scenes\01-DemoStage1\DemoStage1.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />
