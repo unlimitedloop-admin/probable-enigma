@@ -109,14 +109,13 @@ namespace mm2hack::apps::graphics::bg
 
     void BGTileManager::DrawMapByName(const std::wstring& tileset_name, int tile_px_w, int tile_px_h, int offset_x, int offset_y) const
     {
-        auto opt = _catalog.TryGetId(tileset_name);
-        if (!opt)
-        {
-            return;
-        }
-        
-        const Id id = *opt;
-        const auto& atlas = _catalog.GetAtlas(id);
+        DrawMapById(_catalog.GetId(tileset_name), tile_px_w, tile_px_h, offset_x, offset_y);
+    }
+
+    void BGTileManager::DrawMapById(Id tileset_id, int tile_px_w, int tile_px_h, int offset_x, int offset_y) const
+    {
+        if (!_catalog.IsValid(tileset_id)) return;
+        const auto& atlas = _catalog.GetAtlas(tileset_id);
         for (int y = 0; y < _map_h; ++y)
         {
             for (int x = 0; x < _map_w; ++x)

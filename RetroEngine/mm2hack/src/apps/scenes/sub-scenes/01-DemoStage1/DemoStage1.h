@@ -29,10 +29,10 @@ namespace mm2hack::apps::scenes
         Main
     };
 
-    class IDemoStagePhase
+    class IDemoStage1Phase
     {
     public:
-        virtual ~IDemoStagePhase() = default;
+        virtual ~IDemoStage1Phase() = default;
         // Update the phase logic
         virtual void Update() = 0;
         // Render the phase-specific elements
@@ -53,7 +53,6 @@ namespace mm2hack::apps::scenes
         // === IBaseScene implementations ===
         // Initialize the backdoor menu
         void Initialize(const parameters::Parameters& params) override;
-        bool InitializeResources();
         // Main game logic execution
         void Update() override;
         // Render the world elements
@@ -64,14 +63,20 @@ namespace mm2hack::apps::scenes
         SceneID GetSceneID() const override { return SceneID::DemoStage1; }
         // Get the scene name (i.e. class name)
         std::wstring GetSceneName() const override { return kClassName; }
+        // Get the map name used in this scene
+        std::wstring GetMapName() const { return kMapName; }
         // Change child phase of the this scene
-        void QueuePhase(std::unique_ptr<IDemoStagePhase> next, PhaseFadePlan nextPlan);
+        void QueuePhase(std::unique_ptr<IDemoStage1Phase> next, PhaseFadePlan nextPlan);
 
         // === Save/Load state ===
         void Save(std::ostream& out);
         void Load(std::istream& in);
 
+        // Access the fade controller for scene transitions
+        PhaseFadeController& Fader() noexcept { return _fader; }
+
     private:
+        bool InitializeResources(const parameters::Parameters& params);    // Initialize necessary resources
         void Finalize() override;       // Finalize the demo stage scene
 
     private:
@@ -79,12 +84,22 @@ namespace mm2hack::apps::scenes
         const std::wstring kMapName{ L"SAMPLESTAGE1" };
         const std::wstring_view kStageMapBinary{ L"assets\\_exams\\bg\\SAMPLESTAGE1.bin" };
 
+        struct RoomState {
+            int pageIndex{ 0 };
+            int tileW{ 8 };   // in tiles
+            int tileH{ 8 };   // in tiles
+        } _roomState;
+
         SceneChangeMediator* _mediator{ nullptr };              // Mediator for scene changes
-        std::unique_ptr<IDemoStagePhase> _phase;                // Current phase of the demo stage
+        std::unique_ptr<IDemoStage1Phase> _phase;               // Current phase of the demo stage
         DemoStage1PhaseId _phaseId{ DemoStage1PhaseId::Main };  // Current phase identifier
         PhaseFadeController _fader;                             // Fade controller for scene transitions
-        std::unique_ptr<IDemoStagePhase> _pendingPhase;         // Pending phase to switch to
+        std::unique_ptr<IDemoStage1Phase> _pendingPhase;        // Pending phase to switch to
         PhaseFadePlan _pendingPlan{};                           // Pending fade plan for the next phase
+
+        SceneID _nextScene{ SceneID::None };                    // Next scene to switch to
+        parameters::Parameters _nextParams{};                   // Reserve the parameters for the next scene
+        bool _leaving{ false };                                 // Flag indicating if leaving the backdoor menu
 
         const int fadeDurationFrames{ 16 };
 

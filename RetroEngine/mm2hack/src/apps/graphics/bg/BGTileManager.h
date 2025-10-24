@@ -56,6 +56,8 @@ namespace mm2hack::apps::graphics::bg
 
         // Draw map with the specified tileset name
         void DrawMapByName(const std::wstring& tileset_name, int tile_px_w, int tile_px_h, int offset_x = 0, int offset_y = 0) const;
+        // Draw map with the specified tileset Id
+        void DrawMapById(Id tileset_id, int tile_px_w, int tile_px_h, int offset_x = 0, int offset_y = 0) const;
 
         // Events passthrough
         inline void SetEvents(BGTileCatalog::Events e) { _catalog.SetEvents(std::move(e)); }

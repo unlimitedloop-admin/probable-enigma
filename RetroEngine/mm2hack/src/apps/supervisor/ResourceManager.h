@@ -10,6 +10,7 @@
 
 #include <optional>
 #include "apps/audio/AudioManager.h"
+#include "apps/graphics/bg/BGRoomBank.h"
 #include "apps/graphics/bg/BGTileManager.h"
 #include "apps/graphics/effects/FadeIOTexture.h"
 #include "apps/graphics/fonts/FontTileManager.h"
@@ -25,6 +26,7 @@ namespace mm2hack::apps::supervisor
         // --- type aliases (short names only inside this class) ---
         using SpriteManager = graphics::sprite::SpriteManager;
         using BGTileManager = graphics::bg::BGTileManager;
+        using BGRoomBank = graphics::bg::BGRoomBank;
         using FontTileManager = graphics::fonts::FontTileManager;
         using AudioManager  = audio::AudioManager;
         using FadeIOTexture = graphics::effects::FadeIOTexture;
@@ -47,6 +49,8 @@ namespace mm2hack::apps::supervisor
         const SpriteManager& GetSpriteManager() const noexcept { return _spriteManager; }
         BGTileManager& GetBGTileManager() noexcept { return _bgTileManager; }
         const BGTileManager& GetBGTileManager() const noexcept { return _bgTileManager; }
+        BGRoomBank& GetBGRoomBank() noexcept { return _bgRoomBank; }
+        const BGRoomBank& GetBGRoomBank() const noexcept { return _bgRoomBank; }
         FontTileManager& GetFontTileManager() noexcept { return _fontTileManager; }
         const FontTileManager& GetFontTileManager() const noexcept { return _fontTileManager; }
         AudioManager& GetAudioManager() noexcept { return _audioManager; }
@@ -58,6 +62,7 @@ namespace mm2hack::apps::supervisor
     private:
         SpriteManager _spriteManager;       // Instance of SpriteManager
         BGTileManager _bgTileManager;       // Instance of BGTileManager
+        BGRoomBank _bgRoomBank;             // Instance of BGRoomBank
         FontTileManager _fontTileManager;   // Instance of FontTileManager
         AudioManager  _audioManager;        // Instance of AudioManager
 

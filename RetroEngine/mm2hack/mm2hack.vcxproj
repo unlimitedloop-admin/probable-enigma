@@ -184,6 +184,7 @@
     <ClCompile Include="src\apps\audio\SeManager.cpp" />
     <ClCompile Include="src\apps\audio\SoundChannel.cpp" />
     <ClCompile Include="src\apps\deal\GameContext.cpp" />
+    <ClCompile Include="src\apps\graphics\bg\BGRoomBank.cpp" />
     <ClCompile Include="src\apps\graphics\bg\BGTileAtlas.cpp" />
     <ClCompile Include="src\apps\graphics\bg\BGTileCatalog.cpp" />
     <ClCompile Include="src\apps\graphics\bg\BGTileManager.cpp" />
@@ -198,6 +199,7 @@
     <ClCompile Include="src\apps\scenes\SceneFactory.cpp" />
     <ClCompile Include="src\apps\scenes\SceneManager.cpp" />
     <ClCompile Include="src\apps\scenes\sub-scenes\01-DemoStage1\DemoStage1.cpp" />
+    <ClCompile Include="src\apps\scenes\sub-scenes\01-DemoStage1\DemoStage1Phase.cpp" />
     <ClCompile Include="src\apps\scenes\sub-scenes\90-BackdoorMenu\BackdoorMenu.cpp" />
     <ClCompile Include="src\apps\scenes\sub-scenes\90-BackdoorMenu\BackdoorMenuPhase.cpp" />
     <ClCompile Include="src\apps\scenes\sub-scenes\LaunchingGame.cpp" />
@@ -287,6 +289,7 @@
     <ClInclude Include="src\apps\audio\SoundChannel.h" />
     <ClInclude Include="src\apps\deal\GameContext.h" />
     <ClInclude Include="src\apps\deal\IGameContext.h" />
+    <ClInclude Include="src\apps\graphics\bg\BGRoomBank.h" />
     <ClInclude Include="src\apps\graphics\bg\BGTileAtlas.h" />
     <ClInclude Include="src\apps\graphics\bg\BGTileCatalog.h" />
     <ClInclude Include="src\apps\graphics\bg\BGTileManager.h" />
@@ -295,6 +298,7 @@
     <ClInclude Include="src\apps\graphics\sprite\SpriteAtlas.h" />
     <ClInclude Include="src\apps\graphics\sprite\SpriteCatalog.h" />
     <ClInclude Include="src\apps\graphics\sprite\SpriteManager.h" />
+    <ClInclude Include="src\apps\mod\Point.h" />
     <ClInclude Include="src\apps\NES\NESPalette.h" />
     <ClInclude Include="src\apps\parameters\Parameters.h" />
     <ClInclude Include="src\apps\scenes\IBaseScene.h" />
@@ -305,6 +309,7 @@
     <ClInclude Include="src\apps\scenes\SceneID.h" />
     <ClInclude Include="src\apps\scenes\SceneManager.h" />
     <ClInclude Include="src\apps\scenes\sub-scenes\01-DemoStage1\DemoStage1.h" />
+    <ClInclude Include="src\apps\scenes\sub-scenes\01-DemoStage1\DemoStage1Phase.h" />
     <ClInclude Include="src\apps\scenes\sub-scenes\90-BackdoorMenu\BackdoorMenu.h" />
     <ClInclude Include="src\apps\scenes\sub-scenes\90-BackdoorMenu\BackdoorMenuCatalog.h" />
     <ClInclude Include="src\apps\scenes\sub-scenes\90-BackdoorMenu\BackdoorMenuPhase.h" />
