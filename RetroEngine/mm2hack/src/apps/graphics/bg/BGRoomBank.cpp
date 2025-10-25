@@ -27,43 +27,45 @@ namespace mm2hack::apps::graphics::bg
         BGRoomBank::Header h{};
         if (p == nullptr) return h;
 
-        // ヘッダ領域は $00..$0F の 16 バイト。既知のフィールドを個別に設定する。
-        h.magic0 = p[0];
-        h.magic1 = p[1];
-        h.page_hi = p[2];
+        // ヘッダ領域は $00..$0F の 16 バイトで個別の役割を持つ
+        h.magic0     = p[0];
+        h.magic1     = p[1];
+        h.page_hi    = p[2];
         h.bankMarker = p[3];
-        h.room_id = p[4];
-        h.up_id = p[5];
-        h.down_id = p[6];
-        h.left_id = p[7];
-        h.right_id = p[8];
-        h.v_scroll = p[9];
-        h.h_scroll = p[10];
-        h.attr_type = p[11];
-        h.anim_type = p[12];
-        h.user0 = p[13];
-        h.user1 = p[14];
-        h.tail = p[15];
+        h.room_id    = p[4];
+        h.up_id      = p[5];
+        h.down_id    = p[6];
+        h.left_id    = p[7];
+        h.right_id   = p[8];
+        h.v_scroll   = p[9];
+        h.h_scroll   = p[10];
+        h.attr_type  = p[11];
+        h.anim_type  = p[12];
+        h.user0      = p[13];
+        h.user1      = p[14];
+        h.tail       = p[15];
         return h;
     }
 
     void BGRoomBank::Load(std::wstring_view bin_path)
     {
+        const int kPageSize = static_cast<int>(config::SystemConfig::kMapBinaryUnitPageSize);
+
         std::ifstream ifs(std::wstring(bin_path), std::ios::binary);
         if (!ifs) THROW_EXCEPTION(L"BGRoomBank: cannot open file", kClassName);
 
         std::vector<uint8_t> bytes{ std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>() };
-        if (bytes.empty() || (bytes.size() % 0x100) != 0)
-            throw std::runtime_error("BGRoomBank: file size is not multiple of 0x100");
+        if (bytes.empty() || (bytes.size() % kPageSize) != 0)
+            throw std::runtime_error("BGRoomBank: file size is not multiple of " + std::to_string(kPageSize));
 
         _file = std::wstring(bin_path);
         _pages.clear();
-        const size_t page_count = bytes.size() / 0x100;
+        const size_t page_count = bytes.size() / kPageSize;
         _pages.reserve(page_count);
 
         for (size_t i = 0; i < page_count; ++i)
         {
-            const size_t off = i * 0x100;
+            const size_t off = i * kPageSize;
             // ヘッダサイズ分だけ読み込んでもページを越えないことを明示的にチェック
             if (off + sizeof(BGRoomBank::Header) > bytes.size())
                 THROW_EXCEPTION(L"BGRoomBank: unexpected file size while reading header", kClassName);

@@ -15,11 +15,14 @@
 #include <ostream>
 #include <string>
 #include <string_view>
+#include "apps/graphics/bg/AddressScraper.h"
 #include "apps/graphics/bg/BGTileManager.h"
 #include "apps/parameters/Parameters.h"
 #include "apps/scenes/PhaseFadeController.h"
 #include "apps/scenes/SceneChangeMediator.h"
 #include "apps/scenes/SceneID.h"
+#include "apps/supervisor/ResourceManager.h"
+#include "core/assembly/StateProvider.h"
 
 namespace mm2hack::apps::scenes
 {
@@ -41,6 +44,7 @@ namespace mm2hack::apps::scenes
         virtual void RenderOverlay() = 0;
         // Get owner phase id
         virtual DemoStage1PhaseId Id() const noexcept = 0;
+        virtual void SetAddressScraper(std::unique_ptr<graphics::bg::AddressScraper> scraper) noexcept = 0;
     };
 
     // Demo stage scene (ID: 01)
@@ -65,6 +69,8 @@ namespace mm2hack::apps::scenes
         std::wstring GetSceneName() const override { return kClassName; }
         // Get the map name used in this scene
         std::wstring GetMapName() const { return kMapName; }
+        // Get the map binary path used in this scene
+        std::wstring GetMapBinaryPath() const { return std::wstring(kStageMapBinary); }
         // Change child phase of the this scene
         void QueuePhase(std::unique_ptr<IDemoStage1Phase> next, PhaseFadePlan nextPlan);
 
@@ -75,6 +81,9 @@ namespace mm2hack::apps::scenes
         // Access the fade controller for scene transitions
         PhaseFadeController& Fader() noexcept { return _fader; }
 
+        auto& Input() noexcept { return _input; }
+        const auto& Input() const noexcept { return _input; }
+
     private:
         bool InitializeResources(const parameters::Parameters& params);    // Initialize necessary resources
         void Finalize() override;       // Finalize the demo stage scene
@@ -82,7 +91,7 @@ namespace mm2hack::apps::scenes
     private:
         const std::wstring kClassName{ L"DemoStage1" };
         const std::wstring kMapName{ L"SAMPLESTAGE1" };
-        const std::wstring_view kStageMapBinary{ L"assets\\_exams\\bg\\SAMPLESTAGE1.bin" };
+        const std::wstring_view kStageMapBinary{ L"assets\\mapdata\\multiway_test.bin" };
 
         struct RoomState {
             int pageIndex{ 0 };
@@ -103,6 +112,10 @@ namespace mm2hack::apps::scenes
 
         const int fadeDurationFrames{ 16 };
 
-        graphics::bg::BGTileManager::Id _bgTileId{ static_cast<graphics::bg::BGTileManager::Id>(-1) };
+        supervisor::ResourceManager* _resource{ nullptr };      // Reference to the resource manager
+        core::assembly::StateProvider* _input{ nullptr };       // Reference to the state provider
+        graphics::bg::BGTileManager::Id _bgTileId{
+            static_cast<graphics::bg::BGTileManager::Id>(-1)
+        };                                                      // Background tile set Id
     };
 }

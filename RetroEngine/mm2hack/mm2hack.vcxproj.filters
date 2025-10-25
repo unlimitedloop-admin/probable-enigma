@@ -87,6 +87,10 @@
     <ClCompile Include="src\apps\scenes\sub-scenes\01-DemoStage1\DemoStage1.cpp" />
     <ClCompile Include="src\apps\graphics\bg\BGRoomBank.cpp" />
     <ClCompile Include="src\apps\scenes\sub-scenes\01-DemoStage1\DemoStage1Phase.cpp" />
+    <ClCompile Include="src\apps\algorithm\physics\TileCollision.cpp" />
+    <ClCompile Include="src\apps\algorithm\scrolling\atomic\SeamlessBGRenderer.cpp" />
+    <ClCompile Include="src\apps\graphics\bg\AddressScraper.cpp" />
+    <ClCompile Include="src\apps\graphics\bg\MapPageCache.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
@@ -229,9 +233,17 @@
     <ClInclude Include="src\apps\algorithm\scrolling\effect\BgWobblePass.h" />
     <ClInclude Include="src\test\driver\005\LissajousCurveBG.h" />
     <ClInclude Include="src\apps\scenes\sub-scenes\01-DemoStage1\DemoStage1.h" />
-    <ClInclude Include="src\apps\mod\Point.h" />
+    <ClInclude Include="src\apps\mod\CoordinateTypes.h" />
     <ClInclude Include="src\apps\graphics\bg\BGRoomBank.h" />
     <ClInclude Include="src\apps\scenes\sub-scenes\01-DemoStage1\DemoStage1Phase.h" />
+    <ClInclude Include="src\apps\algorithm\physics\TileCollision.h" />
+    <ClInclude Include="src\apps\algorithm\scrolling\atomic\WorldTileQuery.h" />
+    <ClInclude Include="src\apps\algorithm\scrolling\atomic\SeamlessBGRenderer.h" />
+    <ClInclude Include="src\apps\graphics\bg\MapPageCache.h" />
+    <ClInclude Include="src\apps\graphics\bg\AddressScraper.h" />
+    <ClInclude Include="src\apps\graphics\bg\RoomGraphAdapter.h" />
+    <ClInclude Include="src\apps\algorithm\scrolling\atomic\Scroll.h" />
+    <ClInclude Include="src\apps\algorithm\scrolling\atomic\FreeScrollPolicy.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

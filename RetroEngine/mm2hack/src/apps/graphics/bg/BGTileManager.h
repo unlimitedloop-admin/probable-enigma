@@ -49,6 +49,8 @@ namespace mm2hack::apps::graphics::bg
         void SetTile(int x, int y, std::uint8_t id);
         // Get tile at (x,y) in the map
         std::uint8_t GetTile(int x, int y) const;
+        // Extract map binary data from a file, with an optional offset
+        std::vector<std::uint8_t> ExtractMapBinary(std::wstring_view map_file) const;
         // Set tile attributes (per tile-id)
         void SetTileAttribute(std::uint8_t tile_id, std::uint8_t attr);
         // Get tile attribute for the specified tile-id

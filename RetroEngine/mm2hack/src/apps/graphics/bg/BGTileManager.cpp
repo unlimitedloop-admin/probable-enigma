@@ -83,6 +83,43 @@ namespace mm2hack::apps::graphics::bg
         return _tile_map[y * _map_w + x];
     }
 
+    std::vector<std::uint8_t> BGTileManager::ExtractMapBinary(std::wstring_view map_file) const
+    {
+        const std::wstring path = std::wstring(map_file);
+        std::ifstream file(path, std::ios::binary);
+        if (!file)
+        {
+            THROW_EXCEPTION(L"Failed to open map file: " + path, kClassName);
+        }
+
+        // シークしてファイルサイズを取得
+        file.seekg(0, std::ios::end);
+        std::streamoff s = file.tellg();
+        if (s <= 0)
+        {
+            // 空ファイルまたは取得失敗
+            return std::vector<std::uint8_t>();
+        }
+        file.seekg(0, std::ios::beg);
+
+        // バッファ確保して一括読み込み
+        std::vector<std::uint8_t> raw(static_cast<std::size_t>(s));
+        file.read(reinterpret_cast<char*>(raw.data()), static_cast<std::streamsize>(raw.size()));
+
+        // 読み込みが途中で失敗した場合、read で読み取れたバイト数に合わせてリサイズ
+        if (!file)
+        {
+            std::streamsize readBytes = file.gcount();
+            if (readBytes <= 0)
+            {
+                return std::vector<std::uint8_t>();
+            }
+            raw.resize(static_cast<std::size_t>(readBytes));
+        }
+
+        return raw;
+    }
+
     void BGTileManager::SetTileAttribute(std::uint8_t tile_id, std::uint8_t attr)
     {
         if (_tile_attr.size() <= tile_id)

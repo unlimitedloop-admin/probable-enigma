@@ -9,7 +9,6 @@
 #pragma once
 
 #include <cstdint>
-#include <filesystem>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -25,9 +24,22 @@ namespace mm2hack::apps::graphics::bg
         enum class Dir : uint8_t { Up, Down, Left, Right };
         enum class Scroll : uint8_t
         {
-            None = 0, Free = 1, PerPage = 2, NoScrollEdge = 3, NoScroll = 4, Dynamic = 5, AxisFix = 6,
-            Loop = 7, Auto = 8, AutoByObj = 9, Large = 10, Raster3D = 11, RasterFlag = 12,
-            MultiBG = 13, Undef14 = 14, Other = 15
+            None = 0x00,
+            Free = 0x01,
+            PerPage = 0x02,
+            NoScrollEdge = 0x03,
+            NoScroll = 0x04,
+            Dynamic = 0x05,
+            AxisFix = 0x06,
+            Loop = 0x07,
+            Auto = 0x08,
+            AutoByObj = 0x09,
+            Large = 0x0A,
+            Raster3D = 0x0B,
+            RasterFlag = 0x0C,
+            MultiBG = 0x0D,
+            Undef14 = 0x0E,
+            Other = 0x0F
         };
 
         struct Header

@@ -55,6 +55,11 @@ namespace mm2hack::config
 
         static constexpr uint32_t kFeedbackOverlayDuration = 180;   // Duration for feedback overlay display (milliseconds)
 
+        // Map data in binary format
+        static constexpr size_t kMapBinaryUnitPageSize = 0x100;     // Size of one map binary unit page (bytes)
+        static constexpr size_t kMapBinaryHeaderSize = 0x10;        // Size of the map binary header (bytes)
+
+
         // NES Style properties
         // Tile Set
         static const unsigned int kTileSizeWidth = 16;              // BG Tile width (pixels)

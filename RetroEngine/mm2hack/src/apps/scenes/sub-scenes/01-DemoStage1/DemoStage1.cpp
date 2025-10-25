@@ -6,6 +6,7 @@
 #include <istream>
 #include <ostream>
 #include "apps/deal/GameContext.h"
+#include "apps/graphics/bg/AddressScraper.h"
 #include "apps/graphics/bg/BGTileManager.h"
 #include "apps/parameters/Parameters.h"
 #include "apps/scenes/PhaseFadeController.h"
@@ -54,6 +55,17 @@ namespace mm2hack::apps::scenes
             FadeLayerMask::BG | FadeLayerMask::Font // layers
         );
         _fader.BeginPhase(first, resource);
+
+        _resource = &resource;
+        _input = &GameContext::GetInstance().Input();
+
+        _phase->SetAddressScraper(std::make_unique<graphics::bg::AddressScraper>(
+            resource.GetBGTileManager().ExtractMapBinary(
+                resource.GetBGRoomBank().FilePath()
+            )
+        ));
+
+        utils::debug_log(kClassName + L" initialized.");
     }
 
     bool DemoStage1::InitializeResources(const parameters::Parameters& params)
