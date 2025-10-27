@@ -36,6 +36,8 @@ namespace mm2hack::apps::scenes
     {
     public:
         virtual ~IDemoStage1Phase() = default;
+        // Initialize the phase
+        virtual void Initialize() = 0;
         // Update the phase logic
         virtual void Update() = 0;
         // Render the phase-specific elements
@@ -44,7 +46,6 @@ namespace mm2hack::apps::scenes
         virtual void RenderOverlay() = 0;
         // Get owner phase id
         virtual DemoStage1PhaseId Id() const noexcept = 0;
-        virtual void SetAddressScraper(std::unique_ptr<graphics::bg::AddressScraper> scraper) noexcept = 0;
     };
 
     // Demo stage scene (ID: 01)
@@ -80,6 +81,9 @@ namespace mm2hack::apps::scenes
 
         // Access the fade controller for scene transitions
         PhaseFadeController& Fader() noexcept { return _fader; }
+
+        auto& ResourceManager() noexcept { return *_resource; }
+        const auto& ResourceManagerPtr() const noexcept { return *_resource; }
 
         auto& Input() noexcept { return _input; }
         const auto& Input() const noexcept { return _input; }

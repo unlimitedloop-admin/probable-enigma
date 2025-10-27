@@ -59,11 +59,7 @@ namespace mm2hack::apps::scenes
         _resource = &resource;
         _input = &GameContext::GetInstance().Input();
 
-        _phase->SetAddressScraper(std::make_unique<graphics::bg::AddressScraper>(
-            resource.GetBGTileManager().ExtractMapBinary(
-                resource.GetBGRoomBank().FilePath()
-            )
-        ));
+        _phase->Initialize();
 
         utils::debug_log(kClassName + L" initialized.");
     }

@@ -8,10 +8,10 @@
 //==============================================================================
 #pragma once
 
-#include "apps/algorithm/scrolling/atomic/Scroll.h"
 #include "apps/graphics/bg/AddressScraper.h"
 #include "apps/graphics/bg/BGTileManager.h"
 #include "apps/graphics/bg/MapPageCache.h"
+#include "ScrollController.h"
 
 namespace mm2hack::apps::algorithm::scrolling::atomic
 {

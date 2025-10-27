@@ -91,6 +91,10 @@
     <ClCompile Include="src\apps\algorithm\scrolling\atomic\SeamlessBGRenderer.cpp" />
     <ClCompile Include="src\apps\graphics\bg\AddressScraper.cpp" />
     <ClCompile Include="src\apps\graphics\bg\MapPageCache.cpp" />
+    <ClCompile Include="src\apps\algorithm\scrolling\atomic\ScraperScrollRuleProvider.cpp" />
+    <ClCompile Include="src\apps\algorithm\scrolling\atomic\PageScrollAnimator.cpp" />
+    <ClCompile Include="src\apps\algorithm\scrolling\atomic\MapRenderer2D.cpp" />
+    <ClCompile Include="src\apps\algorithm\scrolling\atomic\ScrollController.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
@@ -242,8 +246,13 @@
     <ClInclude Include="src\apps\graphics\bg\MapPageCache.h" />
     <ClInclude Include="src\apps\graphics\bg\AddressScraper.h" />
     <ClInclude Include="src\apps\graphics\bg\RoomGraphAdapter.h" />
-    <ClInclude Include="src\apps\algorithm\scrolling\atomic\Scroll.h" />
+    <ClInclude Include="src\apps\algorithm\scrolling\atomic\ScrollController.h" />
     <ClInclude Include="src\apps\algorithm\scrolling\atomic\FreeScrollPolicy.h" />
+    <ClInclude Include="src\apps\algorithm\scrolling\atomic\ScrollTypes.h" />
+    <ClInclude Include="src\apps\algorithm\scrolling\atomic\IScrollRuleProvider.h" />
+    <ClInclude Include="src\apps\algorithm\scrolling\atomic\ScraperScrollRuleProvider.h" />
+    <ClInclude Include="src\apps\algorithm\scrolling\atomic\PageScrollAnimator.h" />
+    <ClInclude Include="src\apps\algorithm\scrolling\atomic\MapRenderer2D.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

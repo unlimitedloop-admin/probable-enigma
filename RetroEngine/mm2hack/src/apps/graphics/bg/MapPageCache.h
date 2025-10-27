@@ -60,8 +60,7 @@ namespace mm2hack::apps::graphics::bg
         // roomNo (uint8) → pageIndex (>=0) のラッパ
         static std::optional<std::size_t> toOptIndex(int16_t idx)
         {
-            return (idx >= 0) ? std::optional<std::size_t>(static_cast<std::size_t>(idx))
-                : std::nullopt;
+            return (idx >= 0) ? std::optional<std::size_t>(static_cast<std::size_t>(idx)) : std::nullopt;
         }
     };
 }

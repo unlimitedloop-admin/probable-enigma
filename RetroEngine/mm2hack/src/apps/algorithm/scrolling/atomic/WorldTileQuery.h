@@ -11,8 +11,8 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
-#include "apps/algorithm/scrolling/atomic/Scroll.h"
 #include "apps/graphics/bg/MapPageCache.h"
+#include "ScrollController.h"
 
 namespace mm2hack::apps::algorithm::scrolling::atomic
 {

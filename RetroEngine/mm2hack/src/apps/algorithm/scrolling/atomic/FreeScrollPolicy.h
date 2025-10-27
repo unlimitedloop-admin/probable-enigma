@@ -11,7 +11,7 @@
 #include <cstdint>
 #include "apps/graphics/bg/RoomGraphAdapter.h"
 #include "apps/mod/CoordinateTypes.h"
-#include "Scroll.h"
+#include "ScrollController.h"
 
 namespace mm2hack::apps::algorithm::scrolling::atomic
 {
