@@ -8,15 +8,13 @@
 
 namespace mm2hack::apps::algorithm::scrolling::atomic
 {
-    using mm2hack::config::SystemConfig;
-
     static inline int MaxX(int view_w) { return view_w - 1; }
     static inline int MaxY(int view_h) { return view_h - 1; }
 
     void ScrollController::Update(const mod::Vec2& input_delta)
     {
-        const int page_w = _params.tile_px * 16;
-        const int page_h = _params.tile_px * 15;
+        const int page_w = _params.tile_px * _tileX;
+        const int page_h = _params.tile_px * _tileY;
 
         // 固定ページアニメ中：進捗のみ
         if (_anim.Active())
@@ -39,8 +37,8 @@ namespace mm2hack::apps::algorithm::scrolling::atomic
 
     void ScrollController::Render()
     {
-        const int page_w = _params.tile_px * 16;
-        const int page_h = _params.tile_px * 15;
+        const int page_w = _params.tile_px * _tileX;
+        const int page_h = _params.tile_px * _tileY;
 
         if (_anim.Active())
         {

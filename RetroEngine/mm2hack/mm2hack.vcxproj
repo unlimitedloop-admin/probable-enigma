@@ -284,6 +284,12 @@
   <ItemGroup>
     <ClInclude Include="resource.h" />
     <ClInclude Include="src\apps\algorithm\physics\TileCollision.h" />
+    <ClInclude Include="src\apps\graphics\entity\EntityBase.h" />
+    <ClInclude Include="src\apps\graphics\entity\IEntity.h" />
+    <ClInclude Include="src\apps\graphics\entity\IRenderable.h" />
+    <ClInclude Include="src\apps\graphics\entity\IUpdatable.h" />
+    <ClInclude Include="src\apps\graphics\sprite\SpriteBase.h" />
+    <ClInclude Include="src\apps\render\RenderContext.h" />
     <ClInclude Include="src\apps\algorithm\scrolling\atomic\FreeScrollPolicy.h" />
     <ClInclude Include="src\apps\algorithm\scrolling\atomic\IScrollRuleProvider.h" />
     <ClInclude Include="src\apps\algorithm\scrolling\atomic\MapRenderer2D.h" />
@@ -320,6 +326,7 @@
     <ClInclude Include="src\apps\graphics\sprite\SpriteCatalog.h" />
     <ClInclude Include="src\apps\graphics\sprite\SpriteManager.h" />
     <ClInclude Include="src\apps\mod\CoordinateTypes.h" />
+    <ClInclude Include="src\apps\mod\ViewState.h" />
     <ClInclude Include="src\apps\NES\NESPalette.h" />
     <ClInclude Include="src\apps\parameters\Parameters.h" />
     <ClInclude Include="src\apps\scenes\IBaseScene.h" />

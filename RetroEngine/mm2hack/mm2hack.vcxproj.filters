@@ -253,6 +253,13 @@
     <ClInclude Include="src\apps\algorithm\scrolling\atomic\ScraperScrollRuleProvider.h" />
     <ClInclude Include="src\apps\algorithm\scrolling\atomic\PageScrollAnimator.h" />
     <ClInclude Include="src\apps\algorithm\scrolling\atomic\MapRenderer2D.h" />
+    <ClInclude Include="src\apps\mod\ViewState.h" />
+    <ClInclude Include="src\apps\render\RenderContext.h" />
+    <ClInclude Include="src\apps\graphics\entity\IEntity.h" />
+    <ClInclude Include="src\apps\graphics\entity\IUpdatable.h" />
+    <ClInclude Include="src\apps\graphics\entity\IRenderable.h" />
+    <ClInclude Include="src\apps\graphics\entity\EntityBase.h" />
+    <ClInclude Include="src\apps\graphics\sprite\SpriteBase.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

@@ -10,6 +10,8 @@
 
 #include <cstdlib>
 #include "apps/mod/CoordinateTypes.h"
+#include "apps/mod/ViewState.h"
+#include "config/SystemConfig.h"
 #include "IScrollRuleProvider.h"
 #include "MapRenderer2D.h"
 #include "PageScrollAnimator.h"
@@ -21,10 +23,10 @@ namespace mm2hack::apps::algorithm::scrolling::atomic
     struct Camera
     {
         Scalar x{ 0 }, y{ 0 };
-        int vw{ 256 }, vh{ 240 };
+        int vw{ config::SystemConfig::kScreenWidth }, vh{ config::SystemConfig::kScreenHeight };
 
-        static constexpr Scalar kCenterX = 128.0;   // 256/2
-        static constexpr Scalar kCenterY = 120.0;   // 240/2
+        static constexpr Scalar kCenterX = config::SystemConfig::kScreenWidth / 2.0;
+        static constexpr Scalar kCenterY = config::SystemConfig::kScreenHeight / 2.0;
 
         static inline bool NearlyZero(Scalar v, Scalar eps = mod::kEps) noexcept { return std::abs(v) <= eps; }
         static inline bool NearlyEqual(Scalar a, Scalar b, Scalar eps = mod::kEps) noexcept { return std::abs(a - b) <= eps; }
@@ -48,91 +50,21 @@ namespace mm2hack::apps::algorithm::scrolling::atomic
     public:
         virtual ~IScrollPolicy() = default;
         // 戻り値：ページ切替が起きたら true
-        virtual bool Update(const apps::mod::RectF& playerBox,
+        virtual bool Update(const mod::RectF& playerBox,
             Camera& cam,
             size_t& currentPageIndex,
             double dt) = 0;
     };
 
-    //class ScrollController
-    //{
-    //    using RoomGraphAdapter = graphics::bg::RoomGraphAdapter;
-    //    using BGTileManager = graphics::bg::BGTileManager;
-
-    //public:
-    //    ScrollController(Camera cam,
-    //        std::unique_ptr<IScrollPolicy> policy,
-    //        RoomGraphAdapter& graph,
-    //        BGTileManager& bg,
-    //        const std::wstring& tilesetName,
-    //        const std::wstring& mapBinPath)
-    //        : _cam(cam), _policy(std::move(policy)), _graph(graph), _bg(bg),
-    //        _tileset(tilesetName), _mapPath(mapBinPath)
-    //    {
-    //    }
-
-    //    // pageIndex は「現在のページ」を保持（roomNo→pageIndexは初期化時に解決）
-    //    void Initialize(size_t pageIndex, int tilePx)
-    //    {
-    //        _loadedPage = SIZE_MAX;
-    //        _tilePx = tilePx;
-    //        _currentPage = pageIndex;
-    //        _bg.SetMapSize(16, 15);
-    //        reloadIfNeeded(true);
-    //    }
-
-    //    // 1フレーム更新。必要ならページを切替えて BG を再ロード
-    //    void Update(const apps::mod::RectF& playerBox, double dt)
-    //    {
-    //        if (_policy->Update(playerBox, _cam, _currentPage, dt))
-    //        {
-    //            reloadIfNeeded(true);
-    //        }
-    //    }
-
-    //    // 衝突系へ“カメラオフセット”を供給
-    //    template <class CollisionService>
-    //    void FeedTo(CollisionService& col) const
-    //    {
-    //        col.SetWorldOffset(static_cast<float>(_cam.x), static_cast<float>(_cam.y));
-    //    }
-
-    //    const Camera& GetCamera() const noexcept { return _cam; }
-
-    //private:
-    //    void reloadIfNeeded(bool force)
-    //    {
-    //        if (force || _loadedPage != _currentPage)
-    //        {
-    //            // AddressScraper を使って該当ページの 0x10 オフセットへ
-    //            const int offset = static_cast<int>(_currentPage * 0x100 + 0x10);
-    //            _bg.LoadMapBinary(_mapPath, offset);
-    //            _loadedPage = _currentPage;
-    //            // ★ $0B 属性タイプに応じた属性テーブル適用をここで（前回の ApplyAttrByPage 相当）
-    //        }
-    //    }
-
-    //private:
-    //    Camera _cam;
-    //    std::unique_ptr<IScrollPolicy> _policy;
-    //    RoomGraphAdapter& _graph;
-    //    BGTileManager& _bg;
-    //    std::wstring _tileset, _mapPath;
-
-    //    size_t _currentPage{ 0 }, _loadedPage{ SIZE_MAX };
-    //    int _tilePx{ 8 };
-    //};
-
-    // REVIEW: 上記のクラスを改訂
-    // 8方向スクロールの意思決定と状態管理のコア
+    // The main video screen policy and management of scrolling in 2D maps
     class ScrollController
     {
     public:
         struct Params
         {
-            int tile_px{ 16 };          // 1タイル px
-            int view_w{ 256 };         // 画面幅
-            int view_h{ 240 };         // 画面高
+            int tile_px{ 16 };  // Tile px
+            int view_w{ config::SystemConfig::kScreenWidth };  // Width of the screen
+            int view_h{ config::SystemConfig::kScreenHeight };  // Height of the screen
         };
 
         ScrollController(IScrollRuleProvider& rules,
@@ -161,22 +93,35 @@ namespace mm2hack::apps::algorithm::scrolling::atomic
         PageScrollAnimator& Animator() noexcept { return _anim; }
         const PageScrollAnimator& Animator() const noexcept { return _anim; }
 
+        mod::ViewState GetView() const noexcept
+        {
+            mod::ViewState v{};
+            v.camX = _cam.x;
+            v.camY = _cam.y;
+            v.viewW = _params.view_w;
+            v.viewH = _params.view_h;
+            return v;
+        }
+
     private:
-        // 補助
+        // Sub-update for each axis
         void UpdateAxisX(double remain);
         void UpdateAxisY(double remain);
 
-        // 近傍ページ描画（自由スクロール中）
+        // Draw neighboring pages
         void DrawNeighbors();
 
     private:
-        IScrollRuleProvider& _rules;
-        MapRenderer2D& _renderer;
-        Params _params{};
+        IScrollRuleProvider& _rules;        // Scroll rules
+        MapRenderer2D& _renderer;           // Map renderer
+        Params _params{};                   // Parameters
 
         std::size_t _page_index{ 0 };
         mod::Vec2 _object_pos{};
         Camera _cam{};
         PageScrollAnimator _anim{};
+
+        const int _tileX{ config::SystemConfig::kTileCountX };
+        const int _tileY{ config::SystemConfig::kTileCountY };
     };
 }
