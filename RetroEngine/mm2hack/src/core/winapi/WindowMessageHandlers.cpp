@@ -5,7 +5,7 @@
 #include <cstdio>
 #include <filesystem>
 #include "../resource.h"
-#include "apps/deal/GameContext.h"
+#include "apps/runtime/GameContext.h"
 #include "apps/sequence/SequenceManager.h"
 #include "apps/sequence/SequenceType.h"
 #include "config/ConfigUIManager.h"
@@ -237,7 +237,7 @@ namespace mm2hack::core::winapi
 
         case ID_MENU_GAMEPAD_SETTINGS:
         {
-            auto& keyBinding = apps::deal::GameContext::GetInstance().Joystick().GetKeyBinding();
+            auto& keyBinding = apps::runtime::GameContext::GetInstance().Joystick().GetKeyBinding();
             auto steps = overlay::BuildStepsFull16();
             overlay::InputConfigOverlay::GetInstance().Open(keyBinding, steps);
             break;
@@ -325,7 +325,7 @@ namespace mm2hack::core::winapi
 
     void HandleKeyDown(HWND hWnd, WPARAM wParam, LPARAM lParam)
     {
-        auto& gameContext = apps::deal::GameContext::GetInstance();
+        auto& gameContext = apps::runtime::GameContext::GetInstance();
         auto& gameState = GameStateManager::GetInstance();
         auto& windowManager = WindowManager::GetInstance();
 
@@ -431,7 +431,7 @@ namespace mm2hack::core::winapi
             if (core::overlay::PauseManager::IsPaused())
             {
                 // One step frame forward and resume if currently paused.
-                apps::deal::GameContext::GetInstance().Time().StepOneFrame();
+                apps::runtime::GameContext::GetInstance().Time().StepOneFrame();
             }
             break;
 

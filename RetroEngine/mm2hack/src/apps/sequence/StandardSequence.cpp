@@ -2,8 +2,8 @@
 
 #include "StandardSequence.h"
 
-#include "apps/NES/NESPalette.h"
-#include "apps/parameters/Parameters.h"
+#include "apps/foundation/NES/NESPalette.h"
+#include "apps/resources/parameters/Parameters.h"
 #include "apps/scenes/SceneChangeMediator.h"
 #include "apps/scenes/SceneID.h"
 #include "apps/scenes/SceneManager.h"
@@ -19,19 +19,19 @@ namespace mm2hack::apps::sequence
         _sceneManager.SetMediator(&_sceneChanger);
 
         // NOTE: LaunchingGame -> Opening
-        parameters::Parameters params;
+        resources::parameters::Parameters params;
         params = params.With<scenes::SceneID>(L"Subsequent", scenes::SceneID::Opening);
         _sceneChanger.RequestChange(scenes::SceneID::LaunchingGame, params);
 
         // Load the default background color for the NES palette.
-        NES::NESPalette::SetBackgroundFor(config::SystemConfig::kMakeSeqPaletteIndex);
+        foundation::NES::NESPalette::SetBackgroundFor(config::SystemConfig::kMakeSeqPaletteIndex);
     }
 
     StandardSequence::~StandardSequence()
     {
         // Clean up resources, finalize the sequence, etc.
         _sceneManager.Release();
-        NES::NESPalette::SetBackgroundFor(config::SystemConfig::kDefaultNESPaletteIndex);
+        foundation::NES::NESPalette::SetBackgroundFor(config::SystemConfig::kDefaultNESPaletteIndex);
     }
 
     void StandardSequence::Execute()

@@ -14,28 +14,22 @@
 #include <string>
 #include <string_view>
 #include <vector>
-#include "apps/graphics/sprite/SpriteManager.h"
+#include "apps/rendering/sprite/SpriteManager.h"
 
 namespace mm2hack::apps::vfx::cursor
 {
     // Display a twinkling cursor animation at the specified position
     class TwinkleCursorAnimator final
     {
-    public:
-        using SpriteManager = graphics::sprite::SpriteManager;
+        using SpriteManager = rendering::sprite::SpriteManager;
 
+    public:
         struct Step
         {
             int tile;      // Tile number to use (frame)
             int duration;  // Number of frames to maintain this tile (1=1 game frame)
         };
 
-        // Fade animator default loop (7 steps)
-        static constexpr std::array<Step, 7> kDefaultFadeLoop{
-            Step{0, 12}, Step{1, 2}, Step{2, 2}, Step{3, 2}, Step{2, 2}, Step{1, 2}, Step{0, 6}
-        };
-
-    public:
         TwinkleCursorAnimator(SpriteManager& sprites, int x = 0, int y = 0) noexcept;
         ~TwinkleCursorAnimator() = default;
 
@@ -62,14 +56,19 @@ namespace mm2hack::apps::vfx::cursor
         // Get the current tile index being displayed
         [[nodiscard]] int CurrentTile() const noexcept { return _steps[_stepIndex].tile; }
 
+        // Fade animator default loop (7 steps)
+        static constexpr std::array<Step, 7> kDefaultFadeLoop{
+            Step{0, 12}, Step{1, 2}, Step{2, 2}, Step{3, 2}, Step{2, 2}, Step{1, 2}, Step{0, 6}
+        };
+
     private:
         void drawImpl_(int x, int y) const noexcept;     // Internal draw implementation
 
     private:
         SpriteManager& _sprites;
-        std::wstring   _name;
-        int            _x{ 0 };
-        int            _y{ 0 };
+        std::wstring _name;
+        int _y{ 0 };
+        int _x{ 0 };
 
         using Id = std::int32_t;
         Id _id{ -1 };

@@ -3,10 +3,8 @@
 #include "DemoStage1Phase.h"
 
 #include <cstdio>
-#include "apps/algorithm/scrolling/atomic/MapRenderer2D.h"
-#include "apps/algorithm/scrolling/atomic/ScrollController.h"
-#include "apps/graphics/bg/AddressScraper.h"
-#include "apps/mod/CoordinateTypes.h"
+#include "apps/foundation/math/CoordinateTypes.h"
+#include "apps/systems/scrolling/atomic/ScrollController.h"
 #include "DemoStage1.h"
 #include "input/Jpbtn.h"
 
@@ -43,7 +41,7 @@ namespace mm2hack::apps::scenes
             if (!owner.Fader().InputEnabled()) return;
 
             // Simple object movement with arrow keys
-            using namespace mod;
+            using namespace foundation::math;
             Vec2 delta{ 0, 0 };
 
             auto& input = owner.Input();

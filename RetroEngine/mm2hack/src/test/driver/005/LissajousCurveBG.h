@@ -9,15 +9,19 @@
 #pragma once
 
 #include <string>
-#include "apps/algorithm/scrolling/effect/BgWobblePass.h"
-#include "apps/graphics/bg/BGTileManager.h"
-#include "apps/graphics/sprite/SpriteManager.h"
+#include "apps/rendering/bg/BGTileManager.h"
+#include "apps/rendering/sprite/SpriteManager.h"
+#include "apps/systems/scrolling/effect/BgWobblePass.h"
 #include "test/driver/ITestDriver.h"
 
 namespace mm2hack::apps::scenes
 {
     class LissajousCurveBG final : public ITestDriver
     {
+        using BgWobblePass = systems::scrolling::effect::BgWobblePass;
+        using BGTileManager = rendering::bg::BGTileManager;
+        using SpriteManager = rendering::sprite::SpriteManager;
+
     public:
         LissajousCurveBG() {}
         ~LissajousCurveBG() {}
@@ -34,10 +38,10 @@ namespace mm2hack::apps::scenes
 
         const int fadeDurationFrames{ 16 };
 
-        graphics::sprite::SpriteManager::Id _playerId{ static_cast<graphics::sprite::SpriteManager::Id>(-1) };
-        graphics::bg::BGTileManager::Id _bgTileId{ static_cast<graphics::bg::BGTileManager::Id>(-1) };
+        SpriteManager::Id _playerId{ static_cast<SpriteManager::Id>(-1) };
+        BGTileManager::Id _bgTileId{ static_cast<BGTileManager::Id>(-1) };
 
-        apps::algorithm::scrolling::effect::BgWobblePass _bgPass;
+        BgWobblePass _bgPass;
         float _deltaTimeSec{ 0.0f };
     };
 }

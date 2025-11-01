@@ -7,7 +7,7 @@
 #include <iterator>
 #include <limits>
 #include "../resource.h"
-#include "apps/NES/NESPalette.h"
+#include "apps/foundation/NES/NESPalette.h"
 #include "config/ConfigUIManager.h"
 #include "config/EnvironmentConfig.h"
 #include "config/GraphicsConfig.h"
@@ -64,6 +64,7 @@ namespace mm2hack::core::winapi
         using namespace exceptions;
         using namespace utils;
         using conf = config::SystemConfig;
+        using NESPal = apps::foundation::NES::NESPalette;
 
         auto reportInitError = [](const std::wstring& message) -> bool
             {
@@ -146,13 +147,13 @@ namespace mm2hack::core::winapi
         SetWindowLongPtr(_mainWindowHandle, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WindowProc));
 
         // Set the background color using NES palette
-        if (!apps::NES::NESPalette::LoadPaletteFromFile(conf::kNESPaletteFilepath))
+        if (!NESPal::LoadPaletteFromFile(conf::kNESPaletteFilepath))
         {
             // If palette loading fails, handle the error
             ::DxLib::DxLib_End();
             return reportInitError(L"Failed to load NES palette.");
         }
-        apps::NES::NESPalette::SetBackgroundFor(conf::kDefaultNESPaletteIndex);
+        NESPal::SetBackgroundFor(conf::kDefaultNESPaletteIndex);
         ::DxLib::ChangeFont(L"Segoe UI");
 
         _screenHandle = ::DxLib::MakeScreen(conf::kScreenWidth, conf::kScreenHeight, FALSE);  // Create a screen for drawing

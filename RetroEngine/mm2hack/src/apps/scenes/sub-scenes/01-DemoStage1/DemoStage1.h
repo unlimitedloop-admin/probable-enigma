@@ -15,13 +15,12 @@
 #include <ostream>
 #include <string>
 #include <string_view>
-#include "apps/graphics/bg/AddressScraper.h"
-#include "apps/graphics/bg/BGTileManager.h"
-#include "apps/parameters/Parameters.h"
+#include "apps/rendering/bg/BGTileManager.h"
+#include "apps/resources/parameters/Parameters.h"
+#include "apps/resources/ResourceManager.h"
 #include "apps/scenes/PhaseFadeController.h"
 #include "apps/scenes/SceneChangeMediator.h"
 #include "apps/scenes/SceneID.h"
-#include "apps/supervisor/ResourceManager.h"
 #include "core/assembly/StateProvider.h"
 
 namespace mm2hack::apps::scenes
@@ -51,13 +50,15 @@ namespace mm2hack::apps::scenes
     // Demo stage scene (ID: 01)
     class DemoStage1 : public IBaseScene
     {
+        using Parameters = resources::parameters::Parameters;
+
     public:
         explicit DemoStage1(SceneChangeMediator* mediator);
         ~DemoStage1() override;
 
         // === IBaseScene implementations ===
         // Initialize the backdoor menu
-        void Initialize(const parameters::Parameters& params) override;
+        void Initialize(const Parameters& params) override;
         // Main game logic execution
         void Update() override;
         // Render the world elements
@@ -89,8 +90,8 @@ namespace mm2hack::apps::scenes
         const auto& Input() const noexcept { return _input; }
 
     private:
-        bool InitializeResources(const parameters::Parameters& params);    // Initialize necessary resources
-        void Finalize() override;       // Finalize the demo stage scene
+        bool initializeResources_(const Parameters& params);    // Initialize necessary resources
+        void finalize_() override;       // Finalize the demo stage scene
 
     private:
         const std::wstring kClassName{ L"DemoStage1" };
@@ -111,15 +112,15 @@ namespace mm2hack::apps::scenes
         PhaseFadePlan _pendingPlan{};                           // Pending fade plan for the next phase
 
         SceneID _nextScene{ SceneID::None };                    // Next scene to switch to
-        parameters::Parameters _nextParams{};                   // Reserve the parameters for the next scene
+        Parameters _nextParams{};                               // Reserve the parameters for the next scene
         bool _leaving{ false };                                 // Flag indicating if leaving the backdoor menu
 
         const int fadeDurationFrames{ 16 };
 
-        supervisor::ResourceManager* _resource{ nullptr };      // Reference to the resource manager
+        apps::resources::ResourceManager* _resource{ nullptr }; // Reference to the resource manager
         core::assembly::StateProvider* _input{ nullptr };       // Reference to the state provider
-        graphics::bg::BGTileManager::Id _bgTileId{
-            static_cast<graphics::bg::BGTileManager::Id>(-1)
+        rendering::bg::BGTileManager::Id _bgTileId{
+            static_cast<rendering::bg::BGTileManager::Id>(-1)
         };                                                      // Background tile set Id
     };
 }

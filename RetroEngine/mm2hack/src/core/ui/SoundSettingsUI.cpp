@@ -5,7 +5,7 @@
 #include <CommCtrl.h>
 #include <sysinfoapi.h>
 #include <Windowsx.h>
-#include "apps/deal/GameContext.h"
+#include "apps/runtime/GameContext.h"
 #include "CommonUIStyle.h"
 #include "config/ConfigUIManager.h"
 #include "config/SoundConfig.h"
@@ -67,7 +67,7 @@ namespace mm2hack::core::ui
         config::ConfigUIManager::SaveSoundConfig(config);
 
         // To apply the settings, we need to access the ResourceManager.
-        auto& ctx = apps::deal::GameContext::GetInstance();
+        auto& ctx = apps::runtime::GameContext::GetInstance();
         if (ctx.GetResourceManagerPtr())
         {
             auto& audio = ctx.GetResourceManager().GetAudioManager();

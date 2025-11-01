@@ -9,7 +9,7 @@
 #pragma once
 
 #include <string>
-#include "apps/parameters/Parameters.h"
+#include "apps/resources/parameters/Parameters.h"
 #include "SceneID.h"
 
 namespace mm2hack::apps::scenes
@@ -21,7 +21,7 @@ namespace mm2hack::apps::scenes
         virtual ~IBaseScene() = default;
         
         // === Setup ===
-        virtual void Initialize(const parameters::Parameters& params) = 0;
+        virtual void Initialize(const resources::parameters::Parameters& params) = 0;
 
         // === Logic only ===
         virtual void Update() = 0;
@@ -38,6 +38,6 @@ namespace mm2hack::apps::scenes
 
     protected:
         // === Shutdown ===
-        virtual void Finalize() = 0;
+        virtual void finalize_() = 0;
     };
 }

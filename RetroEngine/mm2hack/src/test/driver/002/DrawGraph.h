@@ -10,8 +10,8 @@
 
 #include <string>
 #include <string_view>
-#include "apps/graphics/bg/BGTileManager.h"
-#include "apps/graphics/sprite/SpriteManager.h"
+#include "apps/rendering/sprite/SpriteManager.h"
+#include "apps/rendering/bg/BGTileManager.h"
 #include "test/driver/ITestDriver.h"
 
 namespace mm2hack::apps::scenes
@@ -36,7 +36,7 @@ namespace mm2hack::apps::scenes
 
         const int fadeDurationFrames{ 16 };
 
-        graphics::sprite::SpriteManager::Id _playerId{ static_cast<graphics::sprite::SpriteManager::Id>(-1) };
-        graphics::bg::BGTileManager::Id _bgTileId{ static_cast<graphics::bg::BGTileManager::Id>(-1) };
+        rendering::sprite::SpriteManager::Id _playerId{ static_cast<rendering::sprite::SpriteManager::Id>(-1) };
+        rendering::bg::BGTileManager::Id _bgTileId{ static_cast<rendering::bg::BGTileManager::Id>(-1) };
     };
 }

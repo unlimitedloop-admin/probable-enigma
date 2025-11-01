@@ -9,7 +9,7 @@
 #pragma once
 
 #include <cstdint>
-#include "apps/supervisor/ResourceManager.h"
+#include "apps/resources/ResourceManager.h"
 
 namespace mm2hack::apps::scenes
 {
@@ -34,7 +34,7 @@ namespace mm2hack::apps::scenes
     class PhaseFadeController
     {
     public:
-        using ResourceManager = supervisor::ResourceManager;
+        using ResourceManager = apps::resources::ResourceManager;
         enum class State { Idle, PreBlackHold, FadingIn, Interactive, PreFadeOutHold, FadingOut, PostBlackHold };
 
         PhaseFadeController() = default;

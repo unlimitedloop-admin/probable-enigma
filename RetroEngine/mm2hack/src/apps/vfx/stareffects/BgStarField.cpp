@@ -6,7 +6,7 @@
 #include <ctime>
 #include <istream>
 #include <ostream>
-#include "apps/deal/GameContext.h"
+#include "apps/runtime/GameContext.h"
 #include "config/GameAssets.h"
 #include "FixedStar.h"
 #include "Star.h"
@@ -17,7 +17,7 @@ namespace mm2hack::apps::vfx::stareffects
     void BgStarField::InitStars()
     {
         srand(static_cast<unsigned int>(time(nullptr)));
-        auto& sprites = deal::GameContext::GetInstance().GetResourceManager().GetSpriteManager();
+        auto& sprites = runtime::GameContext::GetInstance().GetResourceManager().GetSpriteManager();
         sprites.Load(std::wstring(kStarSpriteName), MM2H_GRAPHICS(FlashStar), MM2H_GRAPHPROPS(FlashStar));
 
         // Change the color for the stars.

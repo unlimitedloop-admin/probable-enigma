@@ -2,7 +2,7 @@
 
 #include "SoundTest.h"
 
-#include "apps/deal/GameContext.h"
+#include "apps/runtime/GameContext.h"
 #include "core/assembly/InputTypes.h"
 #include "input/Jpbtn.h"
 
@@ -11,7 +11,7 @@ namespace mm2hack::apps::scenes
     bool SoundTest::Initialize()
     {
         // Initialize audio systems here
-        auto& audio = deal::GameContext::GetInstance().GetResourceManager().GetAudioManager();
+        auto& audio = runtime::GameContext::GetInstance().GetResourceManager().GetAudioManager();
         return audio.Initialize(std::wstring(L"assets\\_exams\\audio\\json\\audio_config.json"));
     }
 
@@ -19,8 +19,8 @@ namespace mm2hack::apps::scenes
     {
         using namespace core::assembly;
         // Update audio systems, handle input for playing/stopping sounds, etc.
-        auto& input = deal::GameContext::GetInstance().Input();
-        auto& audio = deal::GameContext::GetInstance().GetResourceManager().GetAudioManager();
+        auto& input = runtime::GameContext::GetInstance().Input();
+        auto& audio = runtime::GameContext::GetInstance().GetResourceManager().GetAudioManager();
 
         if (input.PressedFrames(Key16::START) == 1)
         {

@@ -2,7 +2,7 @@
 
 #include "PhaseFadeController.h"
 
-#include "apps/supervisor/ResourceManager.h"
+#include "apps/resources/ResourceManager.h"
 
 namespace mm2hack::apps::scenes
 {

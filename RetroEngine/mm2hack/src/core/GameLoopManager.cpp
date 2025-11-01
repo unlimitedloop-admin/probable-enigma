@@ -3,7 +3,7 @@
 #include "GameLoopManager.h"
 
 #include <exception>
-#include "apps/deal/GameContext.h"
+#include "apps/runtime/GameContext.h"
 #include "apps/sequence/SequenceManager.h"
 #include "assembly/ISnapshotProvider.h"
 #include "assembly/JoystickInputProviderAdapter.h"
@@ -35,7 +35,7 @@ namespace mm2hack::core
         _time->EnableFollowFps(false);  // Disable follow FPS by default.
 
         // Initialize game context and load input-device(joycard) configuration.
-        auto& gcInstance = apps::deal::GameContext::GetInstance();
+        auto& gcInstance = apps::runtime::GameContext::GetInstance();
         gcInstance.Initialize();
         auto& jm = gcInstance.Joystick();
         ConfigUIManager::LoadInputConfigIfMatches(jm.GetKeyBinding(), jm.ActiveDevice());
@@ -62,7 +62,7 @@ namespace mm2hack::core
             {
                 auto& seq = apps::sequence::SequenceManager::GetInstance();
                 seq.Release();
-                auto& ctx = apps::deal::GameContext::GetInstance();
+                auto& ctx = apps::runtime::GameContext::GetInstance();
                 ctx.Shutdown();
             });
 

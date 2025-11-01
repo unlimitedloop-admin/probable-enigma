@@ -5,10 +5,9 @@
 #include <cstdint>
 #include <istream>
 #include <ostream>
-#include "apps/deal/GameContext.h"
-#include "apps/graphics/bg/AddressScraper.h"
-#include "apps/graphics/bg/BGTileManager.h"
-#include "apps/parameters/Parameters.h"
+#include "apps/rendering/bg/BGTileManager.h"
+#include "apps/resources/parameters/Parameters.h"
+#include "apps/runtime/GameContext.h"
 #include "apps/scenes/PhaseFadeController.h"
 #include "apps/scenes/SceneChangeMediator.h"
 #include "apps/scenes/SceneID.h"
@@ -29,16 +28,16 @@ namespace mm2hack::apps::scenes
     {
         // Clean up resources, finalize the demo stage, etc.
         utils::debug_log(kClassName + L" destructor called.");
-        Finalize();
+        finalize_();
     }
 
-    void DemoStage1::Initialize(const parameters::Parameters& params)
+    void DemoStage1::Initialize(const Parameters& params)
     {
-        using namespace apps::deal;
+        using namespace apps::runtime;
         auto& resource = GameContext::GetInstance().GetResourceManager();
 
         // Initialize the demo stage
-        if (!InitializeResources(params))
+        if (!initializeResources_(params))
         {
             THROW_EXCEPTION(L"Failed to initialize resources", kClassName);
         }
@@ -64,17 +63,17 @@ namespace mm2hack::apps::scenes
         utils::debug_log(kClassName + L" initialized.");
     }
 
-    bool DemoStage1::InitializeResources(const parameters::Parameters& params)
+    bool DemoStage1::initializeResources_(const Parameters& params)
     {
         using namespace config;
-        using namespace deal;
+        using namespace runtime;
         auto& resource = GameContext::GetInstance().GetResourceManager();
 
         // Load the background tile graph.
         auto& bgTileManager = resource.GetBGTileManager();
         auto& bgRoomBank = resource.GetBGRoomBank();
         _bgTileId = bgTileManager.LoadTileset(kMapName, MM2H_GRAPHICS(SampleStage), MM2H_GRAPHPROPS(SampleStage));
-        if (_bgTileId == graphics::bg::BGTileManager::Id(-1))
+        if (_bgTileId == rendering::bg::BGTileManager::Id(-1))
         {
             return false;
         }
@@ -102,7 +101,7 @@ namespace mm2hack::apps::scenes
 
     void DemoStage1::Update()
     {
-        using namespace apps::deal;
+        using namespace apps::runtime;
         auto& res = GameContext::GetInstance().GetResourceManager();
 
         // Proceed with fade process.
@@ -119,7 +118,7 @@ namespace mm2hack::apps::scenes
             if (_nextScene != SceneID::None && _mediator)
             {
                 SceneID scene = _nextScene;
-                parameters::Parameters params = std::move(_nextParams);
+                Parameters params = std::move(_nextParams);
 
                 // Clear members BEFORE calling mediator - don't touch 'this' after the call.
                 _nextScene = SceneID::None;
@@ -174,9 +173,9 @@ namespace mm2hack::apps::scenes
         // Load the demo stage state
     }
 
-    void DemoStage1::Finalize()
+    void DemoStage1::finalize_()
     {
-        using namespace apps::deal;
+        using namespace apps::runtime;
         GameContext::GetInstance().GetResourceManager().GetFontTileManager().ShutDown();
         _phase.reset();
 

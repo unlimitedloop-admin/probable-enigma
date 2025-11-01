@@ -14,11 +14,11 @@
 #include <memory>
 #include <ostream>
 #include <string>
-#include "apps/parameters/Parameters.h"
+#include "apps/resources/parameters/Parameters.h"
+#include "apps/resources/ResourceManager.h"
 #include "apps/scenes/PhaseFadeController.h"
 #include "apps/scenes/SceneChangeMediator.h"
 #include "apps/scenes/SceneID.h"
-#include "apps/supervisor/ResourceManager.h"
 #include "apps/vfx/cursor/TwinkleCursorAnimator.h"
 #include "apps/vfx/stareffects/BgStarField.h"
 #include "core/assembly/StateProvider.h"
@@ -57,7 +57,7 @@ namespace mm2hack::apps::scenes
 
         // === IBaseScene implementations ===
         // Initialize the backdoor menu
-        void Initialize(const parameters::Parameters& params) override;
+        void Initialize(const resources::parameters::Parameters& params) override;
         // Main game logic execution
         void Update() override;
         // Render the game world
@@ -93,10 +93,10 @@ namespace mm2hack::apps::scenes
         // Access the fade controller for scene transitions
         PhaseFadeController& Fader() noexcept { return _fader; }
 
-        void SetNextScene(SceneID scene, const parameters::Parameters& params = {});
+        void SetNextScene(SceneID scene, const resources::parameters::Parameters& params = {});
 
     private:
-        void Finalize() override;       // Finalize the backdoor menu
+        void finalize_() override;       // Finalize the backdoor menu
 
     private:
         const std::wstring kClassName{ L"BackdoorMenu" };
@@ -109,12 +109,12 @@ namespace mm2hack::apps::scenes
         PhaseFadePlan _pendingPlan{};                                   // Pending fade plan for the next phase
 
         SceneID _nextScene{ SceneID::None };                            // Next scene to switch to
-        parameters::Parameters _nextParams{};                           // Reserve the parameters for the next scene
+        resources::parameters::Parameters _nextParams{};                           // Reserve the parameters for the next scene
         bool _leaving{ false };                                         // Flag indicating if leaving the backdoor menu
 
         vfx::cursor::TwinkleCursorAnimator _cursor;                     // Twinkling cursor animator
         vfx::stareffects::BgStarField _starField;                       // Background star field effect
-        supervisor::ResourceManager* _resource{ nullptr };              // Reference to the resource manager
+        apps::resources::ResourceManager* _resource{ nullptr };         // Reference to the resource manager
         core::assembly::StateProvider* _input{ nullptr };               // Reference to the state provider
     };
 }

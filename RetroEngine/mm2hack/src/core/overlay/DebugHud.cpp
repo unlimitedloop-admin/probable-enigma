@@ -3,7 +3,7 @@
 #include "DebugHud.h"
 
 #include <cstdio>
-#include "apps/deal/GameContext.h"
+#include "apps/runtime/GameContext.h"
 #include "config/ConfigUIManager.h"
 #include "utils/FpsManager.h"
 
@@ -21,7 +21,7 @@ namespace mm2hack::core::overlay
 
         if (hud.showFrameTime)
         {
-            auto& time = apps::deal::GameContext::GetInstance().Time();
+            auto& time = apps::runtime::GameContext::GetInstance().Time();
             const auto pf = time.GetPlayFrameCounter();
             wchar_t buf[64];
             if (pf == 0) {

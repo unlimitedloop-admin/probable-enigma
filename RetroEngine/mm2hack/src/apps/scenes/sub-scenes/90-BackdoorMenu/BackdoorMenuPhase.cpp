@@ -4,9 +4,9 @@
 
 #include <array>
 #include <span>
-#include "apps/algorithm/universal/MenuCursorController.h"
-#include "apps/parameters/Parameters.h"
+#include "apps/resources/parameters/Parameters.h"
 #include "apps/scenes/PhaseFadeController.h"
+#include "apps/ui/controls/MenuCursorController.h"
 #include "BackdoorMenu.h"
 #include "BackdoorMenuCatalog.h"
 #include "input/Jpbtn.h"
@@ -132,7 +132,7 @@ namespace mm2hack::apps::scenes
         //  InsideMenuPhase
         //
         //==============================================================================
-        InsideMenuPhase::InsideMenuPhase(BackdoorMenu& owner, algorithm::universal::MenuCursorController cursorCtl, int topItemIndex)
+        InsideMenuPhase::InsideMenuPhase(BackdoorMenu& owner, MenuCursor cursorCtl, int topItemIndex)
             : owner(owner), cursorCtl_(cursorCtl), cursorAnim_(owner.Cursor()), topItemIndex_(topItemIndex)
         {
             BuildPageModel_();
@@ -349,7 +349,7 @@ namespace mm2hack::apps::scenes
             case A::Enter: return nullptr; // Handled via enterSubId
             case A::NextScene: return &InsideMenuPhase::JumpToScene_;
             case A::EditRoomNo: return &InsideMenuPhase::EnterRoomEdit_;
-            case A::None:
+            case A::None:   // Fallthrough
             default: return nullptr;
             }
         }
@@ -413,7 +413,7 @@ namespace mm2hack::apps::scenes
                         return;
                     }
 
-                    parameters::Parameters p;
+                    resources::parameters::Parameters p;
                     p = p.With<int>(L"RoomNo", roomNo_);
                     owner.SetNextScene(GetSceneIDForJumpParameter(insideStack_[0].subId), p);
                 }

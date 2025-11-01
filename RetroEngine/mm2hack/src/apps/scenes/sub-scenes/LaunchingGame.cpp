@@ -2,7 +2,7 @@
 
 #include "LaunchingGame.h"
 
-#include "apps/parameters/Parameters.h"
+#include "apps/resources/parameters/Parameters.h"
 #include "apps/scenes/SceneChangeMediator.h"
 #include "apps/scenes/SceneID.h"
 #include "utils/output_debug.h"
@@ -18,10 +18,10 @@ namespace mm2hack::apps::scenes
     LaunchingGame::~LaunchingGame()
     {
         utils::debug_log(kClassName + L" destructor called.");
-        Finalize();
+        finalize_();
     }
 
-    void LaunchingGame::Initialize(const parameters::Parameters& params)
+    void LaunchingGame::Initialize(const resources::parameters::Parameters& params)
     {
         utils::debug_log(kClassName + L" initialized.");
 
@@ -35,7 +35,7 @@ namespace mm2hack::apps::scenes
         }
     }
 
-    void LaunchingGame::Finalize()
+    void LaunchingGame::finalize_()
     {
         utils::debug_log(kClassName + L" finalized.");
     }

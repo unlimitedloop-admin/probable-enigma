@@ -9,7 +9,7 @@
 #pragma once
 
 #include <string>
-#include "apps/parameters/Parameters.h"
+#include "apps/resources/parameters/Parameters.h"
 #include "apps/scenes/IBaseScene.h"
 #include "apps/scenes/SceneChangeMediator.h"
 #include "apps/scenes/SceneID.h"
@@ -28,9 +28,9 @@ namespace mm2hack::apps::scenes
         ~LaunchingGame() override;
 
         // Initialize the scene with parameters
-        void Initialize(const parameters::Parameters& params) override;
+        void Initialize(const resources::parameters::Parameters& params) override;
         // Finalize and clean up the scene
-        void Finalize() override;
+        void finalize_() override;
         // Update the scene logic for each frame
         void Update() override;
         // Render the main game world, draw the sprites and BGs

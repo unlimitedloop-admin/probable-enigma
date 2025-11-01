@@ -8,7 +8,7 @@
 //==============================================================================
 #pragma once
 
-#include "apps/parameters/Parameters.h"
+#include "apps/resources/parameters/Parameters.h"
 #include "SceneID.h"
 
 namespace mm2hack::apps::scenes
@@ -20,6 +20,6 @@ namespace mm2hack::apps::scenes
         virtual ~ISceneChangedListener() = default;
 
         // Request a scene change
-        virtual void RequestSceneChange(SceneID nextScene, const parameters::Parameters& params) = 0;
+        virtual void RequestSceneChange(SceneID nextScene, const resources::parameters::Parameters& params) = 0;
     };
 }

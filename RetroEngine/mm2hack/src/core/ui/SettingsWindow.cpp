@@ -3,7 +3,7 @@
 #include "SettingsWindow.h"
 
 #include <libloaderapi.h>
-#include "apps/deal/GameContext.h"
+#include "apps/runtime/GameContext.h"
 #include "CheatCodeInjectionUI.h"
 #include "config/ConfigUIManager.h"
 #include "config/SoundConfig.h"
@@ -140,7 +140,7 @@ namespace mm2hack::core::ui
         config::SoundConfig cfg;
         config::ConfigUIManager::LoadSoundConfig(cfg);
 
-        auto& ctx = apps::deal::GameContext::GetInstance();
+        auto& ctx = apps::runtime::GameContext::GetInstance();
         if (ctx.IsInitialized())
         {
             auto& audio = ctx.GetResourceManager().GetAudioManager();

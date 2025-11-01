@@ -5,9 +5,9 @@
 #include <istream>
 #include <iterator>
 #include <ostream>
-#include "apps/deal/GameContext.h"
-#include "apps/NES/NESPalette.h"
-#include "apps/parameters/Parameters.h"
+#include "apps/foundation/NES/NESPalette.h"
+#include "apps/resources/parameters/Parameters.h"
+#include "apps/runtime/GameContext.h"
 #include "apps/scenes/PhaseFadeController.h"
 #include "apps/scenes/SceneChangeMediator.h"
 #include "apps/scenes/SceneID.h"
@@ -21,7 +21,7 @@ namespace mm2hack::apps::scenes
 {
     BackdoorMenu::BackdoorMenu(SceneChangeMediator* mediator)
         : _mediator(mediator)
-        , _cursor(deal::GameContext::GetInstance().GetResourceManager().GetSpriteManager(), 16, 16)
+        , _cursor(runtime::GameContext::GetInstance().GetResourceManager().GetSpriteManager(), 16, 16)
     {
         utils::debug_log(kClassName + L" constructor called.");
     }
@@ -30,14 +30,14 @@ namespace mm2hack::apps::scenes
     {
         // Clean up resources, finalize the backdoor menu, etc.
         utils::debug_log(kClassName + L" destructor called.");
-        Finalize();
+        finalize_();
     }
 
-    void BackdoorMenu::Initialize(const parameters::Parameters& params)
+    void BackdoorMenu::Initialize(const resources::parameters::Parameters& params)
     {
         utils::debug_log(kClassName + L" initialized.");
 
-        using namespace apps::deal;
+        using namespace apps::runtime;
         auto& resource = GameContext::GetInstance().GetResourceManager();
         auto& font = resource.GetFontTileManager();
         font.SetUp();
@@ -45,7 +45,7 @@ namespace mm2hack::apps::scenes
         auto& audio = resource.GetAudioManager();
         audio.Initialize(MM2H_PROPERTY(BackdoorMenuSoundProperty));
 
-        NES::NESPalette::SetBackgroundFor(13U); // Innocent black
+        foundation::NES::NESPalette::SetBackgroundFor(13U); // Innocent black
 
         _phase = std::make_unique<BackdoorMenu_::CreditPhase>(*this);
         _phaseId = _phase->Id();
@@ -74,7 +74,7 @@ namespace mm2hack::apps::scenes
 
     void BackdoorMenu::Update()
     {
-        using namespace apps::deal;
+        using namespace apps::runtime;
         auto& res = GameContext::GetInstance().GetResourceManager();
 
         // Proceed with fade process.
@@ -91,7 +91,7 @@ namespace mm2hack::apps::scenes
             if (_nextScene != SceneID::None && _mediator)
             {
                 SceneID scene = _nextScene;
-                parameters::Parameters params = std::move(_nextParams);
+                resources::parameters::Parameters params = std::move(_nextParams);
 
                 // Clear members BEFORE calling mediator - don't touch 'this' after the call.
                 _nextScene = SceneID::None;
@@ -166,15 +166,15 @@ namespace mm2hack::apps::scenes
         _starField.Load(in);    // Load background stars state
     }
 
-    void BackdoorMenu::SetNextScene(SceneID scene, const parameters::Parameters& params)
+    void BackdoorMenu::SetNextScene(SceneID scene, const resources::parameters::Parameters& params)
     {
         _nextScene = scene;
         _nextParams = params;
     }
 
-    void BackdoorMenu::Finalize()
+    void BackdoorMenu::finalize_()
     {
-        using namespace apps::deal;
+        using namespace apps::runtime;
         GameContext::GetInstance().GetResourceManager().GetFontTileManager().ShutDown();
         _phase.reset();
 

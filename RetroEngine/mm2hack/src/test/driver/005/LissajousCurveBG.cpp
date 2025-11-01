@@ -3,9 +3,9 @@
 #include "LissajousCurveBG.h"
 
 #include <numbers>
-#include "apps/deal/GameContext.h"
-#include "apps/graphics/bg/BGTileManager.h"
-#include "apps/graphics/sprite/SpriteManager.h"
+#include "apps/rendering/bg/BGTileManager.h"
+#include "apps/rendering/sprite/SpriteManager.h"
+#include "apps/runtime/GameContext.h"
 #include "config/GameAssets.h"
 #include "core/winapi/WindowManager.h"
 
@@ -19,14 +19,14 @@ namespace mm2hack::apps::scenes
     bool LissajousCurveBG::InitializeResources()
     {
         using namespace config;
-        using namespace deal;
+        using namespace runtime;
         using conf = SystemConfig;
 
         auto& resource = GameContext::GetInstance().GetResourceManager();
         // Load the graph from the resource manager.
         auto& spriteLoader = resource.GetSpriteManager();
         _playerId = spriteLoader.Load(L"Player", MM2H_GRAPHICS(Player), MM2H_GRAPHPROPS(Player));
-        if (_playerId == graphics::sprite::SpriteManager::Id(-1))
+        if (_playerId == rendering::sprite::SpriteManager::Id(-1))
         {
             return false;
         }
@@ -37,7 +37,7 @@ namespace mm2hack::apps::scenes
         // Load the background tile graph.
         auto& bgTileManager = resource.GetBGTileManager();
         _bgTileId = bgTileManager.LoadTileset(L"SampleNoise", MM2H_GRAPHICS(SampleNoise), MM2H_GRAPHPROPS(SampleNoise));
-        if (_bgTileId == graphics::bg::BGTileManager::Id(-1))
+        if (_bgTileId == rendering::bg::BGTileManager::Id(-1))
         {
             return false;
         }
@@ -65,7 +65,7 @@ namespace mm2hack::apps::scenes
 
     void LissajousCurveBG::Update()
     {
-        using namespace deal;
+        using namespace runtime;
         auto& resource = GameContext::GetInstance().GetResourceManager();
         resource.UpdateEffects();   // Update fade effects
 
@@ -78,7 +78,7 @@ namespace mm2hack::apps::scenes
     void LissajousCurveBG::RenderWorld()
     {
         using namespace config;
-        using namespace deal;
+        using namespace runtime;
         auto& spriteDrawer = GameContext::GetInstance().GetResourceManager().GetSpriteManager();
         auto& bgTileManager = GameContext::GetInstance().GetResourceManager().GetBGTileManager();
         auto& wm = core::winapi::WindowManager::GetInstance();

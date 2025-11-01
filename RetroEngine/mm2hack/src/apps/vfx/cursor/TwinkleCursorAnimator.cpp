@@ -4,7 +4,7 @@
 
 #include <iterator>
 #include <string_view>
-#include "apps/graphics/sprite/SpriteManager.h"
+#include "apps/rendering/sprite/SpriteManager.h"
 
 namespace mm2hack::apps::vfx::cursor
 {

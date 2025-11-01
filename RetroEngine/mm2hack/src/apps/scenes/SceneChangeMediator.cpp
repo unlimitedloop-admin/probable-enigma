@@ -2,7 +2,7 @@
 
 #include "SceneChangeMediator.h"
 
-#include "apps/parameters/Parameters.h"
+#include "apps/resources/parameters/Parameters.h"
 #include "ISceneChangedListener.h"
 #include "SceneID.h"
 
@@ -13,7 +13,7 @@ namespace mm2hack::apps::scenes
         _listener = listener;
     }
 
-    void SceneChangeMediator::RequestChange(SceneID scene, parameters::Parameters params)
+    void SceneChangeMediator::RequestChange(SceneID scene, resources::parameters::Parameters params)
     {
         if (_listener)
         {

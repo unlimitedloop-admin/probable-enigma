@@ -12,10 +12,10 @@
 
 #include <memory>
 #include <string>
-#include "apps/algorithm/scrolling/atomic/MapRenderer2D.h"
-#include "apps/algorithm/scrolling/atomic/ScraperScrollRuleProvider.h"
-#include "apps/algorithm/scrolling/atomic/ScrollController.h"
-#include "apps/graphics/bg/AddressScraper.h"
+#include "apps/resources/bg/AddressScraper.h"
+#include "apps/systems/scrolling/atomic/MapRenderer2D.h"
+#include "apps/systems/scrolling/atomic/ScraperScrollRuleProvider.h"
+#include "apps/systems/scrolling/atomic/ScrollController.h"
 #include "config/SystemConfig.h"
 
 namespace mm2hack::apps::scenes
@@ -25,10 +25,10 @@ namespace mm2hack::apps::scenes
         // Main phase - action stage scene
         class MainPhase : public IDemoStage1Phase
         {
-            using AddressScraper = graphics::bg::AddressScraper;
-            using MapRenderer2D = algorithm::scrolling::atomic::MapRenderer2D;
-            using ScrollController = algorithm::scrolling::atomic::ScrollController;
-            using ScraperScrollRuleProvider = algorithm::scrolling::atomic::ScraperScrollRuleProvider;
+            using AddressScraper = apps::resources::bg::AddressScraper;
+            using MapRenderer2D = systems::scrolling::atomic::MapRenderer2D;
+            using ScrollController = systems::scrolling::atomic::ScrollController;
+            using ScraperScrollRuleProvider = systems::scrolling::atomic::ScraperScrollRuleProvider;
 
         public:
             explicit MainPhase(DemoStage1& owner) : owner(owner) {}

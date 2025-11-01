@@ -11,7 +11,7 @@
 #include "ISceneChangedListener.h"
 
 #include <memory>
-#include "apps/parameters/Parameters.h"
+#include "apps/resources/parameters/Parameters.h"
 #include "IBaseScene.h"
 #include "SceneChangeMediator.h"
 #include "SceneID.h"
@@ -21,6 +21,8 @@ namespace mm2hack::apps::scenes
     // SceneManager is responsible for managing the current scene in the application
     class SceneManager final : public ISceneChangedListener
     {
+        using Parameters = resources::parameters::Parameters;
+
     public:
         SceneManager() = default;
         ~SceneManager() override = default;
@@ -38,7 +40,7 @@ namespace mm2hack::apps::scenes
         // Retrieves the current scene ID as a integer
         int GetCurrentSceneID() const;
         // The role is to switch to a specified scene through an intermediary
-        void RequestSceneChange(SceneID nextScene, const parameters::Parameters& params = {}) override;
+        void RequestSceneChange(SceneID nextScene, const Parameters& params = {}) override;
         // Sets the mediator for scene changes
         void SetMediator(SceneChangeMediator* mediator) { _mediator = mediator; }
 

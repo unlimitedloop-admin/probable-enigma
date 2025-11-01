@@ -8,7 +8,7 @@
 //==============================================================================
 #pragma once
 
-#include "apps/parameters/Parameters.h"
+#include "apps/resources/parameters/Parameters.h"
 #include "ISceneChangedListener.h"
 #include "SceneID.h"
 
@@ -22,7 +22,7 @@ namespace mm2hack::apps::scenes
         // Registers a listener to handle scene change requests
         void RegisterListener(ISceneChangedListener* listener);
         // Requests a scene change through the registered listener
-        void RequestChange(SceneID scene, parameters::Parameters params = {});
+        void RequestChange(SceneID scene, resources::parameters::Parameters params = {});
 
     private:
         ISceneChangedListener* _listener = nullptr;     // Pointer to the registered listener
