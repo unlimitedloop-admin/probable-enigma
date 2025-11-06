@@ -2,8 +2,6 @@
 
 #include "NESPalette.h"
 
-#include <fstream>
-
 namespace mm2hack::apps::foundation::NES
 {
     bool NESPalette::LoadPaletteFromFile(const std::wstring& file_path)

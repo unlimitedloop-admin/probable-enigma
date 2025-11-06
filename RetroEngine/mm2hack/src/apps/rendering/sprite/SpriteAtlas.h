@@ -62,10 +62,12 @@ namespace mm2hack::apps::rendering::sprite
         bool ApplyHSBToVariant(int variant, int hueAdd, int satAdd, int briAdd) noexcept;
 
     private:
-        bool RebuildVariantFromSoftImage_(int variant) noexcept;    // rebuild graphs for the variant from SoftImage
-        void Dispose() noexcept;    // release SoftImage and graphs
+        bool rebuildVariantFromSoftImage_(int variant) noexcept;    // rebuild graphs for the variant from SoftImage
+        void dispose_() noexcept;    // release SoftImage and graphs
 
     private:
+        const std::wstring kClassName = L"SpriteAtlas";
+
         std::wstring _name{};       // unique name identifier
         DivSettings _div{};         // division settings
         int _soft_image{ -1 };      // keep if needed (palette rebuild), otherwise -1

@@ -174,10 +174,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\apps\systems\physics\TileCollision.cpp" />
+    <ClCompile Include="src\apps\systems\scrolling\atomic\FreeScrollPolicy.cpp" />
     <ClCompile Include="src\apps\systems\scrolling\atomic\MapRenderer2D.cpp" />
     <ClCompile Include="src\apps\systems\scrolling\atomic\PageScrollAnimator.cpp" />
     <ClCompile Include="src\apps\systems\scrolling\atomic\ScraperScrollRuleProvider.cpp" />
     <ClCompile Include="src\apps\systems\scrolling\atomic\ScrollController.cpp" />
+    <ClCompile Include="src\apps\systems\scrolling\atomic\WorldTileQuery.cpp" />
     <ClCompile Include="src\apps\systems\scrolling\effect\BgWobble2D.cpp" />
     <ClCompile Include="src\apps\systems\scrolling\effect\BgWobblePass.cpp" />
     <ClCompile Include="src\apps\systems\scrolling\atomic\SeamlessBGRenderer.cpp" />

@@ -10,6 +10,7 @@
 
 #include <array>
 #include <cstdint>
+#include <string>
 
 namespace mm2hack::input
 {
@@ -31,6 +32,8 @@ namespace mm2hack::input
         int64_t GetHoldKeyValue(size_t keynumber);
 
     private:
+        const std::wstring kClassName = L"KeyboardsIn";
+
         static const size_t KEY_NUM = 256;
         std::array<int64_t, KEY_NUM> _diKeyPressed{};
     };

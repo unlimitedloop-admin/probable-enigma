@@ -14,7 +14,11 @@
 #include <string>
 #include <string_view>
 #include <vector>
-#include "apps/rendering/sprite/SpriteManager.h"
+
+namespace mm2hack::apps::rendering::sprite
+{
+    class SpriteManager;
+}
 
 namespace mm2hack::apps::vfx::cursor
 {
@@ -73,7 +77,9 @@ namespace mm2hack::apps::vfx::cursor
         using Id = std::int32_t;
         Id _id{ -1 };
 
-        std::vector<Step> _steps{ std::begin(kDefaultFadeLoop), std::end(kDefaultFadeLoop) };   // Animation steps
+        std::vector<Step> _steps{
+            std::begin(kDefaultFadeLoop),
+            std::end(kDefaultFadeLoop) };   // Animation steps
         std::size_t       _stepIndex{ 0 };  // Current step index
         int               _ticks{ 0 };      // Ticks in the current step
     };

@@ -2,8 +2,6 @@
 
 #include "MapPageCache.h"
 
-#include <cstdint>
-#include <optional>
 #include "AddressScraper.h"
 #include "cstring"
 
@@ -17,23 +15,21 @@ namespace
 
 namespace mm2hack::apps::resources::bg
 {
-    static_assert(PageTiles::kSize == 240, "16x15=240 である必要があります");
+    static_assert(PageTiles::kSize == 240, "it must be 240(16x15=240)");
 
     void MapPageCache::BuildAround(const std::size_t currentPageIndex)
     {
-        // 現在＋8近傍（最大9枚）を用意。無効な近傍はスキップ。
-        // すでに _cache にある場合は上書き（bin の更新にも対応）
+        // The ensure function loads the page if the index is valid.
         auto ensure = [&](std::optional<std::size_t> idxOpt)
             {
                 if (!idxOpt) return;
                 const auto idx = *idxOpt;
-                _cache[idx] = readTiles(idx);
+                _cache[idx] = readTiles_(idx);
             };
 
-        // 現在
-        _cache[currentPageIndex] = readTiles(currentPageIndex);
+        _cache[currentPageIndex] = readTiles_(currentPageIndex);
 
-        // 4 近傍
+        // Neighbors: horizontal and vertical
         const auto r = Right(currentPageIndex);
         const auto l = Left(currentPageIndex);
         const auto u = Up(currentPageIndex);
@@ -41,7 +37,7 @@ namespace mm2hack::apps::resources::bg
 
         ensure(r); ensure(l); ensure(u); ensure(d);
 
-        // 斜め：横→縦（いずれも存在する場合のみ）
+        // Diagonal: horizontal -> vertical (only if both exist)
         if (r && d) ensure(RightDown(currentPageIndex));
         if (l && d) ensure(LeftDown(currentPageIndex));
         if (r && u) ensure(RightUp(currentPageIndex));
@@ -55,8 +51,8 @@ namespace mm2hack::apps::resources::bg
         auto it = _cache.find(pageIndex);
         if (it == _cache.end())
         {
-            // 遅延ロード（BuildAround を呼び忘れても安全に参照可能）
-            auto inserted = _cache.emplace(pageIndex, readTiles(pageIndex));
+            // (Lazy loading) Safe to reference even if BuildAround was forgotten
+            auto inserted = _cache.emplace(pageIndex, readTiles_(pageIndex));
             it = inserted.first;
         }
 
@@ -64,34 +60,34 @@ namespace mm2hack::apps::resources::bg
         return cells[static_cast<std::size_t>(ty) * PageTiles::kW + static_cast<std::size_t>(tx)];
     }
 
-    // 近傍解決：AddressScraper は pageIndex→隣室の roomNo を返す前提。
-    // そこから pageIndex を再解決。
+    // Neighbor resolution: AddressScraper is assumed to return roomNo for pageIndex.
+    // From there, pageIndex is re-resolved.
     std::optional<std::size_t> MapPageCache::Right(const std::size_t page) const
     {
         const int16_t roomNo = _s.getRightRoom(static_cast<int>(page));
         const int16_t idx = _s.getPageIndex(static_cast<std::size_t>(roomNo));
-        return toOptIndex(idx);
+        return toOptIndex_(idx);
     }
 
     std::optional<std::size_t> MapPageCache::Left(const std::size_t page) const
     {
         const int16_t roomNo = _s.getLeftRoom(static_cast<int>(page));
         const int16_t idx = _s.getPageIndex(static_cast<std::size_t>(roomNo));
-        return toOptIndex(idx);
+        return toOptIndex_(idx);
     }
 
     std::optional<std::size_t> MapPageCache::Up(const std::size_t page) const
     {
         const int16_t roomNo = _s.getOverRoom(static_cast<int>(page));
         const int16_t idx = _s.getPageIndex(static_cast<std::size_t>(roomNo));
-        return toOptIndex(idx);
+        return toOptIndex_(idx);
     }
 
     std::optional<std::size_t> MapPageCache::Down(const std::size_t page) const
     {
         const int16_t roomNo = _s.getUnderRoom(static_cast<int>(page));
         const int16_t idx = _s.getPageIndex(static_cast<std::size_t>(roomNo));
-        return toOptIndex(idx);
+        return toOptIndex_(idx);
     }
 
     std::optional<std::size_t> MapPageCache::RightDown(const std::size_t page) const
@@ -100,7 +96,7 @@ namespace mm2hack::apps::resources::bg
         {
             const int16_t roomNo = _s.getUnderRoom(static_cast<int>(*r));
             const int16_t idx = _s.getPageIndex(static_cast<std::size_t>(roomNo));
-            return toOptIndex(idx);
+            return toOptIndex_(idx);
         }
         return std::nullopt;
     }
@@ -111,7 +107,7 @@ namespace mm2hack::apps::resources::bg
         {
             const int16_t roomNo = _s.getUnderRoom(static_cast<int>(*l));
             const int16_t idx = _s.getPageIndex(static_cast<std::size_t>(roomNo));
-            return toOptIndex(idx);
+            return toOptIndex_(idx);
         }
         return std::nullopt;
     }
@@ -122,7 +118,7 @@ namespace mm2hack::apps::resources::bg
         {
             const int16_t roomNo = _s.getOverRoom(static_cast<int>(*r));
             const int16_t idx = _s.getPageIndex(static_cast<std::size_t>(roomNo));
-            return toOptIndex(idx);
+            return toOptIndex_(idx);
         }
         return std::nullopt;
     }
@@ -133,15 +129,14 @@ namespace mm2hack::apps::resources::bg
         {
             const int16_t roomNo = _s.getOverRoom(static_cast<int>(*l));
             const int16_t idx = _s.getPageIndex(static_cast<std::size_t>(roomNo));
-            return toOptIndex(idx);
+            return toOptIndex_(idx);
         }
         return std::nullopt;
     }
 
-    PageTiles MapPageCache::readTiles(const std::size_t pageIndex) const
+    PageTiles MapPageCache::readTiles_(const std::size_t pageIndex) const
     {
-        // AddressScraper の内部 bin 全体を参照（コピー不要）
-        const auto& bin = _s.GetBin(); // ★ const ゲッター（末尾の最小パッチ参照）
+        const auto& bin = _s.GetBin();
 
         const std::size_t off = pageIndex * kPageSize + kPayloadOff;
         const std::size_t need = PageTiles::kSize; // 240
@@ -149,12 +144,12 @@ namespace mm2hack::apps::resources::bg
 
         if (off + need <= bin.size())
         {
-            // 連続 240B を 16x15 順（左→右→下へ）でコピー
+            // Copy tile data to PageTiles (left -> right, top -> bottom)
             std::memcpy(tiles.cells.data(), bin.data() + off, need);
         }
         else
         {
-            // サイズ不足：安全のため 0 埋めのまま返す
+            // Insufficient size: return as-is for safety
         }
         return tiles;
     }

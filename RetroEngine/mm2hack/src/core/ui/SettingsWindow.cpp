@@ -90,14 +90,14 @@ namespace mm2hack::core::ui
                 switch (id)
                 {
                 case ID_BUTTON_OK:
-                    self->ApplySettings();
+                    self->applySettings_();
                     DestroyWindow(hwnd);
                     return 0;
                 case ID_BUTTON_CANCEL:
                     DestroyWindow(hwnd);
                     return 0;
                 case ID_BUTTON_APPLY:
-                    self->ApplySettings();
+                    self->applySettings_();
                     return 0;
                 }
                 if (self->_is_closing) return 0;
@@ -105,8 +105,8 @@ namespace mm2hack::core::ui
                 break;
             }
             case WM_CREATE:
-                self->SetHandle(hwnd);
-                self->CreateContent(_current_tab);
+                self->setHandle_(hwnd);
+                self->createContent_(_current_tab);
                 return 0;
             case WM_DESTROY:
                 _hwnd = nullptr;
@@ -122,7 +122,7 @@ namespace mm2hack::core::ui
         return DefWindowProc(hwnd, msg, wParam, lParam);
     }
 
-    void SettingsWindow::ApplySettings()
+    void SettingsWindow::applySettings_()
     {
         if (_graphics_ui)
         {
@@ -131,11 +131,11 @@ namespace mm2hack::core::ui
         if (_sound_ui)
         {
             _sound_ui->ApplySettings();
-            ApplySoundToAudio();
+            applySoundToAudio_();
         }
     }
 
-    void SettingsWindow::ApplySoundToAudio()
+    void SettingsWindow::applySoundToAudio_()
     {
         config::SoundConfig cfg;
         config::ConfigUIManager::LoadSoundConfig(cfg);
@@ -151,12 +151,12 @@ namespace mm2hack::core::ui
         }
     }
 
-    void SettingsWindow::SetHandle(HWND hwnd)
+    void SettingsWindow::setHandle_(HWND hwnd)
     {
         _hwnd = hwnd;
     }
 
-    void SettingsWindow::CreateContent(Tab tab)
+    void SettingsWindow::createContent_(Tab tab)
     {
         ui::CommonUIStyle uiStyle;
 
@@ -203,7 +203,7 @@ namespace mm2hack::core::ui
         uiStyle.ApplyUIFont(buttonApply);
     }
 
-    SettingsWindow* SettingsWindow::GetThis(HWND hwnd)
+    SettingsWindow* SettingsWindow::getThis_(HWND hwnd)
     {
         return hwnd ? reinterpret_cast<SettingsWindow*>(GetWindowLongPtr(hwnd, GWLP_USERDATA)) : nullptr;
     }

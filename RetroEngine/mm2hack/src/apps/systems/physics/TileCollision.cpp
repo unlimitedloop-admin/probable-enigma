@@ -3,7 +3,6 @@
 #include "TileCollision.h"
 
 #include <cmath>
-#include <cstdint>
 #include "apps/rendering/bg/BGTileManager.h"
 
 namespace
@@ -21,43 +20,41 @@ namespace mm2hack::apps::systems::physics
     using physics::ResolveResult;
     using physics::TileCollisionResolver;
 
-    uint8_t TileCollisionResolver::getAttrByPx(int px, int py, float ofs_x_px, float ofs_y_px) const noexcept
+    uint8_t TileCollisionResolver::getAttrByPx_(int px, int py, float ofs_x_px, float ofs_y_px) const noexcept
     {
-        // 画面スクロール時の BG オフセット（今は 0 のままでもOK）
+        // BG access is tile-based, so convert px -> tx/ty
         const int gx = px - static_cast<int>(ofs_x_px);
         const int gy = py - static_cast<int>(ofs_y_px);
 
         const int tx = floordiv(gx, _ts);
         const int ty = floordiv(gy, _ts);
-        if (tx < 0 || ty < 0 || tx >= _mw || ty >= _mh) return static_cast<uint8_t>(Attr::Solid); // 画面外は壁扱い
+        if (tx < 0 || ty < 0 || tx >= _mw || ty >= _mh) return static_cast<uint8_t>(Attr::Solid); // The wall outside the map
         return _mgr.GetTileAttribute(tx, ty);
     }
 
-    bool TileCollisionResolver::isSolid(int tx, int ty) const noexcept
+    bool TileCollisionResolver::isSolid_(int tx, int ty) const noexcept
     {
-        // xy→属性問い合わせは BGTileManager の API 都合で px 経由に統一したいが、
-        // ここは内部ユースのみなので簡易に 1px 中心で px 化
         const int px = tx * _ts + _ts / 2;
         const int py = ty * _ts + _ts / 2;
-        return getAttrByPx(px, py, 0, 0) == static_cast<uint8_t>(Attr::Solid);
+        return getAttrByPx_(px, py, 0, 0) == static_cast<uint8_t>(Attr::Solid);
     }
-    bool TileCollisionResolver::isOneWay(int tx, int ty) const noexcept
+    bool TileCollisionResolver::isOneWay_(int tx, int ty) const noexcept
     {
         const int px = tx * _ts + _ts / 2;
         const int py = ty * _ts + _ts / 2;
-        return getAttrByPx(px, py, 0, 0) == static_cast<uint8_t>(Attr::OneWay);
+        return getAttrByPx_(px, py, 0, 0) == static_cast<uint8_t>(Attr::OneWay);
     }
-    bool TileCollisionResolver::isLadder(int tx, int ty) const noexcept
+    bool TileCollisionResolver::isLadder_(int tx, int ty) const noexcept
     {
         const int px = tx * _ts + _ts / 2;
         const int py = ty * _ts + _ts / 2;
-        return getAttrByPx(px, py, 0, 0) == static_cast<uint8_t>(Attr::Ladder);
+        return getAttrByPx_(px, py, 0, 0) == static_cast<uint8_t>(Attr::Ladder);
     }
-    bool TileCollisionResolver::isSpike(int tx, int ty) const noexcept
+    bool TileCollisionResolver::isSpike_(int tx, int ty) const noexcept
     {
         const int px = tx * _ts + _ts / 2;
         const int py = ty * _ts + _ts / 2;
-        return getAttrByPx(px, py, 0, 0) == static_cast<uint8_t>(Attr::Spike);
+        return getAttrByPx_(px, py, 0, 0) == static_cast<uint8_t>(Attr::Spike);
     }
 
     ResolveResult TileCollisionResolver::Resolve(AABB& b, float& vx, float& vy,
@@ -65,7 +62,7 @@ namespace mm2hack::apps::systems::physics
         float ofs_x, float ofs_y) const
     {
         ResolveResult rr{};
-        // --- X 軸 ---
+        // --- X axis ---
         if (vx != 0.0f)
         {
             b.x += vx;
@@ -79,10 +76,10 @@ namespace mm2hack::apps::systems::physics
             const int tx = (dir > 0) ? right : left;
             for (int ty = top; ty <= bottom; ++ty)
             {
-                if (isSpike(tx, ty))  rr.touched_spike = true;
-                if (isLadder(tx, ty)) rr.on_ladder = true;
+                if (isSpike_(tx, ty))  rr.touched_spike = true;
+                if (isLadder_(tx, ty)) rr.on_ladder = true;
 
-                if (isSolid(tx, ty))
+                if (isSolid_(tx, ty))
                 {
                     if (dir > 0) b.x = static_cast<float>(tx * _ts) - b.w;
                     else         b.x = static_cast<float>((tx + 1) * _ts);
@@ -92,7 +89,7 @@ namespace mm2hack::apps::systems::physics
             }
         }
 
-        // --- Y 軸 ---
+        // --- Y axis ---
         rr.on_ground = false;
 
         if (vy != 0.0f)
@@ -108,12 +105,12 @@ namespace mm2hack::apps::systems::physics
             const int ty = (dir > 0) ? bottom : top;
             for (int tx = left; tx <= right; ++tx)
             {
-                if (isSpike(tx, ty))  rr.touched_spike = true;
-                if (isLadder(tx, ty)) rr.on_ladder = true;
+                if (isSpike_(tx, ty))  rr.touched_spike = true;
+                if (isLadder_(tx, ty)) rr.on_ladder = true;
 
-                // 下向き移動のときだけ OneWay に衝突させる
-                const bool hit_oneway = (dir > 0.0f) && isOneWay(tx, ty);
-                const bool hit_solid = isSolid(tx, ty);
+                // Only collide with OneWay when moving down.
+                const bool hit_oneway = (dir > 0.0f) && isOneWay_(tx, ty);
+                const bool hit_solid = isSolid_(tx, ty);
 
                 if (hit_solid || hit_oneway)
                 {
@@ -132,12 +129,12 @@ namespace mm2hack::apps::systems::physics
             }
         }
 
-        // はしごタイルに重なっているだけでもフラグは立てる（入力で昇降させる）
+        // The flag is set just by overlapping with the ladder tile (to allow climbing with input).
         if (!rr.on_ladder)
         {
             const int cx = static_cast<int>(std::floor((b.x + b.w * 0.5f) / _ts));
             const int cy = static_cast<int>(std::floor((b.y + b.h * 0.5f) / _ts));
-            rr.on_ladder = isLadder(cx, cy);
+            rr.on_ladder = isLadder_(cx, cy);
         }
 
         return rr;

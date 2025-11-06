@@ -9,6 +9,7 @@
 #pragma once
 
 #include <algorithm>
+#include <string>
 
 namespace mm2hack::apps::ui::controls
 {
@@ -25,14 +26,14 @@ namespace mm2hack::apps::ui::controls
         }
 
         // Set the number of items in the menu (clamped to 0 or more)
-        void SetItemCount(int itemCount) noexcept { _count = std::max(0, itemCount); Clamp_(); }
+        void SetItemCount(int itemCount) noexcept { _count = std::max(0, itemCount); clamp_(); }
         void SetLayout(Layout layout) noexcept { _layout = layout; }
 
         // Move index by +-delta (clamped)
-        void Move(int delta) noexcept { _index += delta; Clamp_(); }
+        void Move(int delta) noexcept { _index += delta; clamp_(); }
 
         // Set index directly (clamped)
-        void SetIndex(int idx) noexcept { _index = idx; Clamp_(); }
+        void SetIndex(int idx) noexcept { _index = idx; clamp_(); }
 
         // Get menu command count, current index and cursor position
         [[nodiscard]] int ItemCount() const noexcept { return _count; }
@@ -42,7 +43,7 @@ namespace mm2hack::apps::ui::controls
 
     private:
         // Clamp index to valid range
-        void Clamp_() noexcept
+        void clamp_() noexcept
         {
             // The cursor will not go out of bounds.
             if (_count <= 0) { _index = 0; return; }
@@ -52,6 +53,8 @@ namespace mm2hack::apps::ui::controls
         }
 
     private:
+        const std::wstring kClassName = L"MenuCursorController";
+
         Layout _layout{ 16, 16, 10 };   // Default layout for menu list of development mode
         int    _count{ 0 };
         int    _index{ 0 };

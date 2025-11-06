@@ -33,15 +33,14 @@ namespace
 {
     using namespace mm2hack::core;
 
-    // Update the state of the save/load slot menu items based on the current save slot.
+    // Update the state of the save/load slot menu items based on the current save slot
     static void UpdateSlotMenuState(HWND hWnd)
     {
         HMENU hMenu = GetMenu(hWnd);
         int selectedSlot = save::SaveSystem::GetCurrentSlot();
         for (int i = 0; i <= 9; ++i)
         {
-            CheckMenuItem(hMenu, ID_SLOT_0 + i,
-                MF_BYCOMMAND | ((i == selectedSlot) ? MF_CHECKED : MF_UNCHECKED));
+            CheckMenuItem(hMenu, ID_SLOT_0 + i, MF_BYCOMMAND | ((i == selectedSlot) ? MF_CHECKED : MF_UNCHECKED));
         }
     }
 }

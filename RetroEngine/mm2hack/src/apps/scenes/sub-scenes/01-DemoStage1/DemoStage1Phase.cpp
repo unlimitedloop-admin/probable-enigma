@@ -5,6 +5,7 @@
 #include <cstdio>
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/systems/scrolling/atomic/ScrollController.h"
+#include "core/assembly/StateProvider.h"
 #include "DemoStage1.h"
 #include "input/Jpbtn.h"
 
@@ -19,7 +20,7 @@ namespace mm2hack::apps::scenes
         //==============================================================================
         void MainPhase::Initialize()
         {
-            auto& resource = owner.ResourceManager();
+            auto& resource = owner.ResourceManagerObj();
 
             auto scraper = std::make_shared<AddressScraper>(
                 resource.GetBGTileManager().ExtractMapBinary(resource.GetBGRoomBank().FilePath()));

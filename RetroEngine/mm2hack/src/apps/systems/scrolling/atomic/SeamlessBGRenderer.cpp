@@ -2,13 +2,12 @@
 
 #include "SeamlessBGRenderer.h"
 
-#include <cstdint>
 #include "apps/rendering/bg/BGTileManager.h"
 #include "ScrollController.h"
 
 namespace mm2hack::apps::systems::scrolling::atomic
 {
-    // 内部ユーティリティ: 指定矩形のタイルブロックを描画する汎用関数
+    // Internal utility: Generic function to draw a tile block in the specified rectangle
     namespace {
         template<typename TileAt>
         inline void DrawTileBlock(const rendering::bg::BGTileManager& bg,
@@ -36,32 +35,34 @@ namespace mm2hack::apps::systems::scrolling::atomic
 
     void SeamlessBGRenderer::Draw(const Camera& cam, size_t currentPageIndex)
     {
+        using conf = config::SystemConfig;
+
         _cache.BuildAround(currentPageIndex);
 
         const int vw = cam.vw, vh = cam.vh;
-        const int pageW = 16 * _ts;
-        const int pageH = 15 * _ts;
+        const int pageW = conf::kTileCountX * _ts;
+        const int pageH = conf::kTileCountY * _ts;
 
-        // 現在ページの画面上への描画オフセット（カメラは世界→画面のマイナス）
+        // Current page's screen drawing offset (camera is world -> screen negative)
         const int ox = -static_cast<int>(cam.x);
         const int oy = -static_cast<int>(cam.y);
 
-        // どの隣接が必要か（はみ出し量で決定）
+        // Determine which adjacent pages are needed (based on overflow)
         const bool needRight = (ox + pageW) < vw;
         const bool needDown = (oy + pageH) < vh;
         const bool needLeft = (ox > 0);
         const bool needUp = (oy > 0);
 
-        // 1) 現在ページ
+        // 1) Current page
         drawPage_(currentPageIndex, ox, oy);
 
-        // 2) 横/縦
+        // 2) Horizontal/Vertical
         if (needRight) if (auto p = _cache.Right(currentPageIndex)) drawPage_(*p, ox + pageW, oy);
         if (needDown)  if (auto p = _cache.Down(currentPageIndex)) drawPage_(*p, ox, oy + pageH);
         if (needLeft)  if (auto p = _cache.Left(currentPageIndex)) drawPage_(*p, ox - pageW, oy);
         if (needUp)    if (auto p = _cache.Up(currentPageIndex)) drawPage_(*p, ox, oy - pageH);
 
-        // 3) 斜め（必要なときだけ）
+        // 3) Diagonal (only if needed)
         if (needRight && needDown) if (auto p = _cache.RightDown(currentPageIndex)) drawPage_(*p, ox + pageW, oy + pageH);
         if (needLeft && needDown) if (auto p = _cache.LeftDown(currentPageIndex)) drawPage_(*p, ox - pageW, oy + pageH);
         if (needRight && needUp)   if (auto p = _cache.RightUp(currentPageIndex)) drawPage_(*p, ox + pageW, oy - pageH);
@@ -70,10 +71,10 @@ namespace mm2hack::apps::systems::scrolling::atomic
 
     void SeamlessBGRenderer::drawPage_(size_t pageIndex, int dstX, int dstY)
     {
-        // 触っておく（無意味アクセスでもOK、先読み等の副作用を期待）
+        // Touch the tiles (meaningless access is OK, expecting side effects like prefetching).
         const auto& tiles = _cache.Tile(pageIndex, 0, 0);
 
-        // ヘルパーに委譲して描画（将来的に BGTileManager 側へ移動して共通化可）
+        // Delegate to helper for drawing (could be moved to BGTileManager side for commonality in the future).
         DrawTileBlock(_bg, _tileset,
             [this, pageIndex](int tx, int ty) -> std::uint8_t {
                 return _cache.Tile(pageIndex, tx, ty);

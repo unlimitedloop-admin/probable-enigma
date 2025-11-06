@@ -23,5 +23,8 @@ namespace mm2hack::core::cheats
 
         // Attempt to parse the given PAR-style code string into one or more CheatPatch entries
         bool TryParse(const std::wstring& code, std::vector<CheatPatch>& out_patches) override;
+
+    private:
+        const std::wstring kClassName = L"ParCodeParser";
     };
 }

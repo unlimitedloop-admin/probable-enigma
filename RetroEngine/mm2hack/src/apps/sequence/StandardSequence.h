@@ -10,6 +10,7 @@
 
 #include "ISequence.h"
 
+#include <string>
 #include "apps/scenes/SceneChangeMediator.h"
 #include "apps/scenes/SceneManager.h"
 #include "core/save/SaveData.h"
@@ -37,6 +38,8 @@ namespace mm2hack::apps::sequence
         bool Load(const core::save::SaveData& in) override;
 
     private:
+        const std::wstring kClassName = L"StandardSequence";
+
         scenes::SceneManager _sceneManager;         // Scene manager instance
         scenes::SceneChangeMediator _sceneChanger;  // Scene change mediator instance
     };

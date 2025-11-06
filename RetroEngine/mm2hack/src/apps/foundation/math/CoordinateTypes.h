@@ -14,7 +14,7 @@ namespace mm2hack::apps::foundation::math
 {
     constexpr double kEps = 1e-9;
 
-    // 2D ベクトル（速度/差分/方向）
+    // Vector 2D (direction and magnitude), Point - Point, Point + Vector = Point
     struct Vec2
     {
         double x{ 0 }, y{ 0 };
@@ -43,7 +43,7 @@ namespace mm2hack::apps::foundation::math
     };
     inline constexpr Vec2 operator*(double s, const Vec2& v) noexcept { return { v.x * s, v.y * s }; }
 
-    // 2D 点（位置）。点＋ベクトル＝点 / 点−点＝ベクトル
+    // 2D Point (position). Point + Vector = Point / Point - Point = Vector
     struct Point2
     {
         double x{ 0 }, y{ 0 };
@@ -59,7 +59,7 @@ namespace mm2hack::apps::foundation::math
         constexpr Point2& operator-=(const Vec2& v) noexcept { x -= v.x; y -= v.y; return *this; }
     };
 
-    // AABB（当たり箱）
+    // AABB (Axis-Aligned Bounding Box)
     struct RectF
     {
         double x{ 0 }, y{ 0 }, w{ 0 }, h{ 0 };
@@ -85,10 +85,10 @@ namespace mm2hack::apps::foundation::math
         [[nodiscard]] constexpr RectF movedBy(const Vec2& v) const noexcept { return { x + v.x, y + v.y, w, h }; }
     };
 
-    // タイル座標変換（スクロールオフセット対応は別で足し引きする）
+    // Tile coordinate conversion (scroll offset handling is done separately)
     [[nodiscard]] inline int ToTileIndex(double pos_px, int tile_px) noexcept
     {
-        // 画面外＝負方向も floor で OK（物理の一貫性）
+        // Out of bounds = negative direction is also OK with floor (consistency in physics)
         return static_cast<int>(std::floor(pos_px / static_cast<double>(tile_px)));
     }
 }

@@ -2,7 +2,6 @@
 
 #include "BGTileManager.h"
 
-#include <cstdint>
 #include <iterator>
 #include <string_view>
 
@@ -92,21 +91,21 @@ namespace mm2hack::apps::rendering::bg
             THROW_EXCEPTION(L"Failed to open map file: " + path, kClassName);
         }
 
-        // シークしてファイルサイズを取得
+        // Get seekg size
         file.seekg(0, std::ios::end);
         std::streamoff s = file.tellg();
         if (s <= 0)
         {
-            // 空ファイルまたは取得失敗
+            // Empty file or failed to obtain
             return std::vector<std::uint8_t>();
         }
         file.seekg(0, std::ios::beg);
 
-        // バッファ確保して一括読み込み
+        // Allocate buffer and read all at once
         std::vector<std::uint8_t> raw(static_cast<std::size_t>(s));
         file.read(reinterpret_cast<char*>(raw.data()), static_cast<std::streamsize>(raw.size()));
 
-        // 読み込みが途中で失敗した場合、read で読み取れたバイト数に合わせてリサイズ
+        // If reading failed midway, resize to match the number of bytes read
         if (!file)
         {
             std::streamsize readBytes = file.gcount();

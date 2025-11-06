@@ -33,7 +33,7 @@ namespace mm2hack::apps::scenes
         finalize_();
     }
 
-    void BackdoorMenu::Initialize(const resources::parameters::Parameters& params)
+    void BackdoorMenu::Initialize(const Parameters& params)
     {
         utils::debug_log(kClassName + L" initialized.");
 
@@ -91,7 +91,7 @@ namespace mm2hack::apps::scenes
             if (_nextScene != SceneID::None && _mediator)
             {
                 SceneID scene = _nextScene;
-                resources::parameters::Parameters params = std::move(_nextParams);
+                Parameters params = std::move(_nextParams);
 
                 // Clear members BEFORE calling mediator - don't touch 'this' after the call.
                 _nextScene = SceneID::None;
@@ -166,7 +166,7 @@ namespace mm2hack::apps::scenes
         _starField.Load(in);    // Load background stars state
     }
 
-    void BackdoorMenu::SetNextScene(SceneID scene, const resources::parameters::Parameters& params)
+    void BackdoorMenu::SetNextScene(SceneID scene, const Parameters& params)
     {
         _nextScene = scene;
         _nextParams = params;

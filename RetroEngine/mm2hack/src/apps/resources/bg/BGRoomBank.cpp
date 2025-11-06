@@ -2,32 +2,29 @@
 
 #include "BGRoomBank.h"
 
-#include <cstdint>
-#include <fstream>
 #include <iterator>
-#include <optional>
 #include <stdexcept>
 #include <string_view>
-#include "exceptions/CoreException.h"
 
 namespace
 {
     inline uint8_t hi(uint8_t v) noexcept { return static_cast<uint8_t>((v >> 4) & 0x0F); }
     inline uint8_t lo(uint8_t v) noexcept { return static_cast<uint8_t>(v & 0x0F); }
 
+    // TODO: Scrolling validity check to be implemented later.
     inline bool valid_bank(uint8_t v) noexcept { return v == 0x10 || v == 0x1A || v == 0x80; }
 }
 
 
 namespace mm2hack::apps::resources::bg
 {
-    // 安全にヘッダを解析する: バイトごとにフィールドを設定してパディング問題を避ける
+    // Safely parse the header: set fields byte by byte to avoid padding issues
     inline static BGRoomBank::Header read_hdr(const uint8_t* p)
     {
         BGRoomBank::Header h{};
         if (p == nullptr) return h;
 
-        // ヘッダ領域は $00..$0F の 16 バイトで個別の役割を持つ
+        // The header area has individual roles for 16 bytes from $00 to $0F
         h.magic0     = p[0];
         h.magic1     = p[1];
         h.page_hi    = p[2];
@@ -66,7 +63,7 @@ namespace mm2hack::apps::resources::bg
         for (size_t i = 0; i < page_count; ++i)
         {
             const size_t off = i * kPageSize;
-            // ヘッダサイズ分だけ読み込んでもページを越えないことを明示的にチェック
+            // Header reading safety check
             if (off + sizeof(BGRoomBank::Header) > bytes.size())
                 THROW_EXCEPTION(L"BGRoomBank: unexpected file size while reading header", kClassName);
 
@@ -100,7 +97,7 @@ namespace mm2hack::apps::resources::bg
             (d == Dir::Down) ? h.down_id :
             (d == Dir::Left) ? h.left_id : h.right_id;
 
-        if (rid == 0x00) return std::nullopt; // 0=隣接なしルール
+        if (rid == 0x00) return std::nullopt;   // No neighbor
 
         return FindIndexByRoomId(rid);
     }

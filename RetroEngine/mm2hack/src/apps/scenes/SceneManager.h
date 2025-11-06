@@ -11,10 +11,18 @@
 #include "ISceneChangedListener.h"
 
 #include <memory>
-#include "apps/resources/parameters/Parameters.h"
 #include "IBaseScene.h"
-#include "SceneChangeMediator.h"
-#include "SceneID.h"
+
+namespace mm2hack::apps::resources::parameters
+{
+    class Parameters;
+}
+
+namespace mm2hack::apps::scenes
+{
+    class SceneChangeMediator;
+    enum class SceneID : int;
+}
 
 namespace mm2hack::apps::scenes
 {
@@ -48,6 +56,6 @@ namespace mm2hack::apps::scenes
         SceneChangeMediator* _mediator = nullptr;                   // Intermediary for scene changes
         std::unique_ptr<IBaseScene> _currentScene;                  // Manage the main part of the game program
 
-        void ChangeScene(std::unique_ptr<IBaseScene> newScene);     // Transition to a new scene, releasing the current one if necessary(concept of state-pattern)
+        void changeScene_(std::unique_ptr<IBaseScene> newScene);    // Transition to a new scene, releasing the current one if necessary(concept of state-pattern)
     };
 }

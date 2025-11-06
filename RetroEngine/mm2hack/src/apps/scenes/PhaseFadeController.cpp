@@ -11,7 +11,7 @@ namespace mm2hack::apps::scenes
         _plan = plan;
         _state = State::PreBlackHold;
         _counter = 0;
-        ForceDark_(res);    // Begin in black.
+        forceDark_(res);    // Begin in black.
     }
 
     void PhaseFadeController::Update(ResourceManager& res)
@@ -19,7 +19,7 @@ namespace mm2hack::apps::scenes
         switch (_state)
         {
         case State::PreBlackHold:
-            if (_counter++ >= _plan.preBlackHold) { StartFadeIn_(res); }
+            if (_counter++ >= _plan.preBlackHold) { startFadeIn_(res); }
             break;
         case State::FadingIn:
             if (_counter++ >= _plan.fadeInFrames) { _state = State::Interactive; _counter = 0; }
@@ -28,10 +28,10 @@ namespace mm2hack::apps::scenes
             // Available for input; waiting for RequestFadeOut() to be called.
             break;
         case State::PreFadeOutHold:
-            if (_counter++ >= _plan.preFadeOutHold) { StartFadeOut_(res); }
+            if (_counter++ >= _plan.preFadeOutHold) { startFadeOut_(res); }
             break;
         case State::FadingOut:
-            if (_counter++ >= _plan.fadeOutFrames) { _state = State::PostBlackHold; _counter = 0; ForceDark_(res); }
+            if (_counter++ >= _plan.fadeOutFrames) { _state = State::PostBlackHold; _counter = 0; forceDark_(res); }
             break;
         case State::PostBlackHold:
             if (_counter++ >= _plan.postBlackHold) { _state = State::Idle; }
@@ -52,75 +52,75 @@ namespace mm2hack::apps::scenes
         }
         else
         {
-            StartFadeOut_(res);
+            startFadeOut_(res);
         }
     }
 
-    void PhaseFadeController::StartFadeIn_(ResourceManager& res)
+    void PhaseFadeController::startFadeIn_(ResourceManager& res)
     {
         if (_plan.fadeInFrames > 0)
         {
-            if (_plan.layers & FadeLayerMask::BG)     FadeInBG_(res, _plan.fadeInFrames);
-            if (_plan.layers & FadeLayerMask::Sprite) FadeInSprite_(res, _plan.fadeInFrames);
-            if (_plan.layers & FadeLayerMask::Font)   FadeInFont_(res, _plan.fadeInFrames);
+            if (_plan.layers & FadeLayerMask::BG)     fadeInBG_(res, _plan.fadeInFrames);
+            if (_plan.layers & FadeLayerMask::Sprite) fadeInSprite_(res, _plan.fadeInFrames);
+            if (_plan.layers & FadeLayerMask::Font)   fadeInFont_(res, _plan.fadeInFrames);
         }
         else
         {
-            LightUp_(res);
+            lightUp_(res);
         }
 
         _state = State::FadingIn;
         _counter = 0;
     }
 
-    void PhaseFadeController::StartFadeOut_(ResourceManager& res)
+    void PhaseFadeController::startFadeOut_(ResourceManager& res)
     {
         if (_plan.fadeOutFrames > 0)
         {
-            if (_plan.layers & FadeLayerMask::BG)     FadeOutBG_(res, _plan.fadeOutFrames);
-            if (_plan.layers & FadeLayerMask::Sprite) FadeOutSprite_(res, _plan.fadeOutFrames);
-            if (_plan.layers & FadeLayerMask::Font)   FadeOutFont_(res, _plan.fadeOutFrames);
+            if (_plan.layers & FadeLayerMask::BG)     fadeOutBG_(res, _plan.fadeOutFrames);
+            if (_plan.layers & FadeLayerMask::Sprite) fadeOutSprite_(res, _plan.fadeOutFrames);
+            if (_plan.layers & FadeLayerMask::Font)   fadeOutFont_(res, _plan.fadeOutFrames);
         }
         else
         {
-            ForceDark_(res);
+            forceDark_(res);
         }
 
         _state = State::FadingOut;
         _counter = 0;
     }
 
-    void PhaseFadeController::FadeInBG_(ResourceManager& res, int to)
+    void PhaseFadeController::fadeInBG_(ResourceManager& res, int to)
     {
         res.FadeInBG(to);
     }
 
-    void PhaseFadeController::FadeInSprite_(ResourceManager& res, int to)
+    void PhaseFadeController::fadeInSprite_(ResourceManager& res, int to)
     {
         res.FadeInSprite(to);
     }
 
-    void PhaseFadeController::FadeInFont_(ResourceManager& res, int to)
+    void PhaseFadeController::fadeInFont_(ResourceManager& res, int to)
     {
         res.FadeInFont(to);
     }
 
-    void PhaseFadeController::FadeOutBG_(ResourceManager& res, int to)
+    void PhaseFadeController::fadeOutBG_(ResourceManager& res, int to)
     {
         res.FadeOutBG(to);
     }
 
-    void PhaseFadeController::FadeOutSprite_(ResourceManager& res, int to)
+    void PhaseFadeController::fadeOutSprite_(ResourceManager& res, int to)
     {
         res.FadeOutSprite(to);
     }
 
-    void PhaseFadeController::FadeOutFont_(ResourceManager& res, int to)
+    void PhaseFadeController::fadeOutFont_(ResourceManager& res, int to)
     {
         res.FadeOutFont(to);
     }
 
-    void PhaseFadeController::ForceDark_(ResourceManager& res) const
+    void PhaseFadeController::forceDark_(ResourceManager& res) const
     {
         if (_plan.layers & FadeLayerMask::BG)
         {
@@ -139,7 +139,7 @@ namespace mm2hack::apps::scenes
         }
     }
 
-    void PhaseFadeController::LightUp_(ResourceManager& res) const
+    void PhaseFadeController::lightUp_(ResourceManager& res) const
     {
         if (_plan.layers & FadeLayerMask::BG)
             res.GetBGTileManager().SetGlobalVariantClamped(0);

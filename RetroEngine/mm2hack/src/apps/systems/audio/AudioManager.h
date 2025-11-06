@@ -72,6 +72,11 @@ namespace mm2hack::apps::systems::audio
         std::function<void(const std::wstring&)> OnSeStopped;
 
     private:
+        int toDxVolume_(int uiVolume);  // Convert volume from 0-100 range to 0-255 range used by the audio system
+
+    private:
+        const std::wstring kClassName = L"AudioManager";
+
         // Sound engine components
         ChannelManager _bgmChannels;
         ChannelManager _seChannels;
@@ -83,7 +88,5 @@ namespace mm2hack::apps::systems::audio
         bool _enabled = true;
 
         std::set<std::pair<SoundChip, int>> _mutedChannels; // Set of muted channels (chip, index)
-
-        int ToDxVolume(int uiVolume);   // Convert volume from 0-100 range to 0-255 range used by the audio system
     };
 }

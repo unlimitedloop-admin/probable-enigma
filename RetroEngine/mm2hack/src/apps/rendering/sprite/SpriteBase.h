@@ -3,25 +3,23 @@
 //  Project: mm2hack
 //  SpriteBase.h
 // 
-//  ** Descriptions **
+//  Generative sprite entity base class.
 // 
 //==============================================================================
 #pragma once
 
-#include "apps/graphics/entity/EntityBase.h"
+#include "apps/world/entity/EntityBase.h"
 
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/systems/view/RenderContext.h"
 
 namespace mm2hack::apps::rendering::sprite
 {
-    using entity::EntityBase;
-    using foundation::math::Vec2;
-
     // Basic implementation of a sprite entity
-    class SpriteBase : public EntityBase
+    class SpriteBase : public world::entity::EntityBase
     {
         using Layer = systems::view::Layer;
+        using Vec2 = foundation::math::Vec2;
 
     public:
         Layer DrawLayer() const noexcept override { return _layer; }
@@ -34,6 +32,6 @@ namespace mm2hack::apps::rendering::sprite
         int  z{ 0 };            // Simple sorting within the same layer
 
     protected:
-        Layer _layer{ Layer::Actors };
+        Layer _layer{ Layer::Actors };  // Default layer
     };
 }

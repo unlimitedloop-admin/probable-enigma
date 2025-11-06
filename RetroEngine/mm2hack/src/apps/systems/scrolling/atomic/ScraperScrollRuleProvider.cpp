@@ -2,7 +2,6 @@
 
 #include "ScraperScrollRuleProvider.h"
 
-#include <cstdint>
 #include "ScrollTypes.h"
 
 namespace mm2hack::apps::systems::scrolling::atomic

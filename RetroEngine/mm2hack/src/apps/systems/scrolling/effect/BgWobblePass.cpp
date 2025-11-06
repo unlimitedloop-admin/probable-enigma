@@ -4,7 +4,6 @@
 
 #include <DxLib.h>
 #include <Windows.h>
-#include "core/winapi/WindowManager.h"
 
 namespace mm2hack::apps::systems::scrolling::effect
 {

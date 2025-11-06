@@ -3,19 +3,27 @@
 //  Project: mm2hack
 //  WorldTileQuery.h
 // 
-//  ** Descriptions **
+//  Helper in querying world tile attributes based on world pixel coordinates.
 // 
 //==============================================================================
 #pragma once
 
-#include <algorithm>
-#include <cmath>
 #include <cstdint>
-#include "apps/resources/bg/MapPageCache.h"
-#include "ScrollController.h"
+#include <string>
+
+namespace mm2hack::apps::resources::bg
+{
+    class MapPageCache;
+}
 
 namespace mm2hack::apps::systems::scrolling::atomic
 {
+    struct Camera;
+}
+
+namespace mm2hack::apps::systems::scrolling::atomic
+{
+    // World tile query helper
     class WorldTileQuery
     {
         using MapPageCache = apps::resources::bg::MapPageCache;
@@ -26,35 +34,14 @@ namespace mm2hack::apps::systems::scrolling::atomic
         {
         }
 
+        // Set current page index
         void SetCurrentPage(size_t p) { _curr = p; }
-
-        // 画面上のワールドpx（= 物体の世界座標）とカメラを受け取り、正しいページから tile を得る
-        uint8_t TileAtPx(double worldPxX, double worldPxY, const Camera& cam) const
-        {
-            const int pageW = 16 * _ts;
-            const int pageH = 15 * _ts;
-
-            // 「現在ページの左上」を世界座標系で 0 とみなす
-            const double localX = worldPxX + cam.x;
-            const double localY = worldPxY + cam.y;
-
-            // local が [0,pageW] に収まっていなければ、どの隣接ページかを選ぶ
-            size_t page = _curr;
-            int     txOffset = 0, tyOffset = 0;
-
-            double x = localX, y = localY;
-            if (x < 0) { if (auto p = _cache.Left(_curr))  page = *p; x += pageW; }
-            else if (x >= pageW) { if (auto p = _cache.Right(_curr)) page = *p; x -= pageW; }
-
-            if (y < 0) { if (auto p = _cache.Up(_curr))    page = *p; y += pageH; }
-            else if (y >= pageH) { if (auto p = _cache.Down(_curr))  page = *p; y -= pageH; }
-
-            const int tx = std::clamp(static_cast<int>(std::floor(x / _ts)), 0, 15);
-            const int ty = std::clamp(static_cast<int>(std::floor(y / _ts)), 0, 14);
-            return _cache.Tile(page, tx, ty);
-        }
+        // Get tile attribute at the given world pixel position
+        uint8_t TileAtPx(double worldPxX, double worldPxY, const Camera& cam) const;
 
     private:
+        const std::wstring kClassName = L"WorldTileQuery";
+
         MapPageCache& _cache;
         size_t _curr;
         int _ts;

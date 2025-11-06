@@ -3,12 +3,13 @@
 //  Project: mm2hack
 //  ScrollController.h
 // 
-//  ** Descriptions **
+//  Manages scrolling behavior in 2D map systems.
 // 
 //==============================================================================
 #pragma once
 
 #include <cstdlib>
+#include <string>
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/systems/view/ViewState.h"
 #include "config/SystemConfig.h"
@@ -18,6 +19,7 @@
 
 namespace mm2hack::apps::systems::scrolling::atomic
 {
+    // View camera representation
     struct Camera
     {
         using Scalar = systems::view::Scalar;
@@ -33,7 +35,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
         static inline bool NearlyEqual(Scalar a, Scalar b, Scalar eps = foundation::math::kEps) noexcept { return std::abs(a - b) <= eps; }
     };
 
-    // 差分タイプ（入力・外力など用途を明示）
+    // 2D difference representation
     struct Diff2
     {
         using Vec2 = foundation::math::Vec2;
@@ -47,11 +49,11 @@ namespace mm2hack::apps::systems::scrolling::atomic
         void reset() noexcept { delta = Vec2::Zero(); }
     };
 
+    // Interface for scroll policy
     class IScrollPolicy
     {
     public:
         virtual ~IScrollPolicy() = default;
-        // 戻り値：ページ切替が起きたら true
         virtual bool Update(const foundation::math::RectF& playerBox, Camera& cam, size_t& currentPageIndex, double dt) = 0;
     };
 
@@ -75,13 +77,13 @@ namespace mm2hack::apps::systems::scrolling::atomic
         {
         }
 
-        // フリースクロール／固定アニメを含む総合更新
+        // Free scroll / fixed animation comprehensive update
         void Update(const Vec2& input_delta);
 
-        // 描画
+        // Rendering
         void Render();
 
-        // 外部公開
+        // External interface
         void SetPageIndex(std::size_t idx) noexcept { _page_index = idx; }
         std::size_t PageIndex() const noexcept { return _page_index; }
 
@@ -106,14 +108,14 @@ namespace mm2hack::apps::systems::scrolling::atomic
         }
 
     private:
-        // Sub-update for each axis
-        void UpdateAxisX(double remain);
-        void UpdateAxisY(double remain);
+        void updateAxisX_(double remain);   // Sub-update for each axis
+        void updateAxisY_(double remain);   // Sub-update for each axis
 
-        // Draw neighboring pages
-        void DrawNeighbors();
+        void drawNeighbors_();              // Draw neighboring pages
 
     private:
+        const std::wstring kClassName = L"ScrollController";
+
         IScrollRuleProvider& _rules;        // Scroll rules
         MapRenderer2D& _renderer;           // Map renderer
         Params _params{};                   // Parameters

@@ -3,7 +3,7 @@
 //  Project: mm2hack
 //  DemoStage1Phase.h
 // 
-//  ** Descriptions **
+//  Phase class for the first demo stage.
 // 
 //==============================================================================
 #pragma once

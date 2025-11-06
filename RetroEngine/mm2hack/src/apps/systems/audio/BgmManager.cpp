@@ -98,7 +98,7 @@ namespace mm2hack::apps::systems::audio
         }
     }
 
-    void BgmManager::ApplyFade()
+    void BgmManager::applyFade_()
     {
         if (_isFading && _fadeFramesRemaining > 0)
         {
@@ -114,7 +114,7 @@ namespace mm2hack::apps::systems::audio
         }
     }
 
-    void BgmManager::CheckAndApplyLoop()
+    void BgmManager::checkAndApplyLoop_()
     {
         if (!_isPlaying || _loopEnd <= 0.0) return;
 
@@ -136,8 +136,8 @@ namespace mm2hack::apps::systems::audio
 
     void BgmManager::Update()
     {
-        ApplyFade();
-        CheckAndApplyLoop();
+        applyFade_();
+        checkAndApplyLoop_();
         _channels.Update();
 
         for (int i = 0; i < _channels.GetChannelCount(); ++i)

@@ -12,8 +12,12 @@
 #include <string>
 #include <vector>
 #include "ICheatEffect.h"
-#include "ICheatMemoryMap.h"
 #include "ICodeParser.h"
+
+namespace mm2hack::core::cheats
+{
+    class ICheatMemoryMap;
+}
 
 namespace mm2hack::core::cheats
 {
@@ -47,6 +51,8 @@ namespace mm2hack::core::cheats
         const std::vector<CheatEntry>& GetEntries() const;
 
     private:
+        const std::wstring kClassName = L"CheatManager";
+
         ICheatMemoryMap& _memory_map;                           // Reference to the memory map for resolving addresses
         std::vector<std::unique_ptr<ICodeParser>> _parsers;     // List of parsers for interpreting cheat codes
         std::vector<CheatEntry> _entries;                       // List of all cheat entries

@@ -9,6 +9,7 @@
 #pragma once
 
 #include <optional>
+#include <string>
 #include "apps/rendering/bg/BGTileManager.h"
 #include "apps/rendering/effects/FadeIOTexture.h"
 #include "apps/rendering/fonts/FontTileManager.h"
@@ -76,6 +77,8 @@ namespace mm2hack::apps::resources
         void SetFallbackFontMax(int v) { _fadeFont.SetFallbackMax(v); }
 
     private:
+        const std::wstring kClassName = L"ResourceFadeBindings";
+
         Fade _fadeSprite{ {[]() { return 0; }, [](int) {}, []() { return 0; } }, Fade::Curve::Linear, 0 };  // Sprite fade controller
         Fade _fadeBG{ {[]() { return 0; }, [](int) {}, []() { return 0; } }, Fade::Curve::Linear, 0 };      // BG tile fade controller
         Fade _fadeFont{ {[]() { return 0; }, [](int) {}, []() { return 0; } }, Fade::Curve::Linear, 0 };    // Font tile fade controller

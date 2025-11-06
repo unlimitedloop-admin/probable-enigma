@@ -2,30 +2,33 @@
 
 #include "AudioMixer.h"
 
+#include "BgmManager.h"
+#include "SeManager.h"
+
 namespace mm2hack::apps::systems::audio
 {
     void AudioMixer::SetMasterVolume(int volume)
     {
         _masterVolume = std::clamp(volume, 0, MAX_VOLUME);
-        ApplyVolumes();
+        applyVolumes_();
     }
 
     void AudioMixer::SetBgmVolume(int volume)
     {
         _bgmVolume = std::clamp(volume, 0, MAX_VOLUME);
-        ApplyVolumes();
+        applyVolumes_();
     }
 
     void AudioMixer::SetSeVolume(int volume)
     {
         _seVolume = std::clamp(volume, 0, MAX_VOLUME);
-        ApplyVolumes();
+        applyVolumes_();
     }
 
     void AudioMixer::SetEnabled(bool enabled)
     {
         _enabled = enabled;
-        ApplyVolumes();
+        applyVolumes_();
     }
 
     void AudioMixer::FadeMaster(int target, int durationFrames)
@@ -52,7 +55,7 @@ namespace mm2hack::apps::systems::audio
         }
     }
 
-    void AudioMixer::ApplyVolumes()
+    void AudioMixer::applyVolumes_()
     {
         const int masterFactor = _enabled ? _masterVolume : 0;
 

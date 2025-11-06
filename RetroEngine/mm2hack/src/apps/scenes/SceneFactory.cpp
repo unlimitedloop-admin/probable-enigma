@@ -2,7 +2,6 @@
 
 #include "SceneFactory.h"
 
-#include <memory>
 #include "IBaseScene.h"
 #include "SceneChangeMediator.h"
 #include "SceneID.h"

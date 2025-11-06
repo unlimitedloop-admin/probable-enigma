@@ -2,8 +2,6 @@
 
 #include "AddressScraper.h"
 
-#include <cstdint>
-
 namespace
 {
     using namespace mm2hack::config;
@@ -22,7 +20,7 @@ namespace mm2hack::apps::resources::bg
     AddressScraper::AddressScraper(std::vector<std::uint8_t> bin)
         : _bin(std::move(bin))
     {
-        // 最低限の整合性：サイズが 0x100 の倍数
+        // Minimum integrity check (multiple of page size)
         if (_bin.empty() || (_bin.size() % kPageSize) != 0)
         {
             _bin.clear();
@@ -43,7 +41,7 @@ namespace mm2hack::apps::resources::bg
         return static_cast<int16_t>(H_(pageIndex, 0x04));
     }
 
-    // 隣室 room_id（無ければ -1）
+    // Return the room_id of the adjacent room (or -1 if not found). Specification: $05=Up, $06=Down, $07=Left, $08=Right
     int16_t AddressScraper::getOverRoom(std::size_t pageIndex) const
     {
         if (!inRange_(pageIndex))
@@ -80,7 +78,7 @@ namespace mm2hack::apps::resources::bg
         return H_(pageIndex, 0x08) == 0x00 ? -1 : static_cast<int16_t>(H_(pageIndex, 0x08));
     }
 
-    // スクロール種別（ニブル）
+    // Scroll type (nibble)
     int16_t AddressScraper::getOverScrollType(std::size_t pageIndex) const
     {
         if (!inRange_(pageIndex)) return -1;
@@ -105,7 +103,7 @@ namespace mm2hack::apps::resources::bg
         return lo4(H_(pageIndex, 0x0A));
     }
 
-    // 可否（部屋存在 && 種別が 1 / 9 / 0x0A）
+    // Is it possible to go over? (room exists && type is 1 / 9 / 0x0A)
     bool AddressScraper::isPossibleGoOver(std::size_t pageIndex) const
     {
         const auto r = getOverRoom(pageIndex);
@@ -151,7 +149,7 @@ namespace mm2hack::apps::resources::bg
         const std::size_t pages = pageCount();
         for (std::size_t i = 0; i < pages; ++i)
         {
-            // 仕様：$00=01, $01=FF, $0F=FF を軽く確認（厳密検証は別途でもOK）
+            // NOTE: $00=01, $01=FF, $0F=FF (light check, strict verification is separate)
             if (H_(i, 0x00) == 0x01 && H_(i, 0x01) == 0xFF && H_(i, 0x0F) == 0xFF)
             {
                 const std::uint8_t room = H_(i, 0x04);

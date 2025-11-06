@@ -5,16 +5,12 @@
 #include "apps/resources/ResourceManager.h"
 #include "config/ConfigUIManager.h"
 #include "config/SoundConfig.h"
-#include "core/assembly/ISnapshotProvider.h"
-#include "core/assembly/ITimeController.h"
-#include "core/assembly/StateProvider.h"
-#include "core/diagnostics/IWatchRegistry.h"
 #include "core/diagnostics/NullWatchRegistry.h"
 #include "input/JoystickManager.h"
 
 namespace mm2hack::apps::runtime
 {
-    IWatchRegistry& GameContext::Watch()
+    GameContext::IWatchRegistry& GameContext::Watch()
     {
         static mm2hack::core::diagnostics::NullWatchRegistry s_null;   // Fallback for uninitialized case
         return _watch ? *_watch : s_null;
@@ -23,10 +19,11 @@ namespace mm2hack::apps::runtime
     void GameContext::Initialize()
     {
         using ResourceManager = apps::resources::ResourceManager;
+        using JoystickManager = input::JoystickManager;
 
         // Set up the resources if necessary.
         _resourceManager = std::make_unique<ResourceManager>();
-        _joystickManager = std::make_unique<input::JoystickManager>();
+        _joystickManager = std::make_unique<JoystickManager>();
 
         using namespace config;
         SoundConfig cfg;

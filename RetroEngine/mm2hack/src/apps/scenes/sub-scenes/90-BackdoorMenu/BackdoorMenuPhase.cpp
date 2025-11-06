@@ -2,13 +2,13 @@
 
 #include "BackdoorMenuPhase.h"
 
-#include <array>
 #include <span>
 #include "apps/resources/parameters/Parameters.h"
 #include "apps/scenes/PhaseFadeController.h"
 #include "apps/ui/controls/MenuCursorController.h"
 #include "BackdoorMenu.h"
 #include "BackdoorMenuCatalog.h"
+#include "core/assembly/StateProvider.h"
 #include "input/Jpbtn.h"
 
 namespace mm2hack::apps::scenes

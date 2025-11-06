@@ -9,7 +9,7 @@
 #pragma once
 
 #include <memory>
-#include <windows.h>
+#include <Windows.h>
 #include "CheatCodeInjectionUI.h"
 #include "CommonUIStyle.h"
 #include "GraphicsSettingsUI.h"
@@ -28,6 +28,7 @@ namespace mm2hack::core::ui
             Cheats
         };
 
+        // Layout properties for each settings tab
         static constexpr SettingTabLayout kWindowProps[] = {
             { L"Graphics", 350, 320,  80, 240, 170, 240, 240, 240 },
             { L"Sound",    400, 380, 130, 300, 220, 300, 290, 300 },
@@ -48,11 +49,11 @@ namespace mm2hack::core::ui
 
         static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-        void ApplySettings();
-        void ApplySoundToAudio();
-        void SetHandle(HWND hwnd);
-        void CreateContent(Tab tab);
-        static SettingsWindow* GetThis(HWND hwnd);
+        void applySettings_();
+        void applySoundToAudio_();
+        void setHandle_(HWND hwnd);
+        void createContent_(Tab tab);
+        static SettingsWindow* getThis_(HWND hwnd);
 
         static std::unique_ptr<SettingsWindow> _instance;   // Just to own the instance
     };

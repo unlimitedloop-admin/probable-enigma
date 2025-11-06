@@ -8,10 +8,14 @@
 //==============================================================================
 #pragma once
 
-#include "BgmManager.h"
-#include "SeManager.h"
-
+#include <string>
 #include "config/SystemConfig.h"
+
+namespace mm2hack::apps::systems::audio
+{
+    class BgmManager;
+    class SeManager;
+}
 
 namespace mm2hack::apps::systems::audio
 {
@@ -43,6 +47,8 @@ namespace mm2hack::apps::systems::audio
         void Update();
 
     private:
+        const std::wstring kClassName = L"AudioMixer";
+
         const int MAX_VOLUME = config::SystemConfig::kAudioMaxVolume;
 
         int _masterVolume = MAX_VOLUME;
@@ -59,6 +65,6 @@ namespace mm2hack::apps::systems::audio
         int _fadeStep = 0;
         int _fadeFramesRemaining = 0;
 
-        void ApplyVolumes();
+        void applyVolumes_();
     };
 }

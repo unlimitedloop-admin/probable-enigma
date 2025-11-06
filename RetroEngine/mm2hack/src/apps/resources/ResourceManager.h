@@ -9,6 +9,7 @@
 #pragma once
 
 #include <optional>
+#include <string>
 #include "apps/rendering/bg/BGTileManager.h"
 #include "apps/rendering/effects/FadeIOTexture.h"
 #include "apps/rendering/fonts/FontTileManager.h"
@@ -60,6 +61,8 @@ namespace mm2hack::apps::resources
         void Release();
 
     private:
+        const std::wstring kClassName = L"ResourceManager";
+
         SpriteManager _spriteManager;       // Instance of SpriteManager
         BGTileManager _bgTileManager;       // Instance of BGTileManager
         BGRoomBank _bgRoomBank;             // Instance of BGRoomBank

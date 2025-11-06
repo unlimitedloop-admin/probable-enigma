@@ -66,8 +66,8 @@ namespace mm2hack::apps::rendering::bg
         [[nodiscard]] int MaxVariantAcross() const noexcept;
 
     private:
-        Id NextId_() const noexcept;        // next available Id (dense array index)
-        std::unique_ptr<BGTileAtlas> BuildAtlas_(const std::wstring& name,
+        Id nextId_() const noexcept;        // next available Id (dense array index)
+        std::unique_ptr<BGTileAtlas> buildAtlas_(const std::wstring& name,
                                                  const std::wstring& png_path,
                                                  const std::wstring& json_path);    // Load to memory and build BG tile graphics
 

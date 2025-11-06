@@ -2,12 +2,9 @@
 
 #include "SpriteCatalog.h"
 
-#include <array>
 #include <cmath>
 #include <limits>
 #include <nlohmann/json.hpp>
-#include <optional>
-#include <utility>
 #include "SpriteAtlas.h"
 
 namespace

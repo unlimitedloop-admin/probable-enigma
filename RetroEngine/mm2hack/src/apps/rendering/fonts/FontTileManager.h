@@ -68,11 +68,11 @@ namespace mm2hack::apps::rendering::fonts
             std::map<char, int> charToIndex; // Optional (default generated if not present)
         };
 
-        static ParsedMeta ParseMeta_(const std::wstring& jsonPath, const std::wstring& setName);
-        static std::wstring DerivePngFromJsonPath_(const std::wstring& jsonPath);
-        static std::wstring ConcatPath_(const std::filesystem::path& baseDir, const std::wstring& rel);
+        static ParsedMeta parseMeta_(const std::wstring& jsonPath, const std::wstring& setName);
+        static std::wstring derivePngFromJsonPath_(const std::wstring& jsonPath);
+        static std::wstring concatPath_(const std::filesystem::path& baseDir, const std::wstring& rel);
 
-        void CreateFontGraphs_(const std::wstring& name, int softImage,
+        void createFontGraphs_(const std::wstring& name, int softImage,
             int tile_w, int tile_h, int tiles_x, int tiles_y,
             const std::map<char, int>& charIndexMap,
             int variant_count, int fade_step);

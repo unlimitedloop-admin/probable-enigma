@@ -2,8 +2,6 @@
 
 #include "ConfigUIManager.h"
 
-#include <array>
-#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include "GraphicsConfig.h"
@@ -16,12 +14,11 @@
 
 namespace
 {
-    using namespace mm2hack;
-    using namespace input;
+    namespace inp = mm2hack::input;
 
     inline uint16_t ParseU16(const wchar_t* ws)
     {
-        if (!ws || !*ws) return kTokenUnbound;
+        if (!ws || !*ws) return inp::kTokenUnbound;
         wchar_t* end = nullptr;
         unsigned long v = std::wcstoul(ws, &end, 0); // 0xFFFF, 65535 ...
         if (v > 0xFFFFul) v = 0xFFFFul;
@@ -34,16 +31,16 @@ namespace
     }
 
     // Translate Device enum to string and vice versa
-    inline const wchar_t* DeviceToW(Device d)
+    inline const wchar_t* DeviceToW(inp::Device d)
     {
-        using D = Device;
+        using D = inp::Device;
         switch (d) { case D::XInput: return L"XInput"; case D::DirectInput: return L"DirectInput"; default: return L"Keyboard"; }
     }
 
     // Parse device string to Device enum
-    inline Device ParseDevice(const wchar_t* ws)
+    inline inp::Device ParseDevice(const wchar_t* ws)
     {
-        using D = Device;
+        using D = inp::Device;
         if (!ws) return D::Keyboard;
         if (_wcsicmp(ws, L"XInput") == 0)      return D::XInput;
         if (_wcsicmp(ws, L"DirectInput") == 0) return D::DirectInput;
@@ -52,7 +49,7 @@ namespace
         if (n == 1) return D::XInput; if (n == 2) return D::DirectInput; return D::Keyboard;
     }
 
-    inline bool ProviderMatches(Device saved, Device detected)
+    inline bool ProviderMatches(inp::Device saved, inp::Device detected)
     {
         return saved == detected;
     }
@@ -63,16 +60,15 @@ namespace mm2hack::config
 {
     HudConfig ConfigUIManager::_cachedHudConfig{ false };
 
-    void ConfigUIManager::SaveInputDeviceConfig(const input::KeyBinding& binding, input::Device provider)
+    void ConfigUIManager::SaveInputDeviceConfig(const KeyBinding& binding, Device provider)
     {
-        using namespace input;
-        const std::wstring path = GetIniPath();
+        const std::wstring path = getIniPath_();
         constexpr bool kHex = false;
 
         for (size_t i = 0; i < JPBTN_COUNT; ++i)
         {
             const auto tok = binding.GetBindingSCon(static_cast<JPBTN>(i));
-            WritePrivateProfileString(L"Input", kJpbtnKeys[i], ToStrU16(tok, kHex).c_str(), path.c_str());
+            WritePrivateProfileString(L"Input", inp::kJpbtnKeys[i], ToStrU16(tok, kHex).c_str(), path.c_str());
         }
 
         WritePrivateProfileString(L"Input", L"XInputEnabled", binding.IsXInputEnabled() ? L"1" : L"0", path.c_str());
@@ -82,16 +78,15 @@ namespace mm2hack::config
         WritePrivateProfileString(L"Input", L"Provider", DeviceToW(provider), path.c_str());
     }
 
-    input::Device ConfigUIManager::LoadInputDeviceConfig(input::KeyBinding& binding)
+    ConfigUIManager::Device ConfigUIManager::LoadInputDeviceConfig(KeyBinding& binding)
     {
-        using namespace input;
-        const std::wstring path = GetIniPath();
+        const std::wstring path = getIniPath_();
         wchar_t buf[64];
 
         for (size_t i = 0; i < JPBTN_COUNT; ++i)
         {
             const uint16_t cur = binding.GetBindingSCon(static_cast<JPBTN>(i));
-            GetPrivateProfileString(L"Input", kJpbtnKeys[i], ToStrU16(cur, false).c_str(), buf, 64, path.c_str());
+            GetPrivateProfileString(L"Input", inp::kJpbtnKeys[i], ToStrU16(cur, false).c_str(), buf, 64, path.c_str());
             binding.SetBinding(static_cast<JPBTN>(i), ParseU16(buf));
         }
 
@@ -110,15 +105,14 @@ namespace mm2hack::config
         return ParseDevice(buf);
     }
 
-    InputLoadResult ConfigUIManager::LoadInputConfigIfMatches(input::KeyBinding& binding, input::Device detected)
+    InputLoadResult ConfigUIManager::LoadInputConfigIfMatches(KeyBinding& binding, Device detected)
     {
-        using namespace input;
-        const std::wstring path = GetIniPath();
+        const std::wstring path = getIniPath_();
         wchar_t buf[64];
 
         // Load the saved provider and check if it matches the detected one.
         GetPrivateProfileString(L"Input", L"Provider", L"", buf, 64, path.c_str());
-        const input::Device savedProv = (buf[0] ? ParseDevice(buf) : detected); // Default to detected if not found
+        const Device savedProv = (buf[0] ? ParseDevice(buf) : detected); // Default to detected if not found
         const bool match = ProviderMatches(savedProv, detected);
 
         // One by one, load the button mappings (default to current values if not found)
@@ -126,7 +120,7 @@ namespace mm2hack::config
         for (size_t i = 0; i < JPBTN_COUNT; ++i)
         {
             const uint16_t cur = binding.GetBindingSCon(static_cast<JPBTN>(i));
-            GetPrivateProfileString(L"Input", kJpbtnKeys[i], ToStrU16(cur).c_str(), buf, 64, path.c_str());
+            GetPrivateProfileString(L"Input", inp::kJpbtnKeys[i], ToStrU16(cur).c_str(), buf, 64, path.c_str());
             tmp[i] = ParseU16(buf);
         }
         auto getBool = [&](const wchar_t* key, bool def)->bool
@@ -156,7 +150,7 @@ namespace mm2hack::config
 
     void ConfigUIManager::SaveGraphicsConfig(const GraphicsConfig& config)
     {
-        const std::wstring path = GetIniPath();
+        const std::wstring path = getIniPath_();
 
         WritePrivateProfileString(L"Graphics", L"ResolutionIndex", std::to_wstring(config.resolutionIndex).c_str(), path.c_str());
         WritePrivateProfileString(L"Graphics", L"VSync", config.vsync ? L"1" : L"0", path.c_str());
@@ -165,7 +159,7 @@ namespace mm2hack::config
 
     void ConfigUIManager::LoadGraphicsConfig(GraphicsConfig& config)
     {
-        const std::wstring path = GetIniPath();
+        const std::wstring path = getIniPath_();
         wchar_t buffer[32];
 
         GetPrivateProfileString(L"Graphics", L"ResolutionIndex", L"-1", buffer, 32, path.c_str());
@@ -180,7 +174,7 @@ namespace mm2hack::config
 
     void ConfigUIManager::SaveSoundConfig(const SoundConfig& config)
     {
-        const std::wstring path = GetIniPath();
+        const std::wstring path = getIniPath_();
 
         WritePrivateProfileString(L"Sound", L"Master", std::to_wstring(config.master).c_str(), path.c_str());
         WritePrivateProfileString(L"Sound", L"BGM", std::to_wstring(config.bgm).c_str(), path.c_str());
@@ -191,7 +185,7 @@ namespace mm2hack::config
 
     void ConfigUIManager::LoadSoundConfig(SoundConfig& config)
     {
-        const std::wstring path = GetIniPath();
+        const std::wstring path = getIniPath_();
         wchar_t buffer[32];
 
         GetPrivateProfileString(L"Sound", L"Master", L"80", buffer, 32, path.c_str());
@@ -212,14 +206,14 @@ namespace mm2hack::config
 
     void ConfigUIManager::SaveHudConfig(const HudConfig& config)
     {
-        const std::wstring path = GetIniPath();
+        const std::wstring path = getIniPath_();
         WritePrivateProfileString(L"Hud", L"ShowFps", config.showFps ? L"1" : L"0", path.c_str());
         WritePrivateProfileString(L"Hud", L"ShowFrameTime", config.showFrameTime ? L"1" : L"0", path.c_str());
     }
 
     void ConfigUIManager::LoadHudConfig(HudConfig& config)
     {
-        const std::wstring path = GetIniPath();
+        const std::wstring path = getIniPath_();
         wchar_t buffer[32];
         GetPrivateProfileString(L"Hud", L"ShowFps", L"0", buffer, 32, path.c_str());
         config.showFps = (_wtoi(buffer) != 0);
@@ -241,8 +235,8 @@ namespace mm2hack::config
         SaveHudConfig(_cachedHudConfig);
     }
 
-    std::wstring ConfigUIManager::GetIniPath()
+    std::wstring ConfigUIManager::getIniPath_()
     {
-        return L"./settings.ini";
+        return _kIniFileName;
     }
 }

@@ -3,7 +3,6 @@
 #include "SpriteAtlas.h"
 
 #include <random>
-#include <utility>
 #include "apps/foundation/NES/NESPalette.h"
 
 namespace mm2hack::apps::rendering::sprite
@@ -19,7 +18,7 @@ namespace mm2hack::apps::rendering::sprite
 
     SpriteAtlas::~SpriteAtlas()
     {
-        Dispose();
+        dispose_();
     }
 
     SpriteAtlas::SpriteAtlas(SpriteAtlas&& other) noexcept
@@ -35,7 +34,7 @@ namespace mm2hack::apps::rendering::sprite
     {
         if (this != &other)
         {
-            Dispose();
+            dispose_();
             _name = std::move(other._name);
             _div = other._div;
             _soft_image = other._soft_image;
@@ -99,7 +98,7 @@ namespace mm2hack::apps::rendering::sprite
             return false;
         }
         // Rebuild the variant's graphs from the updated soft image.
-        return RebuildVariantFromSoftImage_(variant);
+        return rebuildVariantFromSoftImage_(variant);
     }
 
     bool SpriteAtlas::ApplyHSBToVariant(int variant, int hueAdd, int satAdd, int briAdd) noexcept
@@ -128,7 +127,7 @@ namespace mm2hack::apps::rendering::sprite
         return ApplyHSBToVariant(variant, dist(rng), 0, 0);
     }
 
-    bool SpriteAtlas::RebuildVariantFromSoftImage_(int variant) noexcept
+    bool SpriteAtlas::rebuildVariantFromSoftImage_(int variant) noexcept
     {
         if (_soft_image == -1 || variant < 0) return false;
 
@@ -151,7 +150,7 @@ namespace mm2hack::apps::rendering::sprite
         return true;
     }
 
-    void SpriteAtlas::Dispose() noexcept
+    void SpriteAtlas::dispose_() noexcept
     {
         for (auto& frames : _graphs_by_variant)
         {

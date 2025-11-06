@@ -32,6 +32,8 @@ namespace mm2hack::utils
         static void Shutdown();
 
     private:
+        static inline const std::wstring kClassName = L"LogWriter";
+
         static std::wstring _logFilePath;   // Path to the log file
         static bool _initialized;           // Indicates if the logger has been initialized
     };

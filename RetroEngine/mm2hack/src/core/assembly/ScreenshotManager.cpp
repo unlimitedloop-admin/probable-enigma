@@ -37,6 +37,6 @@ namespace mm2hack::core::assembly
         const std::wstring filename = oss.str();
 
         // Output the displayed window contents to a PNG image in the current window size.
-        DxLib::SaveDrawScreenToPNG(0, 0, width - 1, height - 1, filename.c_str());
+        ::DxLib::SaveDrawScreenToPNG(0, 0, width - 1, height - 1, filename.c_str());
     }
 }

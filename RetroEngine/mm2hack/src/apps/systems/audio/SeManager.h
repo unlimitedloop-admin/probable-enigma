@@ -60,6 +60,8 @@ namespace mm2hack::apps::systems::audio
             int seChannelIndex = 0;     // SE channel index
         };
 
+        const std::wstring kClassName = L"SeManager";
+
         const int MAX_VOLUME = config::SystemConfig::kAudioMaxVolume;
 
         ChannelManager _seChannels;                                 // SE channels manager

@@ -10,6 +10,7 @@
 
 #include "IInputProvider.h"
 
+#include <string>
 #include "C16ButtonState.h"
 #include "KeyBinding.h"
 
@@ -29,6 +30,8 @@ namespace mm2hack::input
         bool Update(C16ButtonState& out_state) override;
 
     private:
+        const std::wstring kClassName = L"DirectInputProvider";
+
         const KeyBinding& _binding;     // Key binding for this provider
     };
 }

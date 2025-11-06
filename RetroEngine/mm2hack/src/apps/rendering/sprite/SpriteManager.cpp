@@ -30,7 +30,7 @@ namespace mm2hack::apps::rendering::sprite
 
     void SpriteManager::UseByName(const std::wstring& name, int frame, int x, int y)
     {
-        const Id id = CacheId_(name);
+        const Id id = cacheId_(name);
         if (id == kInvalidId) { return; }
         UseById(id, frame, x, y);
     }
@@ -57,7 +57,7 @@ namespace mm2hack::apps::rendering::sprite
 
     bool SpriteManager::ApplyRandomColorFilterByName(const std::wstring& name, int variant)
     {
-        const Id id = CacheId_(name);
+        const Id id = cacheId_(name);
         if (id == kInvalidId || !_catalog.IsValid(id)) return false;
         return _catalog.GetAtlas(id).ApplyRandomHueToVariant(variant);
     }
@@ -121,7 +121,7 @@ namespace mm2hack::apps::rendering::sprite
         _global_variant = 0;
     }
 
-    SpriteManager::Id SpriteManager::CacheId_(const std::wstring& name)
+    SpriteManager::Id SpriteManager::cacheId_(const std::wstring& name)
     {
         if (const auto it = _name_cache.find(name); it != _name_cache.end())
         {

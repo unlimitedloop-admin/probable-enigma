@@ -2,11 +2,9 @@
 
 #include "BGTileCatalog.h"
 
-#include <array>
 #include <cmath>
 #include <limits>
 #include <nlohmann/json.hpp>
-#include <optional>
 #include <string_view>
 #include "BGTileAtlas.h"
 
@@ -121,9 +119,9 @@ namespace mm2hack::apps::rendering::bg
 
         const std::wstring png{ png_path };
         const std::wstring json{ json_path };
-        auto atlas = BuildAtlas_(name, png, json);
+        auto atlas = buildAtlas_(name, png, json);
 
-        const Id id = NextId_();
+        const Id id = nextId_();
         _atlases.emplace_back(std::move(atlas));
         
         _name_to_id.emplace(name, id);
@@ -168,12 +166,12 @@ namespace mm2hack::apps::rendering::bg
         return std::max(0, result);
     }
 
-    BGTileCatalog::Id BGTileCatalog::NextId_() const noexcept
+    BGTileCatalog::Id BGTileCatalog::nextId_() const noexcept
     {
         return static_cast<Id>(_atlases.size());
     }
 
-    std::unique_ptr<BGTileAtlas> BGTileCatalog::BuildAtlas_(const std::wstring& name,
+    std::unique_ptr<BGTileAtlas> BGTileCatalog::buildAtlas_(const std::wstring& name,
                                                             const std::wstring& png_path,
                                                             const std::wstring& json_path)
     {

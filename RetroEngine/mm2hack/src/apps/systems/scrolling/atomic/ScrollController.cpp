@@ -2,7 +2,6 @@
 
 #include "ScrollController.h"
 
-#include <cstdint>
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "ScrollTypes.h"
 
@@ -16,23 +15,23 @@ namespace mm2hack::apps::systems::scrolling::atomic
         const int page_w = _params.tile_px * _tileX;
         const int page_h = _params.tile_px * _tileY;
 
-        // 固定ページアニメ中：進捗のみ
+        // Fixed page animation: only progress
         if (_anim.Active())
         {
             const auto dir = _anim.State().dir;
             const bool finished = _anim.TickAndInterpolate(dir, page_w, page_h, _params.view_w, _params.view_h, _object_pos);
             if (finished)
             {
-                _page_index = _anim.State().to_index; // 対岸へ確定
+                _page_index = _anim.State().to_index; // Confirm to the opposite bank
                 _cam.x = 0.0; _cam.y = 0.0;
                 _anim.Reset();
             }
             return;
         }
 
-        // 自由スクロール
-        if (input_delta.x != 0.0) { UpdateAxisX(input_delta.x); }
-        if (input_delta.y != 0.0) { UpdateAxisY(input_delta.y); }
+        // Free scroll
+        if (input_delta.x != 0.0) { updateAxisX_(input_delta.x); }
+        if (input_delta.y != 0.0) { updateAxisY_(input_delta.y); }
     }
 
     void ScrollController::Render()
@@ -42,28 +41,28 @@ namespace mm2hack::apps::systems::scrolling::atomic
 
         if (_anim.Active())
         {
-            // 固定ページスクロール演出中
+            // Fixed page scroll animation in progress
             _renderer.DrawAnimation(_anim.State(), _anim.State().from_index, _anim.State().to_index);
         }
         else
         {
-            // 自由スクロール中：現ページ + 必要分のみ隣接ページ
+            // Free scroll: current page + only necessary adjacent pages
             const int ox = -static_cast<int>(_cam.x);
             const int oy = -static_cast<int>(_cam.y);
             _renderer.DrawPage(_page_index, ox, oy);
-            DrawNeighbors();
+            drawNeighbors_();
         }
 
-        // デバッグ十字線
+        // Debug crosshair
         ::DxLib::DrawLine(static_cast<int>(_object_pos.x), 0, static_cast<int>(_object_pos.x), _params.view_h, 0xFFFF0000, 2);
         ::DxLib::DrawLine(0, static_cast<int>(_object_pos.y), _params.view_w, static_cast<int>(_object_pos.y), 0xFFFF0000, 2);
     }
 
-    // ───────────── X 軸処理
-    void ScrollController::UpdateAxisX(double remain)
+    // -------------------- Procedure for X axis
+    void ScrollController::updateAxisX_(double remain)
     {
-        const int page_w = _params.tile_px * 16;
-        // 1) 十字線→中央へ寄せる
+        const int page_w = _params.tile_px * config::SystemConfig::kTileCountX;
+        // 1) Crosshair -> Center it
         if (remain > 0.0 && _object_pos.x < Camera::kCenterX)
         {
             const double take = std::min(remain, Camera::kCenterX - _object_pos.x);
@@ -77,7 +76,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
 
         if (Camera::NearlyZero(remain)) { return; }
 
-        if (remain > 0.0) // →
+        if (remain > 0.0) // RIGHT
         {
             const double tentative = _cam.x + remain;
             if (tentative <= 0.0)
@@ -111,11 +110,11 @@ namespace mm2hack::apps::systems::scrolling::atomic
             }
             else
             {
-                // 不許可：線だけ動かす
+                // Not allowed: only move the line
                 _object_pos.x = std::clamp(_object_pos.x + remain, 0.0, static_cast<double>(MaxX(_params.view_w)));
             }
         }
-        else // ←
+        else // LEFT
         {
             const double tentative = _cam.x + remain;
             if (tentative >= 0.0)
@@ -154,10 +153,10 @@ namespace mm2hack::apps::systems::scrolling::atomic
         }
     }
 
-    // ───────────── Y 軸処理
-    void ScrollController::UpdateAxisY(double remain)
+    // -------------------- Procedure for Y axis
+    void ScrollController::updateAxisY_(double remain)
     {
-        const int page_h = _params.tile_px * 15;
+        const int page_h = _params.tile_px * config::SystemConfig::kTileCountY;
 
         if (remain > 0.0 && _object_pos.y < Camera::kCenterY)
         {
@@ -172,7 +171,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
 
         if (Camera::NearlyZero(remain)) { return; }
 
-        if (remain > 0.0) // ↓
+        if (remain > 0.0) // DOWN
         {
             const double tentative = _cam.y + remain;
             if (tentative <= 0.0)
@@ -209,7 +208,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
                 _object_pos.y = std::clamp(_object_pos.y + remain, 0.0, static_cast<double>(MaxY(_params.view_h)));
             }
         }
-        else // ↑
+        else // UP
         {
             const double tentative = _cam.y + remain;
             if (tentative >= 0.0)
@@ -248,17 +247,17 @@ namespace mm2hack::apps::systems::scrolling::atomic
         }
     }
 
-    void ScrollController::DrawNeighbors()
+    void ScrollController::drawNeighbors_()
     {
-        const int page_w = _params.tile_px * 16;
-        const int page_h = _params.tile_px * 15;
+        const int page_w = _params.tile_px * config::SystemConfig::kTileCountX;
+        const int page_h = _params.tile_px * config::SystemConfig::kTileCountY;
 
         const int ox = -static_cast<int>(_cam.x);
         const int oy = -static_cast<int>(_cam.y);
 
         const auto is_allowed = [](ScrollKind k) { return IsAllowedFree(k); };
 
-        // 右
+        // RIGHT
         if (ox + page_w < _params.view_w)
         {
             const auto k = _rules.RightType(_page_index);
@@ -269,7 +268,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
                 _renderer.DrawPage(static_cast<std::size_t>(idx), ox + page_w, oy);
             }
         }
-        // 下
+        // DOWN
         if (oy + page_h < _params.view_h)
         {
             const auto k = _rules.DownType(_page_index);
@@ -280,7 +279,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
                 _renderer.DrawPage(static_cast<std::size_t>(idx), ox, oy + page_h);
             }
         }
-        // 右下
+        // RIGHT DOWN
         if (ox + page_w < _params.view_w && oy + page_h < _params.view_h)
         {
             const auto kr = _rules.RightType(_page_index);
@@ -297,7 +296,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
                 }
             }
         }
-        // 左
+        // LEFT
         if (ox > 0)
         {
             const auto k = _rules.LeftType(_page_index);
@@ -308,7 +307,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
                 _renderer.DrawPage(static_cast<std::size_t>(idx), ox - page_w, oy);
             }
         }
-        // 上
+        // UP
         if (oy > 0)
         {
             const auto k = _rules.UpType(_page_index);
@@ -319,7 +318,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
                 _renderer.DrawPage(static_cast<std::size_t>(idx), ox, oy - page_h);
             }
         }
-        // 左上
+        // LEFT UP
         if (ox > 0 && oy > 0)
         {
             const auto kl = _rules.LeftType(_page_index);

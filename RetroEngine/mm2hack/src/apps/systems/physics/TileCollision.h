@@ -9,18 +9,23 @@
 #pragma once
 
 #include <cstdint>
-#include "apps/rendering/bg/BGTileManager.h"
+#include <string>
+
+namespace mm2hack::apps::rendering::bg
+{
+    class BGTileManager;
+}
 
 namespace mm2hack::apps::systems::physics
 {
-    // BGTileManager::SetTileAttribute で設定される想定の属性値
+    // BG field tile attributes definition
     enum class Attr : uint8_t
     {
-        Space = 0,   // 空間
-        Solid = 1,   // 壁・床（完全衝突）
-        Ladder = 2,  // はしご
-        OneWay = 3,  // すり抜け床（下から上は通過、上から下へは非衝突）
-        Spike = 4    // トゲ（ダメージ／ミス）
+        Space = 0,   // Null collision
+        Solid = 1,   // Wall/Floor
+        Ladder = 2,  // Up/Down ladder
+        OneWay = 3,  // One-way floor (passable from below, non-collidable from above)
+        Spike = 4    // Spike (damage/miss)
     };
 
     struct AABB
@@ -35,32 +40,36 @@ namespace mm2hack::apps::systems::physics
         bool touched_spike{ false };
     };
 
-    // タイルグリッドに対する衝突解決（X→Yの軸分離）
-    // ピクセル→タイルの変換は tile_px 依存。オフセットは今後のスクロール対応で使用。
+    // Tile grid collision resolution (axis separation for X->Y)
+    // Pixel -> Tile conversion depends on tile_px. Offsets will be used for future scrolling support
     class TileCollisionResolver
     {
+        using BGTileManager = apps::rendering::bg::BGTileManager;
+
     public:
-        TileCollisionResolver(const apps::rendering::bg::BGTileManager& mgr,
+        TileCollisionResolver(const BGTileManager& mgr,
             int map_w_tiles, int map_h_tiles,
             int tile_px)
             : _mgr(mgr), _mw(map_w_tiles), _mh(map_h_tiles), _ts(tile_px)
         {
         }
 
-        // AABB を与えて衝突解決。vx,vy は参照で更新。
+        // Resolve collision for the given AABB with velocity (vx, vy).
         ResolveResult Resolve(AABB& box, float& vx, float& vy,
             bool allow_one_way_pass_up = true,
             float ofs_x_px = 0.0f, float ofs_y_px = 0.0f) const;
 
     private:
-        const apps::rendering::bg::BGTileManager& _mgr;
-        int _mw, _mh, _ts;
+        [[nodiscard]] uint8_t getAttrByPx_(int px, int py, float ofs_x_px, float ofs_y_px) const noexcept;  // Get tile attribute by pixel coordinates with offsets
+        [[nodiscard]] bool isSolid_(int tx, int ty) const noexcept;     // Is tile solid
+        [[nodiscard]] bool isOneWay_(int tx, int ty) const noexcept;    // Is tile one-way
+        [[nodiscard]] bool isLadder_(int tx, int ty) const noexcept;    // Is tile ladder
+        [[nodiscard]] bool isSpike_(int tx, int ty) const noexcept;     // Is tile spike
 
-        [[nodiscard]] uint8_t getAttrByPx(int px, int py,
-            float ofs_x_px, float ofs_y_px) const noexcept;
-        [[nodiscard]] bool isSolid(int tx, int ty) const noexcept;
-        [[nodiscard]] bool isOneWay(int tx, int ty) const noexcept;
-        [[nodiscard]] bool isLadder(int tx, int ty) const noexcept;
-        [[nodiscard]] bool isSpike(int tx, int ty) const noexcept;
+    private:
+        const std::wstring kClassName = L"TileCollisionResolver";
+
+        const BGTileManager& _mgr;
+        int _mw, _mh, _ts;
     };
 }

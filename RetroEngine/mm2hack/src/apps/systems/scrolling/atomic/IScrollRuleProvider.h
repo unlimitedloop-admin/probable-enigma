@@ -3,7 +3,7 @@
 //  Project: mm2hack
 //  IScrollRuleProvider.h
 // 
-//  ** Descriptions **
+//  Provides the interface for scroll rule providers.
 // 
 //==============================================================================
 #pragma once
@@ -28,7 +28,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
         virtual int16_t UpRoom(std::size_t page_index) const = 0;
         virtual int16_t DownRoom(std::size_t page_index) const = 0;
 
-        // room(0..255) → page index(>=0) / 無効なら -1
+        // room -> page index (-1 if not found)
         virtual int ToPageIndex(uint8_t room) const = 0;
     };
 }

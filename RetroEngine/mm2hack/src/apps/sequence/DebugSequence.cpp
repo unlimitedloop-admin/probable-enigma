@@ -13,14 +13,16 @@ namespace mm2hack::apps::sequence
 {
     DebugSequence::DebugSequence()
     {
+        using SceneID = scenes::SceneID;
+
         // Initialize the sequence, checks whether the resource can be loaded, etc.
         _sceneChanger.RegisterListener(&_sceneManager);
         _sceneManager.SetMediator(&_sceneChanger);
 
         // NOTE: LaunchingGame -> BackdoorMenu
         resources::parameters::Parameters params;
-        params = params.With<scenes::SceneID>(L"Subsequent", scenes::SceneID::BackdoorMenu);
-        _sceneChanger.RequestChange(scenes::SceneID::LaunchingGame, params);
+        params = params.With<SceneID>(L"Subsequent", SceneID::BackdoorMenu);
+        _sceneChanger.RequestChange(SceneID::LaunchingGame, params);
 
         // Load the default background color for the NES palette.
         foundation::NES::NESPalette::SetBackgroundFor(config::SystemConfig::kMakeSeqPaletteIndex);

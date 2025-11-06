@@ -106,7 +106,7 @@ namespace mm2hack::core
         }
         catch (const std::exception& e)
         {
-            ErrorHandler::Handle(utf8_to_wstring(e.what()), L"GameLoopManager", L"Run", ErrorLevel::FatalError);
+            ErrorHandler::Handle(utf8_to_wstring(e.what()), kClassName, L"Run", ErrorLevel::FatalError);
         }
     }
 }

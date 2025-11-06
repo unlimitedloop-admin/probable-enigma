@@ -9,6 +9,7 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 #include "apps/resources/ResourceManager.h"
 
 namespace mm2hack::apps::scenes
@@ -33,8 +34,9 @@ namespace mm2hack::apps::scenes
     // Controller for phase fade transitions
     class PhaseFadeController
     {
-    public:
         using ResourceManager = apps::resources::ResourceManager;
+
+    public:
         enum class State { Idle, PreBlackHold, FadingIn, Interactive, PreFadeOutHold, FadingOut, PostBlackHold };
 
         PhaseFadeController() = default;
@@ -47,29 +49,32 @@ namespace mm2hack::apps::scenes
         // Request fade-out (only effective when in Interactive state)
         void RequestFadeOut(ResourceManager& res);
 
+        // ----- Getters -----
         [[nodiscard]] inline bool InputEnabled() const noexcept { return _state == State::Interactive; }
         [[nodiscard]] inline bool ReadyToSwitchPhase() const noexcept { return _state == State::Idle; }
         [[nodiscard]] inline State Current() const noexcept { return _state; }
         [[nodiscard]] inline const PhaseFadePlan& Plan() const noexcept { return _plan; }
 
     private:
-        void StartFadeIn_(ResourceManager& res);
-        void StartFadeOut_(ResourceManager& res);
+        void startFadeIn_(ResourceManager& res);            // Start fade-in process
+        void startFadeOut_(ResourceManager& res);           // Start fade-out process
 
-        void FadeInBG_(ResourceManager& res, int to);
-        void FadeInSprite_(ResourceManager& res, int to);
-        void FadeInFont_(ResourceManager& res, int to);
-        void FadeOutBG_(ResourceManager& res, int to);
-        void FadeOutSprite_(ResourceManager& res, int to);
-        void FadeOutFont_(ResourceManager& res, int to);
+        // ----- Fade-in/out helpers -----
+        void fadeInBG_(ResourceManager& res, int to);
+        void fadeInSprite_(ResourceManager& res, int to);
+        void fadeInFont_(ResourceManager& res, int to);
+        void fadeOutBG_(ResourceManager& res, int to);
+        void fadeOutSprite_(ResourceManager& res, int to);
+        void fadeOutFont_(ResourceManager& res, int to);
 
-        void ForceDark_(ResourceManager& res) const;
-        void LightUp_(ResourceManager& res) const;
+        void forceDark_(ResourceManager& res) const;        // Force all target layers to black
+        void lightUp_(ResourceManager& res) const;          // Restore all target layers to normal brightness
 
     private:
+        const std::wstring kClassName = L"PhaseFadeController";
+
         PhaseFadePlan _plan{};          // Current fade plan
         State _state{ State::Idle };    // Current state
         int _counter{ 0 };              // Frame counter for the current state
     };
-
 }

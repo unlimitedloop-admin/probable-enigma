@@ -2,10 +2,8 @@
 
 #include "FontTileManager.h"
 
-#include <array>
 #include <cctype>
 #include <cmath>
-#include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <nlohmann/json.hpp>
@@ -72,15 +70,15 @@ namespace mm2hack::apps::rendering::fonts
     void FontTileManager::Load(const std::wstring& name, std::wstring_view pngPath, std::wstring_view jsonPath)
     {
         Remove(name);
-        ParsedMeta meta = ParseMeta_(std::wstring(jsonPath), name);
+        ParsedMeta meta = parseMeta_(std::wstring(jsonPath), name);
         if (!pngPath.empty()) meta.pngPath = std::wstring(pngPath);
-        if (meta.pngPath.empty()) meta.pngPath = DerivePngFromJsonPath_(std::wstring(jsonPath));
+        if (meta.pngPath.empty()) meta.pngPath = derivePngFromJsonPath_(std::wstring(jsonPath));
         if (meta.pngPath.empty()) THROW_EXCEPTION(L"PNG path is not specified", kClassName);
 
         const int soft = ::DxLib::LoadSoftImage(meta.pngPath.c_str());
         if (soft == -1) THROW_EXCEPTION(L"LoadSoftImage failed", kClassName);
 
-        CreateFontGraphs_(name, soft, meta.tile_w, meta.tile_h, meta.tiles_x, meta.tiles_y, meta.charToIndex, meta.variant_count, meta.nes_fade_step);
+        createFontGraphs_(name, soft, meta.tile_w, meta.tile_h, meta.tiles_x, meta.tiles_y, meta.charToIndex, meta.variant_count, meta.nes_fade_step);
     }
 
     void FontTileManager::Load(const std::wstring& name, std::wstring_view jsonPath)
@@ -199,8 +197,32 @@ namespace mm2hack::apps::rendering::fonts
         ::DxLib::DrawBox(x, y, x + width - 1, y + height - 1, ::DxLib::GetColor(255, 255, 255), TRUE);
     }
 
+    int FontTileManager::MaxVariant() const noexcept
+    {
+        int result = -1;
+        for (const auto& [_, set] : _fontSets)
+        {
+            const int mv = std::max(0, set.variantCount - 1);
+            result = (result < 0) ? mv : std::min(result, mv);
+        }
+        return std::max(0, result);
+    }
+
+    void FontTileManager::SetGlobalVariantClamped(int v) noexcept
+    {
+        const int mv = MaxVariant();
+        _globalVariant = std::max(0, std::min(v, mv));
+    }
+
+    int FontTileManager::VariantCountByName(const std::wstring& setName) const
+    {
+        auto it = _fontSets.find(setName);
+        if (it == _fontSets.end()) return 0;
+        return it->second.variantCount;
+    }
+
     // --- helpers ---
-    FontTileManager::ParsedMeta FontTileManager::ParseMeta_(const std::wstring& jsonPath, const std::wstring& setName)
+    FontTileManager::ParsedMeta FontTileManager::parseMeta_(const std::wstring& jsonPath, const std::wstring& setName)
     {
         ParsedMeta out{};
         std::filesystem::path jpath(jsonPath);
@@ -236,7 +258,7 @@ namespace mm2hack::apps::rendering::fonts
             std::wstring pngW;
             if (loader) pngW = get_png(*loader);
             if (pngW.empty()) pngW = get_png(root);
-            if (!pngW.empty()) out.pngPath = ConcatPath_(jpath.parent_path(), pngW);
+            if (!pngW.empty()) out.pngPath = concatPath_(jpath.parent_path(), pngW);
 
             if (auto it = root.find("map"); it != root.end() && it->is_object())
             {
@@ -268,25 +290,25 @@ namespace mm2hack::apps::rendering::fonts
             }
         }
 
-        if (out.pngPath.empty()) out.pngPath = DerivePngFromJsonPath_(jsonPath);
+        if (out.pngPath.empty()) out.pngPath = derivePngFromJsonPath_(jsonPath);
         if (out.variant_count <= 0) out.variant_count = 1;
         if (out.nes_fade_step < 0)  out.nes_fade_step = 0;
         return out;
     }
 
-    std::wstring FontTileManager::DerivePngFromJsonPath_(const std::wstring& jsonPath)
+    std::wstring FontTileManager::derivePngFromJsonPath_(const std::wstring& jsonPath)
     {
         std::filesystem::path p(jsonPath); p.replace_extension(L".png"); return p.wstring();
     }
 
-    std::wstring FontTileManager::ConcatPath_(const std::filesystem::path& baseDir, const std::wstring& rel)
+    std::wstring FontTileManager::concatPath_(const std::filesystem::path& baseDir, const std::wstring& rel)
     {
         if (rel.empty()) return baseDir.wstring();
         std::filesystem::path r(rel); if (r.is_absolute()) return r.wstring();
         return (baseDir / r).wstring();
     }
 
-    void FontTileManager::CreateFontGraphs_(const std::wstring& name, int softImage,
+    void FontTileManager::createFontGraphs_(const std::wstring& name, int softImage,
         int tile_w, int tile_h, int tiles_x, int tiles_y,
         const std::map<char, int>& charIndexMap,
         int variant_count, int fade_step)
@@ -351,29 +373,5 @@ namespace mm2hack::apps::rendering::fonts
         if (hasPal) set_palette_256(softImage, basePal);
 
         _fontSets[name] = std::move(set);
-    }
-
-    int FontTileManager::MaxVariant() const noexcept
-    {
-        int result = -1;
-        for (const auto& [_, set] : _fontSets)
-        {
-            const int mv = std::max(0, set.variantCount - 1);
-            result = (result < 0) ? mv : std::min(result, mv);
-        }
-        return std::max(0, result);
-    }
-
-    void FontTileManager::SetGlobalVariantClamped(int v) noexcept
-    {
-        const int mv = MaxVariant();
-        _globalVariant = std::max(0, std::min(v, mv));
-    }
-
-    int FontTileManager::VariantCountByName(const std::wstring& setName) const
-    {
-        auto it = _fontSets.find(setName);
-        if (it == _fontSets.end()) return 0;
-        return it->second.variantCount;
     }
 }

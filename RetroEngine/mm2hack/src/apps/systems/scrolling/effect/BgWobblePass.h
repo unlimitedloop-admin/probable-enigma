@@ -37,6 +37,8 @@ namespace mm2hack::apps::systems::scrolling::effect
         [[nodiscard]] inline int GetBgRenderTarget() const noexcept { return _bg_rt; }
 
     private:
+        const std::wstring kClassName{ L"BgWobblePass" };
+
         int _logical_w{ 0 };    // e.g. 256
         int _logical_h{ 0 };    // e.g. 240
         int _bg_rt{ -1 };       // BG-only render target

@@ -65,6 +65,8 @@ namespace mm2hack::apps::systems::audio
         int GetNativeHandle() const override { return _handle; }
 
     private:
+        const std::wstring kClassName = L"SoundChannel";
+
         const int MAX_VOLUME = config::SystemConfig::kAudioMaxVolume;
 
         int _handle = -1;

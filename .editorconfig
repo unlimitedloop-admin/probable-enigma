@@ -7,4 +7,4 @@ end_of_line = lf
 charset = utf-8
 trim_trailing_whitespace = false
 insert_final_newline = false
-cpp_include_cleanup_alternate_files = pch.h:memory, pch.h:utility, pch.h:string, pch.h:algorithm, pch.h:chrono, pch.h:deque, pch.h:fstream, pch.h:map, pch.h:sstream, pch.h:unordered_map, pch.h:vector, pch.h:DxLib.h, pch.h:config/SystemConfig.h, pch.h:Windows.h, pch.h:DxFunctionWin.h, pch.h:DxDataTypeWin.h, pch.h:CommCtrl.h, pch.h:processenv.h, pch.h:exceptions/CoreException.h, pch.h:exceptions/ErrorHandler.h, pch.h:exceptions/ErrorLevel.h
+cpp_include_cleanup_alternate_files = pch.h:algorithm, pch.h:array, pch.h:cstdint, pch.h:chrono, pch.h:deque, pch.h:fstream, pch.h:map, pch.h:memory, pch.h:optional, pch.h:sstream, pch.h:string, pch.h:unordered_map, pch.h:utility, pch.h:vector, pch.h:DxLib.h, pch.h:config/SystemConfig.h, pch.h:Windows.h, pch.h:DxFunctionWin.h, pch.h:DxDataTypeWin.h, pch.h:CommCtrl.h, pch.h:processenv.h, pch.h:exceptions/CoreException.h, pch.h:exceptions/ErrorHandler.h, pch.h:exceptions/ErrorLevel.h

@@ -2,8 +2,6 @@
 
 #include "BGTileAtlas.h"
 
-#include <utility>
-
 namespace mm2hack::apps::rendering::bg
 {
     BGTileAtlas::BGTileAtlas(std::wstring name,
@@ -19,7 +17,7 @@ namespace mm2hack::apps::rendering::bg
 
     BGTileAtlas::~BGTileAtlas()
     {
-        Dispose();
+        dispose_();
     }
 
     BGTileAtlas::BGTileAtlas(BGTileAtlas&& o) noexcept
@@ -35,7 +33,7 @@ namespace mm2hack::apps::rendering::bg
     {
         if (this != &o)
         {
-            Dispose();
+            dispose_();
             _name = std::move(o._name);
             _div = o._div;
             _soft_image = o._soft_image;
@@ -65,7 +63,7 @@ namespace mm2hack::apps::rendering::bg
         }
     }
 
-    void BGTileAtlas::Dispose() noexcept
+    void BGTileAtlas::dispose_() noexcept
     {
         for (auto& tiles : _graphs_by_variant)
         {

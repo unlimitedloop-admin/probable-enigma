@@ -51,9 +51,11 @@ namespace mm2hack::apps::rendering::bg
         void DrawTile(int variant, int tile_index, int x, int y) const noexcept;
 
     private:
-        void Dispose() noexcept;
+        void dispose_() noexcept;
 
     private:
+        const std::wstring kClassName = L"BGTileAtlas";
+
         std::wstring _name{};
         DivSettings _div{};
         int _soft_image{ -1 };

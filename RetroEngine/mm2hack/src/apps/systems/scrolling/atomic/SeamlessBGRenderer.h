@@ -3,11 +3,12 @@
 //  Project: mm2hack
 //  SeamlessBGRenderer.h
 // 
-//  ** Descriptions **
+//  An NES-style pseudo-viewer with a background scrolling system.
 // 
 //==============================================================================
 #pragma once
 
+#include <string>
 #include "apps/rendering/bg/BGTileManager.h"
 #include "apps/resources/bg/AddressScraper.h"
 #include "apps/resources/bg/MapPageCache.h"
@@ -15,7 +16,7 @@
 
 namespace mm2hack::apps::systems::scrolling::atomic
 {
-    // シームレス背景描画支援クラス
+    // Seamless background rendering support class
     class SeamlessBGRenderer
     {
         using AddressScraper = apps::resources::bg::AddressScraper;
@@ -24,13 +25,16 @@ namespace mm2hack::apps::systems::scrolling::atomic
 
     public:
         SeamlessBGRenderer(BGTileManager& bg, AddressScraper& scraper, BGTileManager::Id tilesetId, int tilePx);
+        ~SeamlessBGRenderer() = default;
 
-        // currentPage を左上原点(0,0) とするページ座標系で、
-        // カメラオフセット cam.x/y を用い、画面に必要なページを最大4枚まで描く
+        // Draw up to 4 pages on the screen using the camera offset cam.x/y
         void Draw(const Camera& cam, size_t currentPageIndex);
 
     private:
-        void drawPage_(size_t pageIndex, int dstX, int dstY);
+        void drawPage_(size_t pageIndex, int dstX, int dstY);   // Draw a single page at the specified screen position
+
+    private:
+        const std::wstring kClassName = L"SeamlessBGRenderer";
 
         BGTileManager& _bg;
         MapPageCache _cache;

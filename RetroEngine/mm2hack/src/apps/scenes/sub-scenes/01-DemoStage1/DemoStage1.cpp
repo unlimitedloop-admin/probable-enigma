@@ -2,7 +2,6 @@
 
 #include "DemoStage1.h"
 
-#include <cstdint>
 #include <istream>
 #include <ostream>
 #include "apps/rendering/bg/BGTileManager.h"

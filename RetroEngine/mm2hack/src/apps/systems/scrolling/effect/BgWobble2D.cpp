@@ -7,8 +7,6 @@
 
 namespace mm2hack::apps::systems::scrolling::effect
 {
-    using std::clamp;
-
     void BgWobble2D::Initialize(int logical_h, int stripe_h) noexcept
     {
         _logical_h = logical_h;
@@ -26,7 +24,7 @@ namespace mm2hack::apps::systems::scrolling::effect
         _freq_y = freq;   // unused (kept for compatibility)
         _speed = spd;
         _phase = phase0;
-        _edge_atten = clamp(edge, 0.0f, 1.0f); // unused (kept for compatibility)
+        _edge_atten = std::clamp(edge, 0.0f, 1.0f); // unused (kept for compatibility)
     }
 
     void BgWobble2D::SetRasterBanding(int band_h_px, float phase_step_rad, bool bottom_to_top) noexcept
@@ -46,7 +44,7 @@ namespace mm2hack::apps::systems::scrolling::effect
         }
     }
 
-    float BgWobble2D::UParabola(float v01) const noexcept
+    float BgWobble2D::uParabola_(float v01) const noexcept
     {
         // U(v) = 1 - 4*(v-0.5)^2, clamp to [0,1]
         const float d = v01 - 0.5f;
@@ -72,7 +70,7 @@ namespace mm2hack::apps::systems::scrolling::effect
         {
             const int y0 = i * _stripe_h;
             const float v = static_cast<float>(y0) / static_cast<float>(_logical_h); // 0..1
-            const float uW = UParabola(v);
+            const float uW = uParabola_(v);
 
             // ----- Band index and phase -----
             const int band_idx_from_top = y0 / band_h;               // 0=topmost
@@ -114,7 +112,7 @@ namespace mm2hack::apps::systems::scrolling::effect
             const float dx2 = dx1 + static_cast<float>(src_w) * sx;
             const float dy2 = dy1 + static_cast<float>(h) * sy;
 
-            // Draw the stripe with wobble effect
+            // Draw the stripe with wobble effect.
             ::DxLib::DrawRectGraphF(dx1, dy1, 0, sySrc, src_w, h, src, TRUE);
         }
     }

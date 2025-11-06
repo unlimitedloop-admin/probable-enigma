@@ -59,12 +59,15 @@ namespace mm2hack::core::winapi
 
         // Get the window procedure handle for DxLib
         WNDPROC GetDxLibWnd() const;
-
+        // The main window procedure for handling window messages
         static LRESULT CALLBACK WindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+        std::wstring GetClassName2() const { return kClassName; }
 
     private:
         WindowManager() = default;
         ~WindowManager() = default;
+
+        const std::wstring kClassName = L"WindowManager";
 
         HWND _mainWindowHandle = nullptr;
         HINSTANCE _hInstance = nullptr;
@@ -74,10 +77,10 @@ namespace mm2hack::core::winapi
         int _screenHandle = -1;             // Handle for the screen
         bool _vSync{ false };               // VSync enabled/disabled
 
-        bool IsDebugMode() const;           // Check if the application is running in debug mode
-        float LoadViewerRate() const;       // Load the viewer rate from configuration
-        bool LoadVSync() const;             // Load the VSync setting from configuration
+        bool isDebugMode_() const;          // Check if the application is running in debug mode
+        float loadViewerRate_() const;      // Load the viewer rate from configuration
+        bool loadVSync_() const;            // Load the VSync setting from configuration
 
-        void SyncWindowSizeMenuCheck(float viewerRate) const;   // Sync the window size menu check state
+        void syncWindowSizeMenuCheck_(float viewerRate) const;   // Sync the window size menu check state
     };
 }

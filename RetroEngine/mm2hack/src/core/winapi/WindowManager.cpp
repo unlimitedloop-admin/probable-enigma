@@ -66,9 +66,9 @@ namespace mm2hack::core::winapi
         using conf = config::SystemConfig;
         using NESPal = apps::foundation::NES::NESPalette;
 
-        auto reportInitError = [](const std::wstring& message) -> bool
+        auto reportInitError = [&](const std::wstring& message) -> bool
             {
-                ErrorHandler::Handle(message, L"WindowManager", L"Initialize", ErrorLevel::Error);
+                ErrorHandler::Handle(message, kClassName, L"Initialize", ErrorLevel::Error);
                 return false;
             };
 
@@ -78,8 +78,8 @@ namespace mm2hack::core::winapi
             return reportInitError(L"Window title is empty.");
         }
         _windowTitle = windowTitle;
-        _viewerRate = LoadViewerRate();
-        _vSync = LoadVSync();
+        _viewerRate = loadViewerRate_();
+        _vSync = loadVSync_();
 
         if (EnvironmentConfig::GetBool(L"OUTPUT_LOG_ENABLE"))
         {
@@ -169,7 +169,7 @@ namespace mm2hack::core::winapi
 
         // Synchronize various settings and menu bar status, etc...
         PostMessage(_mainWindowHandle, WM_USER_CREATE, 0, 0);
-        SyncWindowSizeMenuCheck(_viewerRate);
+        syncWindowSizeMenuCheck_(_viewerRate);
 
         return true;
     }
@@ -230,7 +230,7 @@ namespace mm2hack::core::winapi
             SetWindowPos(hWnd, nullptr, 0, 0, windowW, windowH, SWP_NOMOVE | SWP_NOZORDER);
         }
         _viewerRate = viewerRate;
-        SyncWindowSizeMenuCheck(viewerRate);
+        syncWindowSizeMenuCheck_(viewerRate);
 
         return true;
     }
@@ -250,7 +250,7 @@ namespace mm2hack::core::winapi
         HMENU hMenu = GetMenu(_mainWindowHandle);
         if (!hMenu) return;
 
-        if (!IsDebugMode())
+        if (!isDebugMode_())
         {
             // Debug(&D) is the 3rd command on the menu.
             RemoveMenu(hMenu, 3, MF_BYPOSITION);
@@ -309,9 +309,11 @@ namespace mm2hack::core::winapi
     {
         using namespace exceptions;
 
+        auto& wm = WindowManager::GetInstance();
+
         auto ForwardToDefaultProc = [&]() -> LRESULT
             {
-                auto dxWndProc = WindowManager::GetInstance().GetDxLibWnd();
+                auto dxWndProc = wm.GetDxLibWnd();
                 return dxWndProc != nullptr
                     ? CallWindowProc(dxWndProc, hwnd, message, wParam, lParam)
                     : DefWindowProc(hwnd, message, wParam, lParam);
@@ -354,18 +356,18 @@ namespace mm2hack::core::winapi
         }
         catch (const std::exception& e)
         {
-            ErrorHandler::Handle(utils::utf8_to_wstring(e.what()), L"WindowManager", L"WindowProc", ErrorLevel::FatalError);
+            ErrorHandler::Handle(utils::utf8_to_wstring(e.what()), wm.GetClassName2(), L"WindowProc", ErrorLevel::FatalError);
             return ForwardToDefaultProc();
         }
     }
 
-    bool WindowManager::IsDebugMode() const
+    bool WindowManager::isDebugMode_() const
     {
         return (lstrcmp(GetCommandLine(), L"debug") == 0) ||
             config::EnvironmentConfig::GetBool(L"MM2HACK_DEBUG", false);
     }
 
-    float WindowManager::LoadViewerRate() const
+    float WindowManager::loadViewerRate_() const
     {
         using namespace config;
         using namespace core::ui;
@@ -380,7 +382,7 @@ namespace mm2hack::core::winapi
         return viewerRate;
     }
 
-    bool WindowManager::LoadVSync() const
+    bool WindowManager::loadVSync_() const
     {
         using namespace config;
         bool vsync = false;
@@ -393,7 +395,7 @@ namespace mm2hack::core::winapi
         return vsync;
     }
 
-    void WindowManager::SyncWindowSizeMenuCheck(float viewerRate) const
+    void WindowManager::syncWindowSizeMenuCheck_(float viewerRate) const
     {
         const auto& hwnd = WindowManager::GetInstance().GetMainWindowHandle();
         HMENU hMenu = ::GetMenu(hwnd);

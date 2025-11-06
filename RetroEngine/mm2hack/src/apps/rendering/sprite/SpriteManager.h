@@ -65,9 +65,11 @@ namespace mm2hack::apps::rendering::sprite
         void ReleaseAll();
 
     private:
-        Id CacheId_(const std::wstring& name);      // Get cached Id or cache it if not found
+        Id cacheId_(const std::wstring& name);      // Get cached Id or cache it if not found
 
     private:
+        const std::wstring kClassName = L"SpriteManager";
+
         static constexpr Id kInvalidId = std::numeric_limits<Id>::max();
         SpriteCatalog _catalog{};   // underlying catalog
         mutable std::unordered_map<std::wstring, Id> _name_cache{};     // name -> Id cache for fast lookup

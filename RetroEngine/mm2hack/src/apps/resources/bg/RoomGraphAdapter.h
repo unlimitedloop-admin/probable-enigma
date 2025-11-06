@@ -10,6 +10,7 @@
 
 #include <cstdint>
 #include <optional>
+#include <string>
 #include "AddressScraper.h"
 
 namespace mm2hack::apps::resources::bg
@@ -39,6 +40,8 @@ namespace mm2hack::apps::resources::bg
         static std::optional<uint8_t> opt_(int16_t v) { return v >= 0 ? std::optional<uint8_t>(static_cast<uint8_t>(v)) : std::nullopt; }
 
     private:
+        const std::wstring kClassName = L"RoomGraphAdapter";
+
         AddressScraper& _s;
     };
 }

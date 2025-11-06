@@ -3,7 +3,6 @@
 #include "FadeIOTexture.h"
 
 #include <cmath>
-#include <optional>
 
 namespace mm2hack::apps::rendering::effects
 {

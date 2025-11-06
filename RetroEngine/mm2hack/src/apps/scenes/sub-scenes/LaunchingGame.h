@@ -9,16 +9,26 @@
 #pragma once
 
 #include <string>
-#include "apps/resources/parameters/Parameters.h"
 #include "apps/scenes/IBaseScene.h"
-#include "apps/scenes/SceneChangeMediator.h"
 #include "apps/scenes/SceneID.h"
+
+namespace mm2hack::apps::resources::parameters
+{
+    class Parameters;
+}
+
+namespace mm2hack::apps::scenes
+{
+    class SceneChangeMediator;
+}
 
 namespace mm2hack::apps::scenes
 {
     // This is scene that appears when the game is launching
     class LaunchingGame : public IBaseScene
     {
+        using Parameters = resources::parameters::Parameters;
+
     public:
         LaunchingGame(SceneChangeMediator* mediator);
         LaunchingGame(const LaunchingGame&) = delete;
@@ -28,7 +38,7 @@ namespace mm2hack::apps::scenes
         ~LaunchingGame() override;
 
         // Initialize the scene with parameters
-        void Initialize(const resources::parameters::Parameters& params) override;
+        void Initialize(const Parameters& params) override;
         // Finalize and clean up the scene
         void finalize_() override;
         // Update the scene logic for each frame

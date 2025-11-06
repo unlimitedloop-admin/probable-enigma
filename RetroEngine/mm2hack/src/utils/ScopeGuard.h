@@ -9,6 +9,7 @@
 #pragma once
 
 #include <functional>
+#include <string>
 #include <utility>
 
 namespace mm2hack::utils
@@ -31,6 +32,8 @@ namespace mm2hack::utils
         void Dismiss() { _dismissed = true; }
 
     private:
+        const std::wstring kClassName = L"ScopeGuard";
+
         std::function<void()> _onExit;
         bool _dismissed;
     };

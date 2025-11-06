@@ -8,7 +8,8 @@
 //==============================================================================
 #pragma once
 
-#include <windows.h>
+#include <string>
+#include <Windows.h>
 
 namespace mm2hack::core::ui
 {
@@ -28,6 +29,8 @@ namespace mm2hack::core::ui
         void OnCommand(WPARAM wParam, LPARAM lParam) const;
 
     private:
+        const std::wstring kClassName = L"SoundSettingsUI";
+
         HWND _parent;
 
         HWND _slider_master;
@@ -37,10 +40,10 @@ namespace mm2hack::core::ui
         HWND _combo_source;
 
         mutable ULONGLONG _last_update_tick = 0;
-        const ULONGLONG kUpdateInterval = 30;   // Update interval in milliseconds
+        const ULONGLONG kUpdateInterval = 30;       // Update interval in milliseconds
 
-        void CreateSlider(LPCWSTR label, int x, int y, HWND& out_slider) const;
-        void AddSoundSourceOptions() const;
-        void LoadSettings() const;
+        void createSlider_(LPCWSTR label, int x, int y, HWND& out_slider) const;    // Helper to create a slider control
+        void addSoundSourceOptions_() const;                                        // Populate sound source options in the combo box
+        void loadSettings_() const;                                                 // Load settings from config and apply to UI controls
     };
 }

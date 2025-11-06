@@ -51,6 +51,8 @@ namespace mm2hack::apps::rendering::effects
         static float Ease_(float t);            // Easing function
 
     private:
+        const std::wstring kClassName = L"FadeIOTexture";
+
         Target _t;                              // Target texture variant
         Curve  _curve{ Curve::Linear };         // Easing curve
         int    _fallbackMax{ 0 };               // Fallback maximum variant

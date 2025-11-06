@@ -10,6 +10,7 @@
 
 #include <array>
 #include <cstdint>
+#include <string>
 #include "JpBtn.h"
 #include "KeyToken.h"
 
@@ -75,6 +76,7 @@ namespace mm2hack::input
             SConBindingData& operator=(SConBindingData&&) = delete;
         };
 
+        const std::wstring kClassName = L"KeyBinding";
         SConBindingData _sCon;     // Serial-Controller binding data
     };
 }

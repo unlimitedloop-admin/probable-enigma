@@ -12,24 +12,38 @@
 
 #include <cassert>
 #include <memory>
+#include <string>
 #include "apps/resources/ResourceManager.h"
-#include "core/assembly/ISnapshotProvider.h"
-#include "core/assembly/ITimeController.h"
-#include "core/assembly/StateProvider.h"
-#include "core/diagnostics/IWatchRegistry.h"
 #include "input/JoystickManager.h"
+
+namespace mm2hack::core
+{
+    namespace assembly
+    {
+        class ITimeController;
+        class StateProvider;
+        class ISnapshotProvider;
+    }
+    namespace diagnostics
+    {
+        class IWatchRegistry;
+    }
+}
+
+
 
 namespace mm2hack::apps::runtime
 {
-    // REVIEW: Namespace definitions in header files are prohibited as they violate scope :( Plz refactor later.
-    using namespace core::assembly;
-    using namespace core::diagnostics;
-    using namespace input;
-    using namespace apps::resources;
-
     // GameContext class that implements IGameContext, providing access to game resources and input management
     class GameContext final : public IGameContext
     {
+        using ResourceManager   = apps::resources::ResourceManager;
+        using ITimeController   = core::assembly::ITimeController;
+        using StateProvider     = core::assembly::StateProvider;
+        using ISnapshotProvider = core::assembly::ISnapshotProvider;
+        using IWatchRegistry    = core::diagnostics::IWatchRegistry;
+        using JoystickManager   = input::JoystickManager;
+
     public:
         static GameContext& GetInstance()
         {
@@ -72,6 +86,9 @@ namespace mm2hack::apps::runtime
     private:
         GameContext() = default;
         ~GameContext() = default;
+
+    private:
+        const std::wstring kClassName = L"GameContext";
 
         std::unique_ptr<ResourceManager> _resourceManager;  // SpriteBank, BGTiles, SoundDriver, etc.
         std::unique_ptr<JoystickManager> _joystickManager;  // Joystick manager for handling gamepad inputs (using only for setup)

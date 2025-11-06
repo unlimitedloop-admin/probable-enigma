@@ -21,7 +21,7 @@ namespace mm2hack::apps::scenes
         finalize_();
     }
 
-    void LaunchingGame::Initialize(const resources::parameters::Parameters& params)
+    void LaunchingGame::Initialize(const Parameters& params)
     {
         utils::debug_log(kClassName + L" initialized.");
 

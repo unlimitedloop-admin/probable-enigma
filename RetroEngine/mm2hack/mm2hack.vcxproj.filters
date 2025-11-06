@@ -95,6 +95,8 @@
     <ClCompile Include="src\apps\systems\scrolling\atomic\PageScrollAnimator.cpp" />
     <ClCompile Include="src\apps\systems\scrolling\atomic\MapRenderer2D.cpp" />
     <ClCompile Include="src\apps\systems\scrolling\atomic\ScrollController.cpp" />
+    <ClCompile Include="src\apps\systems\scrolling\atomic\WorldTileQuery.cpp" />
+    <ClCompile Include="src\apps\systems\scrolling\atomic\FreeScrollPolicy.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />

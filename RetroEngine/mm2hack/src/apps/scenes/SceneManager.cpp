@@ -2,9 +2,7 @@
 
 #include "SceneManager.h"
 
-#include <utility>
 #include "apps/runtime/GameContext.h"
-#include "apps/resources/parameters/Parameters.h"
 #include "core/overlay/PauseManager.h"
 #include "IBaseScene.h"
 #include "SceneFactory.h"
@@ -40,7 +38,6 @@ namespace mm2hack::apps::scenes
 
     void SceneManager::RenderOverlay()
     {
-        using namespace core::overlay;
         if (_currentScene)
         {
             // It's drawn after RenderWorld, so it appears on top of everything else.
@@ -68,11 +65,11 @@ namespace mm2hack::apps::scenes
         if (next)
         {
             next->Initialize(params);
-            ChangeScene(std::move(next));
+            changeScene_(std::move(next));
         }
     }
 
-    void SceneManager::ChangeScene(std::unique_ptr<IBaseScene> newScene)
+    void SceneManager::changeScene_(std::unique_ptr<IBaseScene> newScene)
     {
         // HACK: OnExit(), OnEnter() equivalent handling
         _currentScene = std::move(newScene);

@@ -10,6 +10,8 @@
 
 #include "StarState.h"
 
+#include <string>
+
 namespace mm2hack::apps::vfx::stareffects
 {
     // Fixed star effect class
@@ -22,7 +24,10 @@ namespace mm2hack::apps::vfx::stareffects
 
         void Draw() const;
         FixedStarState ToState() const;
+
     private:
+        const std::wstring kClassName = L"FixedStar";
+
         int _tileIndex;     // Tile index for the star sprite
         float _x, _y;       // Position
     };

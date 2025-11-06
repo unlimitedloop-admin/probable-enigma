@@ -9,6 +9,7 @@
 //==============================================================================
 #pragma once
 
+#include <string>
 #include <vector>
 
 namespace mm2hack::apps::systems::scrolling::effect
@@ -41,25 +42,27 @@ namespace mm2hack::apps::systems::scrolling::effect
         void Render(int src_handle, int src_w, int src_h, int dst_w, int dst_h, float dst_x = 0.0f, float dst_y = 0.0f) noexcept;
 
     private:
-        int   _stripe_h{ 2 };       // 1..4 (1=per scanline; 2~4 for performance)
-        int   _logical_h{ 0 };      // e.g. 240
+        [[nodiscard]] float uParabola_(float v01) const noexcept;   // U-shaped profile (center 0, max at top/bottom)
 
-        float _amp_x_px{ 14.0f };
-        float _amp_y_px{ 2.0f };
-        float _freq_y{ 0.0f };      // unused (kept for compatibility)
-        float _speed{ 2.6f };
+    private:
+        const std::wstring kClassName{ L"BgWobble2D" };
+
+        int   _stripe_h{ 2 };                   // 1..4 (1=per scanline; 2~4 for performance)
+        int   _logical_h{ 0 };                  // e.g. 240
+
+        float _amp_x_px{ 14.0f };               // 14px per scanline (default: 14px, 2px = NES-style wobble)
+        float _amp_y_px{ 2.0f };                // 2px per scanline (default: 14px, 2px = NES-style wobble)
+        float _freq_y{ 0.0f };                  // unused (kept for compatibility)
+        float _speed{ 2.6f };                   // rad/sec (default: 2.6 rad/sec = 150 deg/sec)
         float _phase{ 0.0f };
-        float _edge_atten{ 0.10f }; // unused (kept for compatibility)
+        float _edge_atten{ 0.10f };             // unused (kept for compatibility)
 
         // Raster vertical band delay
-        int   _band_h_px{ 16 };     // 16px per band
-        float _band_phase_step{ 0.0f };
-        bool  _band_bottom_to_top{ true };
+        int   _band_h_px{ 16 };                 // 16px per band
+        float _band_phase_step{ 0.0f };         // phase step per band (rad)
+        bool  _band_bottom_to_top{ true };      // true=delay from bottom to top, false=top to bottom
 
-        std::vector<float> _offx;   // per stripe X offset
-        std::vector<int>   _srcy;   // per stripe source Y
-
-        // U-shaped profile (center 0, max at top/bottom)
-        [[nodiscard]] float UParabola(float v01) const noexcept;
+        std::vector<float> _offx;               // per stripe X offset
+        std::vector<int>   _srcy;               // per stripe source Y
     };
 }

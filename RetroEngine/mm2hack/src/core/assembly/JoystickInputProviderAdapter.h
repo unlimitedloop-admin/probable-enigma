@@ -10,6 +10,7 @@
 
 #include <array>
 #include <cstdint>
+#include <string>
 #include <vector>
 #include "input/JoystickManager.h"
 #include "input/Jpbtn.h"
@@ -46,6 +47,8 @@ namespace mm2hack::core::assembly
         }
 
     private:
+        const std::wstring kClassName = L"JoystickInputProviderAdapter";
+
         input::JoystickManager& _jm;    // External joystick manager reference
         std::array<KeyFrameState, static_cast<size_t>(Key16::JPBTN_COUNT)> _state{};    // Current state of all buttons
         std::uint64_t _tick{ 0 };   // Current simulation tick number

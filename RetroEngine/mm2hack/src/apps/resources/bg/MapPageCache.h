@@ -3,7 +3,7 @@
 //  Project: mm2hack
 //  MapPageCache.h
 // 
-//  ** Descriptions **
+//  The `MapPageCache` class provides a lightweight, lazy-loading cache of map page tile data for the background system.
 // 
 //==============================================================================
 #pragma once
@@ -11,34 +11,39 @@
 #include <array>
 #include <cstdint>
 #include <optional>
+#include <string>
 #include <unordered_map>
-#include "AddressScraper.h"
+#include "config/SystemConfig.h"
 
 namespace mm2hack::apps::resources::bg
 {
-    // 1ページ=16x15=240セル
+    class AddressScraper;
+}
+
+namespace mm2hack::apps::resources::bg
+{
+    // One page's tile data (16x15=240 tiles)
     struct PageTiles
     {
-        static constexpr int kW = 16;
-        static constexpr int kH = 15;
-        static constexpr int kSize = kW * kH; // 240
+        static constexpr int kW = config::SystemConfig::kTileCountX;
+        static constexpr int kH = config::SystemConfig::kTileCountY;
+        static constexpr int kSize = kW * kH;       // 240
         std::array<std::uint8_t, kSize> cells{};
     };
 
+    // Map page cache with lazy loading
     class MapPageCache
     {
     public:
-        explicit MapPageCache(AddressScraper& s) : _s(s)
-        {
-        }
+        explicit MapPageCache(AddressScraper& s) : _s(s) {}
 
-        // 現在ページが変わったタイミングで呼ぶ。現在＋近傍をまとめて準備
+        // (Lazy loading) Load the specified page and its surrounding 8 pages into the cache
         void BuildAround(std::size_t currentPageIndex);
 
-        // （遅延ロード可）指定ページの (tx,ty) のタイルIDを返す。範囲外は 0。
+        // (Lazy loading) Return the tile ID at (tx, ty) of the specified page. Out of range returns 0
         std::uint8_t Tile(std::size_t pageIndex, int tx, int ty) const;
 
-        // 近傍解決（見つからなければ nullopt）
+        // Neighbor resolution (returns nullopt if not found)
         std::optional<std::size_t> Right(std::size_t page) const;
         std::optional<std::size_t> Left(std::size_t page) const;
         std::optional<std::size_t> Up(std::size_t page) const;
@@ -50,17 +55,17 @@ namespace mm2hack::apps::resources::bg
         std::optional<std::size_t> LeftUp(std::size_t page) const;
 
     private:
-        AddressScraper& _s;
-        // ページインデックス → タイル配列
-        mutable std::unordered_map<std::size_t, PageTiles> _cache;
+        PageTiles readTiles_(std::size_t pageIndex) const;      // Read tile data from AddressScraper
 
-        // 240B を bin から読み取って PageTiles を作る
-        PageTiles readTiles(std::size_t pageIndex) const;
-
-        // roomNo (uint8) → pageIndex (>=0) のラッパ
-        static std::optional<std::size_t> toOptIndex(int16_t idx)
+        static std::optional<std::size_t> toOptIndex_(int16_t idx)
         {
             return (idx >= 0) ? std::optional<std::size_t>(static_cast<std::size_t>(idx)) : std::nullopt;
-        }
+        }   // Convert -1 to nullopt
+
+    private:
+        const std::wstring kClassName = L"MapPageCache";
+
+        AddressScraper& _s;
+        mutable std::unordered_map<std::size_t, PageTiles> _cache;  // pageIndex -> PageTiles
     };
 }

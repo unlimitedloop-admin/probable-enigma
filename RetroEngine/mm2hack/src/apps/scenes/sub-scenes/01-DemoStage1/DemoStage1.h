@@ -16,12 +16,40 @@
 #include <string>
 #include <string_view>
 #include "apps/rendering/bg/BGTileManager.h"
-#include "apps/resources/parameters/Parameters.h"
-#include "apps/resources/ResourceManager.h"
 #include "apps/scenes/PhaseFadeController.h"
-#include "apps/scenes/SceneChangeMediator.h"
 #include "apps/scenes/SceneID.h"
-#include "core/assembly/StateProvider.h"
+
+namespace mm2hack::apps
+{
+    namespace rendering::bg
+    {
+        class BGTileManager;
+    }
+
+    namespace resources
+    {
+        namespace parameters
+        {
+            class Parameters;
+        }
+        class ResourceManager;
+    }
+
+    namespace runtime
+    {
+        class GameContext;
+    }
+
+    namespace scenes
+    {
+        class SceneChangeMediator;
+    }
+}
+
+namespace mm2hack::core::assembly
+{
+    class StateProvider;
+}
 
 namespace mm2hack::apps::scenes
 {
@@ -50,7 +78,10 @@ namespace mm2hack::apps::scenes
     // Demo stage scene (ID: 01)
     class DemoStage1 : public IBaseScene
     {
+        using BGTileManagerId = rendering::bg::BGTileManager::Id;
         using Parameters = resources::parameters::Parameters;
+        using ResourceManager = apps::resources::ResourceManager;
+        using StateProvider = core::assembly::StateProvider;
 
     public:
         explicit DemoStage1(SceneChangeMediator* mediator);
@@ -83,7 +114,7 @@ namespace mm2hack::apps::scenes
         // Access the fade controller for scene transitions
         PhaseFadeController& Fader() noexcept { return _fader; }
 
-        auto& ResourceManager() noexcept { return *_resource; }
+        auto& ResourceManagerObj() noexcept { return *_resource; }
         const auto& ResourceManagerPtr() const noexcept { return *_resource; }
 
         auto& Input() noexcept { return _input; }
@@ -117,10 +148,8 @@ namespace mm2hack::apps::scenes
 
         const int fadeDurationFrames{ 16 };
 
-        apps::resources::ResourceManager* _resource{ nullptr }; // Reference to the resource manager
-        core::assembly::StateProvider* _input{ nullptr };       // Reference to the state provider
-        rendering::bg::BGTileManager::Id _bgTileId{
-            static_cast<rendering::bg::BGTileManager::Id>(-1)
-        };                                                      // Background tile set Id
+        ResourceManager* _resource{ nullptr };                  // Reference to the resource manager
+        StateProvider* _input{ nullptr };                       // Reference to the state provider
+        BGTileManagerId _bgTileId{ static_cast<BGTileManagerId>(-1) };  // Background tile set Id
     };
 }

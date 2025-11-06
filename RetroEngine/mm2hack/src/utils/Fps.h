@@ -9,6 +9,7 @@
 #pragma once
 
 #include <chrono>
+#include <string>
 
 namespace mm2hack::utils
 {
@@ -31,6 +32,8 @@ namespace mm2hack::utils
         float GetDeltaSeconds() const;
 
     private:
+        const std::wstring kClassName = L"Fps";
+
         using Clock = std::chrono::steady_clock;
         Clock::time_point _lastTime;
         Clock::time_point _fpsTime;
@@ -38,6 +41,6 @@ namespace mm2hack::utils
         int _frameCount;
         mutable double _actualFps;
 
-        void LoadIniFps();  // Load target FPS from ini file or use SystemConfig value
+        void loadIniFps_();         // Load target FPS from ini file or use SystemConfig value
     };
 }

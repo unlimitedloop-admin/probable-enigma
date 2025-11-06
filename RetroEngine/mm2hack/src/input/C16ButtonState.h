@@ -9,6 +9,7 @@
 #pragma once
 
 #include <array>
+#include <string>
 #include "InputFrame.h"
 #include "Jpbtn.h"
 
@@ -28,6 +29,8 @@ namespace mm2hack::input
         void ResetAll();
 
     private:
+        const std::wstring kClassName = L"C16ButtonState";
+
         std::array<InputFrame, JPBTN_COUNT> _states;    // Array to hold the states of the buttons
     };
 }

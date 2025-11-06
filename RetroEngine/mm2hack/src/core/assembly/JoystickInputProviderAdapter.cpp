@@ -1,6 +1,5 @@
 #include "pch.h"
 
-#include <cstdint>
 #include "InputTypes.h"
 #include "JoystickInputProviderAdapter.h"
 

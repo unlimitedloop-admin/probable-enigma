@@ -11,8 +11,12 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include "ChannelManager.h"
 #include "config/SystemConfig.h"
+
+namespace mm2hack::apps::systems::audio
+{
+    class ChannelManager;
+}
 
 namespace mm2hack::apps::systems::audio
 {
@@ -53,6 +57,10 @@ namespace mm2hack::apps::systems::audio
         std::wstring GetCurrentBgmName() const { return _currentBgm; }
 
     private:
+        void applyFade_();           // Apply fade effect if active
+        void checkAndApplyLoop_();   // Check and apply loop points if necessary
+
+    private:
         struct BgmData
         {
             std::vector<std::wstring> filepaths;
@@ -60,6 +68,8 @@ namespace mm2hack::apps::systems::audio
             double loopStart = 0.0;
             double loopEnd = 0.0;
         };
+
+        const std::wstring kClassName = L"BgmManager";
 
         const int MAX_VOLUME = config::SystemConfig::kAudioMaxVolume;
 
@@ -79,8 +89,5 @@ namespace mm2hack::apps::systems::audio
         int _fadeStep = 0;
         int _fadeFramesRemaining = 0;
         int _masterVolume = MAX_VOLUME;
-
-        void ApplyFade();           // Apply fade effect if active
-        void CheckAndApplyLoop();   // Check and apply loop points if necessary
     };
 }
