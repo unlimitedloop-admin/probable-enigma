@@ -2,7 +2,6 @@
 
 #include "FreeScrollPolicy.h"
 
-#include <cstdint>
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/resources/bg/RoomGraphAdapter.h"
 #include "ScrollController.h"

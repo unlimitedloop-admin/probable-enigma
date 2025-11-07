@@ -47,17 +47,17 @@ namespace mm2hack::apps::scenes
 
         _bgPass.Initialize(conf::kScreenWidth, conf::kScreenHeight, /*stripe_h*/ 2);
         _bgPass.SetParams(
-            /*amp_x_px*/ 27.0f,
-            /*amp_y_px*/ 24.0f,
+            /*amp_x_px*/ -29.9f,
+            /*amp_y_px*/ -21.7f,
             /*freq_y  */ 0.0f,
             /*speed   */ 2.5f,
             /*phase0  */ 0.0f,
             /*edge    */ 0.2f
-        );
+        );  
         _bgPass.SetRasterBanding(
-            /*band_h_px     */ 16,
-            /*phase_step_rad*/ std::numbers::pi_v<float> / 19.9f,
-            /*bottom_to_top */ true
+            /*band_h_px     */ 20,
+            /*phase_step_rad*/ std::numbers::pi_v<float> / 18.5f,
+            /*bottom_to_top */ false
         );
 
         return true;
