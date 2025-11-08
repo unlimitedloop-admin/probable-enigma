@@ -16,6 +16,7 @@
 #include "IScrollRuleProvider.h"
 #include "MapRenderer2D.h"
 #include "PageScrollAnimator.h"
+#include "ScrollTypes.h"
 
 namespace mm2hack::apps::systems::scrolling::atomic
 {
@@ -82,6 +83,10 @@ namespace mm2hack::apps::systems::scrolling::atomic
 
         // Rendering
         void Render();
+        // Set scroll mode
+        void SetMode(ScrollKind m) noexcept { _mode = m; }
+
+        void SyncWithObjectCenter(const Vec2& object_center, bool has_adj_x, bool has_adj_y, const Vec2& screen_px, const Vec2& map_px, ViewState& out_view);
 
         // External interface
         void SetPageIndex(std::size_t idx) noexcept { _page_index = idx; }
@@ -116,16 +121,17 @@ namespace mm2hack::apps::systems::scrolling::atomic
     private:
         const std::wstring kClassName = L"ScrollController";
 
-        IScrollRuleProvider& _rules;        // Scroll rules
-        MapRenderer2D& _renderer;           // Map renderer
-        Params _params{};                   // Parameters
+        IScrollRuleProvider& _rules;                // Scroll rules
+        MapRenderer2D& _renderer;                   // Map renderer
+        Params _params{};                           // Parameters
 
-        std::size_t _page_index{ 0 };
-        Vec2 _object_pos{};
-        Camera _cam{};
-        PageScrollAnimator _anim{};
+        ScrollKind _mode{ ScrollKind::None };       // Current scroll mode
+        std::size_t _page_index{ 0 };               // Current page index
+        Vec2 _object_pos{};                         // Object position
+        Camera _cam{};                              // Camera
+        PageScrollAnimator _anim{};                 // Page scroll animator
 
-        const int _tileX{ conf::kTileCountX };
-        const int _tileY{ conf::kTileCountY };
+        const int _tileX{ conf::kTileCountX };      // Tile count X
+        const int _tileY{ conf::kTileCountY };      // Tile count Y
     };
 }

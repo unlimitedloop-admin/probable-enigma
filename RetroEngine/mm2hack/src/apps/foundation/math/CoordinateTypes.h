@@ -74,7 +74,6 @@ namespace mm2hack::apps::foundation::math
         [[nodiscard]] constexpr double right()  const noexcept { return x + w; }
         [[nodiscard]] constexpr double top()    const noexcept { return y; }
         [[nodiscard]] constexpr double bottom() const noexcept { return y + h; }
-
         [[nodiscard]] constexpr Point2 center() const noexcept { return { x + w * 0.5, y + h * 0.5 }; }
 
         [[nodiscard]] constexpr bool intersects(const RectF& o) const noexcept
@@ -90,5 +89,12 @@ namespace mm2hack::apps::foundation::math
     {
         // Out of bounds = negative direction is also OK with floor (consistency in physics)
         return static_cast<int>(std::floor(pos_px / static_cast<double>(tile_px)));
+    }
+
+    // AABB overlap test (a.k.a. RectF::intersects)
+    [[nodiscard]] constexpr bool overlap(const RectF& a, const RectF& b) noexcept
+    {
+        return !(a.right() <= b.left() || b.right() <= a.left() ||
+            a.bottom() <= b.top() || b.bottom() <= a.top());
     }
 }

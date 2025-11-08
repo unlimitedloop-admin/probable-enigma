@@ -45,18 +45,19 @@ namespace mm2hack::apps::scenes
         bgTileManager.SetGlobalVariant(bvmax);
         resource.FadeInBG(fadeDurationFrames);
 
-        _bgPass.Initialize(conf::kScreenWidth, conf::kScreenHeight, /*stripe_h*/ 2);
+        _bgPass.Initialize(conf::kScreenWidth, conf::kScreenHeight, /*stripe_h*/ 15);
         _bgPass.SetParams(
-            /*amp_x_px*/ -29.9f,
-            /*amp_y_px*/ -21.7f,
+            /*amp_x_px*/ 29.9f,
+            /*amp_y_px*/ -32.1f,
+            //0.0f, -32.1f,
             /*freq_y  */ 0.0f,
-            /*speed   */ 2.5f,
+            /*speed   */ 2.7f,
             /*phase0  */ 0.0f,
-            /*edge    */ 0.2f
-        );  
+            /*edge    */ 0.0f
+        );
         _bgPass.SetRasterBanding(
-            /*band_h_px     */ 20,
-            /*phase_step_rad*/ std::numbers::pi_v<float> / 18.5f,
+            /*band_h_px     */ 15,
+            /*phase_step_rad*/ std::numbers::pi_v<float> / 24.3f,
             /*bottom_to_top */ false
         );
 

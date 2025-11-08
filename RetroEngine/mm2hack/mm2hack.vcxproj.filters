@@ -87,7 +87,6 @@
     <ClCompile Include="src\apps\scenes\sub-scenes\01-DemoStage1\DemoStage1.cpp" />
     <ClCompile Include="src\apps\resources\bg\BGRoomBank.cpp" />
     <ClCompile Include="src\apps\scenes\sub-scenes\01-DemoStage1\DemoStage1Phase.cpp" />
-    <ClCompile Include="src\apps\systems\physics\TileCollision.cpp" />
     <ClCompile Include="src\apps\systems\scrolling\atomic\SeamlessBGRenderer.cpp" />
     <ClCompile Include="src\apps\resources\bg\AddressScraper.cpp" />
     <ClCompile Include="src\apps\resources\bg\MapPageCache.cpp" />
@@ -97,6 +96,10 @@
     <ClCompile Include="src\apps\systems\scrolling\atomic\ScrollController.cpp" />
     <ClCompile Include="src\apps\systems\scrolling\atomic\WorldTileQuery.cpp" />
     <ClCompile Include="src\apps\systems\scrolling\atomic\FreeScrollPolicy.cpp" />
+    <ClCompile Include="src\apps\systems\physics\CollisionLayer.cpp" />
+    <ClCompile Include="src\apps\systems\physics\CollisionSystem.cpp" />
+    <ClCompile Include="src\apps\world\entity\avatar\PlayerEntity.cpp" />
+    <ClCompile Include="src\apps\world\entity\common\ProjectileEntity.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
@@ -242,7 +245,6 @@
     <ClInclude Include="src\apps\foundation\math\CoordinateTypes.h" />
     <ClInclude Include="src\apps\resources\bg\BGRoomBank.h" />
     <ClInclude Include="src\apps\scenes\sub-scenes\01-DemoStage1\DemoStage1Phase.h" />
-    <ClInclude Include="src\apps\systems\physics\TileCollision.h" />
     <ClInclude Include="src\apps\systems\scrolling\atomic\WorldTileQuery.h" />
     <ClInclude Include="src\apps\systems\scrolling\atomic\SeamlessBGRenderer.h" />
     <ClInclude Include="src\apps\resources\bg\MapPageCache.h" />
@@ -262,6 +264,13 @@
     <ClInclude Include="src\apps\world\entity\IRenderable.h" />
     <ClInclude Include="src\apps\world\entity\EntityBase.h" />
     <ClInclude Include="src\apps\rendering\sprite\SpriteBase.h" />
+    <ClInclude Include="src\apps\systems\physics\TileAttribute.h" />
+    <ClInclude Include="src\apps\systems\physics\CollisionLayer.h" />
+    <ClInclude Include="src\apps\systems\physics\ICollider.h" />
+    <ClInclude Include="src\apps\systems\physics\ITileMapProvider.h" />
+    <ClInclude Include="src\apps\systems\physics\CollisionSystem.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\PlayerEntity.h" />
+    <ClInclude Include="src\apps\world\entity\common\ProjectileEntity.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

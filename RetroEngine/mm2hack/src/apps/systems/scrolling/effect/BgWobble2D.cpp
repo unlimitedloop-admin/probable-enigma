@@ -47,8 +47,8 @@ namespace mm2hack::apps::systems::scrolling::effect
 
     // Additional: Feel free to make it a class member if you prefer. Here, it's a local constant for minimal diff.
     // Central emphasis (1.0 = conventional / 1.2 to 1.6 for deeper center)
-    constexpr float kGammaX = 1.70f; // Horizontal U central emphasis
-    constexpr float kGammaY = 1.50f; // Vertical "Y error" central emphasis
+    constexpr float kGammaX = 1.00f; // Horizontal U central emphasis
+    constexpr float kGammaY = 1.43f; // Vertical "Y error" central emphasis
 
     void BgWobble2D::Render(int src, int src_w, int src_h,
         int dst_w, int dst_h,

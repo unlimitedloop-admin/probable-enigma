@@ -3,7 +3,7 @@
 //  Project: mm2hack
 //  EntityBase.h
 // 
-//  ** Descriptions **
+//  TODO: Add description.
 // 
 //==============================================================================
 #pragma once

@@ -3,7 +3,7 @@
 //  Project: mm2hack
 //  IRenderable.h
 // 
-//  ** Descriptions **
+//  TODO: Add description.
 // 
 //==============================================================================
 #pragma once

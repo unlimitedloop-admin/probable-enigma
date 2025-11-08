@@ -173,7 +173,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\apps\systems\physics\TileCollision.cpp" />
+    <ClCompile Include="src\apps\systems\physics\CollisionLayer.cpp" />
+    <ClCompile Include="src\apps\systems\physics\CollisionSystem.cpp" />
     <ClCompile Include="src\apps\systems\scrolling\atomic\FreeScrollPolicy.cpp" />
     <ClCompile Include="src\apps\systems\scrolling\atomic\MapRenderer2D.cpp" />
     <ClCompile Include="src\apps\systems\scrolling\atomic\PageScrollAnimator.cpp" />
@@ -222,6 +223,8 @@
     <ClCompile Include="src\apps\vfx\stareffects\FixedStar.cpp" />
     <ClCompile Include="src\apps\vfx\stareffects\ShootingStar.cpp" />
     <ClCompile Include="src\apps\vfx\stareffects\Star.cpp" />
+    <ClCompile Include="src\apps\world\entity\avatar\PlayerEntity.cpp" />
+    <ClCompile Include="src\apps\world\entity\common\ProjectileEntity.cpp" />
     <ClCompile Include="src\config\ConfigUIManager.cpp" />
     <ClCompile Include="src\config\EnvironmentConfig.cpp" />
     <ClCompile Include="src\config\SystemConfig.cpp" />
@@ -285,7 +288,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
-    <ClInclude Include="src\apps\systems\physics\TileCollision.h" />
+    <ClInclude Include="src\apps\systems\physics\CollisionLayer.h" />
+    <ClInclude Include="src\apps\systems\physics\CollisionSystem.h" />
+    <ClInclude Include="src\apps\systems\physics\ICollider.h" />
+    <ClInclude Include="src\apps\systems\physics\ITileMapProvider.h" />
+    <ClInclude Include="src\apps\systems\physics\TileAttribute.h" />
+    <ClInclude Include="src\apps\world\entity\common\ProjectileEntity.h" />
     <ClInclude Include="src\apps\world\entity\EntityBase.h" />
     <ClInclude Include="src\apps\world\entity\IEntity.h" />
     <ClInclude Include="src\apps\world\entity\IRenderable.h" />
@@ -357,6 +365,7 @@
     <ClInclude Include="src\apps\vfx\stareffects\ShootingStar.h" />
     <ClInclude Include="src\apps\vfx\stareffects\Star.h" />
     <ClInclude Include="src\apps\vfx\stareffects\StarState.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\PlayerEntity.h" />
     <ClInclude Include="src\config\AssetPaths.h" />
     <ClInclude Include="src\config\ConfigUIManager.h" />
     <ClInclude Include="src\config\EnvironmentConfig.h" />

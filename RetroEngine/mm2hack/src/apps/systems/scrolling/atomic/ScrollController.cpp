@@ -58,6 +58,30 @@ namespace mm2hack::apps::systems::scrolling::atomic
         ::DxLib::DrawLine(0, static_cast<int>(_object_pos.y), _params.view_w, static_cast<int>(_object_pos.y), 0xFFFF0000, 2);
     }
 
+
+    void ScrollController::SyncWithObjectCenter(const Vec2& object_center, bool has_adj_x, bool has_adj_y, const Vec2& screen_px, const Vec2& map_px, ViewState& out_view)
+    {
+        _object_pos = object_center; // Object position sync
+
+        auto clamp = [](double v, double lo, double hi) { return std::max(lo, std::min(v, hi)); };
+
+        if (IsAllowedFree(_mode))
+        {
+            _cam.x = has_adj_x ? (screen_px.x * 0.5)
+                : clamp(object_center.x, screen_px.x * 0.5, map_px.x - screen_px.x * 0.5);
+            _cam.y = has_adj_y ? (screen_px.y * 0.5)
+                : clamp(object_center.y, screen_px.y * 0.5, map_px.y - screen_px.y * 0.5);
+        }
+        else
+        {
+            // TODO: Fixed scrolling algorithm
+        }
+
+        out_view.camX = _cam.x;
+        out_view.camY = _cam.y;
+    }
+
+
     // -------------------- Procedure for X axis
     void ScrollController::updateAxisX_(double remain)
     {
