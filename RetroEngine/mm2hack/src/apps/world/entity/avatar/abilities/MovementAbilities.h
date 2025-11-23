@@ -3,7 +3,7 @@
 //  Project: mm2hack
 //  MovementAbilities.h
 // 
-//  ** Descriptions **
+//  Movement abilities for the avatar entity.
 // 
 //==============================================================================
 #pragma once

@@ -3,7 +3,7 @@
 //  Project: mm2hack
 //  TileAttribute.h
 // 
-//  TODO: Add description.
+//  Tile attributes for the physics system.
 // 
 //==============================================================================
 #pragma once

@@ -295,6 +295,7 @@
     <ClInclude Include="src\apps\systems\physics\ITerrainProbe.h" />
     <ClInclude Include="src\apps\systems\physics\TileQueryService.h" />
     <ClInclude Include="src\apps\rendering\bg\BGTileMapProvider.h" />
+    <ClInclude Include="src\apps\resources\bg\IMapPageSource.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

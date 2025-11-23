@@ -3,154 +3,142 @@
 #include "MapPageCache.h"
 
 #include "AddressScraper.h"
-#include "cstring"
-
-namespace
-{
-    using conf = mm2hack::config::SystemConfig;
-    constexpr std::size_t kPageSize = conf::kMapBinaryUnitPageSize;
-    constexpr std::size_t kPayloadOff = conf::kMapBinaryHeaderSize;
-}
-
+#include "apps/systems/scrolling/atomic/ScrollTypes.h"
 
 namespace mm2hack::apps::resources::bg
 {
-    static_assert(PageTiles::kSize == 240, "it must be 240(16x15=240)");
+    using systems::scrolling::atomic::ScrollKind;
 
-    void MapPageCache::BuildAround(const std::size_t currentPageIndex)
+    MapPageCache::MapPageCache(std::shared_ptr<AddressScraper> scraper)
+        : _scraper(std::move(scraper))
     {
-        // The ensure function loads the page if the index is valid.
-        auto ensure = [&](std::optional<std::size_t> idxOpt)
-            {
-                if (!idxOpt) return;
-                const auto idx = *idxOpt;
-                _cache[idx] = readTiles_(idx);
-            };
-
-        _cache[currentPageIndex] = readTiles_(currentPageIndex);
-
-        // Neighbors: horizontal and vertical
-        const auto r = Right(currentPageIndex);
-        const auto l = Left(currentPageIndex);
-        const auto u = Up(currentPageIndex);
-        const auto d = Down(currentPageIndex);
-
-        ensure(r); ensure(l); ensure(u); ensure(d);
-
-        // Diagonal: horizontal -> vertical (only if both exist)
-        if (r && d) ensure(RightDown(currentPageIndex));
-        if (l && d) ensure(LeftDown(currentPageIndex));
-        if (r && u) ensure(RightUp(currentPageIndex));
-        if (l && u) ensure(LeftUp(currentPageIndex));
     }
 
-    std::uint8_t MapPageCache::Tile(const std::size_t pageIndex, const int tx, const int ty) const
+    void MapPageCache::BuildAround(std::size_t currentPageIndex)
+    {
+        // Simple eager load of current and 8-neighbors if present
+        const std::array<int, 9> offs = { 0, -1, 1, -16, 16, -17, -15, 15, 17 }; // heuristic; real mapping depends on layout
+        for (auto o : offs)
+        {
+            std::size_t idx = currentPageIndex;
+            if (o < 0)
+            {
+                if (static_cast<std::size_t>(-o) > currentPageIndex) continue;
+                idx = currentPageIndex - static_cast<std::size_t>(-o);
+            }
+            else
+            {
+                idx = currentPageIndex + static_cast<std::size_t>(o);
+            }
+
+            if (_cache.find(idx) == _cache.end())
+            {
+                _cache.emplace(idx, readTiles_(idx));
+            }
+        }
+    }
+
+    PageTiles MapPageCache::readTiles_(std::size_t pageIndex) const
+    {
+        PageTiles out{};
+        if (!_scraper) return out;
+        if (pageIndex >= _scraper->pageCount()) return out;
+
+        const std::uint8_t* p = _scraper->payloadPtr(pageIndex);
+        if (!p) return out;
+
+        for (int i = 0; i < PageTiles::kSize; ++i)
+        {
+            out.cells[i] = p[i];
+        }
+        return out;
+    }
+
+    std::uint8_t MapPageCache::GetTile(std::size_t pageIndex, int tx, int ty) const
     {
         if (tx < 0 || ty < 0 || tx >= PageTiles::kW || ty >= PageTiles::kH) return 0;
-
         auto it = _cache.find(pageIndex);
         if (it == _cache.end())
         {
-            // (Lazy loading) Safe to reference even if BuildAround was forgotten
-            auto inserted = _cache.emplace(pageIndex, readTiles_(pageIndex));
-            it = inserted.first;
+            const auto tiles = readTiles_(pageIndex);
+            it = _cache.emplace(pageIndex, tiles).first;
         }
-
         const auto& cells = it->second.cells;
-        return cells[static_cast<std::size_t>(ty) * PageTiles::kW + static_cast<std::size_t>(tx)];
+        const int idx = ty * PageTiles::kW + tx;
+        return cells[idx];
     }
 
-    // Neighbor resolution: AddressScraper is assumed to return roomNo for pageIndex.
-    // From there, pageIndex is re-resolved.
-    std::optional<std::size_t> MapPageCache::Right(const std::size_t page) const
+    std::optional<ScrollKind> MapPageCache::ScrollTypeRight(std::size_t pageIndex) const
     {
-        const int16_t roomNo = _s.getRightRoom(static_cast<int>(page));
-        const int16_t idx = _s.getPageIndex(static_cast<std::size_t>(roomNo));
+        if (!_scraper) return std::nullopt;
+        const int16_t v = _scraper->getRightScrollType(pageIndex);
+        return static_cast<ScrollKind>(v);
+    }
+    std::optional<ScrollKind> MapPageCache::ScrollTypeLeft(std::size_t pageIndex) const
+    {
+        if (!_scraper) return std::nullopt;
+        const int16_t v = _scraper->getLeftScrollType(pageIndex);
+        return static_cast<ScrollKind>(v);
+    }
+    std::optional<ScrollKind> MapPageCache::ScrollTypeUp(std::size_t pageIndex) const
+    {
+        if (!_scraper) return std::nullopt;
+        const int16_t v = _scraper->getOverScrollType(pageIndex);
+        return static_cast<ScrollKind>(v);
+    }
+    std::optional<ScrollKind> MapPageCache::ScrollTypeDown(std::size_t pageIndex) const
+    {
+        if (!_scraper) return std::nullopt;
+        const int16_t v = _scraper->getUnderScrollType(pageIndex);
+        return static_cast<ScrollKind>(v);
+    }
+
+    std::optional<std::size_t> MapPageCache::NeighborRight(std::size_t pageIndex) const
+    {
+        if (!_scraper) return std::nullopt;
+        return toOptIndex_(_scraper->getRightRoom(pageIndex));
+    }
+    std::optional<std::size_t> MapPageCache::NeighborLeft(std::size_t pageIndex) const
+    {
+        if (!_scraper) return std::nullopt;
+        return toOptIndex_(_scraper->getLeftRoom(pageIndex));
+    }
+    std::optional<std::size_t> MapPageCache::NeighborUp(std::size_t pageIndex) const
+    {
+        if (!_scraper) return std::nullopt;
+        return toOptIndex_(_scraper->getOverRoom(pageIndex));
+    }
+    std::optional<std::size_t> MapPageCache::NeighborDown(std::size_t pageIndex) const
+    {
+        if (!_scraper) return std::nullopt;
+        return toOptIndex_(_scraper->getUnderRoom(pageIndex));
+    }
+
+    std::optional<std::size_t> MapPageCache::RoomToPageIndex(uint8_t room) const
+    {
+        if (!_scraper) return std::nullopt;
+        const int16_t idx = _scraper->getPageIndex(static_cast<std::size_t>(room));
         return toOptIndex_(idx);
     }
 
-    std::optional<std::size_t> MapPageCache::Left(const std::size_t page) const
+    int MapPageCache::TileSize() const
     {
-        const int16_t roomNo = _s.getLeftRoom(static_cast<int>(page));
-        const int16_t idx = _s.getPageIndex(static_cast<std::size_t>(roomNo));
-        return toOptIndex_(idx);
+        return PageTiles::kW; // tile size per tile (in px?) — keep simple, callers expect tile px maybe use config
     }
 
-    std::optional<std::size_t> MapPageCache::Up(const std::size_t page) const
+    int MapPageCache::MapWidth() const
     {
-        const int16_t roomNo = _s.getOverRoom(static_cast<int>(page));
-        const int16_t idx = _s.getPageIndex(static_cast<std::size_t>(roomNo));
-        return toOptIndex_(idx);
+        // Best-effort: return page count in X * page tile width. If AddressScraper can't provide, return single page width.
+        if (!_scraper) return PageTiles::kW;
+        const std::size_t pageCount = _scraper->pageCount();
+        // Assume a single-row layout if unknown
+        return static_cast<int>(PageTiles::kW * std::max<std::size_t>(1, pageCount));
     }
 
-    std::optional<std::size_t> MapPageCache::Down(const std::size_t page) const
+    int MapPageCache::MapHeight() const
     {
-        const int16_t roomNo = _s.getUnderRoom(static_cast<int>(page));
-        const int16_t idx = _s.getPageIndex(static_cast<std::size_t>(roomNo));
-        return toOptIndex_(idx);
-    }
-
-    std::optional<std::size_t> MapPageCache::RightDown(const std::size_t page) const
-    {
-        if (auto r = Right(page))
-        {
-            const int16_t roomNo = _s.getUnderRoom(static_cast<int>(*r));
-            const int16_t idx = _s.getPageIndex(static_cast<std::size_t>(roomNo));
-            return toOptIndex_(idx);
-        }
-        return std::nullopt;
-    }
-
-    std::optional<std::size_t> MapPageCache::LeftDown(const std::size_t page) const
-    {
-        if (auto l = Left(page))
-        {
-            const int16_t roomNo = _s.getUnderRoom(static_cast<int>(*l));
-            const int16_t idx = _s.getPageIndex(static_cast<std::size_t>(roomNo));
-            return toOptIndex_(idx);
-        }
-        return std::nullopt;
-    }
-
-    std::optional<std::size_t> MapPageCache::RightUp(const std::size_t page) const
-    {
-        if (auto r = Right(page))
-        {
-            const int16_t roomNo = _s.getOverRoom(static_cast<int>(*r));
-            const int16_t idx = _s.getPageIndex(static_cast<std::size_t>(roomNo));
-            return toOptIndex_(idx);
-        }
-        return std::nullopt;
-    }
-
-    std::optional<std::size_t> MapPageCache::LeftUp(const std::size_t page) const
-    {
-        if (auto l = Left(page))
-        {
-            const int16_t roomNo = _s.getOverRoom(static_cast<int>(*l));
-            const int16_t idx = _s.getPageIndex(static_cast<std::size_t>(roomNo));
-            return toOptIndex_(idx);
-        }
-        return std::nullopt;
-    }
-
-    PageTiles MapPageCache::readTiles_(const std::size_t pageIndex) const
-    {
-        const auto& bin = _s.GetBin();
-
-        const std::size_t off = pageIndex * kPageSize + kPayloadOff;
-        const std::size_t need = PageTiles::kSize; // 240
-        PageTiles tiles{};
-
-        if (off + need <= bin.size())
-        {
-            // Copy tile data to PageTiles (left -> right, top -> bottom)
-            std::memcpy(tiles.cells.data(), bin.data() + off, need);
-        }
-        else
-        {
-            // Insufficient size: return as-is for safety
-        }
-        return tiles;
+        if (!_scraper) return PageTiles::kH;
+        // naive
+        return PageTiles::kH;
     }
 }

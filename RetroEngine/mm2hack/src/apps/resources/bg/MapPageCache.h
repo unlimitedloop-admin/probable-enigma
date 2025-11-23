@@ -10,18 +10,18 @@
 
 #include <array>
 #include <cstdint>
+#include <memory>
 #include <optional>
 #include <string>
 #include <unordered_map>
+#include "apps/systems/scrolling/atomic/ScrollTypes.h"
 #include "config/SystemConfig.h"
+#include "IMapPageSource.h"
 
 namespace mm2hack::apps::resources::bg
 {
     class AddressScraper;
-}
 
-namespace mm2hack::apps::resources::bg
-{
     // One page's tile data (16x15=240 tiles)
     struct PageTiles
     {
@@ -31,28 +31,39 @@ namespace mm2hack::apps::resources::bg
         std::array<std::uint8_t, kSize> cells{};
     };
 
-    // Map page cache with lazy loading
-    class MapPageCache
+    // MapPageCache: IMapPageSource を実装し、AddressScraper を所有するキャッシュ
+    class MapPageCache final : public IMapPageSource
     {
-    public:
-        explicit MapPageCache(AddressScraper& s) : _s(s) {}
+        using ScrollKind = systems::scrolling::atomic::ScrollKind;
 
-        // (Lazy loading) Load the specified page and its surrounding 8 pages into the cache
+    public:
+        explicit MapPageCache(std::shared_ptr<AddressScraper> scraper);
+
+        // Lazy-loading helper
         void BuildAround(std::size_t currentPageIndex);
 
-        // (Lazy loading) Return the tile ID at (tx, ty) of the specified page. Out of range returns 0
-        std::uint8_t Tile(std::size_t pageIndex, int tx, int ty) const;
+        // IMapPageSource implementation
+        std::uint8_t GetTile(std::size_t pageIndex, int tx, int ty) const override;
 
-        // Neighbor resolution (returns nullopt if not found)
-        std::optional<std::size_t> Right(std::size_t page) const;
-        std::optional<std::size_t> Left(std::size_t page) const;
-        std::optional<std::size_t> Up(std::size_t page) const;
-        std::optional<std::size_t> Down(std::size_t page) const;
+        // Get scroll type for each direction (returns std::nullopt if not scrollable)
+        [[nodiscard]] std::optional<systems::scrolling::atomic::ScrollKind> ScrollTypeRight(std::size_t pageIndex) const override;
+        [[nodiscard]] std::optional<systems::scrolling::atomic::ScrollKind> ScrollTypeLeft(std::size_t pageIndex) const override;
+        [[nodiscard]] std::optional<systems::scrolling::atomic::ScrollKind> ScrollTypeUp(std::size_t pageIndex) const override;
+        [[nodiscard]] std::optional<systems::scrolling::atomic::ScrollKind> ScrollTypeDown(std::size_t pageIndex) const override;
 
-        std::optional<std::size_t> RightDown(std::size_t page) const;
-        std::optional<std::size_t> LeftDown(std::size_t page) const;
-        std::optional<std::size_t> RightUp(std::size_t page) const;
-        std::optional<std::size_t> LeftUp(std::size_t page) const;
+        // Get neighboring page index for each direction (returns std::nullopt if no neighbor)
+        [[nodiscard]] std::optional<std::size_t> NeighborRight(std::size_t pageIndex) const override;
+        [[nodiscard]] std::optional<std::size_t> NeighborLeft(std::size_t pageIndex) const override;
+        [[nodiscard]] std::optional<std::size_t> NeighborUp(std::size_t pageIndex) const override;
+        [[nodiscard]] std::optional<std::size_t> NeighborDown(std::size_t pageIndex) const override;
+
+        // map room id -> page index
+        [[nodiscard]] std::optional<std::size_t> RoomToPageIndex(uint8_t room) const override;
+
+        // Get the overall pixel size, stage map size
+        [[nodiscard]] int TileSize() const override;
+        [[nodiscard]] int MapWidth() const override;
+        [[nodiscard]] int MapHeight() const override;
 
     private:
         PageTiles readTiles_(std::size_t pageIndex) const;      // Read tile data from AddressScraper
@@ -60,12 +71,12 @@ namespace mm2hack::apps::resources::bg
         static std::optional<std::size_t> toOptIndex_(int16_t idx)
         {
             return (idx >= 0) ? std::optional<std::size_t>(static_cast<std::size_t>(idx)) : std::nullopt;
-        }   // Convert -1 to nullopt
+        }
 
     private:
-        const std::wstring kClassName = L"MapPageCache";
+        const std::wstring kClassName{ L"MapPageCache" };
 
-        AddressScraper& _s;
+        std::shared_ptr<AddressScraper> _scraper;   // OWN HOLDER! (Shared to ScraperScrollRuleProvider etc.)
         mutable std::unordered_map<std::size_t, PageTiles> _cache;  // pageIndex -> PageTiles
     };
 }

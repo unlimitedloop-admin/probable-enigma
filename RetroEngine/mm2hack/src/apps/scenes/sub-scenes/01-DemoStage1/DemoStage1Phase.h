@@ -53,12 +53,12 @@ namespace mm2hack::apps::scenes
 
             DemoStage1& owner;
 
-            std::unique_ptr<ITileMapProvider> _mapProvider;
-            std::unique_ptr<ITerrainProbe>    _terrainProbe;
+            std::unique_ptr<ITileMapProvider> _mapProvider;         // Tile map provider
+            std::unique_ptr<ITerrainProbe>    _terrainProbe;        // Terrain probe
 
-            std::unique_ptr<MapRenderer2D> _renderer;
-            std::unique_ptr<ScraperScrollRuleProvider> _rules;
-            std::unique_ptr<ScrollController> _scroll;
+            std::unique_ptr<MapRenderer2D> _renderer;               // Map renderer
+            std::unique_ptr<ScraperScrollRuleProvider> _rules;      // Scroll rule provider
+            std::unique_ptr<ScrollController> _scroll;              // Scroll controller
 
             int _page_index_debug{ 0 };
         };

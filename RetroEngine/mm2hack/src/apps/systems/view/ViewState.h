@@ -3,7 +3,7 @@
 //  Project: mm2hack
 //  ViewState.h
 // 
-//  ** Descriptions **
+//  View state management for the game.
 // 
 //==============================================================================
 #pragma once

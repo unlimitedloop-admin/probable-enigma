@@ -4,6 +4,8 @@
 
 #include <cstdio>
 #include "apps/foundation/math/CoordinateTypes.h"
+#include "apps/resources/bg/AddressScraper.h"
+#include "apps/resources/bg/MapPageCache.h"
 #include "apps/systems/scrolling/atomic/ScrollController.h"
 #include "core/assembly/StateProvider.h"
 #include "DemoStage1.h"
@@ -13,6 +15,9 @@ namespace mm2hack::apps::scenes
 {
     namespace DemoStage1_
     {
+        using resources::bg::AddressScraper;
+        using resources::bg::MapPageCache;
+
         //============================================================================== 
         //
         //  MainPhase
@@ -22,8 +27,11 @@ namespace mm2hack::apps::scenes
         {
             auto& resource = owner.ResourceManagerObj();
             auto& filepath = resource.GetBGRoomBank().FilePath();
-            auto scraper = std::make_shared<AddressScraper>(resource.GetBGTileManager().ExtractMapBinary(filepath));
-            _rules = std::make_unique<ScraperScrollRuleProvider>(scraper);
+            auto scraper = std::make_shared<AddressScraper>(
+                resource.GetBGTileManager().ExtractMapBinary(filepath)
+            );
+            auto pageSource = std::make_shared<MapPageCache>(scraper);
+            _rules = std::make_unique<ScraperScrollRuleProvider>(pageSource);
             _renderer = std::make_unique<MapRenderer2D>(resource, owner.GetMapName(), owner.GetMapBinaryPath(), kTilePx);
 
             ScrollController::Params p;
@@ -32,7 +40,7 @@ namespace mm2hack::apps::scenes
             _scroll->ObjectPos() = { 128.0, 120.0 };
 
             auto* bgMgr = &resource.GetBGTileManager();
-            _mapProvider = std::make_unique<BGTileMapProvider>(bgMgr);
+            _mapProvider = std::make_unique<BGTileMapProvider>(bgMgr, pageSource);
             _terrainProbe = std::make_unique<TileQueryService>(*_mapProvider);
 
             // TODO: Need to provide a vector member for entity. (or EntityManager?)

@@ -3,7 +3,7 @@
 //  Project: mm2hack
 //  TileQueryService.h
 // 
-//  ** Descriptions **
+//  Service for querying tile attributes and terrain information.
 // 
 //==============================================================================
 #pragma once

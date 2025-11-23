@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <string>
 #include "apps/systems/scrolling/atomic/ScrollController.h"
+#include "config/SystemConfig.h"
 
 namespace mm2hack::apps::resources::bg
 {
@@ -37,7 +38,10 @@ namespace mm2hack::apps::systems::physics
         uint8_t TileAtPx(double worldPxX, double worldPxY, const Camera& cam) const;
 
     private:
-        const std::wstring kClassName = L"BgTileQueryHelper";
+        const std::wstring kClassName{L"BgTileQueryHelper"};
+
+        const int tSizeW = config::SystemConfig::kTileCountX;
+        const int tSizeH = config::SystemConfig::kTileCountY;
 
         MapPageCache& _cache;
         size_t _curr;

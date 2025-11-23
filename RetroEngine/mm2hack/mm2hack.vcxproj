@@ -296,6 +296,7 @@
   <ItemGroup>
     <ClInclude Include="resource.h" />
     <ClInclude Include="src\apps\rendering\bg\BGTileMapProvider.h" />
+    <ClInclude Include="src\apps\resources\bg\IMapPageSource.h" />
     <ClInclude Include="src\apps\systems\physics\ITerrainProbe.h" />
     <ClInclude Include="src\apps\systems\physics\Probes.h" />
     <ClInclude Include="src\apps\systems\physics\CollisionLayer.h" />

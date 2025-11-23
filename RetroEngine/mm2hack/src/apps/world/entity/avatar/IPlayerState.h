@@ -3,7 +3,7 @@
 //  Project: mm2hack
 //  IPlayerState.h
 // 
-//  ** Descriptions **
+//  Interface for player state behavior.
 // 
 //==============================================================================
 #pragma once

@@ -106,11 +106,11 @@ namespace mm2hack::apps::world::entity::avatar
         AvatarStatus _status{ AvatarStatus::Standing };                 // Current avatar status
         std::array<std::unique_ptr<IPlayerState>, 7> _states{};
 
-        InputSnapshot     _input{};
-        PlayerTuning      _tuning{};
-        AnimeStepper      _animeStepper{};
-        Probes            _probes{};
-        std::unique_ptr<ITerrainProbe> _terrainProbe{ nullptr };
-        abilities::ILadderService* _ladderService{ nullptr };
+        InputSnapshot                  _input{};                        // Input snapshot
+        PlayerTuning                   _tuning{};                       // Player tuning parameters
+        AnimeStepper                   _animeStepper{};                 // Animation stepper
+        Probes                         _probes{};                       // Collision probes
+        std::unique_ptr<ITerrainProbe> _terrainProbe{ nullptr };        // Terrain probe
+        abilities::ILadderService*     _ladderService{ nullptr };       // Ladder action service
     };
 }

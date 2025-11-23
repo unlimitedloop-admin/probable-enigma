@@ -8,60 +8,63 @@ namespace mm2hack::apps::systems::scrolling::atomic
 {
     using Kind = ScrollKind;
 
-    static Kind ToKind(int v) noexcept
+    static Kind ToKindOpt(const std::optional<Kind>& v) noexcept
     {
-        switch (v)
-        {
-        case 0x01: return Kind::FreeHorizontal;
-        case 0x02: return Kind::FixedPage;
-        case 0x09: return Kind::FollowObject;
-        case 0x0A: return Kind::Free8Way;
-        default:   return Kind::None;
-        }
+        return v.has_value() ? v.value() : Kind::None;
     }
 
     ScrollKind ScraperScrollRuleProvider::RightType(std::size_t p) const
     {
-        return ToKind(_scraper->getRightScrollType(static_cast<int>(p)));
+        return ToKindOpt(_pageSrc ? _pageSrc->ScrollTypeRight(p) : std::optional<Kind>{});
     }
 
     ScrollKind ScraperScrollRuleProvider::LeftType(std::size_t p) const
     {
-        return ToKind(_scraper->getLeftScrollType(static_cast<int>(p)));
+        return ToKindOpt(_pageSrc ? _pageSrc->ScrollTypeLeft(p) : std::optional<Kind>{});
     }
 
     ScrollKind ScraperScrollRuleProvider::UpType(std::size_t p) const
     {
-        return ToKind(_scraper->getOverScrollType(static_cast<int>(p)));
+        return ToKindOpt(_pageSrc ? _pageSrc->ScrollTypeUp(p) : std::optional<Kind>{});
     }
 
     ScrollKind ScraperScrollRuleProvider::DownType(std::size_t p) const
     {
-        return ToKind(_scraper->getUnderScrollType(static_cast<int>(p)));
+        return ToKindOpt(_pageSrc ? _pageSrc->ScrollTypeDown(p) : std::optional<Kind>{});
     }
 
     int16_t ScraperScrollRuleProvider::RightRoom(std::size_t p) const
     {
-        return _scraper->getRightRoom(static_cast<int>(p));
+        if (!_pageSrc) return static_cast<int16_t>(-1);
+        const auto opt = _pageSrc->NeighborRight(p);
+        return opt ? static_cast<int16_t>(*opt) : static_cast<int16_t>(-1);
     }
 
     int16_t ScraperScrollRuleProvider::LeftRoom(std::size_t p) const
     {
-        return _scraper->getLeftRoom(static_cast<int>(p));
+        if (!_pageSrc) return static_cast<int16_t>(-1);
+        const auto opt = _pageSrc->NeighborLeft(p);
+        return opt ? static_cast<int16_t>(*opt) : static_cast<int16_t>(-1);
     }
 
     int16_t ScraperScrollRuleProvider::UpRoom(std::size_t p) const
     {
-        return _scraper->getOverRoom(static_cast<int>(p));
+        if (!_pageSrc) return static_cast<int16_t>(-1);
+        const auto opt = _pageSrc->NeighborUp(p);
+        return opt ? static_cast<int16_t>(*opt) : static_cast<int16_t>(-1);
     }
 
     int16_t ScraperScrollRuleProvider::DownRoom(std::size_t p) const
     {
-        return _scraper->getUnderRoom(static_cast<int>(p));
+        if (!_pageSrc) return static_cast<int16_t>(-1);
+        const auto opt = _pageSrc->NeighborDown(p);
+        return opt ? static_cast<int16_t>(*opt) : static_cast<int16_t>(-1);
     }
 
     int ScraperScrollRuleProvider::ToPageIndex(uint8_t room) const
     {
-        return _scraper->getPageIndex(room);
+        if (!_pageSrc) return -1;
+        const auto opt = _pageSrc->RoomToPageIndex(room);
+        return opt ? static_cast<int>(*opt) : -1;
     }
 }

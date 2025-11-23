@@ -90,17 +90,6 @@ namespace mm2hack::apps::rendering::bg
         [[nodiscard]] inline int MapHeight() const noexcept { return _map_h; }
         [[nodiscard]] inline int TileSize() const noexcept { return 16; }       // fixed 16x16 pixels
 
-        [[nodiscard]] inline bool HasAdjacentRoomX(int dir) const noexcept
-        {
-            // dir = -1 (left) / +1 (right)
-            return (dir < 0) ? (_map_w > config::SystemConfig::kTileCountX) : (_map_w > config::SystemConfig::kTileCountX);
-        }
-        [[nodiscard]] inline bool HasAdjacentRoomY(int dir) const noexcept
-        {
-            // dir = -1 (up) / +1 (down)
-            return (dir < 0) ? (_map_h > config::SystemConfig::kTileCountY) : (_map_h > config::SystemConfig::kTileCountY);
-        }
-
     private:
         const std::wstring kClassName{ L"BGTileManager" };
 
