@@ -24,22 +24,22 @@ namespace mm2hack::apps::resources::bg
         enum class Dir : uint8_t { Up, Down, Left, Right };
         enum class Scroll : uint8_t
         {
-            None = 0x00,
-            Free = 0x01,
-            PerPage = 0x02,
+            None         = 0x00,
+            Free         = 0x01,
+            PerPage      = 0x02,
             NoScrollEdge = 0x03,
-            NoScroll = 0x04,
-            Dynamic = 0x05,
-            AxisFix = 0x06,
-            Loop = 0x07,
-            Auto = 0x08,
-            AutoByObj = 0x09,
-            Large = 0x0A,
-            Raster3D = 0x0B,
-            RasterFlag = 0x0C,
-            MultiBG = 0x0D,
-            Undef14 = 0x0E,
-            Other = 0x0F
+            NoScroll     = 0x04,
+            Dynamic      = 0x05,
+            AxisFix      = 0x06,
+            Loop         = 0x07,
+            Auto         = 0x08,
+            AutoByObj    = 0x09,
+            Large        = 0x0A,
+            Raster3D     = 0x0B,
+            RasterFlag   = 0x0C,
+            MultiBG      = 0x0D,
+            Undef14      = 0x0E,
+            Other        = 0x0F
         };
 
         struct Header

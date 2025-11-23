@@ -20,6 +20,8 @@
 
 namespace mm2hack::apps::systems::scrolling::atomic
 {
+    using foundation::math::kEps;
+
     // View camera representation
     struct Camera
     {
@@ -32,8 +34,8 @@ namespace mm2hack::apps::systems::scrolling::atomic
         static constexpr Scalar kCenterX = conf::kScreenWidth / 2.0;
         static constexpr Scalar kCenterY = conf::kScreenHeight / 2.0;
 
-        static inline bool NearlyZero(Scalar v, Scalar eps = foundation::math::kEps) noexcept { return std::abs(v) <= eps; }
-        static inline bool NearlyEqual(Scalar a, Scalar b, Scalar eps = foundation::math::kEps) noexcept { return std::abs(a - b) <= eps; }
+        static inline bool NearlyZero(Scalar v, Scalar eps = kEps) noexcept { return std::abs(v) <= eps; }
+        static inline bool NearlyEqual(Scalar a, Scalar b, Scalar eps = kEps) noexcept { return std::abs(a - b) <= eps; }
     };
 
     // 2D difference representation
@@ -42,7 +44,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
         using Vec2 = foundation::math::Vec2;
         Vec2 delta{};
 
-        [[nodiscard]] bool any(double eps = foundation::math::kEps) const noexcept
+        [[nodiscard]] bool any(double eps = kEps) const noexcept
         {
             return !Camera::NearlyZero(delta.x, eps) || !Camera::NearlyZero(delta.y, eps);
         }
@@ -68,8 +70,8 @@ namespace mm2hack::apps::systems::scrolling::atomic
     public:
         struct Params
         {
-            int tile_px{ 16 };  // Tile px
-            int view_w{ conf::kScreenWidth };  // Width of the screen
+            int tile_px{ conf::kTileSize };     // Tile px
+            int view_w{ conf::kScreenWidth };   // Width of the screen
             int view_h{ conf::kScreenHeight };  // Height of the screen
         };
 

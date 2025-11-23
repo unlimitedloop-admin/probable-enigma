@@ -5,6 +5,11 @@
 #include <iterator>
 #include <string_view>
 
+namespace mm2hack::apps::systems::physics
+{
+    enum class TileAttribute : std::uint16_t;
+}
+
 namespace mm2hack::apps::rendering::bg
 {
     BGTileManager::Id BGTileManager::LoadTileset(const std::wstring& name, std::wstring_view png_path, std::wstring_view json_path)
@@ -119,7 +124,7 @@ namespace mm2hack::apps::rendering::bg
         return raw;
     }
 
-    void BGTileManager::SetTileAttribute(std::uint8_t tile_id, std::uint8_t attr)
+    void BGTileManager::SetTileAttribute(std::uint8_t tile_id, TileAttribute attr)
     {
         if (_tile_attr.size() <= tile_id)
         {
@@ -127,20 +132,20 @@ namespace mm2hack::apps::rendering::bg
         }
         _tile_attr[tile_id] = attr;
     }
-    std::uint8_t BGTileManager::GetTileAttribute(int x, int y) const
+    TileAttribute BGTileManager::GetTileAttribute(int x, int y) const
     {
-        if (x < 0 || y < 0 || x >= _map_w || y >= _map_h)
-        {
-            return 0;
-        }
+        if (x < 0 || y < 0 || x >= _map_w || y >= _map_h) { return TileAttribute(); }
 
         const std::uint8_t id = _tile_map[y * _map_w + x];
-        if (id < _tile_attr.size())
-        {
-            return _tile_attr[id];
-        }
+        
+        if (id < _tile_attr.size()) { return _tile_attr[id]; }
+        
+        return TileAttribute();
+    }
 
-        return 0;
+    TileAttribute BGTileManager::GetTileAttribute(uint8_t id) const
+    {
+        return id < _tile_attr.size() ? _tile_attr[id] : TileAttribute();
     }
 
     void BGTileManager::DrawMapByName(const std::wstring& tileset_name, int tile_px_w, int tile_px_h, int offset_x, int offset_y) const

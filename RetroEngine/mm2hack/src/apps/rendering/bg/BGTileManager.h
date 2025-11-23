@@ -14,15 +14,20 @@
 #include <string_view>
 #include <utility>
 #include <vector>
+#include "apps/systems/physics/TileAttribute.h"
 #include "BGTileCatalog.h"
+#include "config/SystemConfig.h"
 
 namespace mm2hack::apps::rendering::bg
 {
+    using systems::physics::TileAttribute;
+
     // Manages background tile textures and their properties
     class BGTileManager
     {
     public:
         using Id = BGTileCatalog::Id;
+        using Byte = std::uint8_t;
 
         BGTileManager() = default;
         ~BGTileManager() = default;
@@ -52,9 +57,10 @@ namespace mm2hack::apps::rendering::bg
         // Extract map binary data from a file, with an optional offset
         std::vector<std::uint8_t> ExtractMapBinary(std::wstring_view map_file) const;
         // Set tile attributes (per tile-id)
-        void SetTileAttribute(std::uint8_t tile_id, std::uint8_t attr);
+        void SetTileAttribute(std::uint8_t tile_id, TileAttribute attr);
         // Get tile attribute for the specified tile-id
-        std::uint8_t GetTileAttribute(int x, int y) const;
+        TileAttribute GetTileAttribute(int x, int y) const;
+        TileAttribute GetTileAttribute(uint8_t id) const;
 
         // Draw map with the specified tileset name
         void DrawMapByName(const std::wstring& tileset_name, int tile_px_w, int tile_px_h, int offset_x = 0, int offset_y = 0) const;
@@ -79,6 +85,22 @@ namespace mm2hack::apps::rendering::bg
         // Set global variant, clamped to valid range
         void SetGlobalVariantClamped(int v) noexcept;
 
+        // Map info
+        [[nodiscard]] inline int MapWidth() const noexcept { return _map_w; }
+        [[nodiscard]] inline int MapHeight() const noexcept { return _map_h; }
+        [[nodiscard]] inline int TileSize() const noexcept { return 16; }       // fixed 16x16 pixels
+
+        [[nodiscard]] inline bool HasAdjacentRoomX(int dir) const noexcept
+        {
+            // dir = -1 (left) / +1 (right)
+            return (dir < 0) ? (_map_w > config::SystemConfig::kTileCountX) : (_map_w > config::SystemConfig::kTileCountX);
+        }
+        [[nodiscard]] inline bool HasAdjacentRoomY(int dir) const noexcept
+        {
+            // dir = -1 (up) / +1 (down)
+            return (dir < 0) ? (_map_h > config::SystemConfig::kTileCountY) : (_map_h > config::SystemConfig::kTileCountY);
+        }
+
     private:
         const std::wstring kClassName{ L"BGTileManager" };
 
@@ -86,9 +108,9 @@ namespace mm2hack::apps::rendering::bg
         int _global_variant{ 0 };   // global palette variant for drawing
 
         // Map state
-        int _map_w{ 16 };
-        int _map_h{ 15 };
-        std::vector<std::uint8_t> _tile_map;     // size: _map_w * _map_h
-        std::vector<std::uint8_t> _tile_attr;    // by tile-id
+        int _map_w{ config::SystemConfig::kTileCountX };
+        int _map_h{ config::SystemConfig::kTileCountY };
+        std::vector<Byte> _tile_map;            // size: _map_w * _map_h
+        std::vector<TileAttribute> _tile_attr;  // by tile-id
     };
 }

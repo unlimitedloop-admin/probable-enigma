@@ -1,7 +1,7 @@
 //==============================================================================
 // 
 //  Project: mm2hack
-//  WorldTileQuery.h
+//  BgTileQueryHelper.h
 // 
 //  Helper in querying world tile attributes based on world pixel coordinates.
 // 
@@ -10,26 +10,23 @@
 
 #include <cstdint>
 #include <string>
+#include "apps/systems/scrolling/atomic/ScrollController.h"
 
 namespace mm2hack::apps::resources::bg
 {
     class MapPageCache;
 }
 
-namespace mm2hack::apps::systems::scrolling::atomic
+namespace mm2hack::apps::systems::physics
 {
-    struct Camera;
-}
-
-namespace mm2hack::apps::systems::scrolling::atomic
-{
-    // World tile query helper
-    class WorldTileQuery
+    // Background tile query helper
+    class BgTileQueryHelper
     {
-        using MapPageCache = apps::resources::bg::MapPageCache;
+        using MapPageCache = resources::bg::MapPageCache;
+        using Camera       = scrolling::atomic::Camera;
 
     public:
-        WorldTileQuery(MapPageCache& cache, size_t currentPage, int tilePx)
+        BgTileQueryHelper(MapPageCache& cache, size_t currentPage, int tilePx)
             : _cache(cache), _curr(currentPage), _ts(tilePx)
         {
         }
@@ -40,7 +37,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
         uint8_t TileAtPx(double worldPxX, double worldPxY, const Camera& cam) const;
 
     private:
-        const std::wstring kClassName = L"WorldTileQuery";
+        const std::wstring kClassName = L"BgTileQueryHelper";
 
         MapPageCache& _cache;
         size_t _curr;

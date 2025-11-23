@@ -18,6 +18,8 @@
 #include "apps/rendering/bg/BGTileManager.h"
 #include "apps/scenes/PhaseFadeController.h"
 #include "apps/scenes/SceneID.h"
+#include "apps/systems/physics/ITerrainProbe.h"
+#include "apps/systems/physics/ITileMapProvider.h"
 
 namespace mm2hack::apps
 {
@@ -78,10 +80,12 @@ namespace mm2hack::apps::scenes
     // Demo stage scene (ID: 01)
     class DemoStage1 : public IBaseScene
     {
-        using BGTileManagerId = rendering::bg::BGTileManager::Id;
-        using Parameters = resources::parameters::Parameters;
-        using ResourceManager = apps::resources::ResourceManager;
-        using StateProvider = core::assembly::StateProvider;
+        using ResourceManager   = apps::resources::ResourceManager;
+        using StateProvider     = core::assembly::StateProvider;
+        using BGTileManagerId   = rendering::bg::BGTileManager::Id;
+        using Parameters        = resources::parameters::Parameters;
+        using ITerrainProbe     = systems::physics::ITerrainProbe;
+        using ITileMapProvider  = systems::physics::ITileMapProvider;
 
     public:
         explicit DemoStage1(SceneChangeMediator* mediator);
@@ -135,21 +139,21 @@ namespace mm2hack::apps::scenes
             int tileH{ 8 };   // in tiles
         } _roomState;
 
-        SceneChangeMediator* _mediator{ nullptr };              // Mediator for scene changes
-        std::unique_ptr<IDemoStage1Phase> _phase;               // Current phase of the demo stage
-        DemoStage1PhaseId _phaseId{ DemoStage1PhaseId::Main };  // Current phase identifier
-        PhaseFadeController _fader;                             // Fade controller for scene transitions
-        std::unique_ptr<IDemoStage1Phase> _pendingPhase;        // Pending phase to switch to
-        PhaseFadePlan _pendingPlan{};                           // Pending fade plan for the next phase
+        SceneChangeMediator* _mediator{ nullptr };                      // Mediator for scene changes
+        std::unique_ptr<IDemoStage1Phase> _phase;                       // Current phase of the demo stage
+        DemoStage1PhaseId _phaseId{ DemoStage1PhaseId::Main };          // Current phase identifier
+        PhaseFadeController _fader;                                     // Fade controller for scene transitions
+        std::unique_ptr<IDemoStage1Phase> _pendingPhase;                // Pending phase to switch to
+        PhaseFadePlan _pendingPlan{};                                   // Pending fade plan for the next phase
 
-        SceneID _nextScene{ SceneID::None };                    // Next scene to switch to
-        Parameters _nextParams{};                               // Reserve the parameters for the next scene
-        bool _leaving{ false };                                 // Flag indicating if leaving the backdoor menu
+        SceneID _nextScene{ SceneID::None };                            // Next scene to switch to
+        Parameters _nextParams{};                                       // Reserve the parameters for the next scene
+        bool _leaving{ false };                                         // Flag indicating if leaving the backdoor menu
 
         const int fadeDurationFrames{ 16 };
 
-        ResourceManager* _resource{ nullptr };                  // Reference to the resource manager
-        StateProvider* _input{ nullptr };                       // Reference to the state provider
+        ResourceManager* _resource{ nullptr };                          // Reference to the resource manager
+        StateProvider* _input{ nullptr };                               // Reference to the state provider
         BGTileManagerId _bgTileId{ static_cast<BGTileManagerId>(-1) };  // Background tile set Id
     };
 }

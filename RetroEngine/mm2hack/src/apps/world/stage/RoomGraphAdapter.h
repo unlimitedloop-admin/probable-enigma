@@ -11,10 +11,12 @@
 #include <cstdint>
 #include <optional>
 #include <string>
-#include "AddressScraper.h"
+#include "apps/resources/bg/AddressScraper.h"
 
-namespace mm2hack::apps::resources::bg
+namespace mm2hack::apps::world::stage
 {
+    using resources::bg::AddressScraper;
+
     // Wrapper for AddressScraper to provide room graph interface
     class RoomGraphAdapter
     {

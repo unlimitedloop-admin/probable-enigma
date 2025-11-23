@@ -62,6 +62,7 @@ namespace mm2hack::config
 
         // NES Style properties
         // Tile Set
+        static const unsigned int kTileSize = 16;                   // Tile size (pixels)
         static const unsigned int kTileSizeWidth = 16;              // BG Tile width (pixels)
         static const unsigned int kTileSizeHeight = 16;             // BG Tile height (pixels)
         static const unsigned int kTileCountX = 16;                 // Number of tiles in X direction

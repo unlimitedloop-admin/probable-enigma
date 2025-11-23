@@ -5,7 +5,6 @@
 #include <cmath>
 #include <numbers>
 
-// TODO: 日本語は使用禁止。全部英語で。
 namespace mm2hack::apps::systems::scrolling::effect
 {
     void BgWobble2D::Initialize(int logical_h, int stripe_h) noexcept

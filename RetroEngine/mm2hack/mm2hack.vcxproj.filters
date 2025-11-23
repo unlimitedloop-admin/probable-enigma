@@ -87,19 +87,26 @@
     <ClCompile Include="src\apps\scenes\sub-scenes\01-DemoStage1\DemoStage1.cpp" />
     <ClCompile Include="src\apps\resources\bg\BGRoomBank.cpp" />
     <ClCompile Include="src\apps\scenes\sub-scenes\01-DemoStage1\DemoStage1Phase.cpp" />
-    <ClCompile Include="src\apps\systems\scrolling\atomic\SeamlessBGRenderer.cpp" />
     <ClCompile Include="src\apps\resources\bg\AddressScraper.cpp" />
     <ClCompile Include="src\apps\resources\bg\MapPageCache.cpp" />
     <ClCompile Include="src\apps\systems\scrolling\atomic\ScraperScrollRuleProvider.cpp" />
     <ClCompile Include="src\apps\systems\scrolling\atomic\PageScrollAnimator.cpp" />
     <ClCompile Include="src\apps\systems\scrolling\atomic\MapRenderer2D.cpp" />
     <ClCompile Include="src\apps\systems\scrolling\atomic\ScrollController.cpp" />
-    <ClCompile Include="src\apps\systems\scrolling\atomic\WorldTileQuery.cpp" />
-    <ClCompile Include="src\apps\systems\scrolling\atomic\FreeScrollPolicy.cpp" />
+    <ClCompile Include="src\apps\systems\physics\BgTileQueryHelper.cpp" />
     <ClCompile Include="src\apps\systems\physics\CollisionLayer.cpp" />
     <ClCompile Include="src\apps\systems\physics\CollisionSystem.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\PlayerEntity.cpp" />
     <ClCompile Include="src\apps\world\entity\common\ProjectileEntity.cpp" />
+    <ClCompile Include="src\apps\world\entity\avatar\states\StandingState.cpp" />
+    <ClCompile Include="src\apps\world\entity\avatar\states\RunningState.cpp" />
+    <ClCompile Include="src\apps\world\entity\avatar\states\HoveringState.cpp" />
+    <ClCompile Include="src\apps\world\entity\avatar\states\LaunchRunState.cpp" />
+    <ClCompile Include="src\apps\world\entity\avatar\states\BrakeRunState.cpp" />
+    <ClCompile Include="src\apps\world\entity\avatar\states\LadderingState.cpp" />
+    <ClCompile Include="src\apps\world\entity\avatar\states\LandingState.cpp" />
+    <ClCompile Include="src\apps\systems\physics\TileQueryService.cpp" />
+    <ClCompile Include="src\apps\rendering\bg\BGTileMapProvider.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
@@ -245,13 +252,11 @@
     <ClInclude Include="src\apps\foundation\math\CoordinateTypes.h" />
     <ClInclude Include="src\apps\resources\bg\BGRoomBank.h" />
     <ClInclude Include="src\apps\scenes\sub-scenes\01-DemoStage1\DemoStage1Phase.h" />
-    <ClInclude Include="src\apps\systems\scrolling\atomic\WorldTileQuery.h" />
-    <ClInclude Include="src\apps\systems\scrolling\atomic\SeamlessBGRenderer.h" />
+    <ClInclude Include="src\apps\systems\physics\BgTileQueryHelper.h" />
     <ClInclude Include="src\apps\resources\bg\MapPageCache.h" />
     <ClInclude Include="src\apps\resources\bg\AddressScraper.h" />
-    <ClInclude Include="src\apps\resources\bg\RoomGraphAdapter.h" />
+    <ClInclude Include="src\apps\world\stage\RoomGraphAdapter.h" />
     <ClInclude Include="src\apps\systems\scrolling\atomic\ScrollController.h" />
-    <ClInclude Include="src\apps\systems\scrolling\atomic\FreeScrollPolicy.h" />
     <ClInclude Include="src\apps\systems\scrolling\atomic\ScrollTypes.h" />
     <ClInclude Include="src\apps\systems\scrolling\atomic\IScrollRuleProvider.h" />
     <ClInclude Include="src\apps\systems\scrolling\atomic\ScraperScrollRuleProvider.h" />
@@ -271,6 +276,25 @@
     <ClInclude Include="src\apps\systems\physics\CollisionSystem.h" />
     <ClInclude Include="src\apps\world\entity\avatar\PlayerEntity.h" />
     <ClInclude Include="src\apps\world\entity\common\ProjectileEntity.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\AvatarStatus.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\PlayerParams.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\abilities\ServiceModules.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\IPlayerState.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\states\StandingState.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\states\RunningState.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\states\HoveringState.h" />
+    <ClInclude Include="src\apps\world\entity\common\AnimeStepper.h" />
+    <ClInclude Include="src\apps\systems\physics\Probes.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\abilities\MovementAbilities.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\PlayerContext.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\states\LaunchRunState.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\states\BrakeRunState.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\states\LadderingState.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\states\LandingState.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\abilities\AnimationAbilities.h" />
+    <ClInclude Include="src\apps\systems\physics\ITerrainProbe.h" />
+    <ClInclude Include="src\apps\systems\physics\TileQueryService.h" />
+    <ClInclude Include="src\apps\rendering\bg\BGTileMapProvider.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

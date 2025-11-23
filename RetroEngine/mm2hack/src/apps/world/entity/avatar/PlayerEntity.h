@@ -11,27 +11,36 @@
 #include "apps/systems/physics/ICollider.h"
 #include "apps/world/entity/EntityBase.h"
 
+#include <array>
+#include <memory>
 #include <string>
+#include "abilities/ServiceModules.h"
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/systems/physics/CollisionLayer.h"
+#include "apps/systems/physics/ITerrainProbe.h"
+#include "apps/systems/physics/Probes.h"
 #include "apps/systems/physics/TileAttribute.h"
 #include "apps/systems/view/RenderContext.h"
+#include "apps/world/entity/common/AnimeStepper.h"
 #include "apps/world/entity/IEntity.h"
+#include "AvatarStatus.h"
+#include "IPlayerState.h"
+#include "PlayerParams.h"
 
 namespace mm2hack::apps::world::entity::avatar
 {
-    namespace physics = systems::physics;
-
     // User player character entity
-    class PlayerEntity final : public EntityBase, public physics::ICollider
+    class PlayerEntity final : public EntityBase, public systems::physics::ICollider
     {
-        using CollisionLayer = physics::CollisionLayer;
-        using TileAttribute  = physics::TileAttribute;
-        using LayerView      = systems::view::Layer;
-        using RenderContext  = systems::view::RenderContext;
-        using RectF          = foundation::math::RectF;
-        using Vec2           = foundation::math::Vec2;
-        //using IEntity        = world::entity::IEntity;
+        using AnimeStepper      = common::AnimeStepper;
+        using RectF             = foundation::math::RectF;
+        using Vec2              = foundation::math::Vec2;
+        using CollisionLayer    = systems::physics::CollisionLayer;
+        using ITerrainProbe     = systems::physics::ITerrainProbe;
+        using TileAttribute     = systems::physics::TileAttribute;
+        using Probes            = systems::physics::Probes;
+        using LayerView         = systems::view::Layer;
+        using RenderContext     = systems::view::RenderContext;
 
     public:
         PlayerEntity();
@@ -64,10 +73,44 @@ namespace mm2hack::apps::world::entity::avatar
         // Set collidable
         void SetCollidable(bool v) noexcept;
 
+        // ===== dependency injection & configuration =====
+        void SetInput(const InputSnapshot& in) { _input = in; }
+        void SetTuning(const PlayerTuning& t) { _tuning = t; }
+        void SetLadderService(abilities::ILadderService* s) { _ladderService = s; }
+
+        // ===== public parameters =====
+        bool onGround{ false };
+        AvatarDirection facingLR{ AvatarDirection::Right };
+        int  texture{ 0 };
+
     private:
         const std::wstring kClassName{ L"PlayerEntity" };
 
-        Vec2 _half{};               // Half-size of the bounding box
-        bool _collidable{ true };   // Whether collision is enabled
+        std::unique_ptr<IPlayerState>& FindState(AvatarStatus s)
+        {
+            switch (s)
+            {
+            case AvatarStatus::Running:   return _states[1];
+            case AvatarStatus::Hovering:  return _states[2];
+            case AvatarStatus::LaunchRun: return _states[3];
+            case AvatarStatus::BrakeRun:  return _states[4];
+            case AvatarStatus::Ladder:    return _states[5];
+            case AvatarStatus::Landing:   return _states[6];
+            case AvatarStatus::Standing:
+            default:                      return _states[0];
+            }
+        }
+
+        Vec2 _half{};                                                   // Half-size of the bounding box
+        bool _collidable{ true };                                       // Whether collision is enabled
+        AvatarStatus _status{ AvatarStatus::Standing };                 // Current avatar status
+        std::array<std::unique_ptr<IPlayerState>, 7> _states{};
+
+        InputSnapshot     _input{};
+        PlayerTuning      _tuning{};
+        AnimeStepper      _animeStepper{};
+        Probes            _probes{};
+        std::unique_ptr<ITerrainProbe> _terrainProbe{ nullptr };
+        abilities::ILadderService* _ladderService{ nullptr };
     };
 }

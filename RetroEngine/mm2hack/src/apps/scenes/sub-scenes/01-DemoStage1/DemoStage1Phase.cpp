@@ -21,20 +21,23 @@ namespace mm2hack::apps::scenes
         void MainPhase::Initialize()
         {
             auto& resource = owner.ResourceManagerObj();
-
-            auto scraper = std::make_shared<AddressScraper>(
-                resource.GetBGTileManager().ExtractMapBinary(resource.GetBGRoomBank().FilePath()));
+            auto& filepath = resource.GetBGRoomBank().FilePath();
+            auto scraper = std::make_shared<AddressScraper>(resource.GetBGTileManager().ExtractMapBinary(filepath));
             _rules = std::make_unique<ScraperScrollRuleProvider>(scraper);
-            _renderer = std::make_unique<MapRenderer2D>(
-                resource,
-                owner.GetMapName(),
-                owner.GetMapBinaryPath(),
-                kTilePx);
+            _renderer = std::make_unique<MapRenderer2D>(resource, owner.GetMapName(), owner.GetMapBinaryPath(), kTilePx);
 
             ScrollController::Params p;
             _scroll = std::make_unique<ScrollController>(*_rules, *_renderer, p);
             _scroll->SetPageIndex(0);
             _scroll->ObjectPos() = { 128.0, 120.0 };
+
+            auto* bgMgr = &resource.GetBGTileManager();
+            _mapProvider = std::make_unique<BGTileMapProvider>(bgMgr);
+            _terrainProbe = std::make_unique<TileQueryService>(*_mapProvider);
+
+            // TODO: Need to provide a vector member for entity. (or EntityManager?)
+            // _player->SetTerrainProbe(_terrainProbe.get());
+            // for (auto& e : _enemies) { e->SetTerrainProbe(_terrainProbe.get()); }
         }
 
         void MainPhase::Update()

@@ -1,14 +1,16 @@
 #include "pch.h"
 
-#include "WorldTileQuery.h"
+#include "BgTileQueryHelper.h"
 
 #include <cmath>
 #include "apps/resources/bg/MapPageCache.h"
-#include "ScrollController.h"
+#include "apps/systems/scrolling/atomic/ScrollController.h"
 
-namespace mm2hack::apps::systems::scrolling::atomic
+namespace mm2hack::apps::systems::physics
 {
-    uint8_t WorldTileQuery::TileAtPx(double worldPxX, double worldPxY, const Camera& cam) const
+    using scrolling::atomic::Camera;
+
+    uint8_t BgTileQueryHelper::TileAtPx(double worldPxX, double worldPxY, const Camera& cam) const
     {
         const int pageW = 16 * _ts;
         const int pageH = 15 * _ts;
@@ -19,7 +21,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
 
         // If local is not in [0,pageW], choose adjacent page.
         size_t page = _curr;
-        int     txOffset = 0, tyOffset = 0;
+        int txOffset = 0, tyOffset = 0;
 
         double x = localX, y = localY;
         if (x < 0) { if (auto p = _cache.Left(_curr)) page = *p; x += pageW; }
