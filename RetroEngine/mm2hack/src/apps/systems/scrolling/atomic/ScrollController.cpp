@@ -32,6 +32,8 @@ namespace mm2hack::apps::systems::scrolling::atomic
         // Free scroll
         if (input_delta.x != 0.0) { updateAxisX_(input_delta.x); }
         if (input_delta.y != 0.0) { updateAxisY_(input_delta.y); }
+
+        updateViewState_(); // Sync ViewState
     }
 
     void ScrollController::Render()
@@ -359,5 +361,13 @@ namespace mm2hack::apps::systems::scrolling::atomic
                 }
             }
         }
+    }
+
+    void ScrollController::updateViewState_()
+    {
+        _viewState.camX = _cam.x;
+        _viewState.camY = _cam.y;
+        _viewState.viewW = _params.view_w;
+        _viewState.viewH = _params.view_h;
     }
 }

@@ -6,10 +6,11 @@
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/resources/bg/AddressScraper.h"
 #include "apps/resources/bg/MapPageCache.h"
+#include "apps/runtime/GameContext.h"
 #include "apps/systems/scrolling/atomic/ScrollController.h"
-#include "core/assembly/StateProvider.h"
+#include "apps/systems/view/RenderContext.h"
 #include "DemoStage1.h"
-#include "input/Jpbtn.h"
+#include "utils/output_debug.h"
 
 namespace mm2hack::apps::scenes
 {
@@ -25,11 +26,9 @@ namespace mm2hack::apps::scenes
         //==============================================================================
         void MainPhase::Initialize()
         {
-            auto& resource = owner.ResourceManagerObj();
+            auto& resource = runtime::GameContext::GetInstance().GetResourceManager();
             auto& filepath = resource.GetBGRoomBank().FilePath();
-            auto scraper = std::make_shared<AddressScraper>(
-                resource.GetBGTileManager().ExtractMapBinary(filepath)
-            );
+            auto scraper = std::make_shared<AddressScraper>(resource.GetBGTileManager().ExtractMapBinary(filepath));
             auto pageSource = std::make_shared<MapPageCache>(scraper);
             _rules = std::make_unique<ScraperScrollRuleProvider>(pageSource);
             _renderer = std::make_unique<MapRenderer2D>(resource, owner.GetMapName(), owner.GetMapBinaryPath(), kTilePx);
@@ -44,31 +43,47 @@ namespace mm2hack::apps::scenes
             _terrainProbe = std::make_unique<TileQueryService>(*_mapProvider);
 
             // TODO: Need to provide a vector member for entity. (or EntityManager?)
-            // _player->SetTerrainProbe(_terrainProbe.get());
+            _player = std::make_unique<PlayerEntity>(owner.GetSpriteId());
+            _player->SetTerrainProbe(_terrainProbe.get());
+            _player->pos = { 128.0, 120.0 };
+            _player->texture = 1;
             // for (auto& e : _enemies) { e->SetTerrainProbe(_terrainProbe.get()); }
         }
 
         void MainPhase::Update()
         {
+            using namespace world::entity::avatar;
+
             if (!owner.Fader().InputEnabled()) return;
 
             // Simple object movement with arrow keys
             using namespace foundation::math;
             Vec2 delta{ 0, 0 };
 
-            auto& input = owner.Input();
-            if (input->IsPressed(JPBTN::UP))    delta.y -= 1;
-            if (input->IsPressed(JPBTN::DOWN))  delta.y += 1;
-            if (input->IsPressed(JPBTN::LEFT))  delta.x -= 1;
-            if (input->IsPressed(JPBTN::RIGHT)) delta.x += 1;
-
             _scroll->Update(delta);
             _page_index_debug = static_cast<int>(_scroll->PageIndex());
+
+            if (_player)
+            {
+                auto delta_time = runtime::GameContext::GetInstance().Time().DeltaSeconds();
+                _player->SetInput(owner.Input());
+                _player->Update(delta_time);
+            }
         }
 
         void MainPhase::RenderWorld()
         {
             _scroll->Render();
+
+            if (_player)
+            {
+                systems::view::RenderContext ctx{
+                    .view  = &_scroll->GetView(),
+                    .layer = systems::view::Layer::Actors,
+                };
+
+                _player->Render(ctx);
+            }
         }
 
         void MainPhase::RenderOverlay()

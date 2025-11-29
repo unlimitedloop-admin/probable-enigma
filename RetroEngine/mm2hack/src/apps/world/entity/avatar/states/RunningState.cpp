@@ -7,22 +7,24 @@
 #include "apps/world/entity/avatar/AvatarStatus.h"
 #include "apps/world/entity/avatar/PlayerContext.h"
 #include "apps/world/entity/avatar/PlayerParams.h"
+#include "core/assembly/StateProvider.h"
+#include "input/Jpbtn.h"
 
 namespace mm2hack::apps::world::entity::avatar::states
 {
     AvatarStatus RunningState::Id() const noexcept { return AvatarStatus::Running; }
 
-    AvatarStatus RunningState::Update(PlayerContext& cx, const InputSnapshot& in, const PlayerTuning& t, double /*dt*/)
+    AvatarStatus RunningState::Update(PlayerContext& cx, StateProvider* in, const PlayerTuning& t, double /*dt*/)
     {
         using namespace abilities;
 
-        if (in.left)  cx.facingLR = AvatarDirection::Left;
-        if (in.right) cx.facingLR = AvatarDirection::Right;
+        if (in->IsPressed(JPBTN::LEFT))  cx.facingLR = AvatarDirection::Left;
+        if (in->IsPressed(JPBTN::RIGHT)) cx.facingLR = AvatarDirection::Right;
         FacingDirection(cx, cx.facingLR);   // Set facing direction.
         GroundMove(cx.vel, Id(), in, t);    // X-axis ground movement.
 
         // Speed down to brake run when no input.
-        if (!in.left && !in.right)
+        if (!in->IsPressed(JPBTN::LEFT) && !in->IsPressed(JPBTN::RIGHT))
         {
             cx.animeStepper.reset();
             cx.texture = static_cast<int>(STile::RunningIntro);

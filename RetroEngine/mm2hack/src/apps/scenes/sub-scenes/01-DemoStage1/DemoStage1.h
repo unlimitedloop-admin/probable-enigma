@@ -16,6 +16,7 @@
 #include <string>
 #include <string_view>
 #include "apps/rendering/bg/BGTileManager.h"
+#include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/scenes/PhaseFadeController.h"
 #include "apps/scenes/SceneID.h"
 #include "apps/systems/physics/ITerrainProbe.h"
@@ -34,7 +35,6 @@ namespace mm2hack::apps
         {
             class Parameters;
         }
-        class ResourceManager;
     }
 
     namespace runtime
@@ -80,9 +80,9 @@ namespace mm2hack::apps::scenes
     // Demo stage scene (ID: 01)
     class DemoStage1 : public IBaseScene
     {
-        using ResourceManager   = apps::resources::ResourceManager;
         using StateProvider     = core::assembly::StateProvider;
         using BGTileManagerId   = rendering::bg::BGTileManager::Id;
+        using SpriteManagerId   = rendering::sprite::SpriteManager::Id;
         using Parameters        = resources::parameters::Parameters;
         using ITerrainProbe     = systems::physics::ITerrainProbe;
         using ITileMapProvider  = systems::physics::ITileMapProvider;
@@ -108,6 +108,8 @@ namespace mm2hack::apps::scenes
         std::wstring GetMapName() const { return kMapName; }
         // Get the map binary path used in this scene
         std::wstring GetMapBinaryPath() const { return std::wstring(kStageMapBinary); }
+        // Get the sprite Id used in this scene
+        SpriteManagerId GetSpriteId() const noexcept { return _spriteId; }
         // Change child phase of the this scene
         void QueuePhase(std::unique_ptr<IDemoStage1Phase> next, PhaseFadePlan nextPlan);
 
@@ -117,9 +119,6 @@ namespace mm2hack::apps::scenes
 
         // Access the fade controller for scene transitions
         PhaseFadeController& Fader() noexcept { return _fader; }
-
-        auto& ResourceManagerObj() noexcept { return *_resource; }
-        const auto& ResourceManagerPtr() const noexcept { return *_resource; }
 
         auto& Input() noexcept { return _input; }
         const auto& Input() const noexcept { return _input; }
@@ -152,8 +151,8 @@ namespace mm2hack::apps::scenes
 
         const int fadeDurationFrames{ 16 };
 
-        ResourceManager* _resource{ nullptr };                          // Reference to the resource manager
         StateProvider* _input{ nullptr };                               // Reference to the state provider
         BGTileManagerId _bgTileId{ static_cast<BGTileManagerId>(-1) };  // Background tile set Id
+        SpriteManagerId _spriteId{ static_cast<SpriteManagerId>(-1) };  // Sprite set Id
     };
 }

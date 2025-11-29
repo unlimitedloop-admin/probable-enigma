@@ -2,9 +2,12 @@
 
 #include "PlayerEntity.h"
 
+#include "apps/rendering/sprite/SpriteManager.h"
+#include "apps/runtime/GameContext.h"
 #include "apps/systems/physics/CollisionLayer.h"
 #include "apps/systems/physics/TileAttribute.h"
 #include "apps/systems/view/RenderContext.h"
+#include "apps/systems/view/ViewState.h"
 #include "apps/world/entity/EntityBase.h"
 #include "apps/world/entity/IEntity.h"
 #include "IPlayerState.h"
@@ -16,12 +19,14 @@
 #include "states/LaunchRunState.h"
 #include "states/RunningState.h"
 #include "states/StandingState.h"
+#include "utils/output_debug.h"
 
 namespace mm2hack::apps::world::entity::avatar
 {
     using systems::physics::CollisionLayer;
 
-    PlayerEntity::PlayerEntity()
+    PlayerEntity::PlayerEntity(SpriteManagerId id)
+        : _id(id)
     {
         _half = { 16.0, 16.0 }; // Ex. 32x32
         _states[0] = std::make_unique<states::StandingState>();
@@ -39,7 +44,7 @@ namespace mm2hack::apps::world::entity::avatar
         if (!IsAlive()) return;
 
         PlayerContext cx{
-            pos, vel, onGround, facingLR, texture, _animeStepper, _probes, _terrainProbe.get(), _ladderService
+            pos, vel, onGround, facingLR, texture, _animeStepper, _probes, _terrainProbe, _ladderService
         };
         auto& st = FindState(_status);
 
@@ -56,9 +61,21 @@ namespace mm2hack::apps::world::entity::avatar
     // IRenderable
     PlayerEntity::LayerView PlayerEntity::DrawLayer() const noexcept { return LayerView::Actors; }
 
-    void PlayerEntity::Render(RenderContext& /*ctx*/)
+    void PlayerEntity::Render(RenderContext& ctx)
     {
+        if (!IsAlive()) return;
+        if (!ctx.view) return;
+
+        const auto& view = *ctx.view;
+        const double worldX = pos.x;
+        const double worldY = pos.y;
+
+        const double screenX = worldX - view.camX - _half.x;
+        const double screenY = worldY - view.camY - _half.y;
+
         // TODO: draw of DxLib
+        auto& res = runtime::GameContext::GetInstance().GetResourceManager();
+        res.GetSpriteManager().UseById(_id, texture, static_cast<int>(screenX), static_cast<int>(screenY));
     }
 
     // IEntity

@@ -12,15 +12,20 @@
 #include "apps/world/entity/avatar/AvatarStatus.h"
 #include "apps/world/entity/avatar/PlayerContext.h"
 #include "apps/world/entity/avatar/PlayerParams.h"
+#include "core/assembly/StateProvider.h"
+#include "input/Jpbtn.h"
 
 namespace mm2hack::apps::world::entity::avatar::abilities
 {
     using foundation::math::Vec2;
 
-    inline void GroundMove(Vec2& vel, AvatarStatus status, const InputSnapshot& in, const PlayerTuning& t)
+    inline void GroundMove(Vec2& vel, AvatarStatus status, StateProvider* in, const PlayerTuning& t)
     {
-        const bool hasLR = (in.left ^ in.right);
-        const int  xMoveSign = in.left ? -1 : in.right ? +1 : 0;
+        const bool leftPressed  = in->IsPressed(JPBTN::LEFT);
+        const bool rightPressed = in->IsPressed(JPBTN::RIGHT);
+        const bool hasLR        = (leftPressed ^ rightPressed);
+
+        const int  xMoveSign = leftPressed ? -1 : rightPressed ? +1 : 0;
         double speedX = 0.0;
 
         if (hasLR)

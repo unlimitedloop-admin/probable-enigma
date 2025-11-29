@@ -63,9 +63,9 @@ namespace mm2hack::apps::systems::scrolling::atomic
     // The main video screen policy and management of scrolling in 2D maps
     class ScrollController
     {
-        using conf = config::SystemConfig;
         using ViewState = apps::systems::view::ViewState;
-        using Vec2 = foundation::math::Vec2;
+        using conf      = config::SystemConfig;
+        using Vec2      = foundation::math::Vec2;
 
     public:
         struct Params
@@ -104,21 +104,14 @@ namespace mm2hack::apps::systems::scrolling::atomic
         const PageScrollAnimator& Animator() const noexcept { return _anim; }
 
         // Camera -> ViewState representation
-        ViewState GetView() const noexcept
-        {
-            ViewState v{};
-            v.camX = _cam.x;
-            v.camY = _cam.y;
-            v.viewW = _params.view_w;
-            v.viewH = _params.view_h;
-            return v;
-        }
+        const ViewState& GetView() const noexcept { return _viewState; }
 
     private:
         void updateAxisX_(double remain);   // Sub-update for each axis
         void updateAxisY_(double remain);   // Sub-update for each axis
 
         void drawNeighbors_();              // Draw neighboring pages
+        void updateViewState_();            // Update ViewState representation
 
     private:
         const std::wstring kClassName = L"ScrollController";
@@ -135,5 +128,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
 
         const int _tileX{ conf::kTileCountX };      // Tile count X
         const int _tileY{ conf::kTileCountY };      // Tile count Y
+
+        ViewState _viewState{};                     // View state representation
     };
 }

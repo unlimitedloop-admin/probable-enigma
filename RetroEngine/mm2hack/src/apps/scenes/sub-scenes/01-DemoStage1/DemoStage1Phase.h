@@ -20,6 +20,7 @@
 #include "apps/systems/scrolling/atomic/MapRenderer2D.h"
 #include "apps/systems/scrolling/atomic/ScraperScrollRuleProvider.h"
 #include "apps/systems/scrolling/atomic/ScrollController.h"
+#include "apps/world/entity/avatar/PlayerEntity.h"
 #include "config/SystemConfig.h"
 
 namespace mm2hack::apps::scenes
@@ -39,8 +40,12 @@ namespace mm2hack::apps::scenes
             using ITileMapProvider          = systems::physics::ITileMapProvider;
             using TileQueryService          = systems::physics::TileQueryService;
 
+            using PlayerEntity              = world::entity::avatar::PlayerEntity;
+
         public:
             explicit MainPhase(DemoStage1& owner) : owner(owner) {}
+            ~MainPhase() override = default;
+
             void Initialize() override;
             void Update() override;
             void RenderWorld() override;
@@ -59,6 +64,8 @@ namespace mm2hack::apps::scenes
             std::unique_ptr<MapRenderer2D> _renderer;               // Map renderer
             std::unique_ptr<ScraperScrollRuleProvider> _rules;      // Scroll rule provider
             std::unique_ptr<ScrollController> _scroll;              // Scroll controller
+
+            std::unique_ptr<PlayerEntity> _player;                  // Player entity
 
             int _page_index_debug{ 0 };
         };

@@ -56,7 +56,7 @@ namespace mm2hack::apps::world::entity::avatar::abilities
     inline void StepRunningAnim(PlayerContext& cx, const PlayerTuning& t)
     {
         // Step the running animation (A, C, B, C).
-        cx.animeStepper.step(6, 4); // 6 ticks per frame, 4 frames.
+        cx.animeStepper.step(7, 4); // 7 ticks per frame, 4 frames.
         static const std::array<STile, 4> runningTextures = { STile::RunningA, STile::RunningC, STile::RunningB, STile::RunningC };
         cx.texture = static_cast<int>(runningTextures[cx.animeStepper.cycle]);
     }

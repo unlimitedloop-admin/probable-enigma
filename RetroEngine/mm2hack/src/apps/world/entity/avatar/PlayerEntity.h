@@ -16,6 +16,7 @@
 #include <string>
 #include "abilities/ServiceModules.h"
 #include "apps/foundation/math/CoordinateTypes.h"
+#include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/systems/physics/CollisionLayer.h"
 #include "apps/systems/physics/ITerrainProbe.h"
 #include "apps/systems/physics/Probes.h"
@@ -26,6 +27,11 @@
 #include "AvatarStatus.h"
 #include "IPlayerState.h"
 #include "PlayerParams.h"
+
+namespace mm2hack::core::assembly
+{
+    class StateProvider;
+}
 
 namespace mm2hack::apps::world::entity::avatar
 {
@@ -41,16 +47,19 @@ namespace mm2hack::apps::world::entity::avatar
         using Probes            = systems::physics::Probes;
         using LayerView         = systems::view::Layer;
         using RenderContext     = systems::view::RenderContext;
+        using StateProvider     = core::assembly::StateProvider;
+
+        using SpriteManagerId   = rendering::sprite::SpriteManager::Id;
 
     public:
-        PlayerEntity();
+        PlayerEntity(SpriteManagerId id);
 
         // Main action updates (IUpdatable)
         void Update(double /*dt*/) override;
         // Drawing layer (IRenderable)
         LayerView DrawLayer() const noexcept override;
         // Rendering (IRenderable)
-        void Render(RenderContext& /*ctx*/) override;
+        void Render(RenderContext& ctx) override;
         // Is on alive? (IEntity)
         bool IsAlive() const noexcept override;
         // Kill (IEntity)
@@ -74,8 +83,9 @@ namespace mm2hack::apps::world::entity::avatar
         void SetCollidable(bool v) noexcept;
 
         // ===== dependency injection & configuration =====
-        void SetInput(const InputSnapshot& in) { _input = in; }
+        void SetInput(StateProvider* in) { _input = in; }
         void SetTuning(const PlayerTuning& t) { _tuning = t; }
+        void SetTerrainProbe(ITerrainProbe* p) noexcept { _terrainProbe = p; }
         void SetLadderService(abilities::ILadderService* s) { _ladderService = s; }
 
         // ===== public parameters =====
@@ -101,16 +111,18 @@ namespace mm2hack::apps::world::entity::avatar
             }
         }
 
+        SpriteManagerId _id{};                                          // Sprite Id
+
         Vec2 _half{};                                                   // Half-size of the bounding box
         bool _collidable{ true };                                       // Whether collision is enabled
         AvatarStatus _status{ AvatarStatus::Standing };                 // Current avatar status
         std::array<std::unique_ptr<IPlayerState>, 7> _states{};
 
-        InputSnapshot                  _input{};                        // Input snapshot
+        StateProvider*                 _input{};                        // Player input snapshot (This is separate from core::assembly::InputSnapshot)
         PlayerTuning                   _tuning{};                       // Player tuning parameters
         AnimeStepper                   _animeStepper{};                 // Animation stepper
         Probes                         _probes{};                       // Collision probes
-        std::unique_ptr<ITerrainProbe> _terrainProbe{ nullptr };        // Terrain probe
+        const ITerrainProbe*           _terrainProbe{ nullptr };        // Terrain probe
         abilities::ILadderService*     _ladderService{ nullptr };       // Ladder action service
     };
 }

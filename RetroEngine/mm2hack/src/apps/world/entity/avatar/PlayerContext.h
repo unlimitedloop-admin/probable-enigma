@@ -35,8 +35,8 @@ namespace mm2hack::apps::world::entity::avatar
 
         AnimeStepper& animeStepper;             // Animation counter (local)
         Probes& probes;                         // All probes
-        ITerrainProbe* terrain;                 // Look up interface for terrain probing
-
+        
+        const ITerrainProbe* terrain;           // Look up interface for terrain probing
         ILadderService* ladder{ nullptr };      // Ladder service module
     };
 }

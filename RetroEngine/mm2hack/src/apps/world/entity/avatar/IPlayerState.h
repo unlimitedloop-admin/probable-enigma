@@ -16,8 +16,15 @@ namespace mm2hack::apps::world::entity::avatar
     struct PlayerContext;
 }
 
+namespace mm2hack::core::assembly
+{
+    class StateProvider;
+}
+
 namespace mm2hack::apps::world::entity::avatar
 {
+    using core::assembly::StateProvider;
+
     // Interface for take on player state behavior
     struct IPlayerState
     {
@@ -26,6 +33,6 @@ namespace mm2hack::apps::world::entity::avatar
         virtual void OnEnter(PlayerContext&) {}
         virtual void OnExit(PlayerContext&) {}
         // Update and return the **next state ID** (same ID if continuing)
-        virtual AvatarStatus Update(PlayerContext&, const InputSnapshot&, const PlayerTuning&, double dt) = 0;
+        virtual AvatarStatus Update(PlayerContext&, StateProvider*, const PlayerTuning&, double dt) = 0;
     };
 }

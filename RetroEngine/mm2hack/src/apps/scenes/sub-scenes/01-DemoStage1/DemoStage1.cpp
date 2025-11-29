@@ -5,6 +5,7 @@
 #include <istream>
 #include <ostream>
 #include "apps/rendering/bg/BGTileManager.h"
+#include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/resources/parameters/Parameters.h"
 #include "apps/runtime/GameContext.h"
 #include "apps/scenes/PhaseFadeController.h"
@@ -50,11 +51,10 @@ namespace mm2hack::apps::scenes
             0,  // preFadeOutHold
             12, // fadeOutFrames
             20, // postBlackHold
-            FadeLayerMask::BG | FadeLayerMask::Font // layers
+            FadeLayerMask::All // layers
         );
         _fader.BeginPhase(first, resource);
 
-        _resource = &resource;
         _input = &GameContext::GetInstance().Input();
 
         _phase->Initialize();
@@ -89,23 +89,33 @@ namespace mm2hack::apps::scenes
         {
             _roomState.pageIndex = 0; // Default to first page if not found.
         }
-        bgTileManager.LoadMapBinary(bgRoomBank.FilePath(), bgRoomBank.PayloadOffset(static_cast<size_t>(_roomState.pageIndex)));
+        //bgTileManager.LoadMapBinary(bgRoomBank.FilePath(), bgRoomBank.PayloadOffset(static_cast<size_t>(_roomState.pageIndex)));
 
         const int bvmax = bgTileManager.VariantCountById(_bgTileId);
         bgTileManager.SetGlobalVariant(bvmax);
         resource.FadeInBG(fadeDurationFrames);
+
+        // Load the graph from the resource manager.
+        auto& spriteLoader = resource.GetSpriteManager();
+        _spriteId = spriteLoader.Load(L"Player", MM2H_GRAPHICS(Player), MM2H_GRAPHPROPS(Player));
+        if (_spriteId == rendering::sprite::SpriteManager::Id(-1))
+        {
+            return false;
+        }
+        const int sprvmax = spriteLoader.VariantCountById(_spriteId);
+        spriteLoader.SetGlobalVariant(sprvmax);
+        resource.FadeInSprite(fadeDurationFrames);
 
         return true;
     }
 
     void DemoStage1::Update()
     {
-        using namespace apps::runtime;
-        auto& res = GameContext::GetInstance().GetResourceManager();
+        auto& resource = runtime::GameContext::GetInstance().GetResourceManager();
 
         // Proceed with fade process.
-        _fader.Update(res);
-        res.UpdateEffects();
+        _fader.Update(resource);
+        resource.UpdateEffects();
 
         // Update with current phase logic, if not _phase then next scene.
         if (_phase)
@@ -133,7 +143,7 @@ namespace mm2hack::apps::scenes
             {
                 _phase = std::move(_pendingPhase);
                 _phaseId = _phase->Id();
-                _fader.BeginPhase(_pendingPlan, res);
+                _fader.BeginPhase(_pendingPlan, resource);
                 _pendingPlan = {};
                 utils::debug_log(kClassName + L" switched to new phase.");
             }
@@ -174,9 +184,9 @@ namespace mm2hack::apps::scenes
 
     void DemoStage1::finalize_()
     {
-        using namespace apps::runtime;
+        using namespace runtime;
         GameContext::GetInstance().GetResourceManager().GetFontTileManager().ShutDown();
-        _phase.reset();
+        if (_phase) _phase.reset();
 
         utils::debug_log(kClassName + L" finalized.");
     }

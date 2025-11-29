@@ -12,17 +12,6 @@
 
 namespace mm2hack::apps::world::entity::avatar
 {
-    // Input snapshot structure
-    struct InputSnapshot
-    {
-        bool left { false };
-        bool right{ false };
-        bool up   { false };
-        bool down { false };
-        bool jump { false };
-        bool fire { false };
-    };
-
     struct PlayerTuning
     {
         double gravity          { 0x00.40p0 };  // Falling Newton velocity
