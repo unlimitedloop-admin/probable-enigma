@@ -17,22 +17,44 @@ namespace mm2hack::apps::world::entity::avatar::states
     AvatarStatus StandingState::Update(PlayerContext& cx, StateProvider* in, const PlayerTuning& t, double /*dt*/)
     {
         using namespace abilities;
+        // GroundMove; AdjustVerticalSpeedForGravity; IsGroundLike;
+        GroundPipeline(cx, in, t);
 
-        if (in->IsPressed(JPBTN::LEFT))  cx.facingLR = AvatarDirection::Left;
-        if (in->IsPressed(JPBTN::RIGHT)) cx.facingLR = AvatarDirection::Right;
-        FacingDirection(cx, cx.facingLR);   // Set facing direction.
-        GroundMove(cx.vel, Id(), in, t);    // X-axis ground movement.
+        // Call after cx.texture is set; adds facing offset (0 right, 40 left for AvatarAnimation enums).
+        auto applyFacing = [&](void) noexcept
+            {
+                if (in->IsPressed(JPBTN::LEFT))  cx.facingLR = AvatarDirection::Left;
+                if (in->IsPressed(JPBTN::RIGHT)) cx.facingLR = AvatarDirection::Right;
+                FacingDirection(cx, cx.facingLR);   // Set facing direction at 'cx.texture'.
+            };
 
         // Begin running if left/right key is pressed.
         if (in->IsPressed(JPBTN::LEFT) || in->IsPressed(JPBTN::RIGHT))
         {
             cx.animeStepper.reset();
             cx.texture = static_cast<int>(STile::RunningIntro);
+            applyFacing();
             return AvatarStatus::LaunchRun;
         }
 
-        cx.animeStepper.reset();
-        cx.texture = static_cast<int>(STile::StandingA);
+        if (!cx.onGround)
+        {
+            cx.animeStepper.reset();
+            cx.texture = static_cast<int>(STile::Airpause);
+            applyFacing();
+            return AvatarStatus::Hovering;
+        }
+
+        if (in->JustPressed(JPBTN::A))
+        {
+            DoJump(cx, t);
+            cx.texture = static_cast<int>(STile::Airpause);
+            applyFacing();
+            return AvatarStatus::Hovering;
+        }
+
+        cx.texture = WaitingAnim(cx, t);
+        applyFacing();
         return AvatarStatus::Standing;
     }
 }

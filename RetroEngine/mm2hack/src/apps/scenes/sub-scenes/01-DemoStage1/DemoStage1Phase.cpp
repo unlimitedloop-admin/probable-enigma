@@ -36,7 +36,7 @@ namespace mm2hack::apps::scenes
             ScrollController::Params p;
             _scroll = std::make_unique<ScrollController>(*_rules, *_renderer, p);
             _scroll->SetPageIndex(0);
-            _scroll->ObjectPos() = { 128.0, 120.0 };
+            _scroll->ObjectPos() = _initialize_pos;
 
             auto* bgMgr = &resource.GetBGTileManager();
             _mapProvider = std::make_unique<BGTileMapProvider>(bgMgr, pageSource);
@@ -45,7 +45,7 @@ namespace mm2hack::apps::scenes
             // TODO: Need to provide a vector member for entity. (or EntityManager?)
             _player = std::make_unique<PlayerEntity>(owner.GetSpriteId());
             _player->SetTerrainProbe(_terrainProbe.get());
-            _player->pos = { 128.0, 120.0 };
+            _player->pos = _initialize_pos;
             _player->texture = 1;
             // for (auto& e : _enemies) { e->SetTerrainProbe(_terrainProbe.get()); }
         }

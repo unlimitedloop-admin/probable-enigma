@@ -8,7 +8,7 @@
 //==============================================================================
 #pragma once
 
-#include "apps/world/entity/avatar/IPlayerState.h"
+#include "apps/world/entity/avatar/states/GroundBaseState.h"
 
 #include "apps/world/entity/avatar/AvatarStatus.h"
 
@@ -28,7 +28,7 @@ namespace mm2hack::apps::world::entity::avatar::states
     using core::assembly::StateProvider;
 
     // Player state: Running (on ground, moving)
-    struct RunningState final : IPlayerState
+    struct RunningState final : GroundBaseState
     {
         // Get state ID
         AvatarStatus Id() const noexcept override;

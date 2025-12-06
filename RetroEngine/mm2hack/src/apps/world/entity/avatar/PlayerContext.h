@@ -19,6 +19,7 @@ namespace mm2hack::apps::world::entity::avatar
 {
     using abilities::ILadderService;
     using common::AnimeStepper;
+    using foundation::math::RectF;
     using foundation::math::Vec2;
     using systems::physics::Probes;
     using systems::physics::ITerrainProbe;
@@ -30,11 +31,15 @@ namespace mm2hack::apps::world::entity::avatar
         Vec2& pos;                              // x/y position
         Vec2& vel;                              // x/y velocity
         bool& onGround;                         // Is the avatar on the ground?
+        bool justLanded{ false };               // Did the avatar just land this frame?
+        const bool prevOnGround{ false };       // Was the avatar on the ground previous frame?
         AvatarDirection& facingLR;              // avatar facing direction (-1: left, +1: right)
         int& texture;                           // tile index for rendering
 
         AnimeStepper& animeStepper;             // Animation counter (local)
         Probes& probes;                         // All probes
+        Probes& prelimProbes;                   // Preliminary probes before movement
+        RectF bounds;                           // Get bounding box for convenience
         
         const ITerrainProbe* terrain;           // Look up interface for terrain probing
         ILadderService* ladder{ nullptr };      // Ladder service module

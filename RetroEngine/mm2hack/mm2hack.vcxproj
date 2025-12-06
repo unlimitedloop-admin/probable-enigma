@@ -225,6 +225,7 @@
     <ClCompile Include="src\apps\vfx\stareffects\Star.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\PlayerEntity.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\states\BrakeRunState.cpp" />
+    <ClCompile Include="src\apps\world\entity\avatar\states\GroundBaseState.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\states\HoveringState.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\states\LadderingState.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\states\LandingState.cpp" />
@@ -313,6 +314,7 @@
     <ClInclude Include="src\apps\world\entity\avatar\PlayerContext.h" />
     <ClInclude Include="src\apps\world\entity\avatar\PlayerParams.h" />
     <ClInclude Include="src\apps\world\entity\avatar\states\BrakeRunState.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\states\GroundBaseState.h" />
     <ClInclude Include="src\apps\world\entity\avatar\states\HoveringState.h" />
     <ClInclude Include="src\apps\world\entity\avatar\states\LadderingState.h" />
     <ClInclude Include="src\apps\world\entity\avatar\states\LandingState.h" />

@@ -12,6 +12,7 @@
 #include "apps/world/entity/IEntity.h"
 #include "IPlayerState.h"
 #include "PlayerContext.h"
+#include "PlayerParams.h"
 #include "states/BrakeRunState.h"
 #include "states/HoveringState.h"
 #include "states/LadderingState.h"
@@ -43,8 +44,14 @@ namespace mm2hack::apps::world::entity::avatar
     {
         if (!IsAlive()) return;
 
+        refreshProbes_();
+
+        // TODO: Need to hold this context somewhere else?
         PlayerContext cx{
-            pos, vel, onGround, facingLR, texture, _animeStepper, _probes, _terrainProbe, _ladderService
+            pos, vel,
+            /* onGround */ onGround, /* justLanded */ false, /* prevOnGround */ onGround,
+            facingLR, texture, _animeStepper,
+            /* probes */ _probes, /* prelimProbes */ _probes, this->Bounds(), _terrainProbe, _ladderService
         };
         auto& st = FindState(_status);
 
@@ -56,6 +63,9 @@ namespace mm2hack::apps::world::entity::avatar
             _status = next;
             FindState(_status)->OnEnter(cx);
         }
+
+        // Apply updated context values
+        pos = cx.pos + cx.vel;
     }
 
     // IRenderable
@@ -113,4 +123,53 @@ namespace mm2hack::apps::world::entity::avatar
     const IEntity& PlayerEntity::OwnerEntity() const noexcept { return *this; }
 
     void PlayerEntity::SetCollidable(bool v) noexcept { _collidable = v; }
+
+    void PlayerEntity::refreshProbes_() noexcept
+    {
+        // Update probes based on current position and bounding box.
+        double currentPosX;
+        double currentPosY;
+        PlayerProbes& p = _tuning.probeOffsets;
+        
+        // Front collision probe (ahead of the player)
+        {
+            currentPosX = pos.x + _half.x + (static_cast<int>(facingLR) * p.frontLineOffsetX);
+            currentPosY = pos.y + _half.y;
+            _probes.frontLine.topPoint =    { currentPosX, currentPosY + p.verticalTopOffsetY };
+            _probes.frontLine.middlePoint = { currentPosX, currentPosY + p.verticalMidOffsetY };
+            _probes.frontLine.bottomPoint = { currentPosX, currentPosY + p.verticalBtmOffsetY };
+        }
+        // Rear collision probe (behind the player)
+        {
+            currentPosX = pos.x + _half.x + (static_cast<int>(facingLR) * p.rearLineOffsetX);
+            currentPosY = pos.y + _half.y;
+            _probes.rearLine.topPoint =    { currentPosX, currentPosY + p.verticalTopOffsetY };
+            _probes.rearLine.middlePoint = { currentPosX, currentPosY + p.verticalMidOffsetY };
+            _probes.rearLine.bottomPoint = { currentPosX, currentPosY + p.verticalBtmOffsetY };
+        }
+        // Check on ground probe (below the player)
+        {
+            currentPosX = pos.x + _half.x;
+            currentPosY = pos.y + _half.y + p.groundLineOffsetY;
+            _probes.bottomLine.frontPoint =  { currentPosX + p.horizonFrontOffsetX,  currentPosY };
+            _probes.bottomLine.middlePoint = { currentPosX + p.horizonMidOffsetX,    currentPosY };
+            _probes.bottomLine.behindPoint = { currentPosX + p.horizonBehindOffsetX, currentPosY };
+        }
+        // Overhead probe (above the player)
+        {
+            currentPosX = pos.x + _half.x;
+            currentPosY = pos.y + _half.y + p.overheadLineOffsetY;
+            _probes.topLine.frontPoint =  { currentPosX + p.horizonFrontOffsetX,  currentPosY };
+            _probes.topLine.middlePoint = { currentPosX + p.horizonMidOffsetX,    currentPosY };
+            _probes.topLine.behindPoint = { currentPosX + p.horizonBehindOffsetX, currentPosY };
+        }
+        // Check behind BG tile probe
+        {
+            currentPosX = pos.x + _half.x + (static_cast<int>(facingLR) * 1);
+            currentPosY = pos.y + _half.y;
+            _probes.behindGround.topPoint    = { currentPosX, currentPosY + p.verticalTopOffsetY };
+            _probes.behindGround.middlePoint = { currentPosX, currentPosY + p.verticalMidOffsetY };
+            _probes.behindGround.bottomPoint = { currentPosX, currentPosY + p.verticalBtmOffsetY };
+        }
+    }
 }

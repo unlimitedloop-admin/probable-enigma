@@ -12,6 +12,7 @@
 
 #include <memory>
 #include <string>
+#include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/rendering/bg/BGTileMapProvider.h"
 #include "apps/resources/bg/AddressScraper.h"
 #include "apps/systems/physics/ITerrainProbe.h"
@@ -41,6 +42,7 @@ namespace mm2hack::apps::scenes
             using TileQueryService          = systems::physics::TileQueryService;
 
             using PlayerEntity              = world::entity::avatar::PlayerEntity;
+            using Vec2                      = foundation::math::Vec2;
 
         public:
             explicit MainPhase(DemoStage1& owner) : owner(owner) {}
@@ -68,6 +70,8 @@ namespace mm2hack::apps::scenes
             std::unique_ptr<PlayerEntity> _player;                  // Player entity
 
             int _page_index_debug{ 0 };
+
+            const Vec2 _initialize_pos{ 128.0, 120.0 };
         };
     }
 }

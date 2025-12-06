@@ -94,6 +94,9 @@ namespace mm2hack::apps::world::entity::avatar
         int  texture{ 0 };
 
     private:
+        void refreshProbes_() noexcept;
+
+    private:
         const std::wstring kClassName{ L"PlayerEntity" };
 
         std::unique_ptr<IPlayerState>& FindState(AvatarStatus s)

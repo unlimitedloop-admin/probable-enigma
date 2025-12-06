@@ -9,42 +9,43 @@
 #pragma once
 
 #include <cstdint>
+#include "apps/foundation/math/CoordinateTypes.h"
 
 namespace mm2hack::apps::systems::physics
 {
     struct BehindGroundProbe
     {
-        std::uint8_t topPoint{ 0 };
-        std::uint8_t middlePoint{ 0 };
-        std::uint8_t bottomPoint{ 0 };
+        foundation::math::Vec2 topPoint{ 0.0, 0.0 };
+        foundation::math::Vec2 middlePoint{ 0.0, 0.0 };
+        foundation::math::Vec2 bottomPoint{ 0.0, 0.0 };
     };
 
     struct FrontLineProbe
     {
-        std::uint8_t topPoint{ 0 };
-        std::uint8_t middlePoint{ 0 };
-        std::uint8_t bottomPoint{ 0 };
+        foundation::math::Vec2 topPoint{ 0.0, 0.0 };
+        foundation::math::Vec2 middlePoint{ 0.0, 0.0 };
+        foundation::math::Vec2 bottomPoint{ 0.0, 0.0 };
     };
 
     struct RearLineProbe
     {
-        std::uint8_t topPoint{ 0 };
-        std::uint8_t middlePoint{ 0 };
-        std::uint8_t bottomPoint{ 0 };
+        foundation::math::Vec2 topPoint{ 0.0, 0.0 };
+        foundation::math::Vec2 middlePoint{ 0.0, 0.0 };
+        foundation::math::Vec2 bottomPoint{ 0.0, 0.0 };
     };
 
     struct TopLineProbe
     {
-        std::uint8_t leftPoint{ 0 };
-        std::uint8_t middlePoint{ 0 };
-        std::uint8_t rightPoint{ 0 };
+        foundation::math::Vec2 frontPoint{ 0.0, 0.0 };
+        foundation::math::Vec2 middlePoint{ 0.0, 0.0 };
+        foundation::math::Vec2 behindPoint{ 0.0, 0.0 };
     };
 
     struct BottomLineProbe
     {
-        std::uint8_t leftPoint{ 0 };
-        std::uint8_t middlePoint{ 0 };
-        std::uint8_t rightPoint{ 0 };
+        foundation::math::Vec2 frontPoint{ 0.0, 0.0 };
+        foundation::math::Vec2 middlePoint{ 0.0, 0.0 };
+        foundation::math::Vec2 behindPoint{ 0.0, 0.0 };
     };
 
     // The probes container for character physics

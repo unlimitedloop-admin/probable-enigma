@@ -25,7 +25,7 @@ namespace mm2hack::core::assembly
     public:
         explicit JoystickInputProviderAdapter(input::JoystickManager& jm) noexcept : _jm(jm) {/* Undefined */}
 
-        // Called at the start of each tick. Backend polling -> logical state update
+        // Called at the start of each tick. Backend polling -> logical state update in KeyFrameState
         void BeginTick(std::uint64_t tick) noexcept override;
         // Called at the end of each tick. Finalize state for this tick
         void EndTick() noexcept override {}

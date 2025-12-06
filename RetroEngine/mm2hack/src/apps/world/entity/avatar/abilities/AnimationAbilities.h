@@ -55,9 +55,11 @@ namespace mm2hack::apps::world::entity::avatar::abilities
     // Steps the running animation
     inline void StepRunningAnim(PlayerContext& cx, const PlayerTuning& t)
     {
-        // Step the running animation (A, C, B, C).
-        cx.animeStepper.step(7, 4); // 7 ticks per frame, 4 frames.
-        static const std::array<STile, 4> runningTextures = { STile::RunningA, STile::RunningC, STile::RunningB, STile::RunningC };
+        // Step the running animation (A, C, B, C ... and loop).
+        static const std::array<STile, 4> runningTextures = {
+            STile::RunningA, STile::RunningC, STile::RunningB, STile::RunningC
+        };
+        cx.animeStepper.step(7, static_cast<int>(runningTextures.size())); // 7 ticks per frame, 4 frames.
         cx.texture = static_cast<int>(runningTextures[cx.animeStepper.cycle]);
     }
 
@@ -73,6 +75,35 @@ namespace mm2hack::apps::world::entity::avatar::abilities
         }
         // After that, switch to StandingA animation.
         cx.texture = static_cast<int>(STile::StandingA);
+        return true;
+    }
+
+    // Returns true if the brake is fully engaged
+    inline bool LandingAnim(PlayerContext& cx, const PlayerTuning& t)
+    {
+        // Step the landing animation.
+        cx.animeStepper.step(2, 2); // 2 ticks per frame, 2 frames.
+        if (cx.animeStepper.cycle < 2)
+        {
+            return false;
+        }
+        // After that, switch to StandingA animation.
+        cx.texture = static_cast<int>(STile::StandingA);
+        return true;
+    }
+
+    inline bool WaitingAnim(PlayerContext& cx, const PlayerTuning& t)
+    {
+        // Simple waiting animation between StandingA and StandingB.
+        cx.animeStepper.step(8, 10); // 8 ticks per frame, 10 frames.
+        if (cx.animeStepper.cycle < 10)
+        {
+            cx.texture = static_cast<int>(STile::StandingA);
+        }
+        else
+        {
+            cx.texture = static_cast<int>(STile::StandingB);
+        }
         return true;
     }
 }

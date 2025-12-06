@@ -107,6 +107,7 @@
     <ClCompile Include="src\apps\world\entity\avatar\states\LandingState.cpp" />
     <ClCompile Include="src\apps\systems\physics\TileQueryService.cpp" />
     <ClCompile Include="src\apps\rendering\bg\BGTileMapProvider.cpp" />
+    <ClCompile Include="src\apps\world\entity\avatar\states\GroundBaseState.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
@@ -296,6 +297,7 @@
     <ClInclude Include="src\apps\systems\physics\TileQueryService.h" />
     <ClInclude Include="src\apps\rendering\bg\BGTileMapProvider.h" />
     <ClInclude Include="src\apps\resources\bg\IMapPageSource.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\states\GroundBaseState.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

@@ -9,12 +9,14 @@
 #pragma once
 
 #include "apps/foundation/math/CoordinateTypes.h"
+#include "apps/world/entity/avatar/AvatarStatus.h"
+#include "Probes.h"
 #include "TileAttribute.h"
 
 namespace mm2hack::apps::systems::physics
 {
-    using foundation::math::RectF;
     using foundation::math::Vec2;
+    using apps::world::entity::avatar::AvatarDirection;
 
     // Result of a sweep operation
     struct SweepHit
@@ -30,10 +32,10 @@ namespace mm2hack::apps::systems::physics
     public:
         virtual ~ITerrainProbe() = default;
         // V-sweep: If moving dy, will it hit something?
-        virtual SweepHit SweepVertical(const RectF& bounds, double dy) const = 0;
+        virtual SweepHit SweepVertical(const Probes& probes, double dy) const = 0;
         // Returns true if the feet are considered "ground-like" (floor or ladder top special case)
-        virtual bool IsGroundLike(const RectF& bounds, double dy) const = 0;
+        virtual bool IsGroundLike(const AvatarDirection direction, const Probes& probes, double dy) const = 0;
         // Returns true if special handling for being at the "top" of a ladder is needed
-        virtual bool IsLadderTop(const RectF& bounds, double dy) const = 0;
+        virtual bool IsLadderTop(const AvatarDirection direction, const Probes& probes, double dy) const = 0;
     };
 }
