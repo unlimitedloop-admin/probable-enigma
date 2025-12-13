@@ -26,8 +26,9 @@ namespace mm2hack::apps::world::entity::avatar
     using core::assembly::StateProvider;
 
     // Interface for take on player state behavior
-    struct IPlayerState
+    class IPlayerState
     {
+    public:
         virtual ~IPlayerState() = default;
         virtual AvatarStatus Id() const noexcept = 0;
         virtual void OnEnter(PlayerContext&) {}

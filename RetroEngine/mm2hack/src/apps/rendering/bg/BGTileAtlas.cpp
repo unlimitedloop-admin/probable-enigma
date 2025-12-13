@@ -59,7 +59,7 @@ namespace mm2hack::apps::rendering::bg
 
         if (h != -1)
         {
-            ::DxLib::DrawGraph(x, y, h, TRUE);
+            ::DxLib::DrawGraph(x, y, h, FALSE);
         }
     }
 

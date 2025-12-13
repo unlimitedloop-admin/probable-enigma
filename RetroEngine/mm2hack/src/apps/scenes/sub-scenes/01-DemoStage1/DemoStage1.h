@@ -81,6 +81,7 @@ namespace mm2hack::apps::scenes
     class DemoStage1 : public IBaseScene
     {
         using StateProvider     = core::assembly::StateProvider;
+        using BGTileManager     = rendering::bg::BGTileManager;
         using BGTileManagerId   = rendering::bg::BGTileManager::Id;
         using SpriteManagerId   = rendering::sprite::SpriteManager::Id;
         using Parameters        = resources::parameters::Parameters;
@@ -125,7 +126,8 @@ namespace mm2hack::apps::scenes
 
     private:
         bool initializeResources_(const Parameters& params);    // Initialize necessary resources
-        void finalize_() override;       // Finalize the demo stage scene
+        void loadStage_(BGTileManager& bgTileManager);          // Load the stage map and tile attributes
+        void finalize_() override;                              // Finalize the demo stage scene
 
     private:
         const std::wstring kClassName{ L"DemoStage1" };

@@ -8,7 +8,6 @@
 //==============================================================================
 #pragma once
 
-#include <cstdint>
 #include "apps/foundation/math/CoordinateTypes.h"
 
 namespace mm2hack::apps::systems::physics

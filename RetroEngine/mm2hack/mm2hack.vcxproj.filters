@@ -298,6 +298,7 @@
     <ClInclude Include="src\apps\rendering\bg\BGTileMapProvider.h" />
     <ClInclude Include="src\apps\resources\bg\IMapPageSource.h" />
     <ClInclude Include="src\apps\world\entity\avatar\states\GroundBaseState.h" />
+    <ClInclude Include="src\apps\resources\stages\StageTileAttributes.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

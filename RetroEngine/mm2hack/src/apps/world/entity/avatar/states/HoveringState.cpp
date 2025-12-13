@@ -28,9 +28,18 @@ namespace mm2hack::apps::world::entity::avatar::states
                 FacingDirection(cx, cx.facingLR);   // Set facing direction at 'cx.texture'.
             };
 
-        // Check landing, after horizontal air movement or re-jump.
-        const bool tempOnGround = cx.terrain->IsGroundLike(cx.facingLR, cx.probes, cx.vel.y);
-        cx.onGround = tempOnGround;
+        // Y-axis air movement.
+        // Update onGround status. check below the player's bounding box.
+        auto hit = cx.terrain->SweepVertical(cx.probes, cx.vel.y);
+        if (hit.hit)
+        {
+            cx.vel.y = hit.maxDistanceY;
+            cx.onGround = true;
+        }
+        else
+        {
+            cx.onGround = false;
+        }
         cx.justLanded = (!cx.prevOnGround && cx.onGround);
 
         if (cx.justLanded)

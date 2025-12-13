@@ -6,6 +6,8 @@
 #include "apps/resources/parameters/Parameters.h"
 #include "apps/scenes/SceneID.h"
 #include "apps/scenes/SceneManager.h"
+#include "core/GameState.h"
+#include "core/GameStateManager.h"
 #include "core/save/SaveData.h"
 #include "SequenceType.h"
 
@@ -21,7 +23,11 @@ namespace mm2hack::apps::sequence
 
         // NOTE: LaunchingGame -> BackdoorMenu
         resources::parameters::Parameters params;
-        params = params.With<SceneID>(L"Subsequent", SceneID::BackdoorMenu);
+
+        // W.I.P.: (from 2025-12-11) Directly load DemoStage1 for debugging purposes.
+        //params = params.With<SceneID>(L"Subsequent", SceneID::BackdoorMenu);
+        params = params.With<SceneID>(L"Subsequent", SceneID::DemoStage1);
+
         _sceneChanger.RequestChange(SceneID::LaunchingGame, params);
 
         // Load the default background color for the NES palette.

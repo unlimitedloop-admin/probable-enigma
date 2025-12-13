@@ -68,6 +68,11 @@ namespace mm2hack::apps::world::entity::avatar::abilities
         cx.vel.x = t.steadyRun * static_cast<double>(cx.facingLR);
     }
 
+    inline void SubjectToGravityOnGround(PlayerContext& cx, const PlayerTuning& t)
+    {
+        cx.vel.y = t.gravity;
+    }
+
     inline void SetJumpVelocity(Vec2& vel, double impulse)
     {
         vel.y = impulse;
@@ -119,8 +124,10 @@ namespace mm2hack::apps::world::entity::avatar::abilities
     // *ApplyGravityIfGrounded; otherwise preserve vertical speed
     inline void AdjustVerticalSpeedForGravity(PlayerContext& cx, const PlayerTuning& t)
     {
-        double y, f;
-        y = -std::modf(cx.vel.y, &f);
+        SubjectToGravityOnGround(cx, t);
+
+        double y = 0.0, f = 0.0;
+        y = -std::modf(cx.pos.y, &f);
         cx.vel.y = y ? y : t.gravity;
     }
 }

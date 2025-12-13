@@ -123,7 +123,7 @@ namespace mm2hack::apps::resources::bg
 
     int MapPageCache::TileSize() const
     {
-        return PageTiles::kW; // tile size per tile (in px?) — keep simple, callers expect tile px maybe use config
+        return PageTiles::kW; // tile size per tile (in px?) - keep simple, callers expect tile px maybe use config
     }
 
     int MapPageCache::MapWidth() const

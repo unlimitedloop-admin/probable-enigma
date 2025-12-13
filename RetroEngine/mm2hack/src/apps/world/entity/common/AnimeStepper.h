@@ -13,21 +13,41 @@ namespace mm2hack::apps::world::entity::common
     struct AnimeStepper
     {
         int tick{ 0 };
-        int cycle{ 0 };
+        int frame{ 0 };
+        int loops{ 0 };
 
-        void step(int limitTick, int limitCycle)
+        // returns: true if the animation has completed the specified loop count
+        bool step(int ticksPerFrame, int frameCount, int loopCount = 1) noexcept
         {
-            if (++tick >= limitTick)
+            if (ticksPerFrame <= 0 || frameCount <= 0 || loopCount <= 0)
             {
-                tick = 0;
-                cycle = (cycle + 1) % limitCycle;
+                return false;
             }
+
+            if (++tick < ticksPerFrame)
+            {
+                return false;
+            }
+
+            tick = 0;
+
+            // Advance frame
+            ++frame;
+            if (frame >= frameCount)
+            {
+                frame = 0;
+                ++loops;
+            }
+
+            return loops >= loopCount;
         }
 
-        void reset()
+        // All reset in one
+        void reset() noexcept
         {
             tick = 0;
-            cycle = 0;
+            frame = 0;
+            loops = 0;
         }
     };
 }

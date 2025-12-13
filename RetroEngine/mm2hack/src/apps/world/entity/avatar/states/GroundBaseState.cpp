@@ -17,8 +17,16 @@ namespace mm2hack::apps::world::entity::avatar::states
         // Y-axis vertical speed preparation.
         AdjustVerticalSpeedForGravity(cx, t);
         // Update onGround status. check below the player's bounding box.
-        const bool tempOnGround = cx.terrain->IsGroundLike(cx.facingLR, cx.probes, cx.vel.y);
-        cx.onGround = tempOnGround;
+        auto hit = cx.terrain->SweepVertical(cx.probes, cx.vel.y);
+        if (hit.hit)
+        {
+            cx.vel.y = hit.maxDistanceY;
+            cx.onGround = true;
+        }
+        else
+        {
+            cx.onGround = false;
+        }
         cx.justLanded = (!cx.prevOnGround && cx.onGround);
     }
 }

@@ -31,7 +31,7 @@ namespace mm2hack::apps::resources::bg
         std::array<std::uint8_t, kSize> cells{};
     };
 
-    // MapPageCache: IMapPageSource を実装し、AddressScraper を所有するキャッシュ
+    // MapPageCache: Cache of map page tile data with lazy loading
     class MapPageCache final : public IMapPageSource
     {
         using ScrollKind = systems::scrolling::atomic::ScrollKind;

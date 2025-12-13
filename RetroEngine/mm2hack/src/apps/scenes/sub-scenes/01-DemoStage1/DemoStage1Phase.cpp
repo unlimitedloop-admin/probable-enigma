@@ -10,7 +10,6 @@
 #include "apps/systems/scrolling/atomic/ScrollController.h"
 #include "apps/systems/view/RenderContext.h"
 #include "DemoStage1.h"
-#include "utils/output_debug.h"
 
 namespace mm2hack::apps::scenes
 {
@@ -53,15 +52,8 @@ namespace mm2hack::apps::scenes
         void MainPhase::Update()
         {
             using namespace world::entity::avatar;
-
-            if (!owner.Fader().InputEnabled()) return;
-
-            // Simple object movement with arrow keys
             using namespace foundation::math;
             Vec2 delta{ 0, 0 };
-
-            _scroll->Update(delta);
-            _page_index_debug = static_cast<int>(_scroll->PageIndex());
 
             if (_player)
             {
@@ -69,6 +61,9 @@ namespace mm2hack::apps::scenes
                 _player->SetInput(owner.Input());
                 _player->Update(delta_time);
             }
+
+            _scroll->Update(delta);
+            _page_index_debug = static_cast<int>(_scroll->PageIndex());
         }
 
         void MainPhase::RenderWorld()

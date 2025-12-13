@@ -29,23 +29,32 @@ namespace mm2hack::apps::systems::physics
     public:
         explicit TileQueryService(const ITileMapProvider& map)
             : _map(map), _ts(SystemConfig::kTileSize) {}
+
         // V-sweep: If moving dy, will it hit something?
-        SweepHit SweepVertical(const Probes& probes, double dy) const override;
+        SweepVHit SweepVertical(const Probes& probes, double dy) const override;
         // Returns true if the feet are considered "ground-like" (floor or ladder top special case)
         bool IsGroundLike(const AvatarDirection direction, const Probes& probes, double dy) const override;
-        // Returns true if special handling for being at the "top" of a ladder is needed
-        bool IsLadderTop(const AvatarDirection direction, const Probes& probes, double dy) const override;
 
     private:
-        bool hasBlockUnderfoot(const AvatarDirection direction, const Probes& probes, double dy) const;
-        bool isLadderTopUnderfoot(const AvatarDirection direction, const Probes& probes, double dy) const;
-
-        TileAttribute attrAt(double worldX, double worldY) const;
+        // Classify the ground tile attribute at the given position
+        TileAttribute classifyGroundAt_(double x, double probeY, bool includeOneWay) const;
+        // Collect bottom sample X coordinates based on avatar direction and probes
+        void collectBottomSampleXs_(const AvatarDirection direction, const Probes& probes, double(&outXs)[3]) const noexcept;
+        // Check if there is a block underfoot
+        bool hasBlockUnderfoot_(const AvatarDirection direction, const Probes& probes, double dy) const;
+        // Check if the avatar is at the top of a ladder underfoot
+        bool isLadderTopUnderfoot_(const AvatarDirection direction, const Probes& probes, double dy) const;
+        // Get the tile attribute at the specified world coordinates
+        TileAttribute attrAt_(double worldX, double worldY) const;
+        // Probe the ground and return its attribute
+        bool probeGround_(const Probes& probes, TileAttribute& outAttr) const;
+        // Sweep downwards and return the hit information
+        SweepVHit sweepDown_(const Probes& probes, double dy) const;
 
     private:
         const std::wstring kClassName{ L"TileQueryService" };
 
         const ITileMapProvider& _map;
-        int _ts{ SystemConfig::kTileSize };  // Tile size
+        int _ts{ SystemConfig::kTileSize };     // Tile size
     };
 }

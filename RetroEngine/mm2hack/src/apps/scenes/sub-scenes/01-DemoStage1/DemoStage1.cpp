@@ -7,10 +7,12 @@
 #include "apps/rendering/bg/BGTileManager.h"
 #include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/resources/parameters/Parameters.h"
+#include "apps/resources/stages/StageTileAttributes.h"
 #include "apps/runtime/GameContext.h"
 #include "apps/scenes/PhaseFadeController.h"
 #include "apps/scenes/SceneChangeMediator.h"
 #include "apps/scenes/SceneID.h"
+#include "apps/systems/physics/TileAttribute.h"
 #include "config/GameAssets.h"
 #include "DemoStage1Phase.h"
 #include "exceptions/CoreException.h"
@@ -80,6 +82,10 @@ namespace mm2hack::apps::scenes
         // Load map data.
         bgRoomBank.Load(kStageMapBinary);
         auto roomNo = params.Get<int>(L"RoomNo");
+        if (roomNo == std::nullopt)
+        {
+            roomNo = 0; // Default to room 0 if not specified.
+        }
         if (auto idx = bgRoomBank.FindIndexByRoomId(static_cast<uint8_t>(*roomNo)); idx)
         {
             // Successfully found the room index.
@@ -89,7 +95,7 @@ namespace mm2hack::apps::scenes
         {
             _roomState.pageIndex = 0; // Default to first page if not found.
         }
-        //bgTileManager.LoadMapBinary(bgRoomBank.FilePath(), bgRoomBank.PayloadOffset(static_cast<size_t>(_roomState.pageIndex)));
+        loadStage_(bgTileManager);
 
         const int bvmax = bgTileManager.VariantCountById(_bgTileId);
         bgTileManager.SetGlobalVariant(bvmax);
@@ -107,6 +113,13 @@ namespace mm2hack::apps::scenes
         resource.FadeInSprite(fadeDurationFrames);
 
         return true;
+    }
+
+    void DemoStage1::loadStage_(BGTileManager& bgTileManager)
+    {
+        using namespace systems::physics;
+        using namespace resources::stages;
+        ApplyTileAttributeRanges(bgTileManager, STAGE1_TILEATTRIBUTES);
     }
 
     void DemoStage1::Update()

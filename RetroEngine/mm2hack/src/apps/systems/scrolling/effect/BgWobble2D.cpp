@@ -63,13 +63,13 @@ namespace mm2hack::apps::systems::scrolling::effect
         const int band_h = (_band_h_px > 0) ? _band_h_px : _logical_h;
         const int bands = (band_h > 0) ? ((_logical_h + band_h - 1) / band_h) : 1;
 
-        // Smudge reduction (integer rounding) — only round dx to avoid breaking existing artwork
+        // Smudge reduction (integer rounding) - only round dx to avoid breaking existing artwork
         auto roundi = [](float v) noexcept { return std::floor(v + 0.5f); };
 
         for (int i = 0; i < stripes; ++i)
         {
             const int   y0 = i * _stripe_h;
-            const float v = static_cast<float>(y0) / static_cast<float>(_logical_h); // 0..1（上→下）
+            const float v = static_cast<float>(y0) / static_cast<float>(_logical_h); // 0..1 (reverse allowed)
 
             // Central maximum weight (same shape as before) + gamma emphasis
             //   wx: horizontal U width strength, wy: vertical Y error strength (both maximum at center, minimum at edges)

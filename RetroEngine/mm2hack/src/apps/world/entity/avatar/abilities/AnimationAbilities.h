@@ -59,16 +59,16 @@ namespace mm2hack::apps::world::entity::avatar::abilities
         static const std::array<STile, 4> runningTextures = {
             STile::RunningA, STile::RunningC, STile::RunningB, STile::RunningC
         };
-        cx.animeStepper.step(7, static_cast<int>(runningTextures.size())); // 7 ticks per frame, 4 frames.
-        cx.texture = static_cast<int>(runningTextures[cx.animeStepper.cycle]);
+        cx.animeStepper.step(7, static_cast<int>(runningTextures.size()), 1); // 7 ticks per frame, 4 frames.
+        cx.texture = static_cast<int>(runningTextures[cx.animeStepper.frame]);
     }
 
     // Returns true if the brake is fully engaged
     inline bool StepBrakeRunAnim(PlayerContext& cx, const PlayerTuning& t)
     {
         // Step the brake run animation.
-        cx.animeStepper.step(4, 2); // 4 ticks per frame, 2 frames.
-        if (cx.animeStepper.cycle < 2)
+        const bool committed = cx.animeStepper.step(4, 2); // 4 ticks per frame, 2 frames.
+        if (!committed)
         {
             cx.texture = static_cast<int>(STile::RunningIntro);
             return false;
@@ -82,8 +82,8 @@ namespace mm2hack::apps::world::entity::avatar::abilities
     inline bool LandingAnim(PlayerContext& cx, const PlayerTuning& t)
     {
         // Step the landing animation.
-        cx.animeStepper.step(2, 2); // 2 ticks per frame, 2 frames.
-        if (cx.animeStepper.cycle < 2)
+        const bool committed = cx.animeStepper.step(2, 2); // 2 ticks per frame, 2 frames.
+        if (!committed)
         {
             return false;
         }
@@ -92,11 +92,11 @@ namespace mm2hack::apps::world::entity::avatar::abilities
         return true;
     }
 
-    inline bool WaitingAnim(PlayerContext& cx, const PlayerTuning& t)
+    inline void WaitingAnim(PlayerContext& cx, const PlayerTuning& t)
     {
         // Simple waiting animation between StandingA and StandingB.
-        cx.animeStepper.step(8, 10); // 8 ticks per frame, 10 frames.
-        if (cx.animeStepper.cycle < 10)
+        cx.animeStepper.step(9, 11, 1); // 9 ticks per frame, 11 frames.
+        if (cx.animeStepper.frame < 10)
         {
             cx.texture = static_cast<int>(STile::StandingA);
         }
@@ -104,6 +104,5 @@ namespace mm2hack::apps::world::entity::avatar::abilities
         {
             cx.texture = static_cast<int>(STile::StandingB);
         }
-        return true;
     }
 }

@@ -11,6 +11,7 @@ namespace mfm = mm2hack::apps::foundation::math;
 
 namespace mm2hack::apps::systems::physics
 {
+    // TODO: translate to English comments later :)
     void CollisionSystem::ResolveTile(ICollider& col)
     {
         if (!_provider || !col.IsCollidable()) return;
@@ -32,21 +33,21 @@ namespace mm2hack::apps::systems::physics
                 const auto attr = _provider->SampleTileAttribute(tx, ty);
                 if (Has(attr, TileAttribute::InstantDeath))
                 {
-                    col.OnTileCollision({ 0.0, 0.0 }, attr); // 死亡/リセット等はエンティティ側
+                    col.OnTileCollision({ 0.0, 0.0 }, attr); // Death/reset, etc. are handled by the entity
                     return;
                 }
                 if (Has(attr, TileAttribute::Solid))
                 {
-                    // まずは最小限：床想定の押し戻しはエンティティ側に任せる
+                    // Delegate undo on moving when approaching a wall to the entity. Notify with normal vector.
                     normal = { 0.0, -1.0 };
                     col.OnTileCollision(normal, attr);
                 }
                 else if (Has(attr, TileAttribute::ReflectProjectile))
                 {
-                    // 反射面：正確な反射は速度・法線次第。簡易は“速度反転”を通知
+                    // Reflect projectile wall. Notify with dummy normal.
                     col.OnTileCollision({ -1.0, -1.0 }, attr);
                 }
-                // Ladder / OneWay / Water / Damage は後で詳細分岐
+                // TODO: Ladder / OneWay / Water / Damage 
             }
         }
     }

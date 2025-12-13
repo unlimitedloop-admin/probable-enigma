@@ -20,7 +20,6 @@
 #include "states/LaunchRunState.h"
 #include "states/RunningState.h"
 #include "states/StandingState.h"
-#include "utils/output_debug.h"
 
 namespace mm2hack::apps::world::entity::avatar
 {
@@ -46,7 +45,6 @@ namespace mm2hack::apps::world::entity::avatar
 
         refreshProbes_();
 
-        // TODO: Need to hold this context somewhere else?
         PlayerContext cx{
             pos, vel,
             /* onGround */ onGround, /* justLanded */ false, /* prevOnGround */ onGround,
@@ -129,36 +127,39 @@ namespace mm2hack::apps::world::entity::avatar
         // Update probes based on current position and bounding box.
         double currentPosX;
         double currentPosY;
+        // Explicitly register the base point of the character.
+        double basePosX = pos.x - _half.x;
+        double basePosY = pos.y - _half.y;
         PlayerProbes& p = _tuning.probeOffsets;
         
         // Front collision probe (ahead of the player)
         {
-            currentPosX = pos.x + _half.x + (static_cast<int>(facingLR) * p.frontLineOffsetX);
-            currentPosY = pos.y + _half.y;
+            currentPosX = basePosX + _half.x + (static_cast<int>(facingLR) * p.frontLineOffsetX);
+            currentPosY = basePosY + _half.y;
             _probes.frontLine.topPoint =    { currentPosX, currentPosY + p.verticalTopOffsetY };
             _probes.frontLine.middlePoint = { currentPosX, currentPosY + p.verticalMidOffsetY };
             _probes.frontLine.bottomPoint = { currentPosX, currentPosY + p.verticalBtmOffsetY };
         }
         // Rear collision probe (behind the player)
         {
-            currentPosX = pos.x + _half.x + (static_cast<int>(facingLR) * p.rearLineOffsetX);
-            currentPosY = pos.y + _half.y;
+            currentPosX = basePosX + _half.x + (static_cast<int>(facingLR) * p.rearLineOffsetX);
+            currentPosY = basePosY + _half.y;
             _probes.rearLine.topPoint =    { currentPosX, currentPosY + p.verticalTopOffsetY };
             _probes.rearLine.middlePoint = { currentPosX, currentPosY + p.verticalMidOffsetY };
             _probes.rearLine.bottomPoint = { currentPosX, currentPosY + p.verticalBtmOffsetY };
         }
         // Check on ground probe (below the player)
         {
-            currentPosX = pos.x + _half.x;
-            currentPosY = pos.y + _half.y + p.groundLineOffsetY;
+            currentPosX = basePosX + _half.x;
+            currentPosY = basePosY + _half.y + p.groundLineOffsetY;
             _probes.bottomLine.frontPoint =  { currentPosX + p.horizonFrontOffsetX,  currentPosY };
             _probes.bottomLine.middlePoint = { currentPosX + p.horizonMidOffsetX,    currentPosY };
             _probes.bottomLine.behindPoint = { currentPosX + p.horizonBehindOffsetX, currentPosY };
         }
         // Overhead probe (above the player)
         {
-            currentPosX = pos.x + _half.x;
-            currentPosY = pos.y + _half.y + p.overheadLineOffsetY;
+            currentPosX = basePosX + _half.x;
+            currentPosY = basePosY + _half.y + p.overheadLineOffsetY;
             _probes.topLine.frontPoint =  { currentPosX + p.horizonFrontOffsetX,  currentPosY };
             _probes.topLine.middlePoint = { currentPosX + p.horizonMidOffsetX,    currentPosY };
             _probes.topLine.behindPoint = { currentPosX + p.horizonBehindOffsetX, currentPosY };

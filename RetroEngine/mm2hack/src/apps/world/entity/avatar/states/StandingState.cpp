@@ -53,7 +53,7 @@ namespace mm2hack::apps::world::entity::avatar::states
             return AvatarStatus::Hovering;
         }
 
-        cx.texture = WaitingAnim(cx, t);
+        WaitingAnim(cx, t);
         applyFacing();
         return AvatarStatus::Standing;
     }

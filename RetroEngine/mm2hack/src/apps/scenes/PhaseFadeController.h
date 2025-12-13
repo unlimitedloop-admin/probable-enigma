@@ -71,7 +71,7 @@ namespace mm2hack::apps::scenes
         void lightUp_(ResourceManager& res) const;          // Restore all target layers to normal brightness
 
     private:
-        const std::wstring kClassName = L"PhaseFadeController";
+        const std::wstring kClassName{ L"PhaseFadeController" };
 
         PhaseFadePlan _plan{};          // Current fade plan
         State _state{ State::Idle };    // Current state

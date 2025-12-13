@@ -71,7 +71,7 @@ namespace mm2hack::apps::scenes
 
             int _page_index_debug{ 0 };
 
-            const Vec2 _initialize_pos{ 128.0, 120.0 };
+            const Vec2 _initialize_pos{ 128.0, 0.0 };
         };
     }
 }
