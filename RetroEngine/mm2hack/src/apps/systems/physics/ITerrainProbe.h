@@ -36,5 +36,7 @@ namespace mm2hack::apps::systems::physics
         virtual SweepVHit SweepVertical(const Probes& probes, double dy) const = 0;
         // Returns true if the feet are considered "ground-like" (floor or ladder top special case)
         virtual bool IsGroundLike(const AvatarDirection direction, const Probes& probes, double dy) const = 0;
+        // Returns true if special handling for being at the "top" of a ladder is needed
+        virtual bool IsLadderTop(const AvatarDirection direction, const Probes& probes, double dy) const = 0;
     };
 }

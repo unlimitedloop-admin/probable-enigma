@@ -20,47 +20,42 @@ namespace mm2hack::apps::world::entity::avatar::abilities
 {
     using foundation::math::Vec2;
 
-    // *HorizontalGroundMove; sets horizontal speed based on status and input (left/right)
-    inline void GroundMove(PlayerContext& cx, AvatarStatus status, StateProvider* in, const PlayerTuning& t)
+    // Create GroundMoveIntent based on input and PlayerTuning
+    inline GroundMoveIntent MakeInputMoveIntent(StateProvider* in, const PlayerTuning& t, AvatarStatus st)
     {
-        const bool leftPressed  = in->IsPressed(JPBTN::LEFT);
-        const bool rightPressed = in->IsPressed(JPBTN::RIGHT);
-        const bool hasLR        = (leftPressed ^ rightPressed);
+        const bool left = in->IsPressed(JPBTN::LEFT);
+        const bool right = in->IsPressed(JPBTN::RIGHT);
 
-        int xMoveSign = leftPressed ? -1 : rightPressed ? +1 : 0;
-        double speedX = 0.0;
-
-        if (hasLR)
+        if (!(left ^ right))
         {
-            switch (status)
-            {
-            case AvatarStatus::Standing:
-                // NOTE: Standing but can only be reached when the left or right key is pressed.
-                speedX = t.momentumStart;
-                break;
-            case AvatarStatus::LaunchRun:
-                speedX = t.momentumStart;
-                break;
-            case AvatarStatus::Running:
-                speedX = t.steadyRun;
-                break;
-            case AvatarStatus::BrakeRun:
-                speedX = t.haltSpeed;
-                xMoveSign = cx.facingLR == AvatarDirection::Left ? -1 : 1;  // NOTE: BrakeRun always moves toward facing direction.
-                break;
-            default:
-                speedX = 0.0;
-                break;
-            }
-        }
-        else
-        {
-            // Stopped.
-            speedX = 0.0;
+            return {}; // active=false
         }
 
-        // !Effectively the return value.
-        cx.vel.x = speedX * static_cast<double>(xMoveSign);
+        const int sign = left ? -1 : +1;
+
+        double spd = 0.0;
+        switch (st)
+        {
+        case AvatarStatus::Standing:
+        case AvatarStatus::LaunchRun: spd = t.momentumStart; break;
+        case AvatarStatus::Running:   spd = t.steadyRun;     break;
+        default:                      spd = 0.0;             break;
+        }
+
+        return GroundMoveIntent{ sign, spd, spd > 0.0 };
+    }
+
+    // Create GroundMoveIntent based on PlayerContext and PlayerTuning (Intended for use only with BrakeRun)
+    inline GroundMoveIntent MakeBrakeRunIntent(const PlayerContext& cx, const PlayerTuning& t)
+    {
+        const int sign = (cx.facingLR == AvatarDirection::Left) ? -1 : +1;
+        return GroundMoveIntent{ sign, t.haltSpeed, t.haltSpeed > 0.0 };
+    }
+
+    // *ApplyGroundMove; X-axis movement for ground
+    inline void ApplyGroundMove(PlayerContext& cx, const GroundMoveIntent& intent)
+    {
+        cx.vel.x = (intent.active) ? intent.speed * static_cast<double>(intent.dirSign) : 0.0;
     }
 
     inline void LandingMove(PlayerContext& cx, const PlayerTuning& t)
@@ -81,7 +76,7 @@ namespace mm2hack::apps::world::entity::avatar::abilities
     // *StartJump; sets vertical speed for jump
     inline void DoJump(PlayerContext& cx, const PlayerTuning& t)
     {
-        if (cx.terrain->SweepVertical(cx.probes, 1.0).hit)
+        if (cx.terrain->SweepVertical(cx.probes, -0x00.01p0).hit)
         {
             // Cannot jump if there is a ceiling right above.
             return;
@@ -96,7 +91,11 @@ namespace mm2hack::apps::world::entity::avatar::abilities
         if (left ^ right)
         {
             double s = left ? -1.0 : 1.0;
-            vel.x += s * accel;
+            vel.x = s * accel;
+        }
+        else
+        {
+            vel.x = 0.0;
         }
         // NOTE: Do not decelerate in air. (Realistic physics)
     }
@@ -126,8 +125,8 @@ namespace mm2hack::apps::world::entity::avatar::abilities
     {
         SubjectToGravityOnGround(cx, t);
 
-        double y = 0.0, f = 0.0;
-        y = -std::modf(cx.pos.y, &f);
-        cx.vel.y = y ? y : t.gravity;
+        //double y = 0.0, f = 0.0;
+        //y = -std::modf(cx.pos.y, &f);
+        //cx.vel.y = y ? y : t.gravity;
     }
 }

@@ -344,7 +344,7 @@ namespace mm2hack::core::winapi
 
         // Pressing the ESC key immediately triggers a return and transitions the game state,
         // without interference from other key inputs.
-        if (wParam == VK_ESCAPE)
+        if (wParam == VK_ESCAPE || wParam == VK_PAUSE)
         {
             if (gameState.Is(GameState::Running))
             {

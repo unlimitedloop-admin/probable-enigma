@@ -2,6 +2,9 @@
 
 #include "string_converter.h"
 
+#include <cwchar>
+#include <initializer_list>
+#include <string_view>
 #include <stringapiset.h>
 #include <WinNls.h>
 
@@ -41,5 +44,34 @@ namespace mm2hack::utils
         WideCharToMultiByte(CP_UTF8, 0, wide.c_str(), -1, utf8.data(), utf8Len, nullptr, nullptr);
 
         return utf8;
+    }
+
+    // Concatenates multiple wide string views into a single wchar_t buffer with null termination
+    wchar_t* concat_to_wchar_buffer(wchar_t* outBuf, std::size_t outBufSize, std::initializer_list<std::wstring_view> parts) noexcept
+    {
+        if (outBuf == nullptr || outBufSize == 0)
+        {
+            return outBuf;
+        }
+
+        const std::size_t maxChars = outBufSize - 1; // Reserve space for null terminator.
+        std::size_t pos = 0;
+
+        for (const auto& piece : parts)
+        {
+            if (pos >= maxChars) break;
+
+            const std::size_t pieceLen = piece.size();
+            const std::size_t canCopy = std::min(pieceLen, maxChars - pos);
+            if (canCopy > 0)
+            {
+                // piece.data() は const wchar_t*
+                std::wmemcpy(outBuf + pos, piece.data(), canCopy);
+                pos += canCopy;
+            }
+        }
+
+        outBuf[pos] = L'\0';
+        return outBuf;
     }
 }

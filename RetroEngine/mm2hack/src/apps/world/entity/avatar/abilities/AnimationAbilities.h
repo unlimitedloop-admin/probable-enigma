@@ -85,6 +85,7 @@ namespace mm2hack::apps::world::entity::avatar::abilities
         const bool committed = cx.animeStepper.step(2, 2); // 2 ticks per frame, 2 frames.
         if (!committed)
         {
+            cx.texture = static_cast<int>(STile::RunningB);
             return false;
         }
         // After that, switch to StandingA animation.

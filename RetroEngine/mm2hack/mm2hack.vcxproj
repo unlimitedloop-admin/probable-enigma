@@ -281,6 +281,7 @@
     <ClCompile Include="src\test\driver\004\OuterSpaceBG.cpp" />
     <ClCompile Include="src\test\driver\005\LissajousCurveBG.cpp" />
     <ClCompile Include="src\test\TestSequence.cpp" />
+    <ClCompile Include="src\utils\decimal_decoder.cpp" />
     <ClCompile Include="src\utils\Fps.cpp" />
     <ClCompile Include="src\utils\LogWriter.cpp" />
     <ClCompile Include="src\utils\output_debug.cpp" />
@@ -470,6 +471,7 @@
     <ClInclude Include="src\test\driver\005\LissajousCurveBG.h" />
     <ClInclude Include="src\test\driver\ITestDriver.h" />
     <ClInclude Include="src\test\TestSequence.h" />
+    <ClInclude Include="src\utils\decimal_decoder.h" />
     <ClInclude Include="src\utils\Fps.h" />
     <ClInclude Include="src\utils\FpsManager.h" />
     <ClInclude Include="src\utils\LogWriter.h" />

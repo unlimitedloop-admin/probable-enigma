@@ -49,4 +49,12 @@ namespace mm2hack::apps::world::entity::avatar
 
         PlayerProbes probeOffsets;                  // Player probes offsets
     };
+
+    // Structure to represent ground movement intent, Pre-declare this data type for use with GroundMove
+    struct GroundMoveIntent
+    {
+        int dirSign{ 0 };     // -1 left, +1 right, 0 none
+        double speed{ 0.0 };  // absolute speed (>=0)
+        bool active{ false }; // should apply this frame?
+    };
 }

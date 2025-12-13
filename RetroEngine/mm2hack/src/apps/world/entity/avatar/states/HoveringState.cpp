@@ -60,7 +60,7 @@ namespace mm2hack::apps::world::entity::avatar::states
             }
             else
             {
-                cx.texture = static_cast<int>(STile::RunningB);
+                LandingAnim(cx, t);
                 applyFacing();
                 return AvatarStatus::Landing;
             }

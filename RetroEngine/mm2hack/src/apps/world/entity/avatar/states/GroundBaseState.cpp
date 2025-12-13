@@ -9,11 +9,11 @@
 
 namespace mm2hack::apps::world::entity::avatar::states
 {
-    void GroundBaseState::GroundPipeline(PlayerContext& cx, StateProvider* in, const PlayerTuning& t)
+    void GroundBaseState::GroundPipeline(PlayerContext& cx, StateProvider* in, const PlayerTuning& t, const GroundMoveIntent intent)
     {
         using namespace abilities;
         // X-axis ground movement.
-        GroundMove(cx, Id(), in, t);
+        ApplyGroundMove(cx, intent);
         // Y-axis vertical speed preparation.
         AdjustVerticalSpeedForGravity(cx, t);
         // Update onGround status. check below the player's bounding box.

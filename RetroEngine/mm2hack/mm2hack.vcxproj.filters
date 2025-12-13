@@ -108,6 +108,7 @@
     <ClCompile Include="src\apps\systems\physics\TileQueryService.cpp" />
     <ClCompile Include="src\apps\rendering\bg\BGTileMapProvider.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\states\GroundBaseState.cpp" />
+    <ClCompile Include="src\utils\decimal_decoder.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
@@ -299,6 +300,7 @@
     <ClInclude Include="src\apps\resources\bg\IMapPageSource.h" />
     <ClInclude Include="src\apps\world\entity\avatar\states\GroundBaseState.h" />
     <ClInclude Include="src\apps\resources\stages\StageTileAttributes.h" />
+    <ClInclude Include="src\utils\decimal_decoder.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

@@ -28,33 +28,47 @@ namespace mm2hack::apps::systems::physics
     {
     public:
         explicit TileQueryService(const ITileMapProvider& map)
-            : _map(map), _ts(SystemConfig::kTileSize) {}
+            : _map(map), _ts(config::SystemConfig::kTileSize)
+        {
+        }
 
         // V-sweep: If moving dy, will it hit something?
         SweepVHit SweepVertical(const Probes& probes, double dy) const override;
         // Returns true if the feet are considered "ground-like" (floor or ladder top special case)
         bool IsGroundLike(const AvatarDirection direction, const Probes& probes, double dy) const override;
+        // Returns true if special handling for being at the "top" of a ladder is needed
+        bool IsLadderTop(const AvatarDirection direction, const Probes& probes, double dy) const override;
 
     private:
-        // Classify the ground tile attribute at the given position
-        TileAttribute classifyGroundAt_(double x, double probeY, bool includeOneWay) const;
-        // Collect bottom sample X coordinates based on avatar direction and probes
-        void collectBottomSampleXs_(const AvatarDirection direction, const Probes& probes, double(&outXs)[3]) const noexcept;
-        // Check if there is a block underfoot
-        bool hasBlockUnderfoot_(const AvatarDirection direction, const Probes& probes, double dy) const;
-        // Check if the avatar is at the top of a ladder underfoot
-        bool isLadderTopUnderfoot_(const AvatarDirection direction, const Probes& probes, double dy) const;
-        // Get the tile attribute at the specified world coordinates
-        TileAttribute attrAt_(double worldX, double worldY) const;
-        // Probe the ground and return its attribute
-        bool probeGround_(const Probes& probes, TileAttribute& outAttr) const;
-        // Sweep downwards and return the hit information
+        // Sweeps downwards to check for collisions with the terrain
         SweepVHit sweepDown_(const Probes& probes, double dy) const;
+        // Check for ground collision using bottom probes
+        bool probeGround_(const Probes& probes, TileAttribute& outAttr) const;
+
+        // Check to see if there are any blocks at underfoot meeting the criteria
+        bool hasBlockUnderfoot_(const AvatarDirection direction, const Probes& probes, double dy) const;
+        // Collect X positions for bottom probes based on avatar direction
+        void collectBottomSampleXs_(const AvatarDirection direction, const Probes& probes, double(&outXs)[3]) const noexcept;
+        // Check if the avatar is standing on top of a ladder
+        bool isLadderTopUnderfoot_(const AvatarDirection direction, const Probes& probes, double dy) const;
+
+        // Check just above the head line for ceiling collision (dy==0 stability / "bonk" checks)
+        bool probeCeiling_(const Probes& probes, TileAttribute& outAttr, double peekY = 1.0) const;
+        // Sweep upwards to check for collisions with the terrain
+        SweepVHit sweepUp_(const Probes& probes, double dy) const;
+
+        // Attribute sampling
+        TileAttribute attrAt_(double worldX, double worldY) const;
+
+        // Classify tile attributes at specific probe points
+        TileAttribute classifyGroundAt_(double x, double probeY, bool includeOneWay) const;
+        // Classify ceiling tile attributes at specific probe points, only Solid collides from below
+        TileAttribute classifyCeilingAt_(double x, double probeY) const;
 
     private:
         const std::wstring kClassName{ L"TileQueryService" };
 
         const ITileMapProvider& _map;
-        int _ts{ SystemConfig::kTileSize };     // Tile size
+        int _ts{ config::SystemConfig::kTileSize };  // Tile size
     };
 }

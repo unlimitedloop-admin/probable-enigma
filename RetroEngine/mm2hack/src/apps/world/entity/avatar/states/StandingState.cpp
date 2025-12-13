@@ -17,8 +17,8 @@ namespace mm2hack::apps::world::entity::avatar::states
     AvatarStatus StandingState::Update(PlayerContext& cx, StateProvider* in, const PlayerTuning& t, double /*dt*/)
     {
         using namespace abilities;
-        // GroundMove; AdjustVerticalSpeedForGravity; IsGroundLike;
-        GroundPipeline(cx, in, t);
+        // ApplyGroundMove; AdjustVerticalSpeedForGravity; SweepVertical;
+        GroundPipeline(cx, in, t, MakeInputMoveIntent(in, t, Id()));
 
         // Call after cx.texture is set; adds facing offset (0 right, 40 left for AvatarAnimation enums).
         auto applyFacing = [&](void) noexcept

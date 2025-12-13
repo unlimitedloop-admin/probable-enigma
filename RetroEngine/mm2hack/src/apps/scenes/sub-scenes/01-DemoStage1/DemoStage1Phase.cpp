@@ -10,6 +10,8 @@
 #include "apps/systems/scrolling/atomic/ScrollController.h"
 #include "apps/systems/view/RenderContext.h"
 #include "DemoStage1.h"
+#include "utils/decimal_decoder.h"
+#include "utils/string_converter.h"
 
 namespace mm2hack::apps::scenes
 {
@@ -64,6 +66,8 @@ namespace mm2hack::apps::scenes
 
             _scroll->Update(delta);
             _page_index_debug = static_cast<int>(_scroll->PageIndex());
+            _player_pos_x_debug = _player ? _player->pos.x : 0;
+            _player_pos_y_debug = _player ? _player->pos.y : 0;
         }
 
         void MainPhase::RenderWorld()
@@ -83,9 +87,16 @@ namespace mm2hack::apps::scenes
 
         void MainPhase::RenderOverlay()
         {
+            using namespace utils;
             wchar_t buf[128]{};
+            int dispY = 8;
             ::swprintf(buf, 128, L"PageIndex = %d", _page_index_debug);
-            ::DxLib::DrawString(8, 8, buf, 0xFFFFFF00);
+            ::DxLib::DrawString(8, dispY, buf, 0xFFFFFF00);
+            dispY += 16;
+            const std::wstring xstr = decode_floating_hex_number(_player_pos_x_debug);
+            const std::wstring ystr = decode_floating_hex_number(_player_pos_y_debug);
+            concat_to_wchar_buffer(buf, sizeof(buf) / sizeof(buf[0]), { L"Player Pos = (", xstr, L", ", ystr, L")" });
+            ::DxLib::DrawString(8, dispY, buf, 0xFFFF0000);
         }
 
         DemoStage1PhaseId MainPhase::Id() const noexcept
