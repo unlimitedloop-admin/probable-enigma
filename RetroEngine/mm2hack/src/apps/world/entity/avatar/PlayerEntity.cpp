@@ -26,9 +26,8 @@ namespace mm2hack::apps::world::entity::avatar
     using systems::physics::CollisionLayer;
 
     PlayerEntity::PlayerEntity(SpriteManagerId id)
-        : _id(id)
+        : _id(id), _half{ 16.0, 16.0 }
     {
-        _half = { 16.0, 16.0 }; // Ex. 32x32
         _states[0] = std::make_unique<states::StandingState>();
         _states[1] = std::make_unique<states::RunningState>();
         _states[2] = std::make_unique<states::HoveringState>();
@@ -43,14 +42,14 @@ namespace mm2hack::apps::world::entity::avatar
     {
         if (!IsAlive()) return;
 
-        refreshProbes_();
-
         PlayerContext cx{
             pos, vel,
             /* onGround */ onGround, /* justLanded */ false, /* prevOnGround */ onGround,
             facingLR, texture, _animeStepper,
             /* probes */ _probes, /* prelimProbes */ _probes, this->Bounds(), _terrainProbe, _ladderService
         };
+
+        refreshProbes_(cx);
         auto& st = FindState(_status);
 
         // Update state machine
@@ -122,55 +121,8 @@ namespace mm2hack::apps::world::entity::avatar
 
     void PlayerEntity::SetCollidable(bool v) noexcept { _collidable = v; }
 
-    void PlayerEntity::refreshProbes_() noexcept
+    void PlayerEntity::refreshProbes_(PlayerContext& cx) noexcept
     {
-        // Update probes based on current position and bounding box.
-        double currentPosX;
-        double currentPosY;
-        // Explicitly register the base point of the character.
-        double basePosX = pos.x - _half.x;
-        double basePosY = pos.y - _half.y;
-        PlayerProbes& p = _tuning.probeOffsets;
-        
-        // Front collision probe (ahead of the player)
-        {
-            currentPosX = basePosX + _half.x + (static_cast<int>(facingLR) * p.frontLineOffsetX);
-            currentPosY = basePosY + _half.y;
-            _probes.frontLine.topPoint =    { currentPosX, currentPosY + p.verticalTopOffsetY };
-            _probes.frontLine.middlePoint = { currentPosX, currentPosY + p.verticalMidOffsetY };
-            _probes.frontLine.bottomPoint = { currentPosX, currentPosY + p.verticalBtmOffsetY };
-        }
-        // Rear collision probe (behind the player)
-        {
-            currentPosX = basePosX + _half.x + (static_cast<int>(facingLR) * p.rearLineOffsetX);
-            currentPosY = basePosY + _half.y;
-            _probes.rearLine.topPoint =    { currentPosX, currentPosY + p.verticalTopOffsetY };
-            _probes.rearLine.middlePoint = { currentPosX, currentPosY + p.verticalMidOffsetY };
-            _probes.rearLine.bottomPoint = { currentPosX, currentPosY + p.verticalBtmOffsetY };
-        }
-        // Check on ground probe (below the player)
-        {
-            currentPosX = basePosX + _half.x;
-            currentPosY = basePosY + _half.y + p.groundLineOffsetY;
-            _probes.bottomLine.frontPoint =  { currentPosX + p.horizonFrontOffsetX,  currentPosY };
-            _probes.bottomLine.middlePoint = { currentPosX + p.horizonMidOffsetX,    currentPosY };
-            _probes.bottomLine.behindPoint = { currentPosX + p.horizonBehindOffsetX, currentPosY };
-        }
-        // Overhead probe (above the player)
-        {
-            currentPosX = basePosX + _half.x;
-            currentPosY = basePosY + _half.y + p.overheadLineOffsetY;
-            _probes.topLine.frontPoint =  { currentPosX + p.horizonFrontOffsetX,  currentPosY };
-            _probes.topLine.middlePoint = { currentPosX + p.horizonMidOffsetX,    currentPosY };
-            _probes.topLine.behindPoint = { currentPosX + p.horizonBehindOffsetX, currentPosY };
-        }
-        // Check behind BG tile probe
-        {
-            currentPosX = pos.x + _half.x + (static_cast<int>(facingLR) * 1);
-            currentPosY = pos.y + _half.y;
-            _probes.behindGround.topPoint    = { currentPosX, currentPosY + p.verticalTopOffsetY };
-            _probes.behindGround.middlePoint = { currentPosX, currentPosY + p.verticalMidOffsetY };
-            _probes.behindGround.bottomPoint = { currentPosX, currentPosY + p.verticalBtmOffsetY };
-        }
+        _probes.refreshAll(cx, _tuning.probeOffsets);
     }
 }

@@ -8,8 +8,9 @@
 //==============================================================================
 #pragma once
 
-#include <cmath>
+#include <cstdlib>
 #include "apps/foundation/math/CoordinateTypes.h"
+#include "apps/systems/physics/ITerrainProbe.h"
 #include "apps/world/entity/avatar/AvatarStatus.h"
 #include "apps/world/entity/avatar/PlayerContext.h"
 #include "apps/world/entity/avatar/PlayerParams.h"
@@ -52,8 +53,28 @@ namespace mm2hack::apps::world::entity::avatar::abilities
         return GroundMoveIntent{ sign, t.haltSpeed, t.haltSpeed > 0.0 };
     }
 
+    // Create AirMoveIntent based on input and PlayerTuning (Intended for use with air behavior)
+    inline AirMoveIntent MakeAirMoveIntent(StateProvider* in, const PlayerTuning& t)
+    {
+        const bool left = in->IsPressed(JPBTN::LEFT);
+        const bool right = in->IsPressed(JPBTN::RIGHT);
+
+        if (left ^ right)
+        {
+            return AirMoveIntent{ left ? -1 : +1, t.airStrafeVelocity, t.airStrafeVelocity > 0.0 };
+        }
+
+        return AirMoveIntent{ 0, 0.0, false };
+    }
+
     // *ApplyGroundMove; X-axis movement for ground
     inline void ApplyGroundMove(PlayerContext& cx, const GroundMoveIntent& intent)
+    {
+        cx.vel.x = (intent.active) ? intent.speed * static_cast<double>(intent.dirSign) : 0.0;
+    }
+
+    // *ApplyAirMove; X-axis movement for air
+    inline void ApplyAirMove(PlayerContext& cx, const AirMoveIntent& intent)
     {
         cx.vel.x = (intent.active) ? intent.speed * static_cast<double>(intent.dirSign) : 0.0;
     }
@@ -74,30 +95,33 @@ namespace mm2hack::apps::world::entity::avatar::abilities
     }
 
     // *StartJump; sets vertical speed for jump
-    inline void DoJump(PlayerContext& cx, const PlayerTuning& t)
+    inline bool DoJump(PlayerContext& cx, const PlayerTuning& t)
     {
+        cx.animeStepper.reset();
         if (cx.terrain->SweepVertical(cx.probes, -0x00.01p0).hit)
         {
             // Cannot jump if there is a ceiling right above.
-            return;
+            return false;
         }
         // Add jump impulse.
         SetJumpVelocity(cx.vel, t.jumpImpulse);
+        return true;
     }
 
     // *UpdateAirHorizontalVelocity; X-axis movement for air (do not decelerate in air)
-    inline void ApplyAirControl(Vec2& vel, bool left, bool right, double accel)
+    inline void ApplyAirControl(PlayerContext& cx, AirMoveIntent& intent)
     {
-        if (left ^ right)
+        if (!intent.active)
         {
-            double s = left ? -1.0 : 1.0;
-            vel.x = s * accel;
+            return;
         }
-        else
+
+        const double dx = intent.speed * static_cast<double>(intent.dirSign);
+        const auto hit = cx.terrain->SweepHorizontal(cx.probes, dx, true);
+        if (hit.hit)
         {
-            vel.x = 0.0;
+            intent.speed = std::abs(hit.maxDistanceX);
         }
-        // NOTE: Do not decelerate in air. (Realistic physics)
     }
 
     inline void ApplyGravity(Vec2& vel, double g, double terminal)
@@ -116,6 +140,9 @@ namespace mm2hack::apps::world::entity::avatar::abilities
         }
         else    // Stopped jumping midway, start falling faster.
         {
+            // NOTE:
+            // Sets a downward velocity lower than the jump threshold to prevent mid-air jumps,
+            // maintaining realistic physics after jump cut.
             cx.vel.y = t.jumpCutVelocity;
         }
     }
@@ -124,9 +151,5 @@ namespace mm2hack::apps::world::entity::avatar::abilities
     inline void AdjustVerticalSpeedForGravity(PlayerContext& cx, const PlayerTuning& t)
     {
         SubjectToGravityOnGround(cx, t);
-
-        //double y = 0.0, f = 0.0;
-        //y = -std::modf(cx.pos.y, &f);
-        //cx.vel.y = y ? y : t.gravity;
     }
 }

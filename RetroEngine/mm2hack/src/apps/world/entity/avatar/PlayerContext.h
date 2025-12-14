@@ -10,10 +10,14 @@
 
 #include "abilities/ServiceModules.h"
 #include "apps/foundation/math/CoordinateTypes.h"
-#include "apps/systems/physics/ITerrainProbe.h"
-#include "apps/systems/physics/Probes.h"
 #include "apps/world/entity/common/AnimeStepper.h"
 #include "AvatarStatus.h"
+
+namespace mm2hack::apps::systems::physics
+{
+    struct Probes;
+    class ITerrainProbe;
+}
 
 namespace mm2hack::apps::world::entity::avatar
 {

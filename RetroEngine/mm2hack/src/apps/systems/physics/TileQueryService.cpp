@@ -20,6 +20,22 @@ namespace mm2hack::apps::systems::physics
         }
     }
 
+    SweepHHit TileQueryService::SweepHorizontal(const Probes& probes, double dx, bool airFlag) const
+    {
+        if (dx > 0.0)
+        {
+            return sweepRight_(probes, dx, airFlag);
+        }
+        if (dx < 0.0)
+        {
+            return sweepLeft_(probes, dx, airFlag);
+        }
+
+        SweepHHit out{};
+        out.maxDistanceX = 0.0;
+        return out;
+    }
+
     SweepVHit TileQueryService::SweepVertical(const Probes& probes, double dy) const
     {
         if (dy > 0.0)
@@ -35,7 +51,17 @@ namespace mm2hack::apps::systems::physics
         }
 
         SweepVHit out{};
+        out.kind = VHitKind::Floor;
         out.maxDistanceY = dy;
+
+        TileAttribute b = TileAttribute::None;
+        if (probeCeiling_(probes, b, 1.0))
+        {
+            out.hit = false;
+            out.maxDistanceY = 0.0;
+            out.hitY = probes.topLine.middlePoint.y;
+            out.attr = b;
+        }
 
         TileAttribute a = TileAttribute::None;
         if (probeGround_(probes, a))
@@ -46,20 +72,16 @@ namespace mm2hack::apps::systems::physics
             out.attr = a;
         }
 
-        TileAttribute b = TileAttribute::None;
-        if (probeCeiling_(probes, b, 1.0))
-        {
-            out.hit = true;
-            out.attr = b;
-            out.hitY = probes.topLine.middlePoint.y;
-            out.maxDistanceY = 0.0;
-        }
-
         return out;
     }
 
     bool TileQueryService::IsGroundLike(const AvatarDirection /*direction*/, const Probes& probes, double dy) const
     {
+        if (dy <= 0.0)
+        {
+            return false;
+        }
+
         auto hit = SweepVertical(probes, dy);
         return hit.hit;
     }
@@ -69,56 +91,173 @@ namespace mm2hack::apps::systems::physics
         return isLadderTopUnderfoot_(direction, probes, speedY);
     }
 
-    SweepVHit TileQueryService::sweepDown_(const Probes& probes, double dy) const
+    bool TileQueryService::probeWall_(const Probes& probes, TileAttribute& outAttr, double peekX) const
     {
-        SweepVHit out{};
-        out.maxDistanceY = dy;
+        outAttr = TileAttribute::None;
 
-        if (dy <= 0.0) return out;
+        const double rightProbeX = probes.frontLine.middlePoint.x + std::max(0.0, peekX);
+        const double leftProbeX = probes.rearLine.middlePoint.x - std::max(0.0, peekX);
 
-        const double curBottomY = probes.bottomLine.middlePoint.y;
-        const double targetY = curBottomY + dy;
+        const double ysRight[] = {
+            probes.frontLine.topPoint.y,
+            probes.frontLine.middlePoint.y,
+            probes.frontLine.bottomPoint.y
+        };
 
-        const double xs[] = {
-            probes.bottomLine.frontPoint.x,
-            probes.bottomLine.middlePoint.x,
-            probes.bottomLine.behindPoint.x
+        const double ysLeft[] = {
+            probes.rearLine.topPoint.y,
+            probes.rearLine.middlePoint.y,
+            probes.rearLine.bottomPoint.y
+        };
+
+        for (double y : ysRight)
+        {
+            const TileAttribute a = classifyWallAt_(rightProbeX, y);
+            if (a != TileAttribute::None)
+            {
+                outAttr = a;
+                return true;
+            }
+        }
+
+        for (double y : ysLeft)
+        {
+            const TileAttribute a = classifyWallAt_(leftProbeX, y);
+            if (a != TileAttribute::None)
+            {
+                outAttr = a;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    SweepHHit TileQueryService::sweepRight_(const Probes& probes, double dx, bool airFlag) const
+    {
+        SweepHHit out{};
+        out.maxDistanceX = dx;
+
+        if (dx <= 0.0)
+        {
+            return out;
+        }
+
+        const double curSideX = probes.frontLine.middlePoint.x;
+        const double targetSideX = curSideX + dx;
+        const double point3 = airFlag ? probes.frontLine.bottomPoint2.y : probes.frontLine.bottomPoint.y;
+
+        const double ys[] = {
+            probes.frontLine.topPoint.y,
+            probes.frontLine.middlePoint.y,
+            point3
         };
 
         bool found = false;
-        double bestDist = dy;
+        double bestDist = dx;
+        double bestHitX = curSideX + dx;
         TileAttribute bestAttr = TileAttribute::None;
 
-        for (double x : xs)
+        for (double py : ys)
         {
-            const auto g = classifyGroundAt_(x, targetY, /*includeOneWay=*/true);
-            if (g == TileAttribute::None)
+            const TileAttribute a = classifyWallAt_(targetSideX, py);
+            if (a == TileAttribute::None)
             {
-                continue;   // No reached ground here.
+                continue;
             }
 
-            const int row = static_cast<int>(targetY) / _ts;
-            const double topY = static_cast<double>(row * _ts);
+            // Tile column at destination x
+            const int col = static_cast<int>(targetSideX) / _ts;
 
-            double dist = topY - curBottomY;
+            // When moving right, we must stop at the tile's LEFT edge: col * ts
+            const double wallLeftX = static_cast<double>(col * _ts);
+
+            // Distance so that curSideX + dist == wallLeftX
+            double dist = wallLeftX - curSideX; // should be >= 0
             if (dist < 0.0) dist = 0.0;
-            if (dist > dy)  dist = dy;
+            if (dist > dx)  dist = dx;
 
             if (!found || dist < bestDist)
             {
                 found = true;
                 bestDist = dist;
-                bestAttr = g;
+                bestHitX = curSideX + dist;
+                bestAttr = a;
             }
         }
 
         if (found)
         {
             out.hit = true;
-            out.maxDistanceY = bestDist;
-            out.hitY = curBottomY + bestDist; // will be on top of the ground
+            out.maxDistanceX = bestDist;
+            out.hitX = bestHitX;
             out.attr = bestAttr;
         }
+
+        return out;
+    }
+
+    SweepHHit TileQueryService::sweepLeft_(const Probes& probes, double dx, bool airFlag) const
+    {
+        SweepHHit out{};
+        out.maxDistanceX = dx;
+
+        if (dx >= 0.0)
+        {
+            return out;
+        }
+
+        const double curSideX = probes.frontLine.middlePoint.x;
+        const double targetSideX = curSideX + dx; // dx is negative
+        const double point3 = airFlag ? probes.frontLine.bottomPoint2.y : probes.frontLine.bottomPoint.y;
+
+        const double ys[] = {
+            probes.frontLine.topPoint.y,
+            probes.frontLine.middlePoint.y,
+            point3
+        };
+
+        bool found = false;
+        double bestDist = dx;                 // negative; best is closer to 0 => larger value
+        double bestHitX = curSideX + dx;
+        TileAttribute bestAttr = TileAttribute::None;
+
+        for (double py : ys)
+        {
+            const TileAttribute a = classifyWallAt_(targetSideX, py);
+            if (a == TileAttribute::None)
+            {
+                continue;
+            }
+
+            const int col = static_cast<int>(targetSideX) / _ts;
+
+            // When moving left, stop at the tile's RIGHT edge: (col + 1) * ts
+            const double wallRightX = static_cast<double>((col + 1) * _ts);
+
+            // Distance so that curSideX + dist == wallRightX
+            double dist = wallRightX - curSideX; // should be <= 0
+            if (dist > 0.0) dist = 0.0;
+            if (dist < dx)  dist = dx;
+
+            // Choose the closest collision (largest dist, since dx is negative)
+            if (!found || dist > bestDist)
+            {
+                found = true;
+                bestDist = dist;
+                bestHitX = curSideX + dist;
+                bestAttr = a;
+            }
+        }
+
+        if (found)
+        {
+            out.hit = true;
+            out.maxDistanceX = bestDist;
+            out.hitX = bestHitX;
+            out.attr = bestAttr;
+        }
+
         return out;
     }
 
@@ -151,6 +290,60 @@ namespace mm2hack::apps::systems::physics
 
         outAttr = best;
         return best != TileAttribute::None;
+    }
+
+    SweepVHit TileQueryService::sweepDown_(const Probes& probes, double dy) const
+    {
+        SweepVHit out{};
+        out.kind = VHitKind::Floor;
+        out.maxDistanceY = dy;
+
+        if (dy <= 0.0) return out;
+
+        const double curBottomY = probes.bottomLine.middlePoint.y;
+        const double targetY = curBottomY + dy;
+
+        const double xs[] = {
+            probes.bottomLine.frontPoint.x,
+            probes.bottomLine.middlePoint.x,
+            probes.bottomLine.behindPoint.x
+        };
+
+        bool found = false;
+        double bestDist = dy;
+        TileAttribute bestAttr = TileAttribute::None;
+
+        const int row = static_cast<int>(targetY) / _ts;
+        const double topY = static_cast<double>(row * _ts);
+
+        for (double x : xs)
+        {
+            const auto g = classifyGroundAt_(x, targetY, /*includeOneWay=*/true);
+            if (g == TileAttribute::None)
+            {
+                continue;   // No reached ground here.
+            }
+
+            double dist = topY - curBottomY;
+            if (dist < 0.0) dist = 0.0;
+            if (dist > dy)  dist = dy;
+
+            if (!found || dist < bestDist)
+            {
+                found = true;
+                bestDist = dist;
+                bestAttr = g;
+            }
+        }
+
+        if (found)
+        {
+            out.hit = true;
+            out.maxDistanceY = bestDist;
+            out.hitY = curBottomY + bestDist; // will be on top of the ground
+            out.attr = bestAttr;
+        }
+        return out;
     }
 
     bool TileQueryService::hasBlockUnderfoot_(const AvatarDirection direction, const Probes& probes, double dy) const
@@ -238,6 +431,7 @@ namespace mm2hack::apps::systems::physics
     SweepVHit TileQueryService::sweepUp_(const Probes& probes, double dy) const
     {
         SweepVHit out{};
+        out.kind = VHitKind::Ceiling;
         out.maxDistanceY = dy;
 
         if (dy >= 0.0)
@@ -336,6 +530,16 @@ namespace mm2hack::apps::systems::physics
     {
         const TileAttribute a = attrAt_(x, probeY);
 
+        if (Has(a, TileAttribute::Solid))
+        {
+            return TileAttribute::Solid;
+        }
+        return TileAttribute::None;
+    }
+
+    TileAttribute TileQueryService::classifyWallAt_(double x, double y) const
+    {
+        const TileAttribute a = attrAt_(x, y);
         if (Has(a, TileAttribute::Solid))
         {
             return TileAttribute::Solid;

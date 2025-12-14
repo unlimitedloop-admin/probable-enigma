@@ -32,6 +32,8 @@ namespace mm2hack::apps::systems::physics
         {
         }
 
+        // H-sweep: If moving dx, will it hit something?
+        SweepHHit SweepHorizontal(const Probes& probes, double dx, bool airFlag = false) const override;
         // V-sweep: If moving dy, will it hit something?
         SweepVHit SweepVertical(const Probes& probes, double dy) const override;
         // Returns true if the feet are considered "ground-like" (floor or ladder top special case)
@@ -40,10 +42,17 @@ namespace mm2hack::apps::systems::physics
         bool IsLadderTop(const AvatarDirection direction, const Probes& probes, double dy) const override;
 
     private:
-        // Sweeps downwards to check for collisions with the terrain
-        SweepVHit sweepDown_(const Probes& probes, double dy) const;
+        // Check for wall collision using side probes
+        bool probeWall_(const Probes& probes, TileAttribute& outAttr, double peekX = 1.0) const;
+        // Sweeps rightwards to check for collisions with the terrain
+        SweepHHit sweepRight_(const Probes& probes, double dx, bool airFlag = false) const;
+        // Sweeps leftwards to check for collisions with the terrain
+        SweepHHit sweepLeft_(const Probes& probes, double dx, bool airFlag = false) const;
+
         // Check for ground collision using bottom probes
         bool probeGround_(const Probes& probes, TileAttribute& outAttr) const;
+        // Sweeps downwards to check for collisions with the terrain
+        SweepVHit sweepDown_(const Probes& probes, double dy) const;
 
         // Check to see if there are any blocks at underfoot meeting the criteria
         bool hasBlockUnderfoot_(const AvatarDirection direction, const Probes& probes, double dy) const;
@@ -64,6 +73,8 @@ namespace mm2hack::apps::systems::physics
         TileAttribute classifyGroundAt_(double x, double probeY, bool includeOneWay) const;
         // Classify ceiling tile attributes at specific probe points, only Solid collides from below
         TileAttribute classifyCeilingAt_(double x, double probeY) const;
+        // Classify wall tile attributes at specific probe points, only Solid collides from sides
+        TileAttribute classifyWallAt_(double x, double y) const;
 
     private:
         const std::wstring kClassName{ L"TileQueryService" };

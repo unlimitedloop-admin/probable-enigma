@@ -2,6 +2,7 @@
 
 #include "HoveringState.h"
 
+#include "apps/systems/physics/ITerrainProbe.h"
 #include "apps/world/entity/avatar/abilities/AnimationAbilities.h"
 #include "apps/world/entity/avatar/abilities/MovementAbilities.h"
 #include "apps/world/entity/avatar/AvatarStatus.h"
@@ -18,7 +19,17 @@ namespace mm2hack::apps::world::entity::avatar::states
     {
         using namespace abilities;
         // X-axis air movement.
-        ApplyAirControl(cx.vel, in->IsPressed(JPBTN::LEFT), in->IsPressed(JPBTN::RIGHT), t.airStrafeVelocity);
+        auto intent = MakeAirMoveIntent(in, t);
+
+        if (in->IsPressed(JPBTN::LEFT))  cx.facingLR = AvatarDirection::Left;
+        if (in->IsPressed(JPBTN::RIGHT)) cx.facingLR = AvatarDirection::Right;
+        cx.probes.swapFrontLR(cx, t.probeOffsets); // Update front/rear probes based on facing direction.
+
+        ApplyAirControl(cx, intent);
+        ApplyAirMove(cx, intent);
+
+        // Jump or falling [Yaxis] movement. (Common airborne behavior)
+        UpdateVerticalVelocity(cx, t, in->IsPressed(JPBTN::A));
 
         // Call after cx.texture is set; adds facing offset (0 right, 40 left for AvatarAnimation enums).
         auto applyFacing = [&](void) noexcept
@@ -34,7 +45,7 @@ namespace mm2hack::apps::world::entity::avatar::states
         if (hit.hit)
         {
             cx.vel.y = hit.maxDistanceY;
-            cx.onGround = true;
+            cx.onGround = (hit.kind == systems::physics::VHitKind::Floor);
         }
         else
         {
@@ -54,7 +65,7 @@ namespace mm2hack::apps::world::entity::avatar::states
             else if (in->IsPressed(JPBTN::LEFT) || in->IsPressed(JPBTN::RIGHT))
             {
                 cx.texture = static_cast<int>(STile::RunningA);
-                LandingMove(cx, t);
+                //LandingMove(cx, t);
                 applyFacing();
                 return AvatarStatus::Running;
             }
@@ -66,8 +77,6 @@ namespace mm2hack::apps::world::entity::avatar::states
             }
         }
 
-        // Jump or falling [Yaxis] movement. (Common airborne behavior)
-        UpdateVerticalVelocity(cx, t, in->IsPressed(JPBTN::A));
         cx.texture = static_cast<int>(STile::Airpause);
         applyFacing();
         return AvatarStatus::Hovering;

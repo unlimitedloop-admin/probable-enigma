@@ -21,13 +21,16 @@ namespace mm2hack::apps::world::entity::avatar
         double rearLineOffsetX      { -8.0 };       // X offset for rear line probe
         double verticalTopOffsetY   { -14.0 };      // Y offset for top line probe
         double verticalMidOffsetY   { -7.0 };       // Y offset for middle line probe
-        double verticalBtmOffsetY   { 12.0 };       // Y offset for bottom line probe
+        double verticalBtmOffsetY   { 8.0 };        // Y offset for bottom line probe
+        double verticalBtmOffsetY2  { 9.0 };        // Y offset for second bottom line probe (Probes in hovering)
 
         double groundLineOffsetY    { 9.0 };        // Y offset for ground line probe
-        double overheadLineOffsetY  { -14.0 };      // Y offset for overhead line probe
+        double overheadLineOffsetY  { -15.0 };      // Y offset for overhead line probe
         double horizonFrontOffsetX  { 7.0 };        // X offset for horizon front probe
         double horizonMidOffsetX    { 0.0 };        // X offset for horizon middle probe
         double horizonBehindOffsetX { -7.0 };       // X offset for horizon behind probe
+        double horizonFrontOffsetXA { 7.0 };        // X offset for horizon front probe (airborne)
+        double horizonBehindOffsetXA{ -7.0 };       // X offset for horizon behind probe (airborne)
     };
 
     // Controlling avatar parameters for physics and movement
@@ -50,11 +53,19 @@ namespace mm2hack::apps::world::entity::avatar
         PlayerProbes probeOffsets;                  // Player probes offsets
     };
 
-    // Structure to represent ground movement intent, Pre-declare this data type for use with GroundMove
+    // Structure to represent ground movement intent, Pre-declare this data type for use with ApplyGroundMove
     struct GroundMoveIntent
     {
         int dirSign{ 0 };     // -1 left, +1 right, 0 none
-        double speed{ 0.0 };  // absolute speed (>=0)
+        double speed{ 0.0 };  // absolute horizontal speed (>=0)
+        bool active{ false }; // should apply this frame?
+    };
+
+    // Structure to represent air movement intent, Pre-declare this data type for use with ApplyAirControl
+    struct AirMoveIntent
+    {
+        int dirSign{ 0 };     // -1 left, +1 right, 0 none
+        double speed{ 0.0 };  // absolute horizontal speed (>=0)
         bool active{ false }; // should apply this frame?
     };
 }

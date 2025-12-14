@@ -26,6 +26,7 @@
 #include "apps/world/entity/IEntity.h"
 #include "AvatarStatus.h"
 #include "IPlayerState.h"
+#include "PlayerContext.h"
 #include "PlayerParams.h"
 
 namespace mm2hack::core::assembly
@@ -94,7 +95,7 @@ namespace mm2hack::apps::world::entity::avatar
         int  texture{ 0 };
 
     private:
-        void refreshProbes_() noexcept;
+        void refreshProbes_(PlayerContext& cx) noexcept;
 
     private:
         const std::wstring kClassName{ L"PlayerEntity" };
@@ -124,7 +125,7 @@ namespace mm2hack::apps::world::entity::avatar
         StateProvider*                 _input{};                        // Player input snapshot (This is separate from core::assembly::InputSnapshot)
         PlayerTuning                   _tuning{};                       // Player tuning parameters
         AnimeStepper                   _animeStepper{};                 // Animation stepper
-        Probes                         _probes{};                       // Collision probes
+        Probes                         _probes{ _half };                // Collision probes
         const ITerrainProbe*           _terrainProbe{ nullptr };        // Terrain probe
         abilities::ILadderService*     _ladderService{ nullptr };       // Ladder action service
     };

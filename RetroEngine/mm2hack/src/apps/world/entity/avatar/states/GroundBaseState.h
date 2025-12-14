@@ -22,7 +22,7 @@ namespace mm2hack::apps::world::entity::avatar::states
     {
     protected:
         // Executes common ground processing; controlled to skip if not overridden (HoveringState etc...)
-        void GroundPipeline(PlayerContext& cx, StateProvider* in, const PlayerTuning& t, const GroundMoveIntent intent);
+        void GroundPipeline(PlayerContext& cx, StateProvider* in, const PlayerTuning& t, GroundMoveIntent intent);
 
     private:
         const std::wstring kClassName{ L"GroundBaseState" };
