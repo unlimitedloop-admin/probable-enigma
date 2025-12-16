@@ -3,7 +3,7 @@
 //  Project: mm2hack
 //  EntityBase.h
 // 
-//  TODO: Add description.
+//  Base class for all entities in the game.
 // 
 //==============================================================================
 #pragma once

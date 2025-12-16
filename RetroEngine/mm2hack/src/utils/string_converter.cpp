@@ -65,7 +65,6 @@ namespace mm2hack::utils
             const std::size_t canCopy = std::min(pieceLen, maxChars - pos);
             if (canCopy > 0)
             {
-                // piece.data() は const wchar_t*
                 std::wmemcpy(outBuf + pos, piece.data(), canCopy);
                 pos += canCopy;
             }

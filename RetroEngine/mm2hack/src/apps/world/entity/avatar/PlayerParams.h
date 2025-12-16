@@ -29,8 +29,8 @@ namespace mm2hack::apps::world::entity::avatar
         double horizonFrontOffsetX  { 7.0 };        // X offset for horizon front probe
         double horizonMidOffsetX    { 0.0 };        // X offset for horizon middle probe
         double horizonBehindOffsetX { -7.0 };       // X offset for horizon behind probe
-        double horizonFrontOffsetXA { 7.0 };        // X offset for horizon front probe (airborne)
-        double horizonBehindOffsetXA{ -7.0 };       // X offset for horizon behind probe (airborne)
+        //double horizonFrontOffsetXA { 7.0 };        // X offset for horizon front probe (airborne)
+        //double horizonBehindOffsetXA{ -7.0 };       // X offset for horizon behind probe (airborne)
     };
 
     // Controlling avatar parameters for physics and movement

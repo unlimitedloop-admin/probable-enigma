@@ -28,15 +28,6 @@ namespace mm2hack::apps::world::entity::avatar::states
                 FacingDirection(cx, cx.facingLR);   // Set facing direction at 'cx.texture'.
             };
 
-        // Speed down to brake run when no input.
-        if (!in->IsPressed(JPBTN::LEFT) && !in->IsPressed(JPBTN::RIGHT))
-        {
-            cx.animeStepper.reset();
-            cx.texture = static_cast<int>(STile::RunningIntro);
-            applyFacing();
-            return AvatarStatus::BrakeRun;
-        }
-
         if (!cx.onGround)
         {
             cx.animeStepper.reset();
@@ -50,6 +41,15 @@ namespace mm2hack::apps::world::entity::avatar::states
             cx.texture = static_cast<int>(STile::Airpause);
             applyFacing();
             return AvatarStatus::Hovering;
+        }
+
+        // Speed down to brake run when no input.
+        if (!in->IsPressed(JPBTN::LEFT) && !in->IsPressed(JPBTN::RIGHT))
+        {
+            cx.animeStepper.reset();
+            cx.texture = static_cast<int>(STile::RunningIntro);
+            applyFacing();
+            return AvatarStatus::BrakeRun;
         }
 
         StepRunningAnim(cx, t);

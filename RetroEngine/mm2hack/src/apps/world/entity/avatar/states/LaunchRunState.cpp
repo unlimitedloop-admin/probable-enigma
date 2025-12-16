@@ -28,15 +28,6 @@ namespace mm2hack::apps::world::entity::avatar::states
                 FacingDirection(cx, cx.facingLR);   // Set facing direction at 'cx.texture'.
             };
 
-        // Back to standing if no input.
-        if (!in->IsPressed(JPBTN::LEFT) && !in->IsPressed(JPBTN::RIGHT))
-        {
-            cx.animeStepper.reset();
-            cx.texture = static_cast<int>(STile::StandingA);
-            applyFacing();
-            return AvatarStatus::Standing;
-        }
-
         if (!cx.onGround)
         {
             cx.animeStepper.reset();
@@ -50,6 +41,15 @@ namespace mm2hack::apps::world::entity::avatar::states
             cx.texture = static_cast<int>(STile::Airpause);
             applyFacing();
             return AvatarStatus::Hovering;
+        }
+
+        // Back to standing if no input.
+        if (!in->IsPressed(JPBTN::LEFT) && !in->IsPressed(JPBTN::RIGHT))
+        {
+            cx.animeStepper.reset();
+            cx.texture = static_cast<int>(STile::StandingA);
+            applyFacing();
+            return AvatarStatus::Standing;
         }
 
         const bool bursted = StepLaunchRunAnim(cx, t);

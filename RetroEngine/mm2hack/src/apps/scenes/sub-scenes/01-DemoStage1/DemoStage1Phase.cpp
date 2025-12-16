@@ -87,16 +87,16 @@ namespace mm2hack::apps::scenes
 
         void MainPhase::RenderOverlay()
         {
-            using namespace utils;
-            wchar_t buf[128]{};
-            int dispY = 8;
-            ::swprintf(buf, 128, L"PageIndex = %d", _page_index_debug);
-            ::DxLib::DrawString(8, dispY, buf, 0xFFFFFF00);
-            dispY += 16;
-            const std::wstring xstr = decode_floating_hex_number(_player_pos_x_debug);
-            const std::wstring ystr = decode_floating_hex_number(_player_pos_y_debug);
-            concat_to_wchar_buffer(buf, sizeof(buf) / sizeof(buf[0]), { L"Player Pos = (", xstr, L", ", ystr, L")" });
-            ::DxLib::DrawString(8, dispY, buf, 0xFFFF0000);
+            //using namespace utils;
+            //wchar_t buf[128]{};
+            //int dispY = 8;
+            //::swprintf(buf, 128, L"PageIndex = %d", _page_index_debug);
+            //::DxLib::DrawString(8, dispY, buf, 0xFFFFFF00);
+            //dispY += 16;
+            //const std::wstring xstr = decode_floating_hex_number(_player_pos_x_debug);
+            //const std::wstring ystr = decode_floating_hex_number(_player_pos_y_debug);
+            //concat_to_wchar_buffer(buf, sizeof(buf) / sizeof(buf[0]), { L"Player Pos = (", xstr, L", ", ystr, L")" });
+            //::DxLib::DrawString(8, dispY, buf, 0xFFFF0000);
         }
 
         DemoStage1PhaseId MainPhase::Id() const noexcept

@@ -2,6 +2,7 @@
 
 #include "GroundBaseState.h"
 
+#include <cstdlib>
 #include "apps/systems/physics/ITerrainProbe.h"
 #include "apps/world/entity/avatar/abilities/MovementAbilities.h"
 #include "apps/world/entity/avatar/AvatarStatus.h"
@@ -21,10 +22,11 @@ namespace mm2hack::apps::world::entity::avatar::states
         cx.probes.swapFrontLR(cx, t.probeOffsets); // Update front/rear probes based on facing direction.
 
         // X-axis ground movement. check horizontal collisions.
-        auto hHit = cx.terrain->SweepHorizontal(cx.probes, intent.speed);
+        const double dx = intent.speed * static_cast<double>(intent.dirSign);
+        auto hHit = cx.terrain->SweepHorizontal(cx.probes, dx);
         if (hHit.hit)
         {
-            intent.speed = hHit.maxDistanceX;
+            intent.speed = std::abs(hHit.maxDistanceX);
         }
         ApplyGroundMove(cx, intent);
 
@@ -32,7 +34,7 @@ namespace mm2hack::apps::world::entity::avatar::states
         AdjustVerticalSpeedForGravity(cx, t);
         
         // Update onGround status. check vertical collisions.
-        auto vHit = cx.terrain->SweepVertical(cx.probes, cx.vel.y);
+        auto vHit = cx.terrain->SweepVertical(cx.probes, cx.vel);
         if (vHit.hit)
         {
             cx.vel.y = vHit.maxDistanceY;

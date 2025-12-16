@@ -41,7 +41,7 @@ namespace mm2hack::apps::world::entity::avatar::states
 
         // Y-axis air movement.
         // Update onGround status. check below the player's bounding box.
-        auto hit = cx.terrain->SweepVertical(cx.probes, cx.vel.y);
+        auto hit = cx.terrain->SweepVertical(cx.probes, cx.vel);
         if (hit.hit)
         {
             cx.vel.y = hit.maxDistanceY;

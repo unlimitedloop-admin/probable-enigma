@@ -16,8 +16,8 @@
 
 namespace mm2hack::apps::systems::physics
 {
-    using foundation::math::Vec2;
     using apps::world::entity::avatar::AvatarDirection;
+    using foundation::math::Vec2;
 
     enum class VHitKind : std::uint8_t
     {
@@ -45,6 +45,14 @@ namespace mm2hack::apps::systems::physics
         VHitKind kind{ VHitKind::None };
     };
 
+    // Result of an overlap fix operation on the X-axis
+    struct OverlapXFix
+    {
+        bool hit{ false };
+        double pushX{ 0.0 };
+    };
+
+
     // Terrain probing interface
     class ITerrainProbe
     {
@@ -53,7 +61,7 @@ namespace mm2hack::apps::systems::physics
         // H-sweep: If moving dx, will it hit something?
         virtual SweepHHit SweepHorizontal(const Probes& probes, double dx, bool airFlag = false) const = 0;
         // V-sweep: If moving dy, will it hit something?
-        virtual SweepVHit SweepVertical(const Probes& probes, double dy) const = 0;
+        virtual SweepVHit SweepVertical(const Probes& probes, Vec2 v) const = 0;
         // Returns true if the feet are considered "ground-like" (floor or ladder top special case)
         virtual bool IsGroundLike(const AvatarDirection direction, const Probes& probes, double dy) const = 0;
         // Returns true if special handling for being at the "top" of a ladder is needed

@@ -36,23 +36,23 @@ namespace mm2hack::apps::systems::physics
         return out;
     }
 
-    SweepVHit TileQueryService::SweepVertical(const Probes& probes, double dy) const
+    SweepVHit TileQueryService::SweepVertical(const Probes& probes, Vec2 v) const
     {
-        if (dy > 0.0)
+        if (v.y > 0.0)
         {
             // Moving down
-            return sweepDown_(probes, dy);
+            return sweepDown_(probes, v.x, v.y);
         }
 
-        if (dy < 0.0)
+        if (v.y < 0.0)
         {
             // Moving up
-            return sweepUp_(probes, dy);
+            return sweepUp_(probes, v.x, v.y);
         }
 
         SweepVHit out{};
         out.kind = VHitKind::Floor;
-        out.maxDistanceY = dy;
+        out.maxDistanceY = v.y;
 
         TileAttribute b = TileAttribute::None;
         if (probeCeiling_(probes, b, 1.0))
@@ -82,7 +82,7 @@ namespace mm2hack::apps::systems::physics
             return false;
         }
 
-        auto hit = SweepVertical(probes, dy);
+        auto hit = SweepVertical(probes, Vec2{ 0.0, dy });
         return hit.hit;
     }
 
@@ -292,7 +292,7 @@ namespace mm2hack::apps::systems::physics
         return best != TileAttribute::None;
     }
 
-    SweepVHit TileQueryService::sweepDown_(const Probes& probes, double dy) const
+    SweepVHit TileQueryService::sweepDown_(const Probes& probes, double dx, double dy) const
     {
         SweepVHit out{};
         out.kind = VHitKind::Floor;
@@ -318,7 +318,7 @@ namespace mm2hack::apps::systems::physics
 
         for (double x : xs)
         {
-            const auto g = classifyGroundAt_(x, targetY, /*includeOneWay=*/true);
+            const auto g = classifyGroundAt_(x + dx, targetY, /*includeOneWay=*/true);
             if (g == TileAttribute::None)
             {
                 continue;   // No reached ground here.
@@ -428,7 +428,7 @@ namespace mm2hack::apps::systems::physics
         return false;
     }
 
-    SweepVHit TileQueryService::sweepUp_(const Probes& probes, double dy) const
+    SweepVHit TileQueryService::sweepUp_(const Probes& probes, double dx, double dy) const
     {
         SweepVHit out{};
         out.kind = VHitKind::Ceiling;
@@ -457,7 +457,7 @@ namespace mm2hack::apps::systems::physics
         // We sample at the destination; for very large |dy| you may later replace this with row-walk sweep.
         for (double x : xs)
         {
-            const TileAttribute hitAttr = classifyCeilingAt_(x, targetTopY);
+            const TileAttribute hitAttr = classifyCeilingAt_(x + dx, targetTopY);
             if (hitAttr == TileAttribute::None)
             {
                 continue;

@@ -114,8 +114,8 @@ namespace mm2hack::apps::systems::physics
                 bottomLine.frontPoint   = { currentPosX + p.horizonFrontOffsetX,   currentPosY };
                 bottomLine.middlePoint  = { currentPosX + p.horizonMidOffsetX,     currentPosY };
                 bottomLine.behindPoint  = { currentPosX + p.horizonBehindOffsetX,  currentPosY };
-                bottomLine.frontPoint2  = { currentPosX + p.horizonFrontOffsetXA,  currentPosY };
-                bottomLine.behindPoint2 = { currentPosX + p.horizonBehindOffsetXA, currentPosY };
+                //bottomLine.frontPoint2  = { currentPosX + p.horizonFrontOffsetXA,  currentPosY };
+                //bottomLine.behindPoint2 = { currentPosX + p.horizonBehindOffsetXA, currentPosY };
             }
             // Overhead probe (above the player)
             {

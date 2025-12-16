@@ -3,7 +3,7 @@
 //  Project: mm2hack
 //  IEntity.h
 // 
-//  TODO: Add description.
+//  Interface for all entities in the game.
 // 
 //==============================================================================
 #pragma once

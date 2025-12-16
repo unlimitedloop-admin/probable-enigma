@@ -3,7 +3,7 @@
 //  Project: mm2hack
 //  ICollider.h
 // 
-//  TODO: Add description.
+//  Interface for all collidable entities.
 // 
 //==============================================================================
 #pragma once

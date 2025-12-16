@@ -3,7 +3,7 @@
 //  Project: mm2hack
 //  IUpdatable.h
 // 
-//  TODO: Add description.
+//  Interface for all updatable entities.
 // 
 //==============================================================================
 #pragma once

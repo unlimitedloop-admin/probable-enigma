@@ -28,15 +28,6 @@ namespace mm2hack::apps::world::entity::avatar::states
                 FacingDirection(cx, cx.facingLR);   // Set facing direction at 'cx.texture'.
             };
 
-        // Begin running if left/right key is pressed.
-        if (in->IsPressed(JPBTN::LEFT) || in->IsPressed(JPBTN::RIGHT))
-        {
-            cx.animeStepper.reset();
-            cx.texture = static_cast<int>(STile::RunningIntro);
-            applyFacing();
-            return AvatarStatus::LaunchRun;
-        }
-
         if (!cx.onGround)
         {
             cx.animeStepper.reset();
@@ -50,6 +41,15 @@ namespace mm2hack::apps::world::entity::avatar::states
             cx.texture = static_cast<int>(STile::Airpause);
             applyFacing();
             return AvatarStatus::Hovering;
+        }
+
+        // Begin running if left/right key is pressed.
+        if (in->IsPressed(JPBTN::LEFT) || in->IsPressed(JPBTN::RIGHT))
+        {
+            cx.animeStepper.reset();
+            cx.texture = static_cast<int>(STile::RunningIntro);
+            applyFacing();
+            return AvatarStatus::LaunchRun;
         }
 
         WaitingAnim(cx, t);

@@ -35,7 +35,7 @@ namespace mm2hack::apps::systems::physics
         // H-sweep: If moving dx, will it hit something?
         SweepHHit SweepHorizontal(const Probes& probes, double dx, bool airFlag = false) const override;
         // V-sweep: If moving dy, will it hit something?
-        SweepVHit SweepVertical(const Probes& probes, double dy) const override;
+        SweepVHit SweepVertical(const Probes& probes, Vec2 v) const override;
         // Returns true if the feet are considered "ground-like" (floor or ladder top special case)
         bool IsGroundLike(const AvatarDirection direction, const Probes& probes, double dy) const override;
         // Returns true if special handling for being at the "top" of a ladder is needed
@@ -52,7 +52,7 @@ namespace mm2hack::apps::systems::physics
         // Check for ground collision using bottom probes
         bool probeGround_(const Probes& probes, TileAttribute& outAttr) const;
         // Sweeps downwards to check for collisions with the terrain
-        SweepVHit sweepDown_(const Probes& probes, double dy) const;
+        SweepVHit sweepDown_(const Probes& probes, double dx, double dy) const;
 
         // Check to see if there are any blocks at underfoot meeting the criteria
         bool hasBlockUnderfoot_(const AvatarDirection direction, const Probes& probes, double dy) const;
@@ -64,7 +64,7 @@ namespace mm2hack::apps::systems::physics
         // Check just above the head line for ceiling collision (dy==0 stability / "bonk" checks)
         bool probeCeiling_(const Probes& probes, TileAttribute& outAttr, double peekY = 1.0) const;
         // Sweep upwards to check for collisions with the terrain
-        SweepVHit sweepUp_(const Probes& probes, double dy) const;
+        SweepVHit sweepUp_(const Probes& probes, double dx, double dy) const;
 
         // Attribute sampling
         TileAttribute attrAt_(double worldX, double worldY) const;

@@ -51,8 +51,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,0,1,33
- PRODUCTVERSION 0,0,1,33
+ FILEVERSION 0,0,1,34
+ PRODUCTVERSION 0,0,1,34
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -69,12 +69,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Sirius X"
             VALUE "FileDescription", "mm2hack"
-            VALUE "FileVersion", "0.0.1.33"
+            VALUE "FileVersion", "0.0.1.34"
             VALUE "InternalName", "mm2hack.exe"
             VALUE "LegalCopyright", "Copyright (C) 2025"
             VALUE "OriginalFilename", "mm2hack.exe"
             VALUE "ProductName", "mm2hack project"
-            VALUE "ProductVersion", "0.0.1.33"
+            VALUE "ProductVersion", "0.0.1.34"
         END
     END
     BLOCK "VarFileInfo"

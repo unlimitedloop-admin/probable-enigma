@@ -3,7 +3,7 @@
 //  Project: mm2hack
 //  IRenderable.h
 // 
-//  TODO: Add description.
+//  Interface for all renderable entities.
 // 
 //==============================================================================
 #pragma once

@@ -56,8 +56,8 @@ namespace mm2hack::apps::systems::scrolling::atomic
         }
 
         // Debug crosshair
-        ::DxLib::DrawLine(static_cast<int>(_object_pos.x), 0, static_cast<int>(_object_pos.x), _params.view_h, 0xFFFF0000, 2);
-        ::DxLib::DrawLine(0, static_cast<int>(_object_pos.y), _params.view_w, static_cast<int>(_object_pos.y), 0xFFFF0000, 2);
+        //::DxLib::DrawLine(static_cast<int>(_object_pos.x), 0, static_cast<int>(_object_pos.x), _params.view_h, 0xFFFF0000, 2);
+        //::DxLib::DrawLine(0, static_cast<int>(_object_pos.y), _params.view_w, static_cast<int>(_object_pos.y), 0xFFFF0000, 2);
     }
 
 

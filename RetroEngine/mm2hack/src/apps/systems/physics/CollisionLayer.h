@@ -3,7 +3,7 @@
 //  Project: mm2hack
 //  CollisionLayer.h
 // 
-//  TODO: Add description.
+//  Interface for all collision layers.
 // 
 //==============================================================================
 #pragma once
