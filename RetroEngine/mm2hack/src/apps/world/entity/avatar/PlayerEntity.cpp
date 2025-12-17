@@ -63,6 +63,20 @@ namespace mm2hack::apps::world::entity::avatar
 
         // Apply updated context values
         pos = cx.pos + cx.vel;
+
+        // Shift the avatar's position (coordinates) to match the terrain. This is mainly done against the terrain underfoot.
+        // after updating pos with vel.
+        refreshProbes_(cx);
+
+        if (cx.justLanded)
+        {
+            const auto fix = cx.terrain->ResolveOverlapX(cx.probes);    // Repenetration fix on X-axis.
+            if (fix.hit && fix.pushX != 0.0)
+            {
+                pos.x += fix.pushX;
+                refreshProbes_(cx);
+            }
+        }
     }
 
     // IRenderable

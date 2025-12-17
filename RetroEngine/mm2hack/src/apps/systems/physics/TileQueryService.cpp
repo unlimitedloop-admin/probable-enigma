@@ -2,6 +2,9 @@
 
 #include "TileQueryService.h"
 
+#include <cmath>
+#include <cstdlib>
+#include <limits>
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/world/entity/avatar/AvatarStatus.h"
 #include "ITerrainProbe.h"
@@ -89,6 +92,107 @@ namespace mm2hack::apps::systems::physics
     bool TileQueryService::IsLadderTop(const AvatarDirection direction, const Probes& probes, double speedY) const
     {
         return isLadderTopUnderfoot_(direction, probes, speedY);
+    }
+
+    OverlapXFix TileQueryService::ResolveOverlapX(const Probes& p) const
+    {
+        // Small epsilon to stay strictly outside the solid tile
+        constexpr double kEps = 0x00.01p0; // 1/256
+
+        OverlapXFix out{};
+
+        // Check whether a world position is inside a Solid tile
+        const auto isSolid = [&](double x, double y) noexcept -> bool
+            {
+                return Has(attrAt_(x, y), TileAttribute::Solid);
+            };
+
+        // Check three probe points (top/middle/bottom) on a vertical line
+        const auto insideLine3 = [&](double x, const auto& line) noexcept -> bool
+            {
+                return isSolid(x, line.topPoint.y) ||
+                    isSolid(x, line.middlePoint.y) ||
+                    isSolid(x, line.bottomPoint.y);
+            };
+
+        // Verify that after applying dx, BOTH front and rear probes are clear
+        const auto clearsAll = [&](double dx) noexcept -> bool
+            {
+                const double fx = p.frontLine.middlePoint.x + dx;
+                const double rx = p.rearLine.middlePoint.x + dx;
+
+                const bool f =
+                    isSolid(fx, p.frontLine.topPoint.y) ||
+                    isSolid(fx, p.frontLine.middlePoint.y) ||
+                    isSolid(fx, p.frontLine.bottomPoint.y);
+
+                const bool r =
+                    isSolid(rx, p.rearLine.topPoint.y) ||
+                    isSolid(rx, p.rearLine.middlePoint.y) ||
+                    isSolid(rx, p.rearLine.bottomPoint.y);
+
+                return !(f || r);
+            };
+
+        // Select the candidate with the smallest absolute displacement
+        auto best = [&](double curBest, double cand) noexcept -> double
+            {
+                return (std::abs(cand) < std::abs(curBest)) ? cand : curBest;
+            };
+
+        bool any = false;
+        double bestDx = 0.0;
+
+        // Add push candidates for a single probe X position
+        const auto addCandidatesForX = [&](double x) noexcept
+            {
+                if (!any) { bestDx = std::numeric_limits<double>::infinity(); any = true; }
+
+                // Determine the tile column this point belongs to
+                const int col = static_cast<int>(x) / _ts;
+
+                // Tile boundaries
+                const double tileLeft = static_cast<double>(col * _ts);
+                const double tileRight = static_cast<double>((col + 1) * _ts);
+
+                // Candidate pushes:
+                // - move left to just before the tile
+                // - move right to just after the tile
+                const double toLeft = (tileLeft - kEps) - x; // usually negative
+                const double toRight = (tileRight + kEps) - x; // usually positive
+
+                // Only accept candidates that fully clear both sides
+                if (clearsAll(toLeft)) { bestDx = best(bestDx, toLeft); }
+                if (clearsAll(toRight)) { bestDx = best(bestDx, toRight); }
+            };
+
+        // Detect horizontal penetration on each side
+        const bool frontInside = insideLine3(p.frontLine.middlePoint.x, p.frontLine);
+        const bool rearInside = insideLine3(p.rearLine.middlePoint.x, p.rearLine);
+
+        if (!frontInside && !rearInside)
+        {
+            return out;
+        }
+
+        if (frontInside) { addCandidatesForX(p.frontLine.middlePoint.x); }
+        if (rearInside) { addCandidatesForX(p.rearLine.middlePoint.x); }
+
+        if (!any || !std::isfinite(bestDx))
+        {
+            return out; // No safe correction found
+        }
+
+        // Safety clamp:
+        // Horizontal correction should never exceed one tile width
+        if (std::abs(bestDx) > static_cast<double>(_ts) + kEps)
+        {
+            return out;
+        }
+
+        out.hit = true;
+        out.pushX = bestDx;
+        return out;
     }
 
     bool TileQueryService::probeWall_(const Probes& probes, TileAttribute& outAttr, double peekX) const

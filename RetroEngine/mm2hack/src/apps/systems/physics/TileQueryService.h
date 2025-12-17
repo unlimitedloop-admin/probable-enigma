@@ -40,6 +40,8 @@ namespace mm2hack::apps::systems::physics
         bool IsGroundLike(const AvatarDirection direction, const Probes& probes, double dy) const override;
         // Returns true if special handling for being at the "top" of a ladder is needed
         bool IsLadderTop(const AvatarDirection direction, const Probes& probes, double dy) const override;
+        // Resolve horizontal overlap with Solid tiles
+        OverlapXFix ResolveOverlapX(const Probes& p) const override;
 
     private:
         // Check for wall collision using side probes

@@ -19,6 +19,7 @@ namespace mm2hack::apps::systems::physics
     using apps::world::entity::avatar::AvatarDirection;
     using foundation::math::Vec2;
 
+    // Kind of vertical hit
     enum class VHitKind : std::uint8_t
     {
         None,
@@ -49,7 +50,7 @@ namespace mm2hack::apps::systems::physics
     struct OverlapXFix
     {
         bool hit{ false };
-        double pushX{ 0.0 };
+        double pushX{ 0.0 };    // Positive: push right, Negative: push left
     };
 
 
@@ -66,5 +67,7 @@ namespace mm2hack::apps::systems::physics
         virtual bool IsGroundLike(const AvatarDirection direction, const Probes& probes, double dy) const = 0;
         // Returns true if special handling for being at the "top" of a ladder is needed
         virtual bool IsLadderTop(const AvatarDirection direction, const Probes& probes, double dy) const = 0;
+        // Resolve horizontal overlap with Solid tiles
+        virtual OverlapXFix ResolveOverlapX(const Probes& p) const = 0;
     };
 }
