@@ -24,7 +24,7 @@ namespace mm2hack::apps::world::entity::avatar::states
         // Executes common ground processing; controlled to skip if not overridden (HoveringState etc...)
         void GroundPipeline(PlayerContext& cx, StateProvider* in, const PlayerTuning& t, GroundMoveIntent intent);
 
-        bool TryEnterLadderFromGround(PlayerContext& cx, StateProvider* in, const PlayerTuning& t) const;
+        bool TryEnterLadderFromGround(PlayerContext& cx, StateProvider* in) const;
 
     private:
         const std::wstring kClassName{ L"GroundBaseState" };

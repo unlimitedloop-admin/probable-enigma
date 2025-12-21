@@ -638,10 +638,11 @@ namespace mm2hack::apps::systems::physics
         // Can also land on the top of a ladder.
         if (Has(below, TileAttribute::Ladder))
         {
-            // Make sure there's empty space just above the tile.
             const int row = static_cast<int>(std::floor(probeY / static_cast<double>(_ts)));
             const double topY = static_cast<double>(row * _ts);
-            const auto above = attrAt_(x, topY - 1.0);  // Just above the tile
+
+            constexpr double eps = config::SystemConfig::kEpsilon;
+            const auto above = attrAt_(x, topY - eps);
 
             if (Has(above, TileAttribute::Empty))
             {

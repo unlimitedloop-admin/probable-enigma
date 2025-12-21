@@ -19,7 +19,7 @@ namespace mm2hack::apps::world::entity::avatar::states
         using namespace abilities;
 
         // Branch to laddering state if ladder is detected.
-        if (TryEnterLadderFromGround(cx, in, t))
+        if (TryEnterLadderFromGround(cx, in))
         {
             //cx.animeStepper.reset();    // DELETE: This is done by the LadderingState::OnEnter().
             return AvatarStatus::Laddering;

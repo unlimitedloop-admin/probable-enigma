@@ -14,6 +14,7 @@
 #include "apps/world/entity/avatar/AvatarStatus.h"
 #include "apps/world/entity/avatar/PlayerContext.h"
 #include "apps/world/entity/avatar/PlayerParams.h"
+#include "config/SystemConfig.h"
 #include "core/assembly/StateProvider.h"
 #include "input/Jpbtn.h"
 
@@ -97,7 +98,7 @@ namespace mm2hack::apps::world::entity::avatar::abilities
     // *StartJump; sets vertical speed for jump
     inline bool DoJump(PlayerContext& cx, const PlayerTuning& t)
     {
-        double kEps = t.minimumTolerance; // 1/256
+        double kEps = config::SystemConfig::kEpsilon;   // 1/256
 
         cx.animeStepper.reset();
         if (cx.terrain->SweepVertical(cx.probes, Vec2{ 0.0, -kEps }).hit)

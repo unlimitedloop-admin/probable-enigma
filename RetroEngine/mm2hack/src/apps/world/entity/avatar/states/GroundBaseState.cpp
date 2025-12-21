@@ -49,7 +49,7 @@ namespace mm2hack::apps::world::entity::avatar::states
         cx.justLanded = (!cx.prevOnGround && cx.onGround);
     }
 
-    bool GroundBaseState::TryEnterLadderFromGround(PlayerContext& cx, StateProvider* in, const PlayerTuning& t) const
+    bool GroundBaseState::TryEnterLadderFromGround(PlayerContext& cx, StateProvider* in) const
     {
         if (cx.ladder == nullptr)
         {
@@ -78,7 +78,7 @@ namespace mm2hack::apps::world::entity::avatar::states
         if (down)
         {
             const auto& bl = cx.probes.bottomLine; // Assumes it has left/middle/right
-            const Vec2 p{ bl.middlePoint.x, bl.middlePoint.y + t.minimumTolerance };
+            const Vec2 p{ bl.middlePoint.x, bl.middlePoint.y + config::SystemConfig::kEpsilon };
 
             if (cx.ladder->CanGrabAt(p))
             {

@@ -60,6 +60,10 @@ namespace mm2hack::config
         static constexpr size_t kMapBinaryHeaderSize = 0x10;        // Size of the map binary header (bytes)
 
 
+        // System parameters for physics and rendering
+        static constexpr double kEpsilon = 0x00.01p0;               // Small epsilon value for calculations
+
+
         // NES Style properties
         // Tile Set
         static const unsigned int kTileSize = 16;                   // Tile size (pixels)

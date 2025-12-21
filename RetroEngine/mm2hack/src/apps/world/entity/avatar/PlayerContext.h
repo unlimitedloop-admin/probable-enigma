@@ -36,6 +36,7 @@ namespace mm2hack::apps::world::entity::avatar
         Vec2& vel;                              // x/y velocity
         bool& onGround;                         // Is the avatar on the ground?
         bool justLanded{ false };               // Did the avatar just land this frame?
+        bool isHitCeiling{ false };             // Is the avatar hitting the ceiling?
         const bool prevOnGround{ false };       // Was the avatar on the ground previous frame?
         AvatarDirection& facingLR;              // avatar facing direction (-1: left, +1: right)
         int& texture;                           // tile index for rendering

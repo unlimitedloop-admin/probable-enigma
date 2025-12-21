@@ -44,7 +44,7 @@ namespace mm2hack::apps::world::entity::avatar
 
         PlayerContext cx{
             pos, vel,
-            /* onGround */ onGround, /* justLanded */ false, /* prevOnGround */ onGround,
+            /* onGround */ onGround, /* justLanded */ false, /* isHitCeiling */ false, /* prevOnGround */ onGround,
             facingLR, texture, _animeStepper,
             /* probes */ _probes, /* prelimProbes */ _probes, this->Bounds(), _terrainProbe, _ladderService
         };
@@ -70,12 +70,17 @@ namespace mm2hack::apps::world::entity::avatar
 
         if (cx.justLanded)
         {
-            const auto fix = cx.terrain->ResolveOverlapX(cx.probes, _tuning.minimumTolerance);    // Repenetration fix on X-axis.
+            const auto fix = cx.terrain->ResolveOverlapX(cx.probes, config::SystemConfig::kEpsilon);    // Repenetration fix on X-axis.
             if (fix.hit && fix.pushX != 0.0)
             {
                 pos.x += fix.pushX;
                 refreshProbes_(cx);
             }
+        }
+
+        if (cx.isHitCeiling)
+        {
+            vel.y = 0.0;
         }
     }
 

@@ -34,8 +34,6 @@ namespace mm2hack::apps::world::entity::avatar
     // Controlling avatar parameters for physics and movement
     struct PlayerTuning
     {
-        double minimumTolerance     { 0x00.01p0 };  // Minimum movement tolerance
-
         double gravity              { 0x00.40p0 };  // Falling Newton velocity
         double jumpImpulse          { -0x04.DFp0 }; // Resistance value during takeoff
         double terminalVelocity     { 0x13.00p0 };  // Max falling velocity
