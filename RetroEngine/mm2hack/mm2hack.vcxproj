@@ -223,6 +223,7 @@
     <ClCompile Include="src\apps\vfx\stareffects\FixedStar.cpp" />
     <ClCompile Include="src\apps\vfx\stareffects\ShootingStar.cpp" />
     <ClCompile Include="src\apps\vfx\stareffects\Star.cpp" />
+    <ClCompile Include="src\apps\systems\physics\LadderService.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\PlayerEntity.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\states\BrakeRunState.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\states\GroundBaseState.cpp" />
@@ -309,7 +310,8 @@
     <ClInclude Include="src\apps\systems\physics\TileAttribute.h" />
     <ClInclude Include="src\apps\systems\physics\TileQueryService.h" />
     <ClInclude Include="src\apps\world\entity\avatar\abilities\AnimationAbilities.h" />
-    <ClInclude Include="src\apps\world\entity\avatar\abilities\ServiceModules.h" />
+    <ClInclude Include="src\apps\systems\physics\LadderService.h" />
+    <ClInclude Include="src\apps\systems\physics\ILadderService.h" />
     <ClInclude Include="src\apps\world\entity\avatar\abilities\MovementAbilities.h" />
     <ClInclude Include="src\apps\world\entity\avatar\AvatarStatus.h" />
     <ClInclude Include="src\apps\world\entity\avatar\IPlayerState.h" />

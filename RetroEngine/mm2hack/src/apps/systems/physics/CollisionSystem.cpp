@@ -47,7 +47,7 @@ namespace mm2hack::apps::systems::physics
                     // Reflect projectile wall. Notify with dummy normal.
                     col.OnTileCollision({ -1.0, -1.0 }, attr);
                 }
-                // TODO: Ladder / OneWay / Water / Damage 
+                // TODO: Laddering / OneWay / Water / Damage 
             }
         }
     }

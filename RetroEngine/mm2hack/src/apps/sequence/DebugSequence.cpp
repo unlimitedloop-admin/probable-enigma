@@ -21,11 +21,7 @@ namespace mm2hack::apps::sequence
 
         // NOTE: LaunchingGame -> BackdoorMenu
         resources::parameters::Parameters params;
-
-        // W.I.P.: (from 2025-12-11) Directly load DemoStage1 for debugging purposes.
         params = params.With<SceneID>(L"Subsequent", SceneID::BackdoorMenu);
-        //params = params.With<SceneID>(L"Subsequent", SceneID::DemoStage1);
-
         _sceneChanger.RequestChange(SceneID::LaunchingGame, params);
 
         // Load the default background color for the NES palette.

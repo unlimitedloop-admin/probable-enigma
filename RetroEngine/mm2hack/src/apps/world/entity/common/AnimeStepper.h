@@ -49,5 +49,15 @@ namespace mm2hack::apps::world::entity::common
             frame = 0;
             loops = 0;
         }
+
+        void resetTick() noexcept
+        {
+            tick = 0;
+        }
+
+        void resetFrame() noexcept
+        {
+            frame = 0;
+        }
     };
 }

@@ -3,6 +3,8 @@
 #include "GroundBaseState.h"
 
 #include <cstdlib>
+#include "apps/foundation/math/CoordinateTypes.h"
+#include "apps/systems/physics/ILadderService.h"
 #include "apps/systems/physics/ITerrainProbe.h"
 #include "apps/world/entity/avatar/abilities/MovementAbilities.h"
 #include "apps/world/entity/avatar/AvatarStatus.h"
@@ -45,5 +47,46 @@ namespace mm2hack::apps::world::entity::avatar::states
             cx.onGround = false;
         }
         cx.justLanded = (!cx.prevOnGround && cx.onGround);
+    }
+
+    bool GroundBaseState::TryEnterLadderFromGround(PlayerContext& cx, StateProvider* in, const PlayerTuning& t) const
+    {
+        if (cx.ladder == nullptr)
+        {
+            return false;
+        }
+
+        const bool up = in->IsPressed(JPBTN::UP);
+        const bool down = in->IsPressed(JPBTN::DOWN);
+        if (!up && !down)
+        {
+            return false;
+        }
+
+        // Up: any behind probe point overlaps ladder.
+        if (up)
+        {
+            const auto& b = cx.probes.behindGround;
+            if (cx.ladder->CanGrabAt(b.topPoint) || cx.ladder->CanGrabAt(b.middlePoint) || cx.ladder->CanGrabAt(b.bottomPoint))
+            {
+                cx.ladder->setEntryKind(systems::physics::LadderEntryKind::NormalGrab);
+                return true;
+            }
+        }
+
+        // Down: when descending from the ground, check the 3 points of bottomLine's y + 0x00.01p0
+        if (down)
+        {
+            const auto& bl = cx.probes.bottomLine; // Assumes it has left/middle/right
+            const Vec2 p{ bl.middlePoint.x, bl.middlePoint.y + t.minimumTolerance };
+
+            if (cx.ladder->CanGrabAt(p))
+            {
+                cx.ladder->setEntryKind(systems::physics::LadderEntryKind::FromTopDown);
+                return true;
+            }
+        }
+
+        return false;
     }
 }

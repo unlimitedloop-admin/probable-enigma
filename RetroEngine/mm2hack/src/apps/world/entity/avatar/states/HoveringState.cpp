@@ -2,6 +2,7 @@
 
 #include "HoveringState.h"
 
+#include "apps/systems/physics/ILadderService.h"
 #include "apps/systems/physics/ITerrainProbe.h"
 #include "apps/world/entity/avatar/abilities/AnimationAbilities.h"
 #include "apps/world/entity/avatar/abilities/MovementAbilities.h"
@@ -18,6 +19,13 @@ namespace mm2hack::apps::world::entity::avatar::states
     AvatarStatus HoveringState::Update(PlayerContext& cx, StateProvider* in, const PlayerTuning& t, double /*dt*/)
     {
         using namespace abilities;
+
+        // Branch to laddering state if ladder is detected.
+        if (tryEnterLadder_(cx, in, t))
+        {
+            //cx.animeStepper.reset();    // DELETE: This is done by the LadderingState::OnEnter().
+            return AvatarStatus::Laddering;
+        }
         // X-axis air movement.
         auto intent = MakeAirMoveIntent(in, t);
 
@@ -65,7 +73,6 @@ namespace mm2hack::apps::world::entity::avatar::states
             else if (in->IsPressed(JPBTN::LEFT) || in->IsPressed(JPBTN::RIGHT))
             {
                 cx.texture = static_cast<int>(STile::RunningA);
-                //LandingMove(cx, t);
                 applyFacing();
                 return AvatarStatus::Running;
             }
@@ -80,5 +87,29 @@ namespace mm2hack::apps::world::entity::avatar::states
         cx.texture = static_cast<int>(STile::Airpause);
         applyFacing();
         return AvatarStatus::Hovering;
+    }
+
+    bool HoveringState::tryEnterLadder_(PlayerContext& cx, StateProvider* in, const PlayerTuning& t) const
+    {
+        if (cx.ladder == nullptr)
+        {
+            return false;
+        }
+
+        const bool up = in->IsPressed(JPBTN::UP);
+        const bool down = in->IsPressed(JPBTN::DOWN);
+        if (!up && !down)
+        {
+            return false;
+        }
+
+        const auto& b = cx.probes.behindGround;
+        if (cx.ladder->CanGrabAt(b.topPoint) || cx.ladder->CanGrabAt(b.middlePoint) || cx.ladder->CanGrabAt(b.bottomPoint))
+        {
+            cx.ladder->setEntryKind(systems::physics::LadderEntryKind::NormalGrab);
+            return true;
+        }
+
+        return false;
     }
 }

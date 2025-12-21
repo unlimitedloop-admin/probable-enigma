@@ -94,10 +94,10 @@ namespace mm2hack::apps::systems::physics
         return isLadderTopUnderfoot_(direction, probes, speedY);
     }
 
-    OverlapXFix TileQueryService::ResolveOverlapX(const Probes& p) const
+    OverlapXFix TileQueryService::ResolveOverlapX(const Probes& p, const double parity) const
     {
         // Small epsilon to stay strictly outside the solid tile
-        constexpr double kEps = 0x00.01p0; // 1/256
+        double kEps = parity; // 1/256
 
         OverlapXFix out{};
 
@@ -110,9 +110,7 @@ namespace mm2hack::apps::systems::physics
         // Check three probe points (top/middle/bottom) on a vertical line
         const auto insideLine3 = [&](double x, const auto& line) noexcept -> bool
             {
-                return isSolid(x, line.topPoint.y) ||
-                    isSolid(x, line.middlePoint.y) ||
-                    isSolid(x, line.bottomPoint.y);
+                return isSolid(x, line.topPoint.y) || isSolid(x, line.middlePoint.y) || isSolid(x, line.bottomPoint.y);
             };
 
         // Verify that after applying dx, BOTH front and rear probes are clear
@@ -121,15 +119,9 @@ namespace mm2hack::apps::systems::physics
                 const double fx = p.frontLine.middlePoint.x + dx;
                 const double rx = p.rearLine.middlePoint.x + dx;
 
-                const bool f =
-                    isSolid(fx, p.frontLine.topPoint.y) ||
-                    isSolid(fx, p.frontLine.middlePoint.y) ||
-                    isSolid(fx, p.frontLine.bottomPoint.y);
+                const bool f = isSolid(fx, p.frontLine.topPoint.y) || isSolid(fx, p.frontLine.middlePoint.y) || isSolid(fx, p.frontLine.bottomPoint.y);
 
-                const bool r =
-                    isSolid(rx, p.rearLine.topPoint.y) ||
-                    isSolid(rx, p.rearLine.middlePoint.y) ||
-                    isSolid(rx, p.rearLine.bottomPoint.y);
+                const bool r = isSolid(rx, p.rearLine.topPoint.y) || isSolid(rx, p.rearLine.middlePoint.y) || isSolid(rx, p.rearLine.bottomPoint.y);
 
                 return !(f || r);
             };
@@ -193,6 +185,16 @@ namespace mm2hack::apps::systems::physics
         out.hit = true;
         out.pushX = bestDx;
         return out;
+    }
+
+    TileAttribute TileQueryService::AttributeAt(Vec2 pos) const
+    {
+        return AttributeAt(pos.x, pos.y);
+    }
+
+    TileAttribute TileQueryService::AttributeAt(double x, double y) const
+    {
+        return attrAt_(x, y);
     }
 
     bool TileQueryService::probeWall_(const Probes& probes, TileAttribute& outAttr, double peekX) const
@@ -422,10 +424,26 @@ namespace mm2hack::apps::systems::physics
 
         for (double x : xs)
         {
-            const auto g = classifyGroundAt_(x + dx, targetY, /*includeOneWay=*/true);
+            const double probeX = x + dx;
+            const auto g = classifyGroundAt_(probeX, targetY, /*includeOneWay=*/true);
             if (g == TileAttribute::None)
             {
-                continue;   // No reached ground here.
+                continue;
+            }
+
+            const int row = static_cast<int>(std::floor(targetY / static_cast<double>(_ts)));
+            const double topY = static_cast<double>(row * _ts);
+
+            // ★ LadderTop は「上から跨いだ時だけ床扱い」
+            if (Has(g, TileAttribute::Ladder))
+            {
+                constexpr double epsHold = 0x00.01p0;
+                const bool crossedFromAbove = curBottomY < topY && targetY >= topY;
+                const bool alreadyOnTop = (std::abs(curBottomY - topY) <= epsHold && targetY >= topY);
+                if (!(crossedFromAbove || alreadyOnTop))
+                {
+                    continue; // not crossing from above (from side)
+                }
             }
 
             double dist = topY - curBottomY;
@@ -614,16 +632,20 @@ namespace mm2hack::apps::systems::physics
         if (Has(below, TileAttribute::Solid) ||
             (includeOneWay && Has(below, TileAttribute::OneWayPlatform)))
         {
-            return TileAttribute::Solid; // OnGround
+            return TileAttribute::Solid;
         }
 
         // Can also land on the top of a ladder.
         if (Has(below, TileAttribute::Ladder))
         {
-            const auto above = attrAt_(x, probeY - static_cast<double>(_ts));
+            // Make sure there's empty space just above the tile.
+            const int row = static_cast<int>(std::floor(probeY / static_cast<double>(_ts)));
+            const double topY = static_cast<double>(row * _ts);
+            const auto above = attrAt_(x, topY - 1.0);  // Just above the tile
+
             if (Has(above, TileAttribute::Empty))
             {
-                return TileAttribute::Ladder; // OnGround [LadderTop]
+                return TileAttribute::Ladder; // LadderTop as ground
             }
         }
 

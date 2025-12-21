@@ -14,10 +14,10 @@
 #include <array>
 #include <memory>
 #include <string>
-#include "abilities/ServiceModules.h"
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/systems/physics/CollisionLayer.h"
+#include "apps/systems/physics/ILadderService.h"
 #include "apps/systems/physics/ITerrainProbe.h"
 #include "apps/systems/physics/Probes.h"
 #include "apps/systems/physics/TileAttribute.h"
@@ -43,6 +43,7 @@ namespace mm2hack::apps::world::entity::avatar
         using RectF             = foundation::math::RectF;
         using Vec2              = foundation::math::Vec2;
         using CollisionLayer    = systems::physics::CollisionLayer;
+        using ILadderService    = systems::physics::ILadderService;
         using ITerrainProbe     = systems::physics::ITerrainProbe;
         using TileAttribute     = systems::physics::TileAttribute;
         using Probes            = systems::physics::Probes;
@@ -87,7 +88,7 @@ namespace mm2hack::apps::world::entity::avatar
         void SetInput(StateProvider* in) { _input = in; }
         void SetTuning(const PlayerTuning& t) { _tuning = t; }
         void SetTerrainProbe(ITerrainProbe* p) noexcept { _terrainProbe = p; }
-        void SetLadderService(abilities::ILadderService* s) { _ladderService = s; }
+        void SetLadderService(ILadderService* s) { _ladderService = s; }
 
         // ===== public parameters =====
         bool onGround{ false };
@@ -108,7 +109,7 @@ namespace mm2hack::apps::world::entity::avatar
             case AvatarStatus::Hovering:  return _states[2];
             case AvatarStatus::LaunchRun: return _states[3];
             case AvatarStatus::BrakeRun:  return _states[4];
-            case AvatarStatus::Ladder:    return _states[5];
+            case AvatarStatus::Laddering:    return _states[5];
             case AvatarStatus::Landing:   return _states[6];
             case AvatarStatus::Standing:
             default:                      return _states[0];
@@ -122,11 +123,11 @@ namespace mm2hack::apps::world::entity::avatar
         AvatarStatus _status{ AvatarStatus::Standing };                 // Current avatar status
         std::array<std::unique_ptr<IPlayerState>, 7> _states{};
 
-        StateProvider*                 _input{};                        // Player input snapshot (This is separate from core::assembly::InputSnapshot)
-        PlayerTuning                   _tuning{};                       // Player tuning parameters
-        AnimeStepper                   _animeStepper{};                 // Animation stepper
-        Probes                         _probes{ _half };                // Collision probes
-        const ITerrainProbe*           _terrainProbe{ nullptr };        // Terrain probe
-        abilities::ILadderService*     _ladderService{ nullptr };       // Ladder action service
+        StateProvider*         _input{};                                // Player input snapshot (This is separate from core::assembly::InputSnapshot)
+        PlayerTuning           _tuning{};                               // Player tuning parameters
+        AnimeStepper           _animeStepper{};                         // Animation stepper
+        Probes                 _probes{ _half };                        // Collision probes
+        const ITerrainProbe*   _terrainProbe{ nullptr };                // Terrain probe
+        ILadderService*        _ladderService{ nullptr };               // Laddering action service
     };
 }

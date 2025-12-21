@@ -41,7 +41,11 @@ namespace mm2hack::apps::systems::physics
         // Returns true if special handling for being at the "top" of a ladder is needed
         bool IsLadderTop(const AvatarDirection direction, const Probes& probes, double dy) const override;
         // Resolve horizontal overlap with Solid tiles
-        OverlapXFix ResolveOverlapX(const Probes& p) const override;
+        OverlapXFix ResolveOverlapX(const Probes& p, const double parity) const override;
+
+        // Get direct tile attribute at world position (=> attrAt_)
+        TileAttribute AttributeAt(Vec2 pos) const override;
+        TileAttribute AttributeAt(double x, double y) const override;
 
     private:
         // Check for wall collision using side probes

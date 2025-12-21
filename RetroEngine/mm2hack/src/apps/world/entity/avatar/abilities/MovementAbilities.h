@@ -97,8 +97,10 @@ namespace mm2hack::apps::world::entity::avatar::abilities
     // *StartJump; sets vertical speed for jump
     inline bool DoJump(PlayerContext& cx, const PlayerTuning& t)
     {
+        double kEps = t.minimumTolerance; // 1/256
+
         cx.animeStepper.reset();
-        if (cx.terrain->SweepVertical(cx.probes, Vec2{ 0.0, -0x00.01p0 }).hit)
+        if (cx.terrain->SweepVertical(cx.probes, Vec2{ 0.0, -kEps }).hit)
         {
             // Cannot jump if there is a ceiling right above.
             return false;

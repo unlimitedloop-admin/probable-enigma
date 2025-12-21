@@ -38,6 +38,9 @@ namespace mm2hack::apps::world::entity::avatar::states
         AvatarStatus Update(PlayerContext& cx, StateProvider* in, const PlayerTuning& t, double /*dt*/) override;
 
     private:
+        bool tryEnterLadder_(PlayerContext& cx, StateProvider* in, const PlayerTuning& t) const;
+
+    private:
         const std::wstring kClassName{ L"HoveringState" };
     };
 }

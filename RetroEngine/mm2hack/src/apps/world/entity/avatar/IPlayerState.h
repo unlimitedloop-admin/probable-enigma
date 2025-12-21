@@ -31,8 +31,8 @@ namespace mm2hack::apps::world::entity::avatar
     public:
         virtual ~IPlayerState() = default;
         virtual AvatarStatus Id() const noexcept = 0;
-        virtual void OnEnter(PlayerContext&) {}
-        virtual void OnExit(PlayerContext&) {}
+        virtual void OnEnter(PlayerContext&, StateProvider*, const PlayerTuning&) {}
+        virtual void OnExit(PlayerContext&, StateProvider*, const PlayerTuning&) {}
         // Update and return the **next state ID** (same ID if continuing)
         virtual AvatarStatus Update(PlayerContext&, StateProvider*, const PlayerTuning&, double dt) = 0;
     };

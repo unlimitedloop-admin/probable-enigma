@@ -8,8 +8,8 @@
 //==============================================================================
 #pragma once
 
-#include "abilities/ServiceModules.h"
 #include "apps/foundation/math/CoordinateTypes.h"
+#include "apps/systems/physics/ILadderService.h"
 #include "apps/world/entity/common/AnimeStepper.h"
 #include "AvatarStatus.h"
 
@@ -21,12 +21,12 @@ namespace mm2hack::apps::systems::physics
 
 namespace mm2hack::apps::world::entity::avatar
 {
-    using abilities::ILadderService;
     using common::AnimeStepper;
     using foundation::math::RectF;
     using foundation::math::Vec2;
-    using systems::physics::Probes;
+    using systems::physics::ILadderService;
     using systems::physics::ITerrainProbe;
+    using systems::physics::Probes;
 
     // Context passed to player state handlers
     struct PlayerContext
@@ -46,6 +46,6 @@ namespace mm2hack::apps::world::entity::avatar
         RectF bounds;                           // Get bounding box for convenience
         
         const ITerrainProbe* terrain;           // Look up interface for terrain probing
-        ILadderService* ladder{ nullptr };      // Ladder service module
+        ILadderService* ladder{ nullptr };      // Laddering service module
     };
 }

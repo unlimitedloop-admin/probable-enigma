@@ -49,8 +49,6 @@ namespace mm2hack::apps::systems::physics
         foundation::math::Vec2 frontPoint{ 0.0, 0.0 };
         foundation::math::Vec2 middlePoint{ 0.0, 0.0 };
         foundation::math::Vec2 behindPoint{ 0.0, 0.0 };
-        foundation::math::Vec2 frontPoint2{ 0.0, 0.0 };
-        foundation::math::Vec2 behindPoint2{ 0.0, 0.0 };
     };
 
     // The probes container for character physics
@@ -114,8 +112,6 @@ namespace mm2hack::apps::systems::physics
                 bottomLine.frontPoint   = { currentPosX + p.horizonFrontOffsetX,   currentPosY };
                 bottomLine.middlePoint  = { currentPosX + p.horizonMidOffsetX,     currentPosY };
                 bottomLine.behindPoint  = { currentPosX + p.horizonBehindOffsetX,  currentPosY };
-                //bottomLine.frontPoint2  = { currentPosX + p.horizonFrontOffsetXA,  currentPosY };
-                //bottomLine.behindPoint2 = { currentPosX + p.horizonBehindOffsetXA, currentPosY };
             }
             // Overhead probe (above the player)
             {
@@ -127,8 +123,8 @@ namespace mm2hack::apps::systems::physics
             }
             // Check behind BG tile probe
             {
-                currentPosX = cx.pos.x + half.x + (static_cast<int>(cx.facingLR) * 1);
-                currentPosY = cx.pos.y + half.y;
+                currentPosX = basePosX + half.x + (static_cast<int>(cx.facingLR) * 1);
+                currentPosY = basePosY + half.y;
                 behindGround.topPoint    = { currentPosX, currentPosY + p.verticalTopOffsetY };
                 behindGround.middlePoint = { currentPosX, currentPosY + p.verticalMidOffsetY };
                 behindGround.bottomPoint = { currentPosX, currentPosY + p.verticalBtmOffsetY };

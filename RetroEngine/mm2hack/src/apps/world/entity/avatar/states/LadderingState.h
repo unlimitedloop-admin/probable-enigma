@@ -11,6 +11,7 @@
 #include "apps/world/entity/avatar/IPlayerState.h"
 
 #include <string>
+#include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/world/entity/avatar/AvatarStatus.h"
 
 namespace mm2hack::apps::world::entity::avatar
@@ -27,6 +28,7 @@ namespace mm2hack::core::assembly
 namespace mm2hack::apps::world::entity::avatar::states
 {
     using core::assembly::StateProvider;
+    using foundation::math::Vec2;
 
     // Player state: Laddering (on ladder)
     class LadderingState final : public IPlayerState
@@ -34,10 +36,27 @@ namespace mm2hack::apps::world::entity::avatar::states
     public:
         // Get state ID
         AvatarStatus Id() const noexcept override;
+        // Called when entering the state
+        void OnEnter(PlayerContext& cx, StateProvider* in, const PlayerTuning& t) override;
+        // Called when exiting the state
+        void OnExit(PlayerContext& cx, StateProvider* in, const PlayerTuning& t) override;
         // Update state and return next state ID
         AvatarStatus Update(PlayerContext& cx, StateProvider* in, const PlayerTuning& t, double /*dt*/) override;
 
     private:
+        // Check if the player is still on the ladder
+        bool isOnLadder_(const PlayerContext& cx, const PlayerTuning& t) const noexcept;
+        // Snap player X position to ladder center
+        void snapToLadderCenter_(PlayerContext& cx, const PlayerTuning& t) const noexcept;
+
+        bool shouldRisingToGround_(const PlayerContext& cx) const;
+
+        void doRisingToGround_(PlayerContext& cx) const;
+
+        void buildGrabCandidates_(Vec2 out[9], const PlayerContext& cx, const PlayerTuning& t) const noexcept;
+
+    private:
         const std::wstring kClassName{ L"LadderingState" };
+        static constexpr double kSnapEpsBase = 1.0;
     };
 }

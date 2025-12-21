@@ -29,13 +29,13 @@ namespace mm2hack::apps::world::entity::avatar
         double horizonFrontOffsetX  { 7.0 };        // X offset for horizon front probe
         double horizonMidOffsetX    { 0.0 };        // X offset for horizon middle probe
         double horizonBehindOffsetX { -7.0 };       // X offset for horizon behind probe
-        //double horizonFrontOffsetXA { 7.0 };        // X offset for horizon front probe (airborne)
-        //double horizonBehindOffsetXA{ -7.0 };       // X offset for horizon behind probe (airborne)
     };
 
     // Controlling avatar parameters for physics and movement
     struct PlayerTuning
     {
+        double minimumTolerance     { 0x00.01p0 };  // Minimum movement tolerance
+
         double gravity              { 0x00.40p0 };  // Falling Newton velocity
         double jumpImpulse          { -0x04.DFp0 }; // Resistance value during takeoff
         double terminalVelocity     { 0x13.00p0 };  // Max falling velocity
@@ -49,6 +49,7 @@ namespace mm2hack::apps::world::entity::avatar
         double momentumStart        { 0x00.20p0 };  // Launch run speed (Fixed)
         double steadyRun            { 0x01.60p0 };  // Normal run speed
         double haltSpeed            { 0x00.80p0 };  // Brake run speed (Fixed)
+        double climbSpeed           { 0x00.C0p0 };  // Climbing speed on ladder
 
         PlayerProbes probeOffsets;                  // Player probes offsets
     };

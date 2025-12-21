@@ -42,10 +42,12 @@ namespace mm2hack::apps::scenes
             auto* bgMgr = &resource.GetBGTileManager();
             _mapProvider = std::make_unique<BGTileMapProvider>(bgMgr, pageSource);
             _terrainProbe = std::make_unique<TileQueryService>(*_mapProvider);
+            _ladderService = std::make_unique<LadderService>(*_terrainProbe);
 
             // TODO: Need to provide a vector member for entity. (or EntityManager?)
             _player = std::make_unique<PlayerEntity>(owner.GetSpriteId());
             _player->SetTerrainProbe(_terrainProbe.get());
+            _player->SetLadderService(_ladderService.get());
             _player->pos = _initialize_pos;
             _player->texture = 1;
             // for (auto& e : _enemies) { e->SetTerrainProbe(_terrainProbe.get()); }

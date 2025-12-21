@@ -17,6 +17,13 @@ namespace mm2hack::apps::world::entity::avatar::states
     AvatarStatus BrakeRunState::Update(PlayerContext& cx, StateProvider* in, const PlayerTuning& t, double /*dt*/)
     {
         using namespace abilities;
+
+        // Branch to laddering state if ladder is detected.
+        if (TryEnterLadderFromGround(cx, in, t))
+        {
+            //cx.animeStepper.reset();    // DELETE: This is done by the LadderingState::OnEnter().
+            return AvatarStatus::Laddering;
+        }
         // ApplyGroundMove; AdjustVerticalSpeedForGravity; SweepVertical;
         GroundPipeline(cx, in, t, MakeBrakeRunIntent(cx, t));
 

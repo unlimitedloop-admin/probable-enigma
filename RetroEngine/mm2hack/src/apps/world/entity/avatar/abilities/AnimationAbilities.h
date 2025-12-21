@@ -36,6 +36,11 @@ namespace mm2hack::apps::world::entity::avatar::abilities
         }
     }
 
+    inline AvatarDirection OppositeFacingDirection(const AvatarDirection dir) noexcept
+    {
+        return (dir == AvatarDirection::Left) ? AvatarDirection::Right : AvatarDirection::Left;
+    }
+
     // Returns true when the launch run animation has completed and switched to running
     inline bool StepLaunchRunAnim(PlayerContext& cx, const PlayerTuning& t)
     {
@@ -93,7 +98,32 @@ namespace mm2hack::apps::world::entity::avatar::abilities
         return true;
     }
 
-    inline void WaitingAnim(PlayerContext& cx, const PlayerTuning& t)
+    inline void LadderingAnim(PlayerContext& cx, const int input, const bool isTopAttrEmpty)
+    {
+        // Simple climbing animation between LadderingA and LadderingB.
+        if (!input)
+        {
+            // Reset animation when no vertical input.
+            cx.animeStepper.resetTick();
+        }
+        else
+        {
+            cx.animeStepper.step(9, 2); // 9 ticks per frame, 2 frames.
+        }
+
+        if (cx.animeStepper.frame < 1)
+        {
+            // input == -1 is climbing up, Change to a specified sprite tile near the top of the ladder.
+            cx.texture = isTopAttrEmpty && (input == -1) ? static_cast<int>(STile::LadderTopA) : static_cast<int>(STile::LadderingA);
+        }
+        else
+        {
+            // input == -1 is climbing up, Change to a specified sprite tile near the top of the ladder.
+            cx.texture = isTopAttrEmpty && (input == -1) ? static_cast<int>(STile::LadderTopB) : static_cast<int>(STile::LadderingB);
+        }
+    }
+
+    inline void WaitingAnim(PlayerContext& cx)
     {
         // Simple waiting animation between StandingA and StandingB.
         cx.animeStepper.step(9, 11, 1); // 9 ticks per frame, 11 frames.

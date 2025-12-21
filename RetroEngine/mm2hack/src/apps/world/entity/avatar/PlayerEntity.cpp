@@ -56,9 +56,9 @@ namespace mm2hack::apps::world::entity::avatar
         const auto next = st->Update(cx, _input, _tuning, dt);
         if (next != _status)
         {
-            st->OnExit(cx);
+            st->OnExit(cx, _input, _tuning);
             _status = next;
-            FindState(_status)->OnEnter(cx);
+            FindState(_status)->OnEnter(cx, _input, _tuning);
         }
 
         // Apply updated context values
@@ -70,7 +70,7 @@ namespace mm2hack::apps::world::entity::avatar
 
         if (cx.justLanded)
         {
-            const auto fix = cx.terrain->ResolveOverlapX(cx.probes);    // Repenetration fix on X-axis.
+            const auto fix = cx.terrain->ResolveOverlapX(cx.probes, _tuning.minimumTolerance);    // Repenetration fix on X-axis.
             if (fix.hit && fix.pushX != 0.0)
             {
                 pos.x += fix.pushX;
@@ -120,7 +120,7 @@ namespace mm2hack::apps::world::entity::avatar
         if (Has(attr, TileAttribute::InstantDeath)) { Kill(); return; }
 
         if (normal.y < 0.0) { vel.y = 0.0; onGround = true; }
-        // OneWay / Ladder / Water etc...
+        // OneWay / Laddering / Water etc...
     }
 
     void PlayerEntity::OnEntityCollision(IEntity& other)

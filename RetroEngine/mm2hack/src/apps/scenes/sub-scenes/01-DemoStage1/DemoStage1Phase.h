@@ -15,8 +15,10 @@
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/rendering/bg/BGTileMapProvider.h"
 #include "apps/resources/bg/AddressScraper.h"
+#include "apps/systems/physics/ILadderService.h"
 #include "apps/systems/physics/ITerrainProbe.h"
 #include "apps/systems/physics/ITileMapProvider.h"
+#include "apps/systems/physics/LadderService.h"
 #include "apps/systems/physics/TileQueryService.h"
 #include "apps/systems/scrolling/atomic/MapRenderer2D.h"
 #include "apps/systems/scrolling/atomic/ScraperScrollRuleProvider.h"
@@ -37,8 +39,10 @@ namespace mm2hack::apps::scenes
             using ScraperScrollRuleProvider = systems::scrolling::atomic::ScraperScrollRuleProvider;
 
             using BGTileMapProvider         = rendering::bg::BGTileMapProvider;
+            using ILadderService            = systems::physics::ILadderService;
             using ITerrainProbe             = systems::physics::ITerrainProbe;
             using ITileMapProvider          = systems::physics::ITileMapProvider;
+            using LadderService             = systems::physics::LadderService;
             using TileQueryService          = systems::physics::TileQueryService;
 
             using PlayerEntity              = world::entity::avatar::PlayerEntity;
@@ -62,6 +66,7 @@ namespace mm2hack::apps::scenes
 
             std::unique_ptr<ITileMapProvider> _mapProvider;         // Tile map provider
             std::unique_ptr<ITerrainProbe>    _terrainProbe;        // Terrain probe
+            std::unique_ptr<ILadderService>   _ladderService;       // Laddering action service
 
             std::unique_ptr<MapRenderer2D> _renderer;               // Map renderer
             std::unique_ptr<ScraperScrollRuleProvider> _rules;      // Scroll rule provider

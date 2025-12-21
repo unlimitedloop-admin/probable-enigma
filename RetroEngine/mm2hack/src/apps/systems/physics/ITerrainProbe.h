@@ -68,6 +68,9 @@ namespace mm2hack::apps::systems::physics
         // Returns true if special handling for being at the "top" of a ladder is needed
         virtual bool IsLadderTop(const AvatarDirection direction, const Probes& probes, double dy) const = 0;
         // Resolve horizontal overlap with Solid tiles
-        virtual OverlapXFix ResolveOverlapX(const Probes& p) const = 0;
+        virtual OverlapXFix ResolveOverlapX(const Probes& p, const double parity) const = 0;
+
+        virtual TileAttribute AttributeAt(Vec2 pos) const = 0;
+        virtual TileAttribute AttributeAt(double x, double y) const = 0;
     };
 }
