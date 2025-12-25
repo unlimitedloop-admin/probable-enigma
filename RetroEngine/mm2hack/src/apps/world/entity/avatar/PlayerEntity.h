@@ -19,6 +19,7 @@
 #include "apps/systems/physics/CollisionLayer.h"
 #include "apps/systems/physics/ILadderService.h"
 #include "apps/systems/physics/ITerrainProbe.h"
+#include "apps/systems/physics/PageGridIndex.h"
 #include "apps/systems/physics/Probes.h"
 #include "apps/systems/physics/TileAttribute.h"
 #include "apps/systems/view/RenderContext.h"
@@ -46,6 +47,7 @@ namespace mm2hack::apps::world::entity::avatar
         using ILadderService    = systems::physics::ILadderService;
         using ITerrainProbe     = systems::physics::ITerrainProbe;
         using TileAttribute     = systems::physics::TileAttribute;
+        using PageGridIndex     = systems::physics::PageGridIndex;
         using Probes            = systems::physics::Probes;
         using LayerView         = systems::view::Layer;
         using RenderContext     = systems::view::RenderContext;
@@ -109,7 +111,7 @@ namespace mm2hack::apps::world::entity::avatar
             case AvatarStatus::Hovering:  return _states[2];
             case AvatarStatus::LaunchRun: return _states[3];
             case AvatarStatus::BrakeRun:  return _states[4];
-            case AvatarStatus::Laddering:    return _states[5];
+            case AvatarStatus::Laddering: return _states[5];
             case AvatarStatus::Landing:   return _states[6];
             case AvatarStatus::Standing:
             default:                      return _states[0];

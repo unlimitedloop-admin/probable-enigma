@@ -82,6 +82,25 @@ namespace mm2hack::apps::world::entity::avatar
         {
             vel.y = 0.0;
         }
+
+
+        // REVIEW: test scrolling.
+        //if (_input->IsPressed(JPBTN::RIGHT))
+        //{
+        //    pos.x += 1;
+        //}
+        //if (_input->IsPressed(JPBTN::LEFT))
+        //{
+        //    pos.x -= 1;
+        //}
+        //if (_input->IsPressed(JPBTN::UP))
+        //{
+        //    pos.y -= 1;
+        //}
+        //if (_input->IsPressed(JPBTN::DOWN))
+        //{
+        //    pos.y += 1;
+        //}
     }
 
     // IRenderable

@@ -7,8 +7,10 @@
 #include "apps/resources/bg/AddressScraper.h"
 #include "apps/resources/bg/MapPageCache.h"
 #include "apps/runtime/GameContext.h"
+#include "apps/systems/physics/PageGridIndex.h"
 #include "apps/systems/scrolling/atomic/ScrollController.h"
 #include "apps/systems/view/RenderContext.h"
+#include "config/ConfigUIManager.h"
 #include "DemoStage1.h"
 #include "utils/decimal_decoder.h"
 #include "utils/string_converter.h"
@@ -17,8 +19,11 @@ namespace mm2hack::apps::scenes
 {
     namespace DemoStage1_
     {
+        using config::SystemConfig;
+
         using resources::bg::AddressScraper;
         using resources::bg::MapPageCache;
+        using systems::physics::PageGridIndex;
 
         //============================================================================== 
         //
@@ -31,17 +36,25 @@ namespace mm2hack::apps::scenes
             auto& filepath = resource.GetBGRoomBank().FilePath();
             auto scraper = std::make_shared<AddressScraper>(resource.GetBGTileManager().ExtractMapBinary(filepath));
             auto pageSource = std::make_shared<MapPageCache>(scraper);
+
+            constexpr double kPageW = SystemConfig::kScreenWidth;
+            constexpr double kPageH = SystemConfig::kScreenHeight;
+            _pageGrid = std::make_unique<PageGridIndex>(kPageW, kPageH);
+            _graph = std::make_unique<RoomGraphAdapter>(*scraper);
+            _pageGrid->Build(*_graph, /*start*/ 0);
+
             _rules = std::make_unique<ScraperScrollRuleProvider>(pageSource);
             _renderer = std::make_unique<MapRenderer2D>(resource, owner.GetMapName(), owner.GetMapBinaryPath(), kTilePx);
 
             ScrollController::Params p;
             _scroll = std::make_unique<ScrollController>(*_rules, *_renderer, p);
             _scroll->SetPageIndex(0);
-            _scroll->ObjectPos() = _initialize_pos;
+            using Camera = systems::scrolling::atomic::Camera;
+            _scroll->ObjectPos() = { Camera::kCenterX, Camera::kCenterY };
 
             auto* bgMgr = &resource.GetBGTileManager();
             _mapProvider = std::make_unique<BGTileMapProvider>(bgMgr, pageSource);
-            _terrainProbe = std::make_unique<TileQueryService>(*_mapProvider);
+            _terrainProbe = std::make_unique<TileQueryService>(*_mapProvider, *_graph, *_pageGrid, kTilePx);
             _ladderService = std::make_unique<LadderService>(*_terrainProbe);
 
             // TODO: Need to provide a vector member for entity. (or EntityManager?)
@@ -51,6 +64,8 @@ namespace mm2hack::apps::scenes
             _player->pos = _initialize_pos;
             _player->texture = 1;
             // for (auto& e : _enemies) { e->SetTerrainProbe(_terrainProbe.get()); }
+
+            _player_prev_pos = _player->pos;
         }
 
         void MainPhase::Update()
@@ -61,15 +76,26 @@ namespace mm2hack::apps::scenes
 
             if (_player)
             {
-                auto delta_time = runtime::GameContext::GetInstance().Time().DeltaSeconds();
+                const Vec2 prev_pos =_player->pos;
+                const auto p = _pageGrid->ResolvePageIndexFromWorldPos(_player->pos);
+                if (p) _terrainProbe->SetCurrentPage(*p);
+
                 _player->SetInput(owner.Input());
-                _player->Update(delta_time);
+
+                auto delta_time = runtime::GameContext::GetInstance().Time().DeltaSeconds();
+                _player->Update(delta_time);    // Update player 
+
+                delta = _player->pos - prev_pos;
             }
 
+            _scroll->SetTargetPos(_player ? _player->pos : Vec2::Zero());
             _scroll->Update(delta);
+
             _page_index_debug = static_cast<int>(_scroll->PageIndex());
             _player_pos_x_debug = _player ? _player->pos.x : 0;
             _player_pos_y_debug = _player ? _player->pos.y : 0;
+
+            _player_prev_pos = _player ? _player->pos : Vec2::Zero();
         }
 
         void MainPhase::RenderWorld()
@@ -99,6 +125,9 @@ namespace mm2hack::apps::scenes
             const std::wstring ystr = decode_floating_hex_number(_player_pos_y_debug);
             concat_to_wchar_buffer(buf, sizeof(buf) / sizeof(buf[0]), { L"Player Pos = (", xstr, L", ", ystr, L")" });
             ::DxLib::DrawString(8, dispY, buf, 0xFFFF0000);
+
+            const auto& hud = config::ConfigUIManager::GetCurrentHudConfig();
+            _scroll->DebugHudRender(hud.showScrollLine);
         }
 
         DemoStage1PhaseId MainPhase::Id() const noexcept

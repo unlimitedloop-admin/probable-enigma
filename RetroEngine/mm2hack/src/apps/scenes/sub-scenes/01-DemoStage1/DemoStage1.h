@@ -132,7 +132,7 @@ namespace mm2hack::apps::scenes
     private:
         const std::wstring kClassName{ L"DemoStage1" };
         const std::wstring kMapName{ L"SAMPLESTAGE3" };
-        const std::wstring_view kStageMapBinary{ L"assets\\_exams\\bg\\DEMOSTAGE3.bin" };
+        const std::wstring_view kStageMapBinary{ L"assets\\_exams\\bg\\SAMPLESTAGE1.bin" };
 
         struct RoomState {
             int pageIndex{ 0 };

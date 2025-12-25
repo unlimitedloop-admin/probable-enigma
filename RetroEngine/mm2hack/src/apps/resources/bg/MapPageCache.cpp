@@ -38,22 +38,6 @@ namespace mm2hack::apps::resources::bg
         }
     }
 
-    PageTiles MapPageCache::readTiles_(std::size_t pageIndex) const
-    {
-        PageTiles out{};
-        if (!_scraper) return out;
-        if (pageIndex >= _scraper->pageCount()) return out;
-
-        const std::uint8_t* p = _scraper->payloadPtr(pageIndex);
-        if (!p) return out;
-
-        for (int i = 0; i < PageTiles::kSize; ++i)
-        {
-            out.cells[i] = p[i];
-        }
-        return out;
-    }
-
     std::uint8_t MapPageCache::GetTile(std::size_t pageIndex, int tx, int ty) const
     {
         if (tx < 0 || ty < 0 || tx >= PageTiles::kW || ty >= PageTiles::kH) return 0;
@@ -140,5 +124,21 @@ namespace mm2hack::apps::resources::bg
         if (!_scraper) return PageTiles::kH;
         // naive
         return PageTiles::kH;
+    }
+
+    PageTiles MapPageCache::readTiles_(std::size_t pageIndex) const
+    {
+        PageTiles out{};
+        if (!_scraper) return out;
+        if (pageIndex >= _scraper->pageCount()) return out;
+
+        const std::uint8_t* p = _scraper->payloadPtr(pageIndex);
+        if (!p) return out;
+
+        for (int i = 0; i < PageTiles::kSize; ++i)
+        {
+            out.cells[i] = p[i];
+        }
+        return out;
     }
 }

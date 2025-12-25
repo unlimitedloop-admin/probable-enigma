@@ -55,6 +55,12 @@ namespace mm2hack::apps::rendering::bg
         return _mgr->GetTileAttribute(id);
     }
 
+    TileAttribute BGTileMapProvider::SampleTileAttributeOnPage(std::size_t pageIndex, int tx, int ty) const
+    {
+        const auto tileId = _src->GetTile(pageIndex, tx, ty);
+        return _mgr->GetTileAttribute(tileId);
+    }
+
     int BGTileMapProvider::TileSize() const
     {
         if (_src) return _src->TileSize();

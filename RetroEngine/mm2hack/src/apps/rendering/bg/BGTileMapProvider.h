@@ -36,6 +36,7 @@ namespace mm2hack::apps::rendering::bg
         explicit BGTileMapProvider(const BGTileManager* mgr, std::shared_ptr<apps::resources::bg::IMapPageSource> src) noexcept;
 
         TileAttribute SampleTileAttribute(int tx, int ty) const override;
+        TileAttribute SampleTileAttributeOnPage(std::size_t pageIndex, int tx, int ty) const override;
         int TileSize() const override;
         bool HasAdjacentRoomX(int dir) const override;
         bool HasAdjacentRoomY(int dir) const override;

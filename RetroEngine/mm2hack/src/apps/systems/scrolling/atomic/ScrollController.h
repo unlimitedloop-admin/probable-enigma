@@ -61,7 +61,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
     };
 
     // The main video screen policy and management of scrolling in 2D maps
-    class ScrollController
+    class ScrollController final
     {
         using ViewState = apps::systems::view::ViewState;
         using conf      = config::SystemConfig;
@@ -90,12 +90,16 @@ namespace mm2hack::apps::systems::scrolling::atomic
 
         void SyncWithObjectCenter(const Vec2& object_center, bool has_adj_x, bool has_adj_y, const Vec2& screen_px, const Vec2& map_px, ViewState& out_view);
 
+        void DebugHudRender(bool show) const;
+
         // External interface
         void SetPageIndex(std::size_t idx) noexcept { _page_index = idx; }
         std::size_t PageIndex() const noexcept { return _page_index; }
 
         Vec2& ObjectPos() noexcept { return _object_pos; }
         const Vec2& ObjectPos() const noexcept { return _object_pos; }
+
+        void SetTargetPos(const Vec2& p) noexcept { _target_pos = p; }
 
         Camera& GetCamera() noexcept { return _cam; }
         const Camera& GetCameraConst() const noexcept { return _cam; }
@@ -123,6 +127,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
         ScrollKind _mode{ ScrollKind::None };       // Current scroll mode
         std::size_t _page_index{ 0 };               // Current page index
         Vec2 _object_pos{};                         // Object position
+        Vec2 _target_pos{};                         // Target position
         Camera _cam{};                              // Camera
         PageScrollAnimator _anim{};                 // Page scroll animator
 

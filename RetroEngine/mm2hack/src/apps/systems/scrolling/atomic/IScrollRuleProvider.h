@@ -9,6 +9,7 @@
 #pragma once
 
 #include <cstdint>
+#include "apps/foundation/math/CoordinateTypes.h"
 #include "ScrollTypes.h"
 
 namespace mm2hack::apps::systems::scrolling::atomic
@@ -30,5 +31,9 @@ namespace mm2hack::apps::systems::scrolling::atomic
 
         // room -> page index (-1 if not found)
         virtual int ToPageIndex(uint8_t room) const = 0;
+
+        // Page origin (world) in pixels for the given page_index
+        // page_w/page_h: pixel size of one page
+        virtual foundation::math::Vec2 PageOriginPx(std::size_t page_index, int page_w, int page_h) const = 0;
     };
 }

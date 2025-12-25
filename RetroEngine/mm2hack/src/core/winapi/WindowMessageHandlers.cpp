@@ -280,6 +280,19 @@ namespace mm2hack::core::winapi
             break;
         }
 
+        case ID_HUD_SCROLLINGSYNCLINE:
+        {
+            using confUI = config::ConfigUIManager;
+            auto& hudConfig = confUI::GetCurrentHudConfig();
+            config::HudConfig newConfig = hudConfig;
+            newConfig.showScrollLine = !newConfig.showScrollLine;
+            confUI::SetCurrentHudConfig(newConfig);
+            // Add check/uncheck the HUD => Scrolling Sync Line menu item.
+            HMENU hMenu = GetMenu(hWnd);
+            CheckMenuItem(hMenu, ID_HUD_SCROLLINGSYNCLINE, MF_BYCOMMAND | (newConfig.showScrollLine ? MF_CHECKED : MF_UNCHECKED));
+            break;
+        }
+
         case ID_INSERT_CHEATS:
             SettingsWindow::OpenTab(hWnd, SettingsWindow::Tab::Cheats);
             break;

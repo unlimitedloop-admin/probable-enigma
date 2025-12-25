@@ -8,11 +8,14 @@
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/world/entity/avatar/AvatarStatus.h"
 #include "ITerrainProbe.h"
+#include "PageGridIndex.h"
 #include "Probes.h"
 #include "TileAttribute.h"
 
 namespace mm2hack::apps::systems::physics
 {
+    using config::SystemConfig;
+
     namespace
     {
         // Helper to get array size at compile time
@@ -192,9 +195,9 @@ namespace mm2hack::apps::systems::physics
         return AttributeAt(pos.x, pos.y);
     }
 
-    TileAttribute TileQueryService::AttributeAt(double x, double y) const
+    TileAttribute TileQueryService::AttributeAt(double worldX, double worldY) const
     {
-        return attrAt_(x, y);
+        return attrAt_(worldX, worldY);
     }
 
     bool TileQueryService::probeWall_(const Probes& probes, TileAttribute& outAttr, double peekX) const
@@ -620,9 +623,60 @@ namespace mm2hack::apps::systems::physics
 
     TileAttribute TileQueryService::attrAt_(double worldX, double worldY) const
     {
-        const int tx = static_cast<int>(worldX) / _ts;
-        const int ty = static_cast<int>(worldY) / _ts;
-        return _map.SampleTileAttribute(tx, ty);
+        const int pageW = SystemConfig::kTileCountX * _ts;
+        const int pageH = SystemConfig::kTileCountY * _ts;
+
+        // 1) Resolve the page containing this world position.
+        std::size_t page = _currPage;
+        if (const auto p = _grid.ResolvePageIndexFromWorldPos({ worldX, worldY }); p)
+        {
+            page = static_cast<std::size_t>(*p);
+        }
+
+        // 2) Convert to local coordinate within the resolved page.
+        //    local = world - pageOrigin, where pageOrigin is (gx*pageW, gy*pageH).
+        //    We can compute (gx,gy) again from world, or store them in PageGridIndex.
+        //    Since PageGridIndex already knows pageW/pageH, reuse its floorDiv logic pattern:
+        const int gx = PageGridIndex::FloorDiv(worldX, static_cast<double>(pageW));
+        const int gy = PageGridIndex::FloorDiv(worldY, static_cast<double>(pageH));
+
+        double x = worldX - static_cast<double>(gx * pageW);
+        double y = worldY - static_cast<double>(gy * pageH);
+
+        // 3) Safety: if x/y still out of range due to mapping holes, walk neighbors.
+        while (x < 0.0)
+        {
+            auto p = _graph.AdjacentPageX(page, -1);
+            if (!p) return TileAttribute::Empty;
+            page = *p;
+            x += pageW;
+        }
+        while (x >= pageW)
+        {
+            auto p = _graph.AdjacentPageX(page, +1);
+            if (!p) return TileAttribute::Empty;
+            page = *p;
+            x -= pageW;
+        }
+        while (y < 0.0)
+        {
+            auto p = _graph.AdjacentPageY(page, -1);
+            if (!p) return TileAttribute::Empty;
+            page = *p;
+            y += pageH;
+        }
+        while (y >= pageH)
+        {
+            auto p = _graph.AdjacentPageY(page, +1);
+            if (!p) return TileAttribute::Empty;
+            page = *p;
+            y -= pageH;
+        }
+
+        const int tx = std::clamp<int>(static_cast<int>(x) / _ts, 0, SystemConfig::kTileCountX - 1);
+        const int ty = std::clamp<int>(static_cast<int>(y) / _ts, 0, SystemConfig::kTileCountY - 1);
+
+        return _map.SampleTileAttributeOnPage(page, tx, ty);
     }
 
     TileAttribute TileQueryService::classifyGroundAt_(double x, double probeY, bool includeOneWay) const
@@ -641,7 +695,7 @@ namespace mm2hack::apps::systems::physics
             const int row = static_cast<int>(std::floor(probeY / static_cast<double>(_ts)));
             const double topY = static_cast<double>(row * _ts);
 
-            constexpr double eps = config::SystemConfig::kEpsilon;
+            constexpr double eps = SystemConfig::kEpsilon;
             const auto above = attrAt_(x, topY - eps);
 
             if (Has(above, TileAttribute::Empty))

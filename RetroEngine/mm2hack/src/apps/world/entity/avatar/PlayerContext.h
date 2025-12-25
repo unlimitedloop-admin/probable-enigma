@@ -45,7 +45,7 @@ namespace mm2hack::apps::world::entity::avatar
         Probes& probes;                         // All probes
         Probes& prelimProbes;                   // Preliminary probes before movement
         RectF bounds;                           // Get bounding box for convenience
-        
+
         const ITerrainProbe* terrain;           // Look up interface for terrain probing
         ILadderService* ladder{ nullptr };      // Laddering service module
     };

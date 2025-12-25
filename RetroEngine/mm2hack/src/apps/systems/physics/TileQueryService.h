@@ -14,6 +14,7 @@
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/systems/physics/ITileMapProvider.h"
 #include "apps/world/entity/avatar/AvatarStatus.h"
+#include "apps/world/stage/RoomGraphAdapter.h"
 #include "config/SystemConfig.h"
 #include "Probes.h"
 #include "TileAttribute.h"
@@ -21,16 +22,23 @@
 namespace mm2hack::apps::systems::physics
 {
     using config::SystemConfig;
+
     using foundation::math::Vec2;
+    using world::stage::RoomGraphAdapter;
+
+    class PageGridIndex;
 
     // Tile query service implementation
     class TileQueryService final : public ITerrainProbe
     {
     public:
-        explicit TileQueryService(const ITileMapProvider& map)
-            : _map(map), _ts(config::SystemConfig::kTileSize)
+        explicit TileQueryService(const ITileMapProvider& map, const RoomGraphAdapter& graph, const PageGridIndex& grid, int tilePx)
+            : _map(map), _graph(graph), _grid(grid), _ts(tilePx)
         {
         }
+
+        // Set the current page index for tile queries
+        void SetCurrentPage(std::size_t pageIndex) noexcept override { _currPage = pageIndex; }
 
         // H-sweep: If moving dx, will it hit something?
         SweepHHit SweepHorizontal(const Probes& probes, double dx, bool airFlag = false) const override;
@@ -45,7 +53,7 @@ namespace mm2hack::apps::systems::physics
 
         // Get direct tile attribute at world position (=> attrAt_)
         TileAttribute AttributeAt(Vec2 pos) const override;
-        TileAttribute AttributeAt(double x, double y) const override;
+        TileAttribute AttributeAt(double worldX, double worldY) const override;
 
     private:
         // Check for wall collision using side probes
@@ -85,7 +93,11 @@ namespace mm2hack::apps::systems::physics
     private:
         const std::wstring kClassName{ L"TileQueryService" };
 
-        const ITileMapProvider& _map;
-        int _ts{ config::SystemConfig::kTileSize };  // Tile size
+        const ITileMapProvider& _map;   // Tile map provider
+        const RoomGraphAdapter& _graph; // Room graph adapter
+        const PageGridIndex& _grid;     // Page grid index for spatial mapping
+        int _ts{};                      // Tile size
+
+        std::size_t _currPage{ 0 };     // Current page index for tile queries
     };
 }

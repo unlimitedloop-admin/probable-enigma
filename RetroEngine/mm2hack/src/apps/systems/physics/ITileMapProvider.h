@@ -21,6 +21,7 @@ namespace mm2hack::apps::systems::physics
         virtual ~ITileMapProvider() = default;
 
         virtual TileAttribute SampleTileAttribute(int tx, int ty) const = 0;
+        virtual TileAttribute SampleTileAttributeOnPage(std::size_t pageIndex, int tx, int ty) const = 0;
         virtual int TileSize() const = 0; // ex. 16
         virtual bool HasAdjacentRoomX(int dir /*-1:L,+1:R*/) const = 0;
         virtual bool HasAdjacentRoomY(int dir /*-1:U,+1:D*/) const = 0;

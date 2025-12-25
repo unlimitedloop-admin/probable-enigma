@@ -303,6 +303,7 @@
     <ClInclude Include="src\apps\resources\stages\StageTileAttributes.h" />
     <ClInclude Include="src\utils\decimal_decoder.h" />
     <ClInclude Include="src\apps\systems\physics\LadderService.h" />
+    <ClInclude Include="src\apps\systems\physics\PageGridIndex.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

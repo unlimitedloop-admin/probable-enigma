@@ -49,6 +49,7 @@
 #define ID_PLAYREC_ELICIT               40043
 #define ID_SCRIPT_004                   40044
 #define ID_SCRIPT_005                   40045
+#define ID_HUD_SCROLLINGSYNCLINE        40046
 
 // Next default values for new objects
 // 

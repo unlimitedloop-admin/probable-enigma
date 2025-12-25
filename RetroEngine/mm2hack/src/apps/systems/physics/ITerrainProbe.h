@@ -59,6 +59,7 @@ namespace mm2hack::apps::systems::physics
     {
     public:
         virtual ~ITerrainProbe() = default;
+        virtual void SetCurrentPage(std::size_t pageIndex) noexcept = 0;
         // H-sweep: If moving dx, will it hit something?
         virtual SweepHHit SweepHorizontal(const Probes& probes, double dx, bool airFlag = false) const = 0;
         // V-sweep: If moving dy, will it hit something?
@@ -71,6 +72,6 @@ namespace mm2hack::apps::systems::physics
         virtual OverlapXFix ResolveOverlapX(const Probes& p, const double parity) const = 0;
 
         virtual TileAttribute AttributeAt(Vec2 pos) const = 0;
-        virtual TileAttribute AttributeAt(double x, double y) const = 0;
+        virtual TileAttribute AttributeAt(double worldX, double worldY) const = 0;
     };
 }

@@ -302,6 +302,7 @@
     <ClInclude Include="src\apps\resources\bg\IMapPageSource.h" />
     <ClInclude Include="src\apps\resources\stages\StageTileAttributes.h" />
     <ClInclude Include="src\apps\systems\physics\ITerrainProbe.h" />
+    <ClInclude Include="src\apps\systems\physics\PageGridIndex.h" />
     <ClInclude Include="src\apps\systems\physics\Probes.h" />
     <ClInclude Include="src\apps\systems\physics\CollisionLayer.h" />
     <ClInclude Include="src\apps\systems\physics\CollisionSystem.h" />

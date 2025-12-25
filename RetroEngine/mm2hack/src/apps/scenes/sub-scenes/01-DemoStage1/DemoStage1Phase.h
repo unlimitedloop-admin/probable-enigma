@@ -19,11 +19,13 @@
 #include "apps/systems/physics/ITerrainProbe.h"
 #include "apps/systems/physics/ITileMapProvider.h"
 #include "apps/systems/physics/LadderService.h"
+#include "apps/systems/physics/PageGridIndex.h"
 #include "apps/systems/physics/TileQueryService.h"
 #include "apps/systems/scrolling/atomic/MapRenderer2D.h"
 #include "apps/systems/scrolling/atomic/ScraperScrollRuleProvider.h"
 #include "apps/systems/scrolling/atomic/ScrollController.h"
 #include "apps/world/entity/avatar/PlayerEntity.h"
+#include "apps/world/stage/RoomGraphAdapter.h"
 #include "config/SystemConfig.h"
 
 namespace mm2hack::apps::scenes
@@ -43,9 +45,11 @@ namespace mm2hack::apps::scenes
             using ITerrainProbe             = systems::physics::ITerrainProbe;
             using ITileMapProvider          = systems::physics::ITileMapProvider;
             using LadderService             = systems::physics::LadderService;
+            using PageGridIndex             = systems::physics::PageGridIndex;
             using TileQueryService          = systems::physics::TileQueryService;
 
             using PlayerEntity              = world::entity::avatar::PlayerEntity;
+            using RoomGraphAdapter          = world::stage::RoomGraphAdapter;
             using Vec2                      = foundation::math::Vec2;
 
         public:
@@ -67,18 +71,21 @@ namespace mm2hack::apps::scenes
             std::unique_ptr<ITileMapProvider> _mapProvider;         // Tile map provider
             std::unique_ptr<ITerrainProbe>    _terrainProbe;        // Terrain probe
             std::unique_ptr<ILadderService>   _ladderService;       // Laddering action service
+            std::unique_ptr<PageGridIndex>    _pageGrid;            // Page grid index
 
-            std::unique_ptr<MapRenderer2D> _renderer;               // Map renderer
+            std::unique_ptr<MapRenderer2D>             _renderer;   // Map renderer
             std::unique_ptr<ScraperScrollRuleProvider> _rules;      // Scroll rule provider
-            std::unique_ptr<ScrollController> _scroll;              // Scroll controller
+            std::unique_ptr<ScrollController>          _scroll;     // Scroll controller
 
-            std::unique_ptr<PlayerEntity> _player;                  // Player entity
+            std::unique_ptr<PlayerEntity>     _player;              // Player entity
+            std::unique_ptr<RoomGraphAdapter> _graph;               // Room graph adapter
 
             int _page_index_debug{ 0 };
             double _player_pos_x_debug{ 0 };
             double _player_pos_y_debug{ 0 };
 
-            const Vec2 _initialize_pos{ 128.0, 0.0 };
+            const Vec2 _initialize_pos{ 128.0, 10.0 };              // HACK: Received from an external class.
+            Vec2 _player_prev_pos{};                                // Previous player position, scrolling-player sync use
         };
     }
 }

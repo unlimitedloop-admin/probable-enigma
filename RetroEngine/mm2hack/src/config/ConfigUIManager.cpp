@@ -209,6 +209,7 @@ namespace mm2hack::config
         const std::wstring path = getIniPath_();
         WritePrivateProfileString(L"Hud", L"ShowFps", config.showFps ? L"1" : L"0", path.c_str());
         WritePrivateProfileString(L"Hud", L"ShowFrameTime", config.showFrameTime ? L"1" : L"0", path.c_str());
+        WritePrivateProfileString(L"Hud", L"ShowScrollLine", config.showScrollLine ? L"1" : L"0", path.c_str());
     }
 
     void ConfigUIManager::LoadHudConfig(HudConfig& config)
@@ -219,6 +220,8 @@ namespace mm2hack::config
         config.showFps = (_wtoi(buffer) != 0);
         GetPrivateProfileString(L"Hud", L"ShowFrameTime", L"0", buffer, 32, path.c_str());
         config.showFrameTime = (_wtoi(buffer) != 0);
+        GetPrivateProfileString(L"Hud", L"ShowScrollLine", L"0", buffer, 32, path.c_str());
+        config.showScrollLine = (_wtoi(buffer) != 0);
 
         // Cache the loaded configuration.
         _cachedHudConfig = config;
