@@ -12,6 +12,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include "apps/systems/scrolling/atomic/ScrollTypes.h"
 
 namespace mm2hack::apps::resources::bg
 {
@@ -59,7 +60,9 @@ namespace mm2hack::apps::resources::bg
         [[nodiscard]] std::uint8_t H_(std::size_t pageIndex, std::size_t off) const noexcept;   // Get header 1B
         [[nodiscard]] static bool isScrollableNibble_(std::uint8_t v) noexcept
         {
-            return v == 0x01 || v == 0x09 || v == 0x0A;
+            using Scrl = mm2hack::apps::systems::scrolling::atomic::ScrollKind;
+            auto const sv = static_cast<Scrl>(v);
+            return sv == Scrl::FreeHorizontal || sv == Scrl::FollowObject || sv == Scrl::Free8Way;
         }
 
     private:

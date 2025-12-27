@@ -233,6 +233,7 @@
     <ClCompile Include="src\apps\world\entity\avatar\states\RunningState.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\states\StandingState.cpp" />
     <ClCompile Include="src\apps\world\entity\common\ProjectileEntity.cpp" />
+    <ClCompile Include="src\apps\world\stage\RoomGraphAdapter.cpp" />
     <ClCompile Include="src\config\ConfigUIManager.cpp" />
     <ClCompile Include="src\config\EnvironmentConfig.cpp" />
     <ClCompile Include="src\config\SystemConfig.cpp" />

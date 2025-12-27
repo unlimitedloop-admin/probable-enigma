@@ -101,36 +101,25 @@ namespace mm2hack::apps::systems::scrolling::atomic
 
         auto origin = _rules.PageOriginPx(_page_index, page_w, page_h);
         double targetLocalX = targetWorldX - origin.x;
-        double delta = targetLocalX - crossX;
-        double desired = delta;
+        double desired = targetLocalX - crossX;
 
-        auto can_left = [&]() -> bool
+        auto can_left_of = [&](std::size_t page) -> bool
             {
-                const auto k = _rules.LeftType(_page_index);
-                const int16_t room = _rules.LeftRoom(_page_index);
+                const auto k = _rules.LeftType(page);
+                const int16_t room = _rules.LeftRoom(page);
                 const int idx = (room >= 0) ? _rules.ToPageIndex(static_cast<uint8_t>(room)) : -1;
                 return IsAllowedFree(k) && idx >= 0;
             };
 
-        auto can_right = [&]() -> bool
+        auto can_right_of = [&](std::size_t page) -> bool
             {
-                const auto k = _rules.RightType(_page_index);
-                const int16_t room = _rules.RightRoom(_page_index);
+                const auto k = _rules.RightType(page);
+                const int16_t room = _rules.RightRoom(page);
                 const int idx = (room >= 0) ? _rules.ToPageIndex(static_cast<uint8_t>(room)) : -1;
                 return IsAllowedFree(k) && idx >= 0;
             };
 
-        if (delta < 0.0 && !can_left())
-        {
-            _cam.x = 0.0;
-            return;
-        }
-        if (delta > 0.0 && !can_right())
-        {
-            _cam.x = 0.0;
-            return;
-        }
-
+        // --- Across-page normalization (may change _page_index) ---
         while (desired < 0.0)
         {
             const auto kind = _rules.LeftType(_page_index);
@@ -139,6 +128,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
 
             if (!IsAllowedFree(kind) || l_idx < 0)
             {
+                // No left neighbor: do not go past the left edge.
                 desired = 0.0;
                 break;
             }
@@ -158,6 +148,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
 
             if (!IsAllowedFree(kind) || r_idx < 0)
             {
+                // No right neighbor: do not go past the right edge.
                 desired = 0.0;
                 break;
             }
@@ -169,8 +160,35 @@ namespace mm2hack::apps::systems::scrolling::atomic
             desired = targetLocalX - crossX;
         }
 
-        while (desired < 0.0) desired += page_w;
-        while (desired >= page_w) desired -= page_w;
+        // Re-evaluate adjacency on the FINAL page index.
+        const bool canLeft = can_left_of(_page_index);
+        const bool canRight = can_right_of(_page_index);
+
+        // --- Key rule: if there is no adjacent room in that direction, NEVER expose that side. ---
+        if (!canRight && desired > 0.0)
+        {
+            desired = 0.0;
+        }
+        if (!canLeft && desired < 0.0)
+        {
+            desired = 0.0;
+        }
+
+        // --- Keep cam within page, but only wrap when the corresponding neighbor exists ---
+        if (desired < 0.0)
+        {
+            desired = canLeft ? (desired + static_cast<double>(page_w)) : 0.0;
+        }
+        else if (desired >= static_cast<double>(page_w))
+        {
+            desired = canRight ? (desired - static_cast<double>(page_w)) : 0.0;
+        }
+
+        // Safety clamp
+        if (desired < 0.0 || desired >= static_cast<double>(page_w))
+        {
+            desired = 0.0;
+        }
 
         _cam.x = desired;
     }
@@ -180,43 +198,30 @@ namespace mm2hack::apps::systems::scrolling::atomic
         const int page_w = _params.tile_px * config::SystemConfig::kTileCountX;
         const int page_h = _params.tile_px * config::SystemConfig::kTileCountY;
 
-        const double crossY = _object_pos.y;          // screen crosshair
-        const double targetWorldY = _target_pos.y;    // world
+        const double crossY = _object_pos.y;
+        const double targetWorldY = _target_pos.y;
 
         auto origin = _rules.PageOriginPx(_page_index, page_w, page_h);
         double targetLocalY = targetWorldY - origin.y;
-        double delta = targetLocalY - crossY;         // want cam move by this (sign shows direction)
-        double desired = delta;
+        double desired = targetLocalY - crossY;
 
-        auto can_up = [&]() -> bool
+        auto can_up_of = [&](std::size_t page) -> bool
             {
-                const auto k = _rules.UpType(_page_index);
-                const int16_t room = _rules.UpRoom(_page_index);
+                const auto k = _rules.UpType(page);
+                const int16_t room = _rules.UpRoom(page);
                 const int idx = (room >= 0) ? _rules.ToPageIndex(static_cast<uint8_t>(room)) : -1;
                 return IsAllowedFree(k) && idx >= 0;
             };
 
-        auto can_down = [&]() -> bool
+        auto can_down_of = [&](std::size_t page) -> bool
             {
-                const auto k = _rules.DownType(_page_index);
-                const int16_t room = _rules.DownRoom(_page_index);
+                const auto k = _rules.DownType(page);
+                const int16_t room = _rules.DownRoom(page);
                 const int idx = (room >= 0) ? _rules.ToPageIndex(static_cast<uint8_t>(room)) : -1;
                 return IsAllowedFree(k) && idx >= 0;
             };
 
-        // --- If no adjacent in the moving direction, camera must NOT move in-page ---
-        if (delta < 0.0 && !can_up())
-        {
-            _cam.y = 0.0;
-            return;
-        }
-        if (delta > 0.0 && !can_down())
-        {
-            _cam.y = 0.0;
-            return;
-        }
-
-        // --- Normalize across pages (when delta exceeds page bounds) ---
+        // --- Across-page normalization (may change _page_index) ---
         while (desired < 0.0)
         {
             const auto kind = _rules.UpType(_page_index);
@@ -225,6 +230,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
 
             if (!IsAllowedFree(kind) || u_idx < 0)
             {
+                // No up neighbor: do not go above current page.
                 desired = 0.0;
                 break;
             }
@@ -244,6 +250,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
 
             if (!IsAllowedFree(kind) || d_idx < 0)
             {
+                // No down neighbor: do not go below current page.
                 desired = 0.0;
                 break;
             }
@@ -255,9 +262,36 @@ namespace mm2hack::apps::systems::scrolling::atomic
             desired = targetLocalY - crossY;
         }
 
-        // Keep cam within page (needed for neighbor drawing math)
-        while (desired < 0.0) desired += page_h;
-        while (desired >= page_h) desired -= page_h;
+        // Re-evaluate adjacency on the FINAL page index.
+        const bool canUp = can_up_of(_page_index);
+        const bool canDown = can_down_of(_page_index);
+
+        // --- Key rule: if there is no adjacent room in that direction, NEVER expose that side. ---
+        // This prevents "base BG color" from appearing when renderer expects neighbor room.
+        if (!canDown && desired > 0.0)
+        {
+            desired = 0.0;
+        }
+        if (!canUp && desired < 0.0)
+        {
+            desired = 0.0;
+        }
+
+        // --- Keep cam within page, but only wrap when the corresponding neighbor exists ---
+        if (desired < 0.0)
+        {
+            desired = canUp ? (desired + static_cast<double>(page_h)) : 0.0;
+        }
+        else if (desired >= static_cast<double>(page_h))
+        {
+            desired = canDown ? (desired - static_cast<double>(page_h)) : 0.0;
+        }
+
+        // Safety clamp
+        if (desired < 0.0 || desired >= static_cast<double>(page_h))
+        {
+            desired = 0.0;
+        }
 
         _cam.y = desired;
     }
