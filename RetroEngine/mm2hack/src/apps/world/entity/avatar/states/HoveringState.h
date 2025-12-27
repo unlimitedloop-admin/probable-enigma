@@ -43,7 +43,7 @@ namespace mm2hack::apps::world::entity::avatar::states
         bool tryEnterLadder_(PlayerContext& cx, StateProvider* in, const PlayerTuning& t) const;
 
         // Resolve vertical collision when SweepVertical reports a hit.
-        // origVelY: Sweep 前の垂直速度（判定に使用）。
+        // origVelY: Vertical velocity before Sweep.
         void resolveVerticalCollision_(PlayerContext& cx, const PlayerTuning& t, double origVelY, const ::mm2hack::apps::systems::physics::SweepVHit& hit) noexcept;
 
     private:

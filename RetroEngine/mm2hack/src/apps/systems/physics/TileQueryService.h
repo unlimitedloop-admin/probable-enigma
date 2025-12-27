@@ -10,6 +10,9 @@
 
 #include "apps/systems/physics/ITerrainProbe.h"
 
+#include <array>
+#include <cstdlib>
+#include <optional>
 #include <string>
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/systems/physics/ITileMapProvider.h"
@@ -27,6 +30,10 @@ namespace mm2hack::apps::systems::physics
     using world::stage::RoomGraphAdapter;
 
     class PageGridIndex;
+
+    // NOTE:
+    // Ground existence queries (hasBlockUnderfoot_/IsLadderTop) were removed.
+    // Use SweepVertical() for authoritative ground resolution.
 
     // Tile query service implementation
     class TileQueryService final : public ITerrainProbe
@@ -46,8 +53,6 @@ namespace mm2hack::apps::systems::physics
         SweepVHit SweepVertical(const Probes& probes, Vec2 v) const override;
         // Returns true if the feet are considered "ground-like" (floor or ladder top special case)
         bool IsGroundLike(const AvatarDirection direction, const Probes& probes, double dy) const override;
-        // Returns true if special handling for being at the "top" of a ladder is needed
-        bool IsLadderTop(const AvatarDirection direction, const Probes& probes, double dy) const override;
         // Resolve horizontal overlap with Solid tiles
         OverlapXFix ResolveOverlapX(const Probes& p, const double parity) const override;
 
@@ -56,6 +61,9 @@ namespace mm2hack::apps::systems::physics
         TileAttribute AttributeAt(double worldX, double worldY) const override;
 
     private:
+        // Attribute sampling
+        TileAttribute attrAt_(double worldX, double worldY) const;
+
         // Check for wall collision using side probes
         bool probeWall_(const Probes& probes, TileAttribute& outAttr, double peekX = 1.0) const;
         // Sweeps rightwards to check for collisions with the terrain
@@ -64,27 +72,18 @@ namespace mm2hack::apps::systems::physics
         SweepHHit sweepLeft_(const Probes& probes, double dx, bool airFlag = false) const;
 
         // Check for ground collision using bottom probes
-        bool probeGround_(const Probes& probes, TileAttribute& outAttr) const;
+        bool probeGround_(const Probes& probes, TileAttribute& outAttr, bool includeOneWay, std::optional<double> prevFootY) const;
         // Sweeps downwards to check for collisions with the terrain
         SweepVHit sweepDown_(const Probes& probes, double dx, double dy) const;
-
-        // Check to see if there are any blocks at underfoot meeting the criteria
-        bool hasBlockUnderfoot_(const AvatarDirection direction, const Probes& probes, double dy) const;
         // Collect X positions for bottom probes based on avatar direction
-        void collectBottomSampleXs_(const AvatarDirection direction, const Probes& probes, double(&outXs)[3]) const noexcept;
-        // Check if the avatar is standing on top of a ladder
-        bool isLadderTopUnderfoot_(const AvatarDirection direction, const Probes& probes, double dy) const;
+        std::array<double, 3> collectBottomSampleXs_(const Probes& probes) const noexcept;
+        // Classify tile attributes at specific probe points
+        TileAttribute classifyGroundAt_(double x, double probeY, bool includeOneWay, std::optional<double> prevFootY) const;
 
         // Check just above the head line for ceiling collision (dy==0 stability / "bonk" checks)
         bool probeCeiling_(const Probes& probes, TileAttribute& outAttr, double peekY = 1.0) const;
         // Sweep upwards to check for collisions with the terrain
         SweepVHit sweepUp_(const Probes& probes, double dx, double dy) const;
-
-        // Attribute sampling
-        TileAttribute attrAt_(double worldX, double worldY) const;
-
-        // Classify tile attributes at specific probe points
-        TileAttribute classifyGroundAt_(double x, double probeY, bool includeOneWay) const;
         // Classify ceiling tile attributes at specific probe points, only Solid collides from below
         TileAttribute classifyCeilingAt_(double x, double probeY) const;
         // Classify wall tile attributes at specific probe points, only Solid collides from sides

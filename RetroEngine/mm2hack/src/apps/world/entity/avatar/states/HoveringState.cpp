@@ -92,21 +92,17 @@ namespace mm2hack::apps::world::entity::avatar::states
     }
 
     // Resolve vertical collision when a hit is reported by SweepVertical.
-    // - origVelY: Sweep 前の垂直速度を受け取り、"ジャンプ中に天井に当たった" 判定に使う。
-    // - 天面に当たった際のセット値は PlayerTuning::jumpCutVelocity を使用。
     void HoveringState::resolveVerticalCollision_(PlayerContext& cx, const PlayerTuning& t, double origVelY, const apps::systems::physics::SweepVHit& hit) noexcept
     {
-        // 衝突までの移動量でまずクリップ
         cx.vel.y = hit.maxDistanceY;
 
-        // 天面に当たった場合かつ「上向きの移動（ジャンプ中）」なら指定の速度に置き換え
-        // （符号ルール: このコードベースでは上向きは負値を想定）
+        // If hit the ceiling and "moving up (jumping)", replace with specified speed.
         if (hit.kind == systems::physics::VHitKind::Ceiling && origVelY < 0.0)
         {
             cx.vel.y = 0.0;
         }
 
-        // onGround は床判定のみ
+        // onGround is only for floor detection.
         cx.onGround = (hit.kind == systems::physics::VHitKind::Floor);
     }
 

@@ -181,7 +181,6 @@
     <ClCompile Include="src\apps\systems\scrolling\atomic\PageScrollAnimator.cpp" />
     <ClCompile Include="src\apps\systems\scrolling\atomic\ScraperScrollRuleProvider.cpp" />
     <ClCompile Include="src\apps\systems\scrolling\atomic\ScrollController.cpp" />
-    <ClCompile Include="src\apps\systems\physics\BgTileQueryHelper.cpp" />
     <ClCompile Include="src\apps\systems\scrolling\effect\BgWobble2D.cpp" />
     <ClCompile Include="src\apps\systems\scrolling\effect\BgWobblePass.cpp" />
     <ClCompile Include="src\apps\systems\audio\AudioConfigLoader.cpp" />
@@ -343,7 +342,6 @@
     <ClInclude Include="src\apps\systems\scrolling\effect\BgWobble2D.h" />
     <ClInclude Include="src\apps\systems\scrolling\effect\BgWobblePass.h" />
     <ClInclude Include="src\apps\resources\bg\MapPageCache.h" />
-    <ClInclude Include="src\apps\systems\physics\BgTileQueryHelper.h" />
     <ClInclude Include="src\apps\ui\controls\MenuCursorController.h" />
     <ClInclude Include="src\apps\systems\audio\AudioConfigLoader.h" />
     <ClInclude Include="src\apps\systems\audio\AudioInitializer.h" />

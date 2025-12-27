@@ -3,7 +3,7 @@
 //  Project: mm2hack
 //  PageGridIndex.h
 // 
-//  ** Descriptions **
+//  Page grid index for resolving page indices from world positions.
 // 
 //==============================================================================
 #pragma once
@@ -37,7 +37,7 @@ namespace mm2hack::apps::systems::physics
             std::size_t h1 = std::hash<int>{}(p.gx);
             std::size_t h2 = std::hash<int>{}(p.gy);
 
-            // hash combine (すべて std::size_t 演算に統一して警告を回避)
+            // Hash combine (unify all operations to std::size_t to avoid warnings)
             return h1 ^ (h2 + static_cast<std::size_t>(0x9e3779b97f4a7c15ULL) + (h1 << 6) + (h1 >> 2));
         }
     };
@@ -105,7 +105,7 @@ namespace mm2hack::apps::systems::physics
             if (!next) return;
 
             const GridPos ng{ curGrid.gx + dir, curGrid.gy };
-            tryInsert_(*next, ng, q);   // TODO: 64bit only, size_t to int conversion safe here
+            tryInsert_(static_cast<int>(*next), ng, q);
         }
 
         template <class GraphAdapter>
@@ -115,7 +115,7 @@ namespace mm2hack::apps::systems::physics
             if (!next) return;
 
             const GridPos ng{ curGrid.gx, curGrid.gy + dir };
-            tryInsert_(*next, ng, q);   // TODO: 64bit only, size_t to int conversion safe here
+            tryInsert_(static_cast<int>(*next), ng, q);
         }
 
         void tryInsert_(int page, GridPos grid, std::queue<int>& q)

@@ -66,8 +66,6 @@ namespace mm2hack::apps::systems::physics
         virtual SweepVHit SweepVertical(const Probes& probes, Vec2 v) const = 0;
         // Returns true if the feet are considered "ground-like" (floor or ladder top special case)
         virtual bool IsGroundLike(const AvatarDirection direction, const Probes& probes, double dy) const = 0;
-        // Returns true if special handling for being at the "top" of a ladder is needed
-        virtual bool IsLadderTop(const AvatarDirection direction, const Probes& probes, double dy) const = 0;
         // Resolve horizontal overlap with Solid tiles
         virtual OverlapXFix ResolveOverlapX(const Probes& p, const double parity) const = 0;
 

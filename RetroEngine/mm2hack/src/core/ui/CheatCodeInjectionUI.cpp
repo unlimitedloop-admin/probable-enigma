@@ -189,13 +189,13 @@ namespace mm2hack::core::ui
 
     void CheatCodeInjectionUI::LoadFromConfig()
     {
-        // TODO: Construct _rows from INI/JSON
+        // HACK: Construct _rows from INI/JSON
         // Ex: _rows = config::ConfigUIManager::LoadCheatCodes();
     }
 
     void CheatCodeInjectionUI::SaveToConfig() const
     {
-        // TODO: Save for current _rows to INI/JSON
+        // HACK: Save for current _rows to INI/JSON
         // Ex: config::ConfigUIManager::SaveCheatCodes(_rows);
     }
 

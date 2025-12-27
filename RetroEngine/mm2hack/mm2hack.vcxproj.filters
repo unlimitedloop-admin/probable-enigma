@@ -93,7 +93,6 @@
     <ClCompile Include="src\apps\systems\scrolling\atomic\PageScrollAnimator.cpp" />
     <ClCompile Include="src\apps\systems\scrolling\atomic\MapRenderer2D.cpp" />
     <ClCompile Include="src\apps\systems\scrolling\atomic\ScrollController.cpp" />
-    <ClCompile Include="src\apps\systems\physics\BgTileQueryHelper.cpp" />
     <ClCompile Include="src\apps\systems\physics\CollisionLayer.cpp" />
     <ClCompile Include="src\apps\systems\physics\CollisionSystem.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\PlayerEntity.cpp" />
@@ -255,7 +254,6 @@
     <ClInclude Include="src\apps\foundation\math\CoordinateTypes.h" />
     <ClInclude Include="src\apps\resources\bg\BGRoomBank.h" />
     <ClInclude Include="src\apps\scenes\sub-scenes\01-DemoStage1\DemoStage1Phase.h" />
-    <ClInclude Include="src\apps\systems\physics\BgTileQueryHelper.h" />
     <ClInclude Include="src\apps\resources\bg\MapPageCache.h" />
     <ClInclude Include="src\apps\resources\bg\AddressScraper.h" />
     <ClInclude Include="src\apps\world\stage\RoomGraphAdapter.h" />

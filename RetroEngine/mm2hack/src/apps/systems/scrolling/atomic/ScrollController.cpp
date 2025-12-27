@@ -2,7 +2,6 @@
 
 #include "ScrollController.h"
 
-#include <cassert>
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "core/winapi/WindowManager.h"
 #include "ScrollTypes.h"

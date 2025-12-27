@@ -82,25 +82,6 @@ namespace mm2hack::apps::world::entity::avatar
         {
             vel.y = 0.0;
         }
-
-
-        // REVIEW: test scrolling.
-        //if (_input->IsPressed(JPBTN::RIGHT))
-        //{
-        //    pos.x += 1;
-        //}
-        //if (_input->IsPressed(JPBTN::LEFT))
-        //{
-        //    pos.x -= 1;
-        //}
-        //if (_input->IsPressed(JPBTN::UP))
-        //{
-        //    pos.y -= 1;
-        //}
-        //if (_input->IsPressed(JPBTN::DOWN))
-        //{
-        //    pos.y += 1;
-        //}
     }
 
     // IRenderable
@@ -118,7 +99,6 @@ namespace mm2hack::apps::world::entity::avatar
         const double screenX = worldX - view.camX - _half.x;
         const double screenY = worldY - view.camY - _half.y;
 
-        // TODO: draw of DxLib
         auto& res = runtime::GameContext::GetInstance().GetResourceManager();
         res.GetSpriteManager().UseById(_id, texture, static_cast<int>(screenX), static_cast<int>(screenY));
     }

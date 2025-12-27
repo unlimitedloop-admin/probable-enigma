@@ -25,16 +25,16 @@ namespace mm2hack::apps::systems::physics
         Count
     };
 
-    // Collision matrix for collision layers
+    // Collision matrix for collision layers (sprites/entities)
     struct CollisionMatrix
     {
-        std::array<std::array<bool, static_cast<size_t>(CollisionLayer::Count)>,
-            static_cast<size_t>(CollisionLayer::Count)> _table{};
+        std::array<std::array<bool, static_cast<std::size_t>(CollisionLayer::Count)>,
+            static_cast<std::size_t>(CollisionLayer::Count)> _table{};
 
         CollisionMatrix();
         ~CollisionMatrix() = default;
 
-        void Set(const CollisionLayer a, const CollisionLayer b, const bool v) noexcept;
+        void Set(CollisionLayer a, CollisionLayer b, bool v) noexcept;
         [[nodiscard]] bool Test(CollisionLayer a, CollisionLayer b) const noexcept;
     };
 }

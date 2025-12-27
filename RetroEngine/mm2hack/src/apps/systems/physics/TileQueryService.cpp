@@ -46,34 +46,25 @@ namespace mm2hack::apps::systems::physics
     {
         if (v.y > 0.0)
         {
-            // Moving down
             return sweepDown_(probes, v.x, v.y);
         }
 
         if (v.y < 0.0)
         {
-            // Moving up
             return sweepUp_(probes, v.x, v.y);
         }
 
+        // v.y == 0 : apex / idle. Do NOT snap to ladder/one-way top.
         SweepVHit out{};
         out.kind = VHitKind::Floor;
-        out.maxDistanceY = v.y;
-
-        TileAttribute b = TileAttribute::None;
-        if (probeCeiling_(probes, b, 1.0))
-        {
-            out.hit = false;
-            out.maxDistanceY = 0.0;
-            out.hitY = probes.topLine.middlePoint.y;
-            out.attr = b;
-        }
+        out.maxDistanceY = 0.0;
 
         TileAttribute a = TileAttribute::None;
-        if (probeGround_(probes, a))
+
+        // No prevFootY => CanLandOnTopSurface() returns false => no one-frame grounding.
+        if (probeGround_(probes, a, /*includeOneWay=*/false, /*prevFootY=*/std::nullopt))
         {
             out.hit = true;
-            out.maxDistanceY = 0.0;
             out.hitY = probes.bottomLine.middlePoint.y;
             out.attr = a;
         }
@@ -90,11 +81,6 @@ namespace mm2hack::apps::systems::physics
 
         auto hit = SweepVertical(probes, Vec2{ 0.0, dy });
         return hit.hit;
-    }
-
-    bool TileQueryService::IsLadderTop(const AvatarDirection direction, const Probes& probes, double speedY) const
-    {
-        return isLadderTopUnderfoot_(direction, probes, speedY);
     }
 
     OverlapXFix TileQueryService::ResolveOverlapX(const Probes& p, const double parity) const
@@ -327,7 +313,7 @@ namespace mm2hack::apps::systems::physics
         };
 
         bool found = false;
-        double bestDist = dx;                 // negative; best is closer to 0 => larger value
+        double bestDist = dx;   // negative; best is closer to 0 => larger value
         double bestHitX = curSideX + dx;
         TileAttribute bestAttr = TileAttribute::None;
 
@@ -370,11 +356,13 @@ namespace mm2hack::apps::systems::physics
         return out;
     }
 
-    bool TileQueryService::probeGround_(const Probes& probes, TileAttribute& outAttr) const
+    bool TileQueryService::probeGround_(const Probes& probes, TileAttribute& outAttr, bool includeOneWay, std::optional<double> prevFootY) const
     {
         constexpr double kPeek = 1.0;
 
-        const double probeY = probes.bottomLine.middlePoint.y + kPeek;
+        const double curBottomY = probes.bottomLine.middlePoint.y;
+        const double probeY = curBottomY + kPeek;
+
         const double xs[] = {
             probes.bottomLine.frontPoint.x,
             probes.bottomLine.middlePoint.x,
@@ -385,12 +373,14 @@ namespace mm2hack::apps::systems::physics
 
         for (double x : xs)
         {
-            const auto a = classifyGroundAt_(x, probeY, /*includeOneWay=*/true);
+            const auto a = classifyGroundAt_(x, probeY, includeOneWay, prevFootY);
+
             if (Has(a, TileAttribute::Solid))
             {
                 outAttr = TileAttribute::Solid;
                 return true;
             }
+
             if (Has(a, TileAttribute::Ladder))
             {
                 best = TileAttribute::Ladder;
@@ -428,7 +418,9 @@ namespace mm2hack::apps::systems::physics
         for (double x : xs)
         {
             const double probeX = x + dx;
-            const auto g = classifyGroundAt_(probeX, targetY, /*includeOneWay=*/true);
+            // Allow one-way here, but only when falling / moving downward.
+            const bool includeOneWay = (dy > 0.0);
+            const TileAttribute g = classifyGroundAt_(probeX, targetY, includeOneWay, includeOneWay ? std::optional<double>{curBottomY} : std::nullopt);
             if (g == TileAttribute::None)
             {
                 continue;
@@ -436,18 +428,6 @@ namespace mm2hack::apps::systems::physics
 
             const int row = static_cast<int>(std::floor(targetY / static_cast<double>(_ts)));
             const double topY = static_cast<double>(row * _ts);
-
-            // ★ LadderTop は「上から跨いだ時だけ床扱い」
-            if (Has(g, TileAttribute::Ladder))
-            {
-                constexpr double epsHold = 0x00.01p0;
-                const bool crossedFromAbove = curBottomY < topY && targetY >= topY;
-                const bool alreadyOnTop = (std::abs(curBottomY - topY) <= epsHold && targetY >= topY);
-                if (!(crossedFromAbove || alreadyOnTop))
-                {
-                    continue; // not crossing from above (from side)
-                }
-            }
 
             double dist = topY - curBottomY;
             if (dist < 0.0) dist = 0.0;
@@ -471,62 +451,74 @@ namespace mm2hack::apps::systems::physics
         return out;
     }
 
-    bool TileQueryService::hasBlockUnderfoot_(const AvatarDirection direction, const Probes& probes, double dy) const
+    std::array<double, 3> TileQueryService::collectBottomSampleXs_(const Probes& probes) const noexcept
     {
-        // Check just below the bottom, or 1 pixel below if not moving down.
-        const double probeY = probes.bottomLine.middlePoint.y + (dy > 0.0 ? dy : 1.0);
-
-        double xs[3]{};
-        collectBottomSampleXs_(direction, probes, xs);
-
-        for (double px : xs)
-        {
-            const TileAttribute attr = classifyGroundAt_(px, probeY, /*includeOneWay=*/false);
-            if (Has(attr, TileAttribute::Solid) && !Has(attr, TileAttribute::NoCollision))
-            {
-                return true;
-            }
-        }
-        return false;
+        return {
+            probes.bottomLine.frontPoint.x,
+            probes.bottomLine.middlePoint.x,
+            probes.bottomLine.behindPoint.x
+        };
     }
 
-    void TileQueryService::collectBottomSampleXs_(const AvatarDirection direction, const Probes& probes, double(&outXs)[3]) const noexcept
+    TileAttribute TileQueryService::classifyGroundAt_(double x, double probeY, bool includeOneWay, std::optional<double> prevFootY) const
     {
-        const double midX = probes.bottomLine.middlePoint.x;
-        const double frontX = probes.bottomLine.frontPoint.x;
-        const double behindX = probes.bottomLine.behindPoint.x;
-
-        if (direction == AvatarDirection::Left)
+        // Return true if we should treat the tile top as a "landing surface".
+        // - If prevFootY is present: require crossing from above (or already on top).
+        // - If prevFootY is absent: do NOT snap (avoid apex/idle false grounding).
+        auto canLandOnTopSurface = [](const std::optional<double> prevFootY, const double curFootProbeY, const double topY, const double eps) -> bool
         {
-            outXs[0] = frontX;
-            outXs[1] = midX;
-            outXs[2] = behindX;
-        }
-        else
-        {
-            // Caution: The points vary based on direction. 0 and 2.
-            outXs[0] = behindX;
-            outXs[1] = midX;
-            outXs[2] = frontX;
-        }
-    }
-
-    bool TileQueryService::isLadderTopUnderfoot_(const AvatarDirection direction, const Probes& probes, double dy) const
-    {
-        const double probeY = probes.bottomLine.middlePoint.y + (dy > 0.0 ? dy : 1.0);
-
-        double xs[3]{};
-        collectBottomSampleXs_(direction, probes, xs);
-
-        for (double px : xs)
-        {
-            const TileAttribute attr = classifyGroundAt_(px, probeY, /*includeOneWay=*/false);
-            if (Has(attr, TileAttribute::Ladder) && !Has(attr, TileAttribute::NoCollision))
+            if (!prevFootY.has_value())
             {
-                return true;
+                // No history => no snapping (prevents apex/idle one-frame grounding).
+                return false;
             }
+            const double prevY = *prevFootY;
+            // Crossing: previous foot was above the top, current probe reached/passed the top.
+            const bool crossedFromAbove = (prevY < topY - eps) && (curFootProbeY >= topY - eps);
+            // Maintain: already standing on top within epsilon, and still not going above it.
+            const bool alreadyOnTop = (std::abs(prevY - topY) <= eps) && (curFootProbeY >= topY - eps);
+            return crossedFromAbove || alreadyOnTop;
+        };
+
+        const auto below = attrAt_(x, probeY);
+
+        // Solid tile is always ground.
+        if (Has(below, TileAttribute::Solid))
+        {
+            return TileAttribute::Solid;
         }
-        return false;
+
+        // Compute the top Y of the tile row containing probeY.
+        const int row = static_cast<int>(std::floor(probeY / static_cast<double>(_ts)));
+        const double topY = static_cast<double>(row * _ts);
+
+        constexpr double eps = SystemConfig::kEpsilon;
+
+        // "Top surface" is valid only if the space just above is empty.
+        const auto above = attrAt_(x, topY - eps);
+        const bool hasEmptyAbove = Has(above, TileAttribute::Empty);
+
+        // Ladder top: landable only on its top edge, and only when crossing from above.
+        if (Has(below, TileAttribute::Ladder))
+        {
+            if (hasEmptyAbove && canLandOnTopSurface(prevFootY, probeY, topY, eps))
+            {
+                return TileAttribute::Ladder; // LadderTop as ground
+            }
+            return TileAttribute::None;
+        }
+
+        // One-way platform: landable only on its top edge, and only when crossing from above.
+        if (includeOneWay && Has(below, TileAttribute::OneWayPlatform))
+        {
+            if (hasEmptyAbove && canLandOnTopSurface(prevFootY, probeY, topY, eps))
+            {
+                return TileAttribute::Solid; // Treat as floor when landing on its top.
+            }
+            return TileAttribute::None;
+        }
+
+        return TileAttribute::None;
     }
 
     bool TileQueryService::probeCeiling_(const Probes& probes, TileAttribute& outAttr, double peekY) const
@@ -677,34 +669,6 @@ namespace mm2hack::apps::systems::physics
         const int ty = std::clamp<int>(static_cast<int>(y) / _ts, 0, SystemConfig::kTileCountY - 1);
 
         return _map.SampleTileAttributeOnPage(page, tx, ty);
-    }
-
-    TileAttribute TileQueryService::classifyGroundAt_(double x, double probeY, bool includeOneWay) const
-    {
-        const auto below = attrAt_(x, probeY);
-
-        if (Has(below, TileAttribute::Solid) ||
-            (includeOneWay && Has(below, TileAttribute::OneWayPlatform)))
-        {
-            return TileAttribute::Solid;
-        }
-
-        // Can also land on the top of a ladder.
-        if (Has(below, TileAttribute::Ladder))
-        {
-            const int row = static_cast<int>(std::floor(probeY / static_cast<double>(_ts)));
-            const double topY = static_cast<double>(row * _ts);
-
-            constexpr double eps = SystemConfig::kEpsilon;
-            const auto above = attrAt_(x, topY - eps);
-
-            if (Has(above, TileAttribute::Empty))
-            {
-                return TileAttribute::Ladder; // LadderTop as ground
-            }
-        }
-
-        return TileAttribute::None;
     }
 
     TileAttribute TileQueryService::classifyCeilingAt_(double x, double probeY) const
