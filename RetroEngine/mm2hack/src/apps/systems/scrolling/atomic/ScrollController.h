@@ -9,6 +9,7 @@
 #pragma once
 
 #include <cstdlib>
+#include <optional>
 #include <string>
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/systems/view/ViewState.h"
@@ -88,8 +89,11 @@ namespace mm2hack::apps::systems::scrolling::atomic
         // Set scroll mode
         void SetMode(ScrollKind m) noexcept { _mode = m; }
 
+        // Request fixed page scroll. Returns false if rejected (no neighbor / not allowed / already animating)
+        bool RequestFixedScroll(PageScroll::Dir dir) noexcept;
+        // Synchronize with object center position
         void SyncWithObjectCenter(const Vec2& object_center, bool has_adj_x, bool has_adj_y, const Vec2& screen_px, const Vec2& map_px, ViewState& out_view);
-
+        // Debug HUD render
         void DebugHudRender(bool show) const;
 
         // External interface
@@ -111,29 +115,31 @@ namespace mm2hack::apps::systems::scrolling::atomic
         const ViewState& GetView() const noexcept { return _viewState; }
 
     private:
-        void updateAxisX_(double remain);   // Sub-update for each axis
-        void updateAxisY_(double remain);   // Sub-update for each axis
+        void updateAxisX_(double remain);               // Sub-update for each axis
+        void updateAxisY_(double remain);               // Sub-update for each axis
 
-        void drawNeighbors_();              // Draw neighboring pages
-        void updateViewState_();            // Update ViewState representation
+
+        void drawNeighbors_();                          // Draw neighboring pages
+        void updateViewState_();                        // Update ViewState representation
 
     private:
-        const std::wstring kClassName = L"ScrollController";
+        const std::wstring kClassName{ L"ScrollController" };
 
-        IScrollRuleProvider& _rules;                // Scroll rules
-        MapRenderer2D& _renderer;                   // Map renderer
-        Params _params{};                           // Parameters
+        IScrollRuleProvider& _rules;                    // Scroll rules
+        MapRenderer2D& _renderer;                       // Map renderer
+        Params _params{};                               // Parameters
 
-        ScrollKind _mode{ ScrollKind::None };       // Current scroll mode
-        std::size_t _page_index{ 0 };               // Current page index
-        Vec2 _object_pos{};                         // Object position
-        Vec2 _target_pos{};                         // Target position
-        Camera _cam{};                              // Camera
-        PageScrollAnimator _anim{};                 // Page scroll animator
+        ScrollKind _mode{ ScrollKind::None };           // Current scroll mode
+        std::size_t _page_index{ 0 };                   // Current page index
+        Vec2 _object_pos{};                             // Object position
+        Vec2 _target_pos{};                             // Target position
+        Camera _cam{};                                  // Camera
+        PageScrollAnimator _anim{};                     // Page scroll animator
+        std::optional<PageScroll::Dir> _pending_fixed{};// Pending fixed scroll request
 
-        const int _tileX{ conf::kTileCountX };      // Tile count X
-        const int _tileY{ conf::kTileCountY };      // Tile count Y
+        const int _tileX{ conf::kTileCountX };          // Tile count X
+        const int _tileY{ conf::kTileCountY };          // Tile count Y
 
-        ViewState _viewState{};                     // View state representation
+        ViewState _viewState{};                         // View state representation
     };
 }

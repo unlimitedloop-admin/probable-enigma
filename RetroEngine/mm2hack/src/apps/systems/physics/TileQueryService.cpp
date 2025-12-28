@@ -7,6 +7,7 @@
 #include <limits>
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/world/entity/avatar/AvatarStatus.h"
+#include "apps/world/stage/RoomGraphAdapter.h"
 #include "ITerrainProbe.h"
 #include "PageGridIndex.h"
 #include "Probes.h"
@@ -615,6 +616,7 @@ namespace mm2hack::apps::systems::physics
 
     TileAttribute TileQueryService::attrAt_(double worldX, double worldY) const
     {
+        using AdjacentPolicy = world::stage::AdjacentPolicy;
         const int pageW = SystemConfig::kTileCountX * _ts;
         const int pageH = SystemConfig::kTileCountY * _ts;
 
@@ -630,7 +632,7 @@ namespace mm2hack::apps::systems::physics
         // while still allowing negative pages in the future (if the grid maps them, resolvedPage will succeed).
         if (worldY < 0.0 && !resolvedPage)
         {
-            const auto up = _graph.AdjacentPageY(_currPage, -1);
+            const auto up = _graph.AdjacentPageY(_currPage, -1, AdjacentPolicy::AnyConnection);
             if (!up)
             {
                 return TileAttribute::Empty;
@@ -654,40 +656,40 @@ namespace mm2hack::apps::systems::physics
         double y = worldY - static_cast<double>(gy * pageH);
 
         // 3) Safety: if x/y still out of range due to mapping holes, walk neighbors.
-        while (x < 0.0)
-        {
-            auto p = _graph.AdjacentPageX(page, -1);
-            if (!p) return TileAttribute::Empty;
-            page = *p;
-            x += pageW;
-        }
-        while (x >= pageW)
-        {
-            auto p = _graph.AdjacentPageX(page, +1);
-            if (!p) return TileAttribute::Empty;
-            page = *p;
-            x -= pageW;
-        }
+        //while (x < 0.0)
+        //{
+        //    auto p = _graph.AdjacentPageX(page, -1, AdjacentPolicy::AnyConnection);
+        //    if (!p) return TileAttribute::Solid;
+        //    page = *p;
+        //    x += pageW;
+        //}
+        //while (x >= pageW)
+        //{
+        //    auto p = _graph.AdjacentPageX(page, +1, AdjacentPolicy::AnyConnection);
+        //    if (!p) return TileAttribute::Solid;
+        //    page = *p;
+        //    x -= pageW;
+        //}
 
-        while (y < 0.0)
-        {
-            auto p = _graph.AdjacentPageY(page, -1);
-            if (!p)
-            {
-                // Default behavior: no upper neighbor => treat as empty.
-                // (If you want "only when worldY<0" instead, you can gate this with (worldY < 0.0).)
-                return TileAttribute::Empty;
-            }
-            page = *p;
-            y += pageH;
-        }
-        while (y >= pageH)
-        {
-            auto p = _graph.AdjacentPageY(page, +1);
-            if (!p) return TileAttribute::Empty;
-            page = *p;
-            y -= pageH;
-        }
+        //while (y < 0.0)
+        //{
+        //    auto p = _graph.AdjacentPageY(page, -1, AdjacentPolicy::AnyConnection);
+        //    if (!p)
+        //    {
+        //        // Default behavior: no upper neighbor => treat as empty.
+        //        // (If you want "only when worldY<0" instead, you can gate this with (worldY < 0.0).)
+        //        return TileAttribute::Empty;
+        //    }
+        //    page = *p;
+        //    y += pageH;
+        //}
+        //while (y >= pageH)
+        //{
+        //    auto p = _graph.AdjacentPageY(page, +1, AdjacentPolicy::AnyConnection);
+        //    if (!p) return TileAttribute::Empty;
+        //    page = *p;
+        //    y -= pageH;
+        //}
 
         const int tx = std::clamp(static_cast<int>(x) / _ts, 0, static_cast<int>(SystemConfig::kTileCountX) - 1);
         const int ty = std::clamp(static_cast<int>(y) / _ts, 0, static_cast<int>(SystemConfig::kTileCountY) - 1);

@@ -36,7 +36,11 @@ namespace mm2hack::apps::systems::scrolling::atomic
     // Check if the scroll kind allows free movement
     inline constexpr bool IsAllowedFree(ScrollKind k) noexcept
     {
-        const int v = static_cast<int>(k);
-        return (v == 0x01) || (v == 0x09) || (v == 0x0A);
+        return (k == ScrollKind::FreeHorizontal) || (k == ScrollKind::FollowObject) || (k == ScrollKind::Free8Way);
+    }
+
+    inline constexpr bool IsFixedScroll(ScrollKind k) noexcept
+    {
+        return (k == ScrollKind::FixedPage);
     }
 }

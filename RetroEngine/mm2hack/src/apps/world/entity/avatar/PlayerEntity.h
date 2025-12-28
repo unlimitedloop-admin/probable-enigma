@@ -13,6 +13,7 @@
 
 #include <array>
 #include <memory>
+#include <optional>
 #include <string>
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/rendering/sprite/SpriteManager.h"
@@ -22,6 +23,7 @@
 #include "apps/systems/physics/PageGridIndex.h"
 #include "apps/systems/physics/Probes.h"
 #include "apps/systems/physics/TileAttribute.h"
+#include "apps/systems/scrolling/atomic/ScrollTypes.h"
 #include "apps/systems/view/RenderContext.h"
 #include "apps/world/entity/common/AnimeStepper.h"
 #include "apps/world/entity/IEntity.h"
@@ -56,6 +58,8 @@ namespace mm2hack::apps::world::entity::avatar
         using SpriteManagerId   = rendering::sprite::SpriteManager::Id;
 
     public:
+        using ScrollDir         = systems::scrolling::atomic::PageScroll::Dir;
+
         PlayerEntity(SpriteManagerId id);
 
         // Main action updates (IUpdatable)
@@ -92,6 +96,9 @@ namespace mm2hack::apps::world::entity::avatar
         void SetTerrainProbe(ITerrainProbe* p) noexcept { _terrainProbe = p; }
         void SetLadderService(ILadderService* s) { _ladderService = s; }
 
+        // Get scrolling request (if any) and consume it
+        [[nodiscard]] std::optional<ScrollDir> ConsumeScrollRequest() noexcept;
+
         // ===== public parameters =====
         bool onGround{ false };
         AvatarDirection facingLR{ AvatarDirection::Right };
@@ -99,9 +106,7 @@ namespace mm2hack::apps::world::entity::avatar
 
     private:
         void refreshProbes_(PlayerContext& cx) noexcept;
-
-    private:
-        const std::wstring kClassName{ L"PlayerEntity" };
+        void requestScroll_(ScrollDir dir) noexcept;
 
         std::unique_ptr<IPlayerState>& FindState(AvatarStatus s)
         {
@@ -118,6 +123,9 @@ namespace mm2hack::apps::world::entity::avatar
             }
         }
 
+    private:
+        const std::wstring kClassName{ L"PlayerEntity" };
+
         SpriteManagerId _id{};                                          // Sprite Id
 
         Vec2 _half{};                                                   // Half-size of the bounding box
@@ -131,5 +139,7 @@ namespace mm2hack::apps::world::entity::avatar
         Probes                 _probes{ _half };                        // Collision probes
         const ITerrainProbe*   _terrainProbe{ nullptr };                // Terrain probe
         ILadderService*        _ladderService{ nullptr };               // Laddering action service
+
+        std::optional<ScrollDir> _pendingScroll{};
     };
 }

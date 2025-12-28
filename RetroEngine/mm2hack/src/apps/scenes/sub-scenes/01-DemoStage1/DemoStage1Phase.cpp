@@ -10,6 +10,7 @@
 #include "apps/systems/physics/PageGridIndex.h"
 #include "apps/systems/scrolling/atomic/ScrollController.h"
 #include "apps/systems/view/RenderContext.h"
+#include "apps/world/entity/avatar/PlayerEntity.h"
 #include "config/ConfigUIManager.h"
 #include "DemoStage1.h"
 #include "utils/decimal_decoder.h"
@@ -74,20 +75,30 @@ namespace mm2hack::apps::scenes
             using namespace foundation::math;
             Vec2 delta{ 0, 0 };
 
+            /* Entity Updates */
             if (_player)
             {
                 const Vec2 prev_pos =_player->pos;
-                const auto p = _pageGrid->ResolvePageIndexFromWorldPos(_player->pos);
-                if (p) _terrainProbe->SetCurrentPage(*p);
+                if (const auto p = _pageGrid->ResolvePageIndexFromWorldPos(_player->pos); p)
+                {
+                    _terrainProbe->SetCurrentPage(*p);
+                }
 
                 _player->SetInput(owner.Input());
-
-                auto delta_time = runtime::GameContext::GetInstance().Time().DeltaSeconds();
-                _player->Update(delta_time);    // Update player 
+                const auto dt = runtime::GameContext::GetInstance().Time().DeltaSeconds();
+                _player->Update(dt);    // Update player 
 
                 delta = _player->pos - prev_pos;
             }
 
+            /* BG Updates */
+            if (_player)
+            {
+                if (const auto req = _player->ConsumeScrollRequest(); req)
+                {
+                    _scroll->RequestFixedScroll(*req);
+                }
+            }
             _scroll->SetTargetPos(_player ? _player->pos : Vec2::Zero());
             _scroll->Update(delta);
 

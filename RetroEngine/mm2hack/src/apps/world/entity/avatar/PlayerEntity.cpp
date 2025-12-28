@@ -6,6 +6,7 @@
 #include "apps/runtime/GameContext.h"
 #include "apps/systems/physics/CollisionLayer.h"
 #include "apps/systems/physics/TileAttribute.h"
+#include "apps/systems/scrolling/atomic/ScrollTypes.h"
 #include "apps/systems/view/RenderContext.h"
 #include "apps/systems/view/ViewState.h"
 #include "apps/world/entity/EntityBase.h"
@@ -46,7 +47,8 @@ namespace mm2hack::apps::world::entity::avatar
             pos, vel,
             /* onGround */ onGround, /* justLanded */ false, /* isHitCeiling */ false, /* prevOnGround */ onGround,
             facingLR, texture, _animeStepper,
-            /* probes */ _probes, /* prelimProbes */ _probes, this->Bounds(), _terrainProbe, _ladderService
+            /* probes */ _probes, /* prelimProbes */ _probes, this->Bounds(), _terrainProbe, _ladderService,
+            /* vBounds */ {}, /* pendingFixedScroll */ ScrollDir::None
         };
 
         refreshProbes_(cx);
@@ -59,6 +61,11 @@ namespace mm2hack::apps::world::entity::avatar
             st->OnExit(cx, _input, _tuning);
             _status = next;
             FindState(_status)->OnEnter(cx, _input, _tuning);
+        }
+
+        if (cx.pendingFixedScroll != ScrollDir::None)
+        {
+            requestScroll_(cx.pendingFixedScroll);
         }
 
         // Apply updated context values
@@ -139,8 +146,21 @@ namespace mm2hack::apps::world::entity::avatar
 
     void PlayerEntity::SetCollidable(bool v) noexcept { _collidable = v; }
 
+    [[nodiscard]] std::optional<PlayerEntity::ScrollDir> PlayerEntity::ConsumeScrollRequest() noexcept
+    {
+        auto out = _pendingScroll;
+        _pendingScroll.reset();
+        return out;
+    }
+
     void PlayerEntity::refreshProbes_(PlayerContext& cx) noexcept
     {
         _probes.refreshAll(cx, _tuning.probeOffsets);
+    }
+
+    void PlayerEntity::requestScroll_(ScrollDir dir) noexcept
+    {
+        if (_pendingScroll.has_value()) return; // keep first!
+        _pendingScroll = dir;
     }
 }

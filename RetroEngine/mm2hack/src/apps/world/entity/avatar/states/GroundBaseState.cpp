@@ -6,6 +6,8 @@
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/systems/physics/ILadderService.h"
 #include "apps/systems/physics/ITerrainProbe.h"
+#include "apps/systems/physics/PageGridIndex.h"
+#include "apps/systems/scrolling/atomic/ScrollTypes.h"
 #include "apps/world/entity/avatar/abilities/MovementAbilities.h"
 #include "apps/world/entity/avatar/AvatarStatus.h"
 #include "apps/world/entity/avatar/PlayerContext.h"
@@ -18,19 +20,56 @@ namespace mm2hack::apps::world::entity::avatar::states
     void GroundBaseState::GroundPipeline(PlayerContext& cx, StateProvider* in, const PlayerTuning& t, GroundMoveIntent intent)
     {
         using namespace abilities;
+        using PageDir = systems::scrolling::atomic::PageScroll::Dir;
 
-        if (in->IsPressed(JPBTN::LEFT))  cx.facingLR = AvatarDirection::Left;
-        if (in->IsPressed(JPBTN::RIGHT)) cx.facingLR = AvatarDirection::Right;
-        cx.probes.swapFrontLR(cx, t.probeOffsets); // Update front/rear probes based on facing direction.
+        // Update facing.
+        if (in->IsPressed(JPBTN::LEFT)) { cx.facingLR = AvatarDirection::Left; }
+        if (in->IsPressed(JPBTN::RIGHT)) { cx.facingLR = AvatarDirection::Right; }
 
-        // X-axis ground movement. check horizontal collisions.
+        // Update front/rear probes based on facing direction.
+        cx.probes.swapFrontLR(cx, t.probeOffsets);
+
+        // X-axis ground movement. Check horizontal collisions.
         const double dx = intent.speed * static_cast<double>(intent.dirSign);
+
+        // Save the front-probe X BEFORE movement for boundary-cross detection (world space).
+        const double prevFrontX = cx.probes.frontLine.middlePoint.x;
+
         auto hHit = cx.terrain->SweepHorizontal(cx.probes, dx);
         if (hHit.hit)
         {
             intent.speed = std::abs(hHit.maxDistanceX);
         }
+
+        // Apply velocity based on updated intent.
         ApplyGroundMove(cx, intent);
+
+        // ---- Fixed page scroll request by boundary crossing (NOT by hit) ----
+        // We base this on the movement that will actually happen this frame.
+        if (intent.active)
+        {
+            const double actualDx = intent.speed * static_cast<double>(intent.dirSign);
+            if (actualDx != 0.0)
+            {
+                // Compute "next" probe X in world space.
+                const double nextFrontX = prevFrontX + actualDx;
+
+                // Page width in pixels (e.g., 256).
+                const double pageW = static_cast<double>(_ts * kTileCountX);
+
+                const int prevGX = systems::physics::PageGridIndex::FloorDiv(prevFrontX, pageW);
+                const int nextGX = systems::physics::PageGridIndex::FloorDiv(nextFrontX, pageW);
+
+                if (nextGX > prevGX)
+                {
+                    cx.pendingFixedScroll = PageDir::Right;
+                }
+                else if (nextGX < prevGX)
+                {
+                    cx.pendingFixedScroll = PageDir::Left;
+                }
+            }
+        }
 
         // Y-axis vertical speed preparation.
         AdjustVerticalSpeedForGravity(cx, t);

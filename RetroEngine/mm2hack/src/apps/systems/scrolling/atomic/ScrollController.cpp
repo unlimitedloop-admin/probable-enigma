@@ -20,21 +20,83 @@ namespace mm2hack::apps::systems::scrolling::atomic
         if (_anim.Active())
         {
             const auto dir = _anim.State().dir;
-            const bool finished = _anim.TickAndInterpolate(dir, page_w, page_h, _params.view_w, _params.view_h, _object_pos);
+            const bool finished = _anim.TickAndInterpolate(dir, page_w, page_h, _params.view_w, _params.view_h, _target_pos);
             if (finished)
             {
-                _page_index = _anim.State().to_index; // Confirm to the opposite bank
+                _page_index = _anim.State().to_index;
                 _cam.x = 0.0; _cam.y = 0.0;
                 _anim.Reset();
             }
             return;
         }
 
-        // Free scroll
+        // Start fixed scroll if requested (before free-scroll updates)
+        if (_pending_fixed.has_value())
+        {
+            const auto dir = *_pending_fixed;
+            _pending_fixed.reset();
+
+            // Resolve neighbor based on dir.
+            // TODO: Refactor externally as a ScrollController method! ;) 
+            auto tryStart = [&](PageScroll::Dir d) -> bool
+                {
+                    std::size_t from = _page_index;
+                    int to_idx = -1;
+
+                    switch (d)
+                    {
+                    case PageScroll::Dir::Right:
+                    {
+                        const auto kind = _rules.RightType(from);
+                        const int16_t rr = _rules.RightRoom(from);
+                        to_idx = (rr >= 0) ? _rules.ToPageIndex(static_cast<uint8_t>(rr)) : -1;
+                        if (!IsFixedScroll(kind)) return false;
+                        break;
+                    }
+                    case PageScroll::Dir::Left:
+                    {
+                        const auto kind = _rules.LeftType(from);
+                        const int16_t lr = _rules.LeftRoom(from);
+                        to_idx = (lr >= 0) ? _rules.ToPageIndex(static_cast<uint8_t>(lr)) : -1;
+                        if (!IsFixedScroll(kind)) return false;
+                        break;
+                    }
+                    case PageScroll::Dir::Down:
+                    {
+                        const auto kind = _rules.DownType(from);
+                        const int16_t dr = _rules.DownRoom(from);
+                        to_idx = (dr >= 0) ? _rules.ToPageIndex(static_cast<uint8_t>(dr)) : -1;
+                        if (!IsFixedScroll(kind)) return false;
+                        break;
+                    }
+                    case PageScroll::Dir::Up:
+                    {
+                        const auto kind = _rules.UpType(from);
+                        const int16_t ur = _rules.UpRoom(from);
+                        to_idx = (ur >= 0) ? _rules.ToPageIndex(static_cast<uint8_t>(ur)) : -1;
+                        if (!IsFixedScroll(kind)) return false;
+                        break;
+                    }
+                    default:
+                        return false;
+                    }
+
+                    _cam.x = 0.0;
+                    _cam.y = 0.0;
+                    _anim.Start(d, from, static_cast<std::size_t>(to_idx));
+                    return true;
+                };
+
+            (void)tryStart(dir);
+            // If start succeeded, next frame Update() will run TickAndInterpolate (_anim.Active() has true).
+            // Even if it failed, we just fall through to free scroll.
+        }
+
+        // Free scroll (only if not animating)
         if (input_delta.x != 0.0) { updateAxisX_(input_delta.x); }
         if (input_delta.y != 0.0) { updateAxisY_(input_delta.y); }
 
-        updateViewState_(); // Sync ViewState
+        updateViewState_();
     }
 
     void ScrollController::Render()
@@ -55,6 +117,23 @@ namespace mm2hack::apps::systems::scrolling::atomic
             _renderer.DrawPage(_page_index, ox, oy);
             drawNeighbors_();
         }
+    }
+
+    bool ScrollController::RequestFixedScroll(PageScroll::Dir dir) noexcept
+    {
+        if (_anim.Active())
+        {
+            return false;
+        }
+
+        // If already pending, keep first request (or overwrite; your choice).
+        if (_pending_fixed.has_value())
+        {
+            return false;
+        }
+
+        _pending_fixed = dir;
+        return true;
     }
 
     void ScrollController::SyncWithObjectCenter(const Vec2& object_center, bool has_adj_x, bool has_adj_y, const Vec2& screen_px, const Vec2& map_px, ViewState& out_view)

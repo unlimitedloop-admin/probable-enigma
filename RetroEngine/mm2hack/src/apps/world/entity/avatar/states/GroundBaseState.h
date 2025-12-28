@@ -13,6 +13,7 @@
 #include <string>
 #include "apps/world/entity/avatar/PlayerContext.h"
 #include "apps/world/entity/avatar/PlayerParams.h"
+#include "config/SystemConfig.h"
 #include "core/assembly/StateProvider.h"
 
 namespace mm2hack::apps::world::entity::avatar::states
@@ -28,5 +29,9 @@ namespace mm2hack::apps::world::entity::avatar::states
 
     private:
         const std::wstring kClassName{ L"GroundBaseState" };
+
+        static constexpr int _ts = 16; // Tile size in pixels
+        const int kTileCountX = config::SystemConfig::kTileCountX;
+        const int kTileCountY = config::SystemConfig::kTileCountY;
     };
 }

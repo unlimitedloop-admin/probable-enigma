@@ -17,6 +17,12 @@ namespace mm2hack::apps::world::stage
 {
     using resources::bg::AddressScraper;
 
+    enum class AdjacentPolicy
+    {
+        AnyConnection,  // neighbor exists regardless of scroll type
+        FreeOnly,       // current behavior: only if free scroll
+    };
+
     // Adapter for room graph based on AddressScraper (Only entity class uses this)
     class RoomGraphAdapter
     {
@@ -40,9 +46,9 @@ namespace mm2hack::apps::world::stage
         bool CanGoDown(int16_t pageIndex)  const { return _s.isPossibleGoUnder(pageIndex); }
 
         // dir > 0: right/down, dir < 0: left/up, dir == 0: none
-        [[nodiscard]] std::optional<std::size_t> AdjacentPageX(std::size_t pageIndex, int dir) const;
+        [[nodiscard]] std::optional<std::size_t> AdjacentPageX(std::size_t pageIndex, int dir, AdjacentPolicy policy) const;
         // dir > 0: down, dir < 0: up, dir == 0: none
-        [[nodiscard]] std::optional<std::size_t> AdjacentPageY(std::size_t pageIndex, int dir) const;
+        [[nodiscard]] std::optional<std::size_t> AdjacentPageY(std::size_t pageIndex, int dir, AdjacentPolicy policy) const;
 
     private:
         // Convert -1 to nullopt, otherwise return uint8_t value

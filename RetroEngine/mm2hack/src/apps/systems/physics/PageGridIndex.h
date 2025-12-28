@@ -14,6 +14,7 @@
 #include <unordered_map>
 
 #include "apps/foundation/math/CoordinateTypes.h"
+#include "apps/world/stage/RoomGraphAdapter.h"
 
 namespace mm2hack::apps::systems::physics
 {
@@ -45,6 +46,8 @@ namespace mm2hack::apps::systems::physics
     // Build a grid embedding for a page graph so we can resolve pageIndex from world position
     class PageGridIndex final
     {
+        using AdjacentPolicy = world::stage::AdjacentPolicy;
+
     public:
         PageGridIndex(double pageW, double pageH) noexcept
             : _pageW(pageW), _pageH(pageH)
@@ -101,7 +104,7 @@ namespace mm2hack::apps::systems::physics
         template <class GraphAdapter>
         void expandX_(GraphAdapter& src, int curPage, GridPos curGrid, int dir, std::queue<int>& q)
         {
-            const auto next = src.AdjacentPageX(curPage, dir); // optional<int>
+            const auto next = src.AdjacentPageX(curPage, dir, AdjacentPolicy::AnyConnection); // optional<int>
             if (!next) return;
 
             const GridPos ng{ curGrid.gx + dir, curGrid.gy };
@@ -111,7 +114,7 @@ namespace mm2hack::apps::systems::physics
         template <class GraphAdapter>
         void expandY_(GraphAdapter& src, int curPage, GridPos curGrid, int dir, std::queue<int>& q)
         {
-            const auto next = src.AdjacentPageY(curPage, dir); // optional<int>
+            const auto next = src.AdjacentPageY(curPage, dir, AdjacentPolicy::AnyConnection); // optional<int>
             if (!next) return;
 
             const GridPos ng{ curGrid.gx, curGrid.gy + dir };
