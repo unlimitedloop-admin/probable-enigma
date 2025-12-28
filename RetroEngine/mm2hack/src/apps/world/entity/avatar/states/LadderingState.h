@@ -11,6 +11,7 @@
 #include "apps/world/entity/avatar/IPlayerState.h"
 
 #include <string>
+#include <utility>
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/world/entity/avatar/AvatarStatus.h"
 
@@ -48,12 +49,14 @@ namespace mm2hack::apps::world::entity::avatar::states
         bool isOnLadder_(const PlayerContext& cx, const PlayerTuning& t) const noexcept;
         // Snap player X position to ladder center
         void snapToLadderCenter_(PlayerContext& cx, const PlayerTuning& t) const noexcept;
-
+        // Check if should rise to ground
         bool shouldRisingToGround_(const PlayerContext& cx) const;
-
+        // Perform rising to ground action
         void doRisingToGround_(PlayerContext& cx) const;
-
+        // Build grab candidate positions
         void buildGrabCandidates_(Vec2 out[9], const PlayerContext& cx, const PlayerTuning& t) const noexcept;
+
+        std::pair<int, bool> computeInputAndTopEmpty_(const PlayerContext& cx, StateProvider* in) const noexcept;
 
     private:
         const std::wstring kClassName{ L"LadderingState" };

@@ -619,16 +619,34 @@ namespace mm2hack::apps::systems::physics
         const int pageH = SystemConfig::kTileCountY * _ts;
 
         // 1) Resolve the page containing this world position.
-        std::size_t page = _currPage;
-        if (const auto p = _grid.ResolvePageIndexFromWorldPos({ worldX, worldY }); p)
+        //    NOTE: We also keep whether resolution succeeded, because FloorDiv normalization
+        //          hides "worldY < 0" by wrapping it into [0, pageH).
+        const auto resolvedPage = _grid.ResolvePageIndexFromWorldPos({ worldX, worldY });
+
+        // Special rule:
+        // If the probe point is above the world-top (worldY < 0) AND there is no page at that world position,
+        // then allow "void" only when the current page has NO upper neighbor.
+        // This enables "go off-screen upward" behavior (e.g., Mario-like ceiling passage)
+        // while still allowing negative pages in the future (if the grid maps them, resolvedPage will succeed).
+        if (worldY < 0.0 && !resolvedPage)
         {
-            page = static_cast<std::size_t>(*p);
+            const auto up = _graph.AdjacentPageY(_currPage, -1);
+            if (!up)
+            {
+                return TileAttribute::Empty;
+            }
+            // If there IS an upper neighbor, fall through to the normal logic.
+            // (In this situation, resolvedPage may fail due to mapping holes, but we prefer consistency:
+            //  do not treat it as void when an upper room is supposed to exist.)
+        }
+
+        std::size_t page = _currPage;
+        if (resolvedPage)
+        {
+            page = static_cast<std::size_t>(*resolvedPage);
         }
 
         // 2) Convert to local coordinate within the resolved page.
-        //    local = world - pageOrigin, where pageOrigin is (gx*pageW, gy*pageH).
-        //    We can compute (gx,gy) again from world, or store them in PageGridIndex.
-        //    Since PageGridIndex already knows pageW/pageH, reuse its floorDiv logic pattern:
         const int gx = PageGridIndex::FloorDiv(worldX, static_cast<double>(pageW));
         const int gy = PageGridIndex::FloorDiv(worldY, static_cast<double>(pageH));
 
@@ -650,10 +668,16 @@ namespace mm2hack::apps::systems::physics
             page = *p;
             x -= pageW;
         }
+
         while (y < 0.0)
         {
             auto p = _graph.AdjacentPageY(page, -1);
-            if (!p) return TileAttribute::Empty;
+            if (!p)
+            {
+                // Default behavior: no upper neighbor => treat as empty.
+                // (If you want "only when worldY<0" instead, you can gate this with (worldY < 0.0).)
+                return TileAttribute::Empty;
+            }
             page = *p;
             y += pageH;
         }
@@ -665,8 +689,8 @@ namespace mm2hack::apps::systems::physics
             y -= pageH;
         }
 
-        const int tx = std::clamp<int>(static_cast<int>(x) / _ts, 0, SystemConfig::kTileCountX - 1);
-        const int ty = std::clamp<int>(static_cast<int>(y) / _ts, 0, SystemConfig::kTileCountY - 1);
+        const int tx = std::clamp(static_cast<int>(x) / _ts, 0, static_cast<int>(SystemConfig::kTileCountX) - 1);
+        const int ty = std::clamp(static_cast<int>(y) / _ts, 0, static_cast<int>(SystemConfig::kTileCountY) - 1);
 
         return _map.SampleTileAttributeOnPage(page, tx, ty);
     }

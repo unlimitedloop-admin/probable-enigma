@@ -37,21 +37,6 @@ namespace mm2hack::apps::world::entity::avatar::states
         {
             cx.vel.y = 0.0;         // No vertical movement on normal entry (from sides)
         }
-
-
-        // Climb movement
-        //const bool up = in->IsPressed(JPBTN::UP);
-        //const bool down = in->IsPressed(JPBTN::DOWN);
-
-        //if (up && !down)
-        //{
-        //    cx.vel.y = -t.climbSpeed;
-        //}
-        //else if (down && !up)
-        //{
-        //    cx.vel.y = +t.climbSpeed;
-        //}
-
         snapToLadderCenter_(cx, t); // Align avatar's X-position to ladder center on entry.
 
         cx.texture = static_cast<int>(STile::LadderingA);
@@ -129,9 +114,7 @@ namespace mm2hack::apps::world::entity::avatar::states
             return AvatarStatus::Standing;
         }
 
-        auto topAttr = cx.terrain->AttributeAt(cx.probes.behindGround.topPoint);
-        bool isTopAttrEmpty = Has(topAttr, TileAttribute::Empty);
-        const int input = (up && !down) ? -1 : ((down && !up) ? +1 : 0);
+        auto [input, isTopAttrEmpty] = computeInputAndTopEmpty_(cx, in);
         LadderingAnim(cx, input, isTopAttrEmpty);
         return AvatarStatus::Laddering;
     }
@@ -230,5 +213,17 @@ namespace mm2hack::apps::world::entity::avatar::states
         out[6] = Vec2{ b.topPoint.x,    b.topPoint.y - eps };
         out[7] = Vec2{ b.middlePoint.x, b.middlePoint.y - eps };
         out[8] = Vec2{ b.bottomPoint.x, b.bottomPoint.y - eps };
+    }
+
+    std::pair<int, bool> LadderingState::computeInputAndTopEmpty_(const PlayerContext& cx, StateProvider* in) const noexcept
+    {
+        const bool up = in->IsPressed(JPBTN::UP);
+        const bool down = in->IsPressed(JPBTN::DOWN);
+
+        auto topAttr = cx.terrain->AttributeAt(cx.probes.behindGround.topPoint);
+        const bool isTopAttrEmpty = Has(topAttr, TileAttribute::Empty);
+        const int input = (up && !down) ? -1 : ((down && !up) ? +1 : 0);
+
+        return { input, isTopAttrEmpty };
     }
 }
