@@ -71,24 +71,35 @@ namespace mm2hack::apps::scenes
 
         void MainPhase::Update()
         {
-            using namespace world::entity::avatar;
             using namespace foundation::math;
             Vec2 delta{ 0, 0 };
+
+            const bool lock = _scroll->IsScrollLocked();
 
             /* Entity Updates */
             if (_player)
             {
-                const Vec2 prev_pos =_player->pos;
+                const Vec2 prev_pos = _player->pos;
+
                 if (const auto p = _pageGrid->ResolvePageIndexFromWorldPos(_player->pos); p)
                 {
                     _terrainProbe->SetCurrentPage(*p);
                 }
 
-                _player->SetInput(owner.Input());
-                const auto dt = runtime::GameContext::GetInstance().Time().DeltaSeconds();
-                _player->Update(dt);    // Update player 
+                if (!lock)
+                {
+                    _player->SetInput(owner.Input());
+                    const double dt = runtime::GameContext::GetInstance().Time().DeltaSeconds();
+                    _player->Update(dt);
 
-                delta = _player->pos - prev_pos;
+                    delta = _player->pos - prev_pos;
+                }
+                else
+                {
+                    // During fixed scroll: player is carried by scroll.
+                    delta = Vec2{ 0, 0 };
+
+                }
             }
 
             /* BG Updates */
@@ -99,8 +110,15 @@ namespace mm2hack::apps::scenes
                     _scroll->RequestFixedScroll(*req);
                 }
             }
+
             _scroll->SetTargetPos(_player ? _player->pos : Vec2::Zero());
-            _scroll->Update(delta);
+            const auto fx = _scroll->Update(delta);
+
+            // Apply carry movement while scrolling
+            if (_player && fx.fixedActive)
+            {
+                _player->pos += fx.playerDelta;
+            }
 
             _page_index_debug = static_cast<int>(_scroll->PageIndex());
             _player_pos_x_debug = _player ? _player->pos.x : 0;

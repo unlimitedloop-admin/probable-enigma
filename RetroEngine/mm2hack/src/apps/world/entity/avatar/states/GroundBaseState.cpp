@@ -21,6 +21,7 @@ namespace mm2hack::apps::world::entity::avatar::states
     {
         using namespace abilities;
         using PageDir = systems::scrolling::atomic::PageScroll::Dir;
+        using PageGridIndex = systems::physics::PageGridIndex;
 
         // Update facing.
         if (in->IsPressed(JPBTN::LEFT)) { cx.facingLR = AvatarDirection::Left; }
@@ -32,8 +33,8 @@ namespace mm2hack::apps::world::entity::avatar::states
         // X-axis ground movement. Check horizontal collisions.
         const double dx = intent.speed * static_cast<double>(intent.dirSign);
 
-        // Save the front-probe X BEFORE movement for boundary-cross detection (world space).
-        const double prevFrontX = cx.probes.frontLine.middlePoint.x;
+        // Save the front-probe X BEFORE movement for boundary-cross detection (world space). (Unused?)
+        //const double prevFrontX = cx.probes.frontLine.middlePoint.x;
 
         auto hHit = cx.terrain->SweepHorizontal(cx.probes, dx);
         if (hHit.hit)
@@ -51,20 +52,18 @@ namespace mm2hack::apps::world::entity::avatar::states
             const double actualDx = intent.speed * static_cast<double>(intent.dirSign);
             if (actualDx != 0.0)
             {
-                // Compute "next" probe X in world space.
-                const double nextFrontX = prevFrontX + actualDx;
+                constexpr double pageW = 256.0;
+                constexpr double kTriggerRight = 242.0;
+                constexpr double kTriggerLeft = 14.0;
+                const double frontX = cx.probes.frontLine.middlePoint.x;
+                const int gx = PageGridIndex::FloorDiv(frontX, pageW);
+                const double localFrontX = frontX - static_cast<double>(gx) * pageW;
 
-                // Page width in pixels (e.g., 256).
-                const double pageW = static_cast<double>(_ts * kTileCountX);
-
-                const int prevGX = systems::physics::PageGridIndex::FloorDiv(prevFrontX, pageW);
-                const int nextGX = systems::physics::PageGridIndex::FloorDiv(nextFrontX, pageW);
-
-                if (nextGX > prevGX)
+                if (intent.dirSign > 0 && localFrontX >= kTriggerRight)
                 {
                     cx.pendingFixedScroll = PageDir::Right;
                 }
-                else if (nextGX < prevGX)
+                else if (intent.dirSign < 0 && localFrontX <= kTriggerLeft)
                 {
                     cx.pendingFixedScroll = PageDir::Left;
                 }

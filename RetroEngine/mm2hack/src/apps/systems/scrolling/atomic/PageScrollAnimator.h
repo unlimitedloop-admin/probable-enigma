@@ -30,7 +30,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
 
         // Progress update and player position interpolation (0..pageW/H)
         // Returns: true if completed
-        bool TickAndInterpolate(PageDir dir, int page_w, int page_h, int view_w, int view_h, Vec2& object_pos) noexcept;
+        bool Tick(PageDir dir, int page_w, int page_h) noexcept;
 
         // Start page scroll animation
         void Start(PageDir dir, std::size_t from_idx, std::size_t to_idx) noexcept
@@ -43,7 +43,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
         void SetSpeed(double px_per_frame) noexcept { _pg.speed = px_per_frame; }
 
     private:
-        const std::wstring kClassName = L"PageScrollAnimator";
+        const std::wstring kClassName{ L"PageScrollAnimator" };
 
         PageScroll _pg{};
     };

@@ -64,6 +64,7 @@ namespace mm2hack::apps::world::entity::avatar
 
         // Main action updates (IUpdatable)
         void Update(double /*dt*/) override;
+        //void TickAnimationDuringScroll(double dt);
         // Drawing layer (IRenderable)
         LayerView DrawLayer() const noexcept override;
         // Rendering (IRenderable)

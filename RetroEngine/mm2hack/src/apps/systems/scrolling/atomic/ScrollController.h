@@ -61,6 +61,12 @@ namespace mm2hack::apps::systems::scrolling::atomic
         virtual bool Update(const foundation::math::RectF& playerBox, Camera& cam, size_t& currentPageIndex, double dt) = 0;
     };
 
+    struct ScrollEffect
+    {
+        bool fixedActive{ false };
+        foundation::math::Vec2 playerDelta{}; // apply to player.pos (world)
+    };
+
     // The main video screen policy and management of scrolling in 2D maps
     class ScrollController final
     {
@@ -82,7 +88,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
         }
 
         // Free scroll / fixed animation comprehensive update
-        void Update(const Vec2& input_delta);
+        ScrollEffect Update(const Vec2& input_delta);
 
         // Rendering
         void Render();
@@ -91,6 +97,10 @@ namespace mm2hack::apps::systems::scrolling::atomic
 
         // Request fixed page scroll. Returns false if rejected (no neighbor / not allowed / already animating)
         bool RequestFixedScroll(PageScroll::Dir dir) noexcept;
+        // Check if fixed scroll is locked (animating or pending)
+        [[nodiscard]] bool IsFixedScrollLocked() const noexcept;
+        // Check if any scroll is locked (fixed animating/pending or freeze)
+        [[nodiscard]] bool IsScrollLocked() const noexcept;
         // Synchronize with object center position
         void SyncWithObjectCenter(const Vec2& object_center, bool has_adj_x, bool has_adj_y, const Vec2& screen_px, const Vec2& map_px, ViewState& out_view);
         // Debug HUD render
@@ -139,6 +149,11 @@ namespace mm2hack::apps::systems::scrolling::atomic
 
         const int _tileX{ conf::kTileCountX };          // Tile count X
         const int _tileY{ conf::kTileCountY };          // Tile count Y
+        std::optional<PageScroll> _freeze_draw{};       // draw-only snapshot
+        int _freezeFrames{ 0 };
+        static constexpr int kFreezeOnStart = 30;
+        static constexpr int kFreezeOnEnd = 30;
+
 
         ViewState _viewState{};                         // View state representation
     };

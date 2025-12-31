@@ -11,23 +11,75 @@ namespace mm2hack::apps::systems::scrolling::atomic
     static inline int MaxX(int view_w) { return view_w - 1; }
     static inline int MaxY(int view_h) { return view_h - 1; }
 
-    void ScrollController::Update(const foundation::math::Vec2& input_delta)
+    ScrollEffect ScrollController::Update(const foundation::math::Vec2& input_delta)
     {
+        using ScrlDir = PageScroll::Dir;
+        ScrollEffect fx{};
+
+        if (_freezeFrames > 0)
+        {
+            --_freezeFrames;
+            if (_freezeFrames == 0) { _freeze_draw.reset(); }
+
+            updateViewState_();
+            return fx;
+        }
+
         const int page_w = _params.tile_px * _tileX;
         const int page_h = _params.tile_px * _tileY;
 
-        // Fixed page animation: only progress
+        constexpr double kCamStep    = 0x04.00p0;      // 4.0 px/frame
+        constexpr double kPlayerStep = 0x00.C0p0;   // 0.75 px/frame
+        constexpr double kCarryRatio = kPlayerStep / kCamStep; // 0.1875
+
+        // TODO: We'll split this into method later.
         if (_anim.Active())
         {
+            ScrollEffect fx{};
+            fx.fixedActive = true;
+
             const auto dir = _anim.State().dir;
-            const bool finished = _anim.TickAndInterpolate(dir, page_w, page_h, _params.view_w, _params.view_h, _target_pos);
+            const double prevProg = _anim.State().progress;
+
+            const bool finished = _anim.Tick(dir, page_w, page_h); // progress += speed(=4)
+
+            const double currProg = finished ? static_cast<double>((dir == ScrlDir::Left || dir == ScrlDir::Right) ? page_w : page_h)
+                : _anim.State().progress;
+
+            const double dProg = currProg - prevProg;  // typically 4.0
+
+            const double carry = dProg * kCarryRatio;  // typically 0.75
+
+            switch (dir)
+            {
+            case ScrlDir::Right: fx.playerDelta.x = +carry; break;
+            case ScrlDir::Left:  fx.playerDelta.x = -carry; break;
+            case ScrlDir::Down:  fx.playerDelta.y = +carry; break;
+            case ScrlDir::Up:    fx.playerDelta.y = -carry; break;
+            default: break;
+            }
+
             if (finished)
             {
+                // Keep final frame for drawing during end-freeze
+                PageScroll snap = _anim.State();          // from/to/dir/speed etc
+                snap.progress = (snap.dir == PageScroll::Dir::Left || snap.dir == PageScroll::Dir::Right)
+                    ? static_cast<double>(page_w) : static_cast<double>(page_h);
+                snap.active = true;
+
+                _freeze_draw = snap;                // Set freeze-draw state
+                _freezeFrames = kFreezeOnEnd;       // Set freeze frames on scroll end
+
+                // Commit new page, reset anim runtime
                 _page_index = _anim.State().to_index;
                 _cam.x = 0.0; _cam.y = 0.0;
                 _anim.Reset();
+
+                updateViewState_();
+                return fx;
             }
-            return;
+            updateViewState_();
+            return fx;
         }
 
         // Start fixed scroll if requested (before free-scroll updates)
@@ -36,11 +88,16 @@ namespace mm2hack::apps::systems::scrolling::atomic
             const auto dir = *_pending_fixed;
             _pending_fixed.reset();
 
-            // Resolve neighbor based on dir.
-            // TODO: Refactor externally as a ScrollController method! ;) 
             auto tryStart = [&](PageScroll::Dir d) -> bool
                 {
-                    std::size_t from = _page_index;
+                    const std::size_t from = _page_index;
+
+                    auto resolveToIndex = [&](int16_t room) -> int
+                        {
+                            if (room < 0) return -1;
+                            return _rules.ToPageIndex(static_cast<uint8_t>(room));
+                        };
+
                     int to_idx = -1;
 
                     switch (d)
@@ -48,55 +105,59 @@ namespace mm2hack::apps::systems::scrolling::atomic
                     case PageScroll::Dir::Right:
                     {
                         const auto kind = _rules.RightType(from);
-                        const int16_t rr = _rules.RightRoom(from);
-                        to_idx = (rr >= 0) ? _rules.ToPageIndex(static_cast<uint8_t>(rr)) : -1;
                         if (!IsFixedScroll(kind)) return false;
+                        to_idx = resolveToIndex(_rules.RightRoom(from));
                         break;
                     }
                     case PageScroll::Dir::Left:
                     {
                         const auto kind = _rules.LeftType(from);
-                        const int16_t lr = _rules.LeftRoom(from);
-                        to_idx = (lr >= 0) ? _rules.ToPageIndex(static_cast<uint8_t>(lr)) : -1;
                         if (!IsFixedScroll(kind)) return false;
+                        to_idx = resolveToIndex(_rules.LeftRoom(from));
                         break;
                     }
                     case PageScroll::Dir::Down:
                     {
                         const auto kind = _rules.DownType(from);
-                        const int16_t dr = _rules.DownRoom(from);
-                        to_idx = (dr >= 0) ? _rules.ToPageIndex(static_cast<uint8_t>(dr)) : -1;
                         if (!IsFixedScroll(kind)) return false;
+                        to_idx = resolveToIndex(_rules.DownRoom(from));
                         break;
                     }
                     case PageScroll::Dir::Up:
                     {
                         const auto kind = _rules.UpType(from);
-                        const int16_t ur = _rules.UpRoom(from);
-                        to_idx = (ur >= 0) ? _rules.ToPageIndex(static_cast<uint8_t>(ur)) : -1;
                         if (!IsFixedScroll(kind)) return false;
+                        to_idx = resolveToIndex(_rules.UpRoom(from));
                         break;
                     }
                     default:
                         return false;
                     }
 
+                    // Invalid target
+                    if (to_idx < 0) return false;
+
                     _cam.x = 0.0;
                     _cam.y = 0.0;
                     _anim.Start(d, from, static_cast<std::size_t>(to_idx));
+
                     return true;
                 };
 
-            (void)tryStart(dir);
-            // If start succeeded, next frame Update() will run TickAndInterpolate (_anim.Active() has true).
-            // Even if it failed, we just fall through to free scroll.
+            if (tryStart(dir))
+            {
+                _freezeFrames = kFreezeOnStart;     // Freeze frames on scroll start.
+                updateViewState_();
+                return fx;
+            }
         }
 
-        // Free scroll (only if not animating)
+        // Free scroll
         if (input_delta.x != 0.0) { updateAxisX_(input_delta.x); }
         if (input_delta.y != 0.0) { updateAxisY_(input_delta.y); }
 
         updateViewState_();
+        return fx;
     }
 
     void ScrollController::Render()
@@ -106,8 +167,11 @@ namespace mm2hack::apps::systems::scrolling::atomic
 
         if (_anim.Active())
         {
-            // Fixed page scroll animation in progress
             _renderer.DrawAnimation(_anim.State(), _anim.State().from_index, _anim.State().to_index);
+        }
+        else if (_freeze_draw.has_value())
+        {
+            _renderer.DrawAnimation(*_freeze_draw, _freeze_draw->from_index, _freeze_draw->to_index);
         }
         else
         {
@@ -136,6 +200,16 @@ namespace mm2hack::apps::systems::scrolling::atomic
         return true;
     }
 
+    bool ScrollController::IsFixedScrollLocked() const noexcept
+    {
+        return _anim.Active() || _pending_fixed.has_value();
+    }
+
+    bool ScrollController::IsScrollLocked() const noexcept
+    {
+        return _anim.Active() || _pending_fixed.has_value() || (_freezeFrames > 0);
+    }
+
     void ScrollController::SyncWithObjectCenter(const Vec2& object_center, bool has_adj_x, bool has_adj_y, const Vec2& screen_px, const Vec2& map_px, ViewState& out_view)
     {
         _object_pos = object_center; // Object position sync
@@ -151,7 +225,12 @@ namespace mm2hack::apps::systems::scrolling::atomic
         }
         else
         {
-            // TODO: Fixed scrolling algorithm
+            // Fixed page: keep page pinned. Animation is handled by DrawAnimation.
+            if (!_anim.Active())
+            {
+                _cam.x = 0.0;
+                _cam.y = 0.0;
+            }
         }
 
         out_view.camX = _cam.x;
@@ -467,15 +546,45 @@ namespace mm2hack::apps::systems::scrolling::atomic
 
     void ScrollController::updateViewState_()
     {
-        const int page_w = _params.tile_px * config::SystemConfig::kTileCountX;
-        const int page_h = _params.tile_px * config::SystemConfig::kTileCountY;
+        const int page_w = _params.tile_px * _tileX;
+        const int page_h = _params.tile_px * _tileY;
 
-        const auto origin = _rules.PageOriginPx(_page_index, page_w, page_h);
+        const auto curOrigin = _rules.PageOriginPx(_page_index, page_w, page_h);
 
-        // Convert world cam to ViewState cam
-        _viewState.camX = origin.x + _cam.x;
-        _viewState.camY = origin.y + _cam.y;
-        _viewState.viewW = _params.view_w;
-        _viewState.viewH = _params.view_h;
+        if (_anim.Active())
+        {
+            const auto& st = _anim.State();
+
+            // from page origin (start page)
+            const auto fromOrigin = _rules.PageOriginPx(st.from_index, page_w, page_h);
+            const double prog = st.progress;
+
+            double vx = fromOrigin.x;
+            double vy = fromOrigin.y;
+
+            switch (st.dir)
+            {
+            case PageScroll::Dir::Right: vx += prog; break;
+            case PageScroll::Dir::Left:  vx -= prog; break;
+            case PageScroll::Dir::Down:  vy += prog; break;
+            case PageScroll::Dir::Up:    vy -= prog; break;
+            default: break;
+            }
+
+            _viewState.viewWorldX = vx;
+            _viewState.viewWorldY = vy;
+
+            // Here the camera remains local to the page being animated.
+            _viewState.camX = _cam.x;
+            _viewState.camY = _cam.y;
+            return;
+        }
+
+        // Free: page origin + local cam offset
+        _viewState.viewWorldX = curOrigin.x + _cam.x;
+        _viewState.viewWorldY = curOrigin.y + _cam.y;
+
+        _viewState.camX = _cam.x;
+        _viewState.camY = _cam.y;
     }
 }

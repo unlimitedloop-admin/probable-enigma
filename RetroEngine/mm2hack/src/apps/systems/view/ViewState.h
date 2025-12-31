@@ -21,6 +21,8 @@ namespace mm2hack::apps::systems::view
 
         Scalar camX{ 0.0 };
         Scalar camY{ 0.0 };
+        double viewWorldX{};
+        double viewWorldY{};
         int viewW{ conf::kScreenWidth };
         int viewH{ conf::kScreenHeight };
     };

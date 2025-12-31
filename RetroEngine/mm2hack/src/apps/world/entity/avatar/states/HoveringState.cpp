@@ -4,6 +4,8 @@
 
 #include "apps/systems/physics/ILadderService.h"
 #include "apps/systems/physics/ITerrainProbe.h"
+#include "apps/systems/physics/PageGridIndex.h"
+#include "apps/systems/scrolling/atomic/ScrollTypes.h"
 #include "apps/world/entity/avatar/abilities/AnimationAbilities.h"
 #include "apps/world/entity/avatar/abilities/MovementAbilities.h"
 #include "apps/world/entity/avatar/AvatarStatus.h"
@@ -19,6 +21,8 @@ namespace mm2hack::apps::world::entity::avatar::states
     AvatarStatus HoveringState::Update(PlayerContext& cx, StateProvider* in, const PlayerTuning& t, double /*dt*/)
     {
         using namespace abilities;
+        using PageDir = systems::scrolling::atomic::PageScroll::Dir;
+        using PageGridIndex = systems::physics::PageGridIndex;
 
         // Branch to laddering state if ladder is detected.
         if (tryEnterLadder_(cx, in, t))
@@ -35,6 +39,31 @@ namespace mm2hack::apps::world::entity::avatar::states
 
         ApplyAirControl(cx, intent);
         ApplyAirMove(cx, intent);
+
+        // ---- Fixed page scroll request by boundary crossing (NOT by hit) ----
+        // We base this on the movement that will actually happen this frame.
+        if (intent.active)
+        {
+            const double actualDx = intent.speed * static_cast<double>(intent.dirSign);
+            if (actualDx != 0.0)
+            {
+                constexpr double pageW = 256.0;
+                constexpr double kTriggerRight = 242.0;
+                constexpr double kTriggerLeft = 14.0;
+                const double frontX = cx.probes.frontLine.middlePoint.x;
+                const int gx = PageGridIndex::FloorDiv(frontX, pageW);
+                const double localFrontX = frontX - static_cast<double>(gx) * pageW;
+
+                if (intent.dirSign > 0 && localFrontX >= kTriggerRight)
+                {
+                    cx.pendingFixedScroll = PageDir::Right;
+                }
+                else if (intent.dirSign < 0 && localFrontX <= kTriggerLeft)
+                {
+                    cx.pendingFixedScroll = PageDir::Left;
+                }
+            }
+        }
 
         // Jump or falling [Yaxis] movement. (Common airborne behavior)
         UpdateVerticalVelocity(cx, t, in->IsPressed(JPBTN::A));

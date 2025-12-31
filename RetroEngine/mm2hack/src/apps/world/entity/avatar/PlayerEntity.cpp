@@ -11,6 +11,7 @@
 #include "apps/systems/view/ViewState.h"
 #include "apps/world/entity/EntityBase.h"
 #include "apps/world/entity/IEntity.h"
+#include "AvatarStatus.h"
 #include "IPlayerState.h"
 #include "PlayerContext.h"
 #include "PlayerParams.h"
@@ -91,6 +92,16 @@ namespace mm2hack::apps::world::entity::avatar
         }
     }
 
+    //void PlayerEntity::UpdateAnimationOnly(double dt)
+    //{
+    //    if (!IsAlive()) return;
+
+    //    if (_status == AvatarStatus::Running)
+    //    {
+    //        
+    //    }
+    //}
+
     // IRenderable
     PlayerEntity::LayerView PlayerEntity::DrawLayer() const noexcept { return LayerView::Actors; }
 
@@ -103,8 +114,8 @@ namespace mm2hack::apps::world::entity::avatar
         const double worldX = pos.x;
         const double worldY = pos.y;
 
-        const double screenX = worldX - view.camX - _half.x;
-        const double screenY = worldY - view.camY - _half.y;
+        const double screenX = worldX - view.viewWorldX - _half.x;
+        const double screenY = worldY - view.viewWorldY - _half.y;
 
         auto& res = runtime::GameContext::GetInstance().GetResourceManager();
         res.GetSpriteManager().UseById(_id, texture, static_cast<int>(screenX), static_cast<int>(screenY));
