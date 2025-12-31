@@ -32,7 +32,7 @@ namespace mm2hack::apps::world::entity::avatar::states
             {
                 if (in->IsPressed(JPBTN::LEFT))  cx.facingLR = AvatarDirection::Left;
                 if (in->IsPressed(JPBTN::RIGHT)) cx.facingLR = AvatarDirection::Right;
-                FacingDirection(cx, cx.facingLR);   // Set facing direction at 'cx.texture'.
+                FacingDirection(cx.texture, cx.facingLR);   // Set facing direction at 'cx.texture'.
             };
 
         if (!cx.onGround)
@@ -62,5 +62,21 @@ namespace mm2hack::apps::world::entity::avatar::states
         StepRunningAnim(cx, t);
         applyFacing();  // Must be after setting cx.texture at StepRunningAnim().
         return AvatarStatus::Running;
+    }
+
+    void RunningState::TickAnimationOnly(AnimeContext& ax, StateProvider* in, const PlayerTuning& t, double /*dt*/)
+    {
+        using namespace abilities;
+
+        // Call after cx.texture is set; adds facing offset (0 right, 40 left for AvatarAnimation enums).
+        auto applyFacing = [&](void) noexcept
+            {
+                if (in->IsPressed(JPBTN::LEFT))  ax.facingLR = AvatarDirection::Left;
+                if (in->IsPressed(JPBTN::RIGHT)) ax.facingLR = AvatarDirection::Right;
+                FacingDirection(ax.texture, ax.facingLR);   // Set facing direction at 'ax.texture'.
+            };
+
+        StepRunningAnim(ax, t);
+        applyFacing();  // Must be after setting cx.texture at StepRunningAnim().
     }
 }

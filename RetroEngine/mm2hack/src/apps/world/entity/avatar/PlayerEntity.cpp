@@ -11,7 +11,6 @@
 #include "apps/systems/view/ViewState.h"
 #include "apps/world/entity/EntityBase.h"
 #include "apps/world/entity/IEntity.h"
-#include "AvatarStatus.h"
 #include "IPlayerState.h"
 #include "PlayerContext.h"
 #include "PlayerParams.h"
@@ -92,15 +91,13 @@ namespace mm2hack::apps::world::entity::avatar
         }
     }
 
-    //void PlayerEntity::UpdateAnimationOnly(double dt)
-    //{
-    //    if (!IsAlive()) return;
+    void PlayerEntity::TickAnimation(double dt)
+    {
+        if (!IsAlive()) return;
 
-    //    if (_status == AvatarStatus::Running)
-    //    {
-    //        
-    //    }
-    //}
+        AnimeContext ax{ _animeStepper, facingLR, texture };
+        FindState(_status)->TickAnimationOnly(ax, _input, _tuning, dt);
+    }
 
     // IRenderable
     PlayerEntity::LayerView PlayerEntity::DrawLayer() const noexcept { return LayerView::Actors; }

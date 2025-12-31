@@ -64,4 +64,12 @@ namespace mm2hack::apps::world::entity::avatar
         PageScroll::Dir pendingFixedScroll{
             PageScroll::Dir::None };            // Pending fixed scroll request
     };
+
+    // Simplified context for animation abilities
+    struct AnimeContext
+    {
+        AnimeStepper& animeStepper;             // Animation counter (local)
+        AvatarDirection& facingLR;              // avatar facing direction (-1: left, +1: right)
+        int& texture;                           // tile index for rendering
+    };
 }

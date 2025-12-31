@@ -16,7 +16,7 @@
 namespace mm2hack::apps::world::entity::avatar::abilities
 {
     // Avatar facing direction enumeration
-    inline bool FacingDirection(PlayerContext& cx, const AvatarDirection facingLR)
+    inline bool FacingDirection(int& texture, const AvatarDirection facingLR)
     {
         // This function can be expanded to set the avatar's facing direction
         // based on the facingLR value (-1 for left, +1 for right).
@@ -25,11 +25,11 @@ namespace mm2hack::apps::world::entity::avatar::abilities
         {
         case AvatarDirection::Left:
             // Set the avatar's facing direction to left.
-            cx.texture = cx.texture + static_cast<int>(AvatarAnimation::ToTheLeft);
+            texture = texture + static_cast<int>(AvatarAnimation::ToTheLeft);
             return true;
         case AvatarDirection::Right:
             // Set the avatar's facing direction to right.
-            cx.texture = cx.texture + static_cast<int>(AvatarAnimation::ToTheRight);
+            texture = texture + static_cast<int>(AvatarAnimation::ToTheRight);
             return true;
         default:
             return false;
@@ -66,6 +66,17 @@ namespace mm2hack::apps::world::entity::avatar::abilities
         };
         cx.animeStepper.step(7, static_cast<int>(runningTextures.size()), 1); // 7 ticks per frame, 4 frames.
         cx.texture = static_cast<int>(runningTextures[cx.animeStepper.frame]);
+    }
+
+    // Steps the running animation (animation-only context)
+    inline void StepRunningAnim(AnimeContext& ax, const PlayerTuning& t)
+    {
+        // Step the running animation (A, C, B, C ... and loop).
+        static const std::array<STile, 4> runningTextures = {
+            STile::RunningA, STile::RunningC, STile::RunningB, STile::RunningC
+        };
+        ax.animeStepper.step(7, static_cast<int>(runningTextures.size()), 1); // 7 ticks per frame, 4 frames.
+        ax.texture = static_cast<int>(runningTextures[ax.animeStepper.frame]);
     }
 
     // Returns true if the brake is fully engaged

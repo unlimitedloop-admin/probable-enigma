@@ -101,6 +101,8 @@ namespace mm2hack::apps::systems::scrolling::atomic
         [[nodiscard]] bool IsFixedScrollLocked() const noexcept;
         // Check if any scroll is locked (fixed animating/pending or freeze)
         [[nodiscard]] bool IsScrollLocked() const noexcept;
+        // Check if in freeze frames
+        [[nodiscard]] bool IsFreezeFrames() const noexcept;
         // Synchronize with object center position
         void SyncWithObjectCenter(const Vec2& object_center, bool has_adj_x, bool has_adj_y, const Vec2& screen_px, const Vec2& map_px, ViewState& out_view);
         // Debug HUD render

@@ -26,6 +26,7 @@
 #include "apps/systems/scrolling/atomic/ScrollTypes.h"
 #include "apps/systems/view/RenderContext.h"
 #include "apps/world/entity/common/AnimeStepper.h"
+#include "apps/world/entity/IAnimTickable.h"
 #include "apps/world/entity/IEntity.h"
 #include "AvatarStatus.h"
 #include "IPlayerState.h"
@@ -40,7 +41,7 @@ namespace mm2hack::core::assembly
 namespace mm2hack::apps::world::entity::avatar
 {
     // User player character entity
-    class PlayerEntity final : public EntityBase, public systems::physics::ICollider
+    class PlayerEntity final : public EntityBase, public systems::physics::ICollider, public IAnimTickable
     {
         using AnimeStepper      = common::AnimeStepper;
         using RectF             = foundation::math::RectF;
@@ -64,7 +65,7 @@ namespace mm2hack::apps::world::entity::avatar
 
         // Main action updates (IUpdatable)
         void Update(double /*dt*/) override;
-        //void TickAnimationDuringScroll(double dt);
+        void TickAnimation(double dt) override;
         // Drawing layer (IRenderable)
         LayerView DrawLayer() const noexcept override;
         // Rendering (IRenderable)

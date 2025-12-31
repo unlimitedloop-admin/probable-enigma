@@ -192,7 +192,7 @@ namespace mm2hack::apps::world::entity::avatar::states
         cx.justLanded = true;
 
         cx.facingLR = OppositeFacingDirection(cx.facingLR);
-        cx.texture = static_cast<int>(STile::StandingA) + FacingDirection(cx, cx.facingLR);
+        cx.texture = static_cast<int>(STile::StandingA) + FacingDirection(cx.texture, cx.facingLR);
     }
 
     void LadderingState::buildGrabCandidates_(Vec2 out[9], const PlayerContext& cx, const PlayerTuning& t) const noexcept

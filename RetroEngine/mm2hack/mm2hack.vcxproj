@@ -329,6 +329,7 @@
     <ClInclude Include="src\apps\world\entity\common\AnimeStepper.h" />
     <ClInclude Include="src\apps\world\entity\common\ProjectileEntity.h" />
     <ClInclude Include="src\apps\world\entity\EntityBase.h" />
+    <ClInclude Include="src\apps\world\entity\IAnimTickable.h" />
     <ClInclude Include="src\apps\world\entity\IEntity.h" />
     <ClInclude Include="src\apps\world\entity\IRenderable.h" />
     <ClInclude Include="src\apps\world\entity\IUpdatable.h" />

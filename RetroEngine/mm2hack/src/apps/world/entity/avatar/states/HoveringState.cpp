@@ -73,7 +73,7 @@ namespace mm2hack::apps::world::entity::avatar::states
             {
                 if (in->IsPressed(JPBTN::LEFT))  cx.facingLR = AvatarDirection::Left;
                 if (in->IsPressed(JPBTN::RIGHT)) cx.facingLR = AvatarDirection::Right;
-                FacingDirection(cx, cx.facingLR);   // Set facing direction at 'cx.texture'.
+                FacingDirection(cx.texture, cx.facingLR);   // Set facing direction at 'cx.texture'.
             };
 
         // Y-axis air movement.

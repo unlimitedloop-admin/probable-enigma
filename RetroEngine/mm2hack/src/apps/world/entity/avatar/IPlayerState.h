@@ -9,6 +9,7 @@
 #pragma once
 
 #include "AvatarStatus.h"
+#include "PlayerContext.h"
 #include "PlayerParams.h"
 
 namespace mm2hack::apps::world::entity::avatar
@@ -35,5 +36,8 @@ namespace mm2hack::apps::world::entity::avatar
         virtual void OnExit(PlayerContext&, StateProvider*, const PlayerTuning&) {}
         // Update and return the **next state ID** (same ID if continuing)
         virtual AvatarStatus Update(PlayerContext&, StateProvider*, const PlayerTuning&, double dt) = 0;
+
+        // Animation only tick (separate from Update, default: no-op)
+        virtual void TickAnimationOnly(AnimeContext& ax, StateProvider*, const PlayerTuning& t, double dt) { (void)ax; (void)t; (void)dt; }
     };
 }

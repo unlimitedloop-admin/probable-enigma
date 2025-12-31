@@ -86,10 +86,10 @@ namespace mm2hack::apps::scenes
                     _terrainProbe->SetCurrentPage(*p);
                 }
 
+                const double dt = runtime::GameContext::GetInstance().Time().DeltaSeconds();
                 if (!lock)
                 {
                     _player->SetInput(owner.Input());
-                    const double dt = runtime::GameContext::GetInstance().Time().DeltaSeconds();
                     _player->Update(dt);
 
                     delta = _player->pos - prev_pos;
@@ -98,7 +98,10 @@ namespace mm2hack::apps::scenes
                 {
                     // During fixed scroll: player is carried by scroll.
                     delta = Vec2{ 0, 0 };
-
+                    if (!_scroll->IsFreezeFrames())
+                    {
+                        _player->TickAnimation(dt);
+                    }
                 }
             }
 

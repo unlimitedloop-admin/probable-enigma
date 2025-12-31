@@ -210,6 +210,11 @@ namespace mm2hack::apps::systems::scrolling::atomic
         return _anim.Active() || _pending_fixed.has_value() || (_freezeFrames > 0);
     }
 
+    bool ScrollController::IsFreezeFrames() const noexcept
+    {
+        return _freezeFrames > 0;
+    }
+
     void ScrollController::SyncWithObjectCenter(const Vec2& object_center, bool has_adj_x, bool has_adj_y, const Vec2& screen_px, const Vec2& map_px, ViewState& out_view)
     {
         _object_pos = object_center; // Object position sync
