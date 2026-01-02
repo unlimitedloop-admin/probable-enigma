@@ -21,17 +21,52 @@ namespace mm2hack::apps::systems::scrolling::atomic
 
     struct PageScroll
     {
-        // Direction of scroll
         enum class Dir { None, Right, Left, Down, Up };
 
-        bool  active{ false };
-        Dir   dir{ Dir::None };
-        double progress{ 0.0 }; // px progress
-        double speed{ 4.0 };    // px/frame (adjust as needed)
+        bool active{ false };
+        Dir dir{ Dir::None };
+        double progress{ 0.0 };
+        double speed{ 4.0 };
 
         std::size_t from_index{ 0 };
         std::size_t to_index{ 0 };
     };
+
+    struct FixedScrollRequest
+    {
+        PageScroll::Dir dir{ PageScroll::Dir::None };
+        double edgeGapPx{ 0.0 }; // "distance to edge" in world px at request time
+    };
+
+    // Helpers
+    inline constexpr bool IsHorizontal(PageScroll::Dir d) noexcept
+    {
+        return d == PageScroll::Dir::Left || d == PageScroll::Dir::Right;
+    }
+
+    inline constexpr bool IsVertical(PageScroll::Dir d) noexcept
+    {
+        return d == PageScroll::Dir::Up || d == PageScroll::Dir::Down;
+    }
+
+    inline constexpr int DirSignX(PageScroll::Dir d) noexcept
+    {
+        if (d == PageScroll::Dir::Right) return +1;
+        if (d == PageScroll::Dir::Left)  return -1;
+        return 0;
+    }
+
+    inline constexpr int DirSignY(PageScroll::Dir d) noexcept
+    {
+        if (d == PageScroll::Dir::Down) return +1;
+        if (d == PageScroll::Dir::Up)   return -1;
+        return 0;
+    }
+
+    inline constexpr double ClampNonNeg(double v) noexcept
+    {
+        return (v < 0.0) ? 0.0 : v;
+    }
 
     // Check if the scroll kind allows free movement
     inline constexpr bool IsAllowedFree(ScrollKind k) noexcept

@@ -7,6 +7,7 @@
 #include "apps/systems/physics/ILadderService.h"
 #include "apps/systems/physics/ITerrainProbe.h"
 #include "apps/systems/physics/PageGridIndex.h"
+#include "apps/systems/scrolling/atomic/ScrollController.h"
 #include "apps/systems/scrolling/atomic/ScrollTypes.h"
 #include "apps/world/entity/avatar/abilities/MovementAbilities.h"
 #include "apps/world/entity/avatar/AvatarStatus.h"
@@ -20,7 +21,8 @@ namespace mm2hack::apps::world::entity::avatar::states
     void GroundBaseState::GroundPipeline(PlayerContext& cx, StateProvider* in, const PlayerTuning& t, GroundMoveIntent intent)
     {
         using namespace abilities;
-        using PageDir = systems::scrolling::atomic::PageScroll::Dir;
+        using namespace systems::scrolling::atomic;
+        using PageDir = PageScroll::Dir;
         using PageGridIndex = systems::physics::PageGridIndex;
 
         // Update facing.
@@ -50,23 +52,28 @@ namespace mm2hack::apps::world::entity::avatar::states
         if (intent.active)
         {
             const double actualDx = intent.speed * static_cast<double>(intent.dirSign);
-            if (actualDx != 0.0)
+            if (actualDx > 0.0)
             {
-                constexpr double pageW = 256.0;
-                constexpr double kTriggerRight = 242.0;
-                constexpr double kTriggerLeft = 14.0;
-                const double frontX = cx.probes.frontLine.middlePoint.x;
-                const int gx = PageGridIndex::FloorDiv(frontX, pageW);
-                const double localFrontX = frontX - static_cast<double>(gx) * pageW;
+                FixedScrollRequest req{};
+                req.dir = PageScroll::Dir::Right;
 
-                if (intent.dirSign > 0 && localFrontX >= kTriggerRight)
-                {
-                    cx.pendingFixedScroll = PageDir::Right;
-                }
-                else if (intent.dirSign < 0 && localFrontX <= kTriggerLeft)
-                {
-                    cx.pendingFixedScroll = PageDir::Left;
-                }
+                // Calculate edge gap in world px at request time.
+                const double frontX = cx.probes.frontLine.middlePoint.x;// world pos.
+                const double rightEdge = cx.vBounds.rightX;             // world pos.
+                req.edgeGapPx = std::max(0.0, rightEdge - frontX);
+
+                cx.pendingFixedScroll = req;
+            }
+            else if (actualDx < 0.0)
+            {
+                FixedScrollRequest req{};
+                req.dir = PageScroll::Dir::Left;
+
+                // Calculate edge gap in world px at request time.
+                const double frontX = cx.probes.frontLine.middlePoint.x;// world pos.
+                const double leftEdge = cx.vBounds.leftX;               // world pos.
+                req.edgeGapPx = std::max(0.0, frontX - leftEdge);
+                cx.pendingFixedScroll = req;
             }
         }
 

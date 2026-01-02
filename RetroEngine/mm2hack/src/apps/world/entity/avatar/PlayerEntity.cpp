@@ -21,6 +21,7 @@
 #include "states/LaunchRunState.h"
 #include "states/RunningState.h"
 #include "states/StandingState.h"
+#include "apps/systems/scrolling/atomic/ScrollController.h"
 
 namespace mm2hack::apps::world::entity::avatar
 {
@@ -41,6 +42,7 @@ namespace mm2hack::apps::world::entity::avatar
     // IUpdatable
     void PlayerEntity::Update(double dt)
     {
+        using namespace systems::scrolling::atomic;
         if (!IsAlive()) return;
 
         PlayerContext cx{
@@ -63,10 +65,11 @@ namespace mm2hack::apps::world::entity::avatar
             FindState(_status)->OnEnter(cx, _input, _tuning);
         }
 
-        if (cx.pendingFixedScroll != ScrollDir::None)
+        if (cx.pendingFixedScroll.dir != ScrollDir::None)
         {
-            requestScroll_(cx.pendingFixedScroll);
+            requestScroll_(cx.pendingFixedScroll.dir);
         }
+
 
         // Apply updated context values
         pos = cx.pos + cx.vel;
@@ -154,10 +157,11 @@ namespace mm2hack::apps::world::entity::avatar
 
     void PlayerEntity::SetCollidable(bool v) noexcept { _collidable = v; }
 
-    [[nodiscard]] std::optional<PlayerEntity::ScrollDir> PlayerEntity::ConsumeScrollRequest() noexcept
+    [[nodiscard]] std::optional<FixedScrollRequest> PlayerEntity::ConsumeScrollRequest() noexcept
     {
-        auto out = _pendingScroll;
-        _pendingScroll.reset();
+        if (!_pendingScrollReq.has_value()) return std::nullopt;
+        auto out = _pendingScrollReq;
+        _pendingScrollReq.reset();
         return out;
     }
 
@@ -168,7 +172,7 @@ namespace mm2hack::apps::world::entity::avatar
 
     void PlayerEntity::requestScroll_(ScrollDir dir) noexcept
     {
-        if (_pendingScroll.has_value()) return; // keep first!
-        _pendingScroll = dir;
+        if (_pendingScrollReq.has_value()) return; // keep first!
+        _pendingScrollReq = FixedScrollRequest{ dir };
     }
 }

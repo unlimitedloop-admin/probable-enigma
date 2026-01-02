@@ -23,6 +23,7 @@
 #include "apps/systems/physics/PageGridIndex.h"
 #include "apps/systems/physics/Probes.h"
 #include "apps/systems/physics/TileAttribute.h"
+#include "apps/systems/scrolling/atomic/ScrollController.h"
 #include "apps/systems/scrolling/atomic/ScrollTypes.h"
 #include "apps/systems/view/RenderContext.h"
 #include "apps/world/entity/common/AnimeStepper.h"
@@ -99,7 +100,7 @@ namespace mm2hack::apps::world::entity::avatar
         void SetLadderService(ILadderService* s) { _ladderService = s; }
 
         // Get scrolling request (if any) and consume it
-        [[nodiscard]] std::optional<ScrollDir> ConsumeScrollRequest() noexcept;
+        [[nodiscard]] std::optional<FixedScrollRequest> ConsumeScrollRequest() noexcept;
 
         // ===== public parameters =====
         bool onGround{ false };
@@ -142,6 +143,6 @@ namespace mm2hack::apps::world::entity::avatar
         const ITerrainProbe*   _terrainProbe{ nullptr };                // Terrain probe
         ILadderService*        _ladderService{ nullptr };               // Laddering action service
 
-        std::optional<ScrollDir> _pendingScroll{};
+        std::optional<FixedScrollRequest> _pendingScrollReq{};
     };
 }

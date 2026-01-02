@@ -3,7 +3,8 @@
 #include "ScrollController.h"
 
 #include "apps/foundation/math/CoordinateTypes.h"
-#include "core/winapi/WindowManager.h"
+#include "core/winapi/WindowManager.h"  // Use for draw reference lines for debug HUD
+#include "IScrollRuleProvider.h"
 #include "ScrollTypes.h"
 
 namespace mm2hack::apps::systems::scrolling::atomic
@@ -35,7 +36,6 @@ namespace mm2hack::apps::systems::scrolling::atomic
         // TODO: We'll split this into method later.
         if (_anim.Active())
         {
-            ScrollEffect fx{};
             fx.fixedActive = true;
 
             const auto dir = _anim.State().dir;
@@ -43,12 +43,16 @@ namespace mm2hack::apps::systems::scrolling::atomic
 
             const bool finished = _anim.Tick(dir, page_w, page_h); // progress += speed(=4)
 
-            const double currProg = finished ? static_cast<double>((dir == ScrlDir::Left || dir == ScrlDir::Right) ? page_w : page_h)
-                : _anim.State().progress;
+            const double need = (dir == ScrlDir::Left || dir == ScrlDir::Right)
+                ? static_cast<double>(page_w)
+                : static_cast<double>(page_h);
 
-            const double dProg = currProg - prevProg;  // typically 4.0
+            // Clamp current progress to [0..need] for stable dProg
+            const double currProg = finished ? need : std::min(_anim.State().progress, need);
+            const double dProg = std::max(0.0, currProg - prevProg);
 
-            const double carry = dProg * kCarryRatio;  // typically 0.75
+            // carry is proportional to camera progress
+            const double carry = (need > 0.0) ? (dProg * (_carryTotalPx / need)) : 0.0;
 
             switch (dir)
             {
@@ -61,16 +65,14 @@ namespace mm2hack::apps::systems::scrolling::atomic
 
             if (finished)
             {
-                // Keep final frame for drawing during end-freeze
-                PageScroll snap = _anim.State();          // from/to/dir/speed etc
-                snap.progress = (snap.dir == PageScroll::Dir::Left || snap.dir == PageScroll::Dir::Right)
-                    ? static_cast<double>(page_w) : static_cast<double>(page_h);
+                // freeze-draw snap as you already do
+                PageScroll snap = _anim.State();
+                snap.progress = need;
                 snap.active = true;
 
-                _freeze_draw = snap;                // Set freeze-draw state
-                _freezeFrames = kFreezeOnEnd;       // Set freeze frames on scroll end
+                _freeze_draw = snap;
+                _freezeFrames = kFreezeOnEnd;
 
-                // Commit new page, reset anim runtime
                 _page_index = _anim.State().to_index;
                 _cam.x = 0.0; _cam.y = 0.0;
                 _anim.Reset();
@@ -78,6 +80,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
                 updateViewState_();
                 return fx;
             }
+
             updateViewState_();
             return fx;
         }
@@ -85,68 +88,12 @@ namespace mm2hack::apps::systems::scrolling::atomic
         // Start fixed scroll if requested (before free-scroll updates)
         if (_pending_fixed.has_value())
         {
-            const auto dir = *_pending_fixed;
+            const FixedScrollRequest req = *_pending_fixed; // copy
             _pending_fixed.reset();
 
-            auto tryStart = [&](PageScroll::Dir d) -> bool
-                {
-                    const std::size_t from = _page_index;
-
-                    auto resolveToIndex = [&](int16_t room) -> int
-                        {
-                            if (room < 0) return -1;
-                            return _rules.ToPageIndex(static_cast<uint8_t>(room));
-                        };
-
-                    int to_idx = -1;
-
-                    switch (d)
-                    {
-                    case PageScroll::Dir::Right:
-                    {
-                        const auto kind = _rules.RightType(from);
-                        if (!IsFixedScroll(kind)) return false;
-                        to_idx = resolveToIndex(_rules.RightRoom(from));
-                        break;
-                    }
-                    case PageScroll::Dir::Left:
-                    {
-                        const auto kind = _rules.LeftType(from);
-                        if (!IsFixedScroll(kind)) return false;
-                        to_idx = resolveToIndex(_rules.LeftRoom(from));
-                        break;
-                    }
-                    case PageScroll::Dir::Down:
-                    {
-                        const auto kind = _rules.DownType(from);
-                        if (!IsFixedScroll(kind)) return false;
-                        to_idx = resolveToIndex(_rules.DownRoom(from));
-                        break;
-                    }
-                    case PageScroll::Dir::Up:
-                    {
-                        const auto kind = _rules.UpType(from);
-                        if (!IsFixedScroll(kind)) return false;
-                        to_idx = resolveToIndex(_rules.UpRoom(from));
-                        break;
-                    }
-                    default:
-                        return false;
-                    }
-
-                    // Invalid target
-                    if (to_idx < 0) return false;
-
-                    _cam.x = 0.0;
-                    _cam.y = 0.0;
-                    _anim.Start(d, from, static_cast<std::size_t>(to_idx));
-
-                    return true;
-                };
-
-            if (tryStart(dir))
+            if (tryStartFixed_(req, page_w, page_h))
             {
-                _freezeFrames = kFreezeOnStart;     // Freeze frames on scroll start.
+                _freezeFrames = kFreezeOnStart;
                 updateViewState_();
                 return fx;
             }
@@ -183,20 +130,12 @@ namespace mm2hack::apps::systems::scrolling::atomic
         }
     }
 
-    bool ScrollController::RequestFixedScroll(PageScroll::Dir dir) noexcept
+    bool ScrollController::RequestFixedScroll(const FixedScrollRequest& req) noexcept
     {
-        if (_anim.Active())
-        {
-            return false;
-        }
+        if (_anim.Active()) return false;
+        if (_pending_fixed.has_value()) return false;
 
-        // If already pending, keep first request (or overwrite; your choice).
-        if (_pending_fixed.has_value())
-        {
-            return false;
-        }
-
-        _pending_fixed = dir;
+        _pending_fixed = req;
         return true;
     }
 
@@ -254,209 +193,158 @@ namespace mm2hack::apps::systems::scrolling::atomic
         ::DxLib::DrawLine(0, static_cast<int>(_object_pos.y * viewerRate), static_cast<int>(_params.view_w * viewerRate), static_cast<int>(_object_pos.y * viewerRate), 0xFFFF0000, 2);
     }
 
-    void ScrollController::updateAxisX_(double /*remain*/)
+    void ScrollController::SetPageIndex(std::size_t idx) noexcept
     {
+        _page_index = idx;
+
         const int page_w = _params.tile_px * config::SystemConfig::kTileCountX;
         const int page_h = _params.tile_px * config::SystemConfig::kTileCountY;
 
-        const double crossX = _object_pos.x;
-        const double targetWorldX = _target_pos.x;
-
-        auto origin = _rules.PageOriginPx(_page_index, page_w, page_h);
-        double targetLocalX = targetWorldX - origin.x;
-        double desired = targetLocalX - crossX;
-
-        auto can_left_of = [&](std::size_t page) -> bool
-            {
-                const auto k = _rules.LeftType(page);
-                const int16_t room = _rules.LeftRoom(page);
-                const int idx = (room >= 0) ? _rules.ToPageIndex(static_cast<uint8_t>(room)) : -1;
-                return IsAllowedFree(k) && idx >= 0;
-            };
-
-        auto can_right_of = [&](std::size_t page) -> bool
-            {
-                const auto k = _rules.RightType(page);
-                const int16_t room = _rules.RightRoom(page);
-                const int idx = (room >= 0) ? _rules.ToPageIndex(static_cast<uint8_t>(room)) : -1;
-                return IsAllowedFree(k) && idx >= 0;
-            };
-
-        // --- Across-page normalization (may change _page_index) ---
-        while (desired < 0.0)
-        {
-            const auto kind = _rules.LeftType(_page_index);
-            const int16_t lr = _rules.LeftRoom(_page_index);
-            const int l_idx = (lr >= 0) ? _rules.ToPageIndex(static_cast<uint8_t>(lr)) : -1;
-
-            if (!IsAllowedFree(kind) || l_idx < 0)
-            {
-                // No left neighbor: do not go past the left edge.
-                desired = 0.0;
-                break;
-            }
-
-            _page_index = static_cast<std::size_t>(l_idx);
-
-            origin = _rules.PageOriginPx(_page_index, page_w, page_h);
-            targetLocalX = targetWorldX - origin.x;
-            desired = targetLocalX - crossX;
-        }
-
-        while (desired >= static_cast<double>(page_w))
-        {
-            const auto kind = _rules.RightType(_page_index);
-            const int16_t rr = _rules.RightRoom(_page_index);
-            const int r_idx = (rr >= 0) ? _rules.ToPageIndex(static_cast<uint8_t>(rr)) : -1;
-
-            if (!IsAllowedFree(kind) || r_idx < 0)
-            {
-                // No right neighbor: do not go past the right edge.
-                desired = 0.0;
-                break;
-            }
-
-            _page_index = static_cast<std::size_t>(r_idx);
-
-            origin = _rules.PageOriginPx(_page_index, page_w, page_h);
-            targetLocalX = targetWorldX - origin.x;
-            desired = targetLocalX - crossX;
-        }
-
-        // Re-evaluate adjacency on the FINAL page index.
-        const bool canLeft = can_left_of(_page_index);
-        const bool canRight = can_right_of(_page_index);
-
-        // --- Key rule: if there is no adjacent room in that direction, NEVER expose that side. ---
-        if (!canRight && desired > 0.0)
-        {
-            desired = 0.0;
-        }
-        if (!canLeft && desired < 0.0)
-        {
-            desired = 0.0;
-        }
-
-        // --- Keep cam within page, but only wrap when the corresponding neighbor exists ---
-        if (desired < 0.0)
-        {
-            desired = canLeft ? (desired + static_cast<double>(page_w)) : 0.0;
-        }
-        else if (desired >= static_cast<double>(page_w))
-        {
-            desired = canRight ? (desired - static_cast<double>(page_w)) : 0.0;
-        }
-
-        // Safety clamp
-        if (desired < 0.0 || desired >= static_cast<double>(page_w))
-        {
-            desired = 0.0;
-        }
-
-        _cam.x = desired;
+        const auto origin = _rules.PageOriginPx(_page_index, page_w, page_h);
+        _view_world = origin;  // Start at top-left of the page.
+        _cam = { 0.0, 0.0 };
     }
 
-    void ScrollController::updateAxisY_(double /*remain*/)
+    void ScrollController::updateAxisX_(double remain)
     {
+        const double crossX = _object_pos.x;
+        const double worldX = _target_pos.x;
+
         const int page_w = _params.tile_px * config::SystemConfig::kTileCountX;
         const int page_h = _params.tile_px * config::SystemConfig::kTileCountY;
 
-        const double crossY = _object_pos.y;
-        const double targetWorldY = _target_pos.y;
-
         auto origin = _rules.PageOriginPx(_page_index, page_w, page_h);
-        double targetLocalY = targetWorldY - origin.y;
-        double desired = targetLocalY - crossY;
 
-        auto can_up_of = [&](std::size_t page) -> bool
-            {
-                const auto k = _rules.UpType(page);
-                const int16_t room = _rules.UpRoom(page);
-                const int idx = (room >= 0) ? _rules.ToPageIndex(static_cast<uint8_t>(room)) : -1;
-                return IsAllowedFree(k) && idx >= 0;
-            };
+        const bool hasLeft = (resolveNextIndexX_(_rules, _page_index, -1) >= 0);
+        const bool hasRight = (resolveNextIndexX_(_rules, _page_index, +1) >= 0);
 
-        auto can_down_of = [&](std::size_t page) -> bool
-            {
-                const auto k = _rules.DownType(page);
-                const int16_t room = _rules.DownRoom(page);
-                const int idx = (room >= 0) ? _rules.ToPageIndex(static_cast<uint8_t>(room)) : -1;
-                return IsAllowedFree(k) && idx >= 0;
-            };
+        const double screenX = worldX - _view_world.x;
 
-        // --- Across-page normalization (may change _page_index) ---
-        while (desired < 0.0)
+        if (remain < 0.0)
         {
-            const auto kind = _rules.UpType(_page_index);
-            const int16_t ur = _rules.UpRoom(_page_index);
-            const int u_idx = (ur >= 0) ? _rules.ToPageIndex(static_cast<uint8_t>(ur)) : -1;
-
-            if (!IsAllowedFree(kind) || u_idx < 0)
+            // Moving left
+            if (screenX <= crossX)
             {
-                // No up neighbor: do not go above current page.
-                desired = 0.0;
-                break;
+                const double next = _view_world.x + remain; // negative
+
+                if (hasLeft)
+                {
+                    _view_world.x = next;
+                }
+                else
+                {
+                    // No LEFT neighbor: do not go left of origin, but allow returning.
+                    _view_world.x = std::max(next, origin.x);
+                }
             }
-
-            _page_index = static_cast<std::size_t>(u_idx);
-
-            origin = _rules.PageOriginPx(_page_index, page_w, page_h);
-            targetLocalY = targetWorldY - origin.y;
-            desired = targetLocalY - crossY;
         }
-
-        while (desired >= static_cast<double>(page_h))
+        else if (remain > 0.0)
         {
-            const auto kind = _rules.DownType(_page_index);
-            const int16_t dr = _rules.DownRoom(_page_index);
-            const int d_idx = (dr >= 0) ? _rules.ToPageIndex(static_cast<uint8_t>(dr)) : -1;
-
-            if (!IsAllowedFree(kind) || d_idx < 0)
+            // Moving right
+            if (screenX >= crossX)
             {
-                // No down neighbor: do not go below current page.
-                desired = 0.0;
-                break;
+                const double next = _view_world.x + remain; // positive
+
+                if (hasRight)
+                {
+                    _view_world.x = next;
+                }
+                else
+                {
+                    // No RIGHT neighbor: do not go right of origin, but allow returning.
+                    _view_world.x = std::min(next, origin.x);
+                }
             }
-
-            _page_index = static_cast<std::size_t>(d_idx);
-
-            origin = _rules.PageOriginPx(_page_index, page_w, page_h);
-            targetLocalY = targetWorldY - origin.y;
-            desired = targetLocalY - crossY;
         }
 
-        // Re-evaluate adjacency on the FINAL page index.
-        const bool canUp = can_up_of(_page_index);
-        const bool canDown = can_down_of(_page_index);
+        normalizeViewWorldToPage_();
+    }
 
-        // --- Key rule: if there is no adjacent room in that direction, NEVER expose that side. ---
-        // This prevents "base BG color" from appearing when renderer expects neighbor room.
-        if (!canDown && desired > 0.0)
+    void ScrollController::updateAxisY_(double remain)
+    {
+        const double crossY = _object_pos.y;
+        const double worldY = _target_pos.y;
+
+        const int page_w = _params.tile_px * config::SystemConfig::kTileCountX;
+        const int page_h = _params.tile_px * config::SystemConfig::kTileCountY;
+
+        // "Current" origin of the page_index (before normalization).
+        auto origin = _rules.PageOriginPx(_page_index, page_w, page_h);
+
+        // Is there an adjacent page in each direction (free-scroll allowed)?
+        const bool hasUp = (resolveNextIndexY_(_rules, _page_index, -1) >= 0);
+        const bool hasDown = (resolveNextIndexY_(_rules, _page_index, +1) >= 0);
+
+        // Current on-screen Y of the target (world - viewWorld).
+        const double screenY = worldY - _view_world.y;
+
+        if (remain < 0.0)
         {
-            desired = 0.0;
+            // Moving up: follow only when above (or at) the cross line.
+            if (screenY <= crossY)
+            {
+                const double next = _view_world.y + remain; // remain is negative
+
+                if (hasUp)
+                {
+                    // Allowed to expose UP neighbor.
+                    _view_world.y = next;
+                }
+                else
+                {
+                    // No UP neighbor:
+                    // Allow only "returning toward origin" (i.e., do not go above origin).
+                    _view_world.y = std::max(next, origin.y);
+                }
+            }
         }
-        if (!canUp && desired < 0.0)
+        else if (remain > 0.0)
         {
-            desired = 0.0;
+            // Moving down: follow only when below (or at) the cross line.
+            if (screenY >= crossY)
+            {
+                const double next = _view_world.y + remain; // remain is positive
+
+                if (hasDown)
+                {
+                    // Allowed to expose DOWN neighbor.
+                    _view_world.y = next;
+                }
+                else
+                {
+                    // No DOWN neighbor:
+                    // Allow only "returning toward origin" (i.e., do not go below origin).
+                    _view_world.y = std::min(next, origin.y);
+                }
+            }
         }
 
-        // --- Keep cam within page, but only wrap when the corresponding neighbor exists ---
-        if (desired < 0.0)
-        {
-            desired = canUp ? (desired + static_cast<double>(page_h)) : 0.0;
-        }
-        else if (desired >= static_cast<double>(page_h))
-        {
-            desired = canDown ? (desired - static_cast<double>(page_h)) : 0.0;
-        }
+        // After changing viewWorld, normalize page/cam consistently.
+        normalizeViewWorldToPage_();
+    }
 
-        // Safety clamp
-        if (desired < 0.0 || desired >= static_cast<double>(page_h))
-        {
-            desired = 0.0;
-        }
+    int ScrollController::resolveNextIndexX_(const IScrollRuleProvider& rules, const std::size_t page_index, const int dir)
+    {
+        if (dir == 0) return -1;
 
-        _cam.y = desired;
+        const auto kind = (dir > 0) ? rules.RightType(page_index) : rules.LeftType(page_index);
+        const int16_t room = (dir > 0) ? rules.RightRoom(page_index) : rules.LeftRoom(page_index);
+        if (!IsAllowedFree(kind) || room < 0) return -1;
+
+        const int idx = rules.ToPageIndex(static_cast<uint8_t>(room));
+        return (idx >= 0) ? idx : -1;
+    }
+
+    int ScrollController::resolveNextIndexY_(const IScrollRuleProvider& rules, const std::size_t page_index, const int dir)
+    {
+        if (dir == 0) return -1;
+
+        const auto kind = (dir > 0) ? rules.DownType(page_index) : rules.UpType(page_index);
+        const int16_t room = (dir > 0) ? rules.DownRoom(page_index) : rules.UpRoom(page_index);
+        if (!IsAllowedFree(kind) || room < 0) return -1;
+
+        const int idx = rules.ToPageIndex(static_cast<uint8_t>(room));
+        return (idx >= 0) ? idx : -1;
     }
 
     void ScrollController::drawNeighbors_()
@@ -467,81 +355,121 @@ namespace mm2hack::apps::systems::scrolling::atomic
         const int ox = -static_cast<int>(_cam.x);
         const int oy = -static_cast<int>(_cam.y);
 
-        const auto is_allowed = [](ScrollKind k) { return IsAllowedFree(k); };
+        const auto is_allowed = [](ScrollKind k) noexcept { return IsAllowedFree(k); };
+
+        auto to_page = [&](int16_t room) -> int
+            {
+                if (room < 0) return -1;
+                return _rules.ToPageIndex(static_cast<uint8_t>(room));
+            };
+
+        const bool needLeft = (ox > 0);
+        const bool needRight = (ox + page_w < _params.view_w);
+        const bool needUp = (oy > 0);
+        const bool needDown = (oy + page_h < _params.view_h);
 
         // RIGHT
-        if (ox + page_w < _params.view_w)
+        if (needRight)
         {
             const auto k = _rules.RightType(_page_index);
-            const int16_t room = _rules.RightRoom(_page_index);
-            const int idx = _rules.ToPageIndex(static_cast<uint8_t>(room));
-            if (is_allowed(k) && room >= 0 && idx >= 0)
+            const int idx = to_page(_rules.RightRoom(_page_index));
+            if (is_allowed(k) && idx >= 0)
             {
                 _renderer.DrawPage(static_cast<std::size_t>(idx), ox + page_w, oy);
             }
         }
+
+        // LEFT
+        if (needLeft)
+        {
+            const auto k = _rules.LeftType(_page_index);
+            const int idx = to_page(_rules.LeftRoom(_page_index));
+            if (is_allowed(k) && idx >= 0)
+            {
+                _renderer.DrawPage(static_cast<std::size_t>(idx), ox - page_w, oy);
+            }
+        }
+
         // DOWN
-        if (oy + page_h < _params.view_h)
+        if (needDown)
         {
             const auto k = _rules.DownType(_page_index);
-            const int16_t room = _rules.DownRoom(_page_index);
-            const int idx = _rules.ToPageIndex(static_cast<uint8_t>(room));
-            if (is_allowed(k) && room >= 0 && idx >= 0)
+            const int idx = to_page(_rules.DownRoom(_page_index));
+            if (is_allowed(k) && idx >= 0)
             {
                 _renderer.DrawPage(static_cast<std::size_t>(idx), ox, oy + page_h);
             }
         }
-        // RIGHT DOWN
-        if (ox + page_w < _params.view_w && oy + page_h < _params.view_h)
+
+        // UP
+        if (needUp)
+        {
+            const auto k = _rules.UpType(_page_index);
+            const int idx = to_page(_rules.UpRoom(_page_index));
+            if (is_allowed(k) && idx >= 0)
+            {
+                _renderer.DrawPage(static_cast<std::size_t>(idx), ox, oy - page_h);
+            }
+        }
+
+        // RIGHT+DOWN
+        if (needRight && needDown)
         {
             const auto kr = _rules.RightType(_page_index);
-            const int16_t rr = _rules.RightRoom(_page_index);
-            const int r_idx = _rules.ToPageIndex(static_cast<uint8_t>(rr));
-            if (IsAllowedFree(kr) && rr >= 0 && r_idx >= 0)
+            const int r_idx = to_page(_rules.RightRoom(_page_index));
+            if (is_allowed(kr) && r_idx >= 0)
             {
                 const auto kd = _rules.DownType(static_cast<std::size_t>(r_idx));
-                const int16_t rd = _rules.DownRoom(static_cast<std::size_t>(r_idx));
-                const int rd_idx = _rules.ToPageIndex(static_cast<uint8_t>(rd));
-                if (IsAllowedFree(kd) && rd >= 0 && rd_idx >= 0)
+                const int rd_idx = to_page(_rules.DownRoom(static_cast<std::size_t>(r_idx)));
+                if (is_allowed(kd) && rd_idx >= 0)
                 {
                     _renderer.DrawPage(static_cast<std::size_t>(rd_idx), ox + page_w, oy + page_h);
                 }
             }
         }
-        // LEFT
-        if (ox > 0)
+
+        // RIGHT+UP
+        if (needRight && needUp)
         {
-            const auto k = _rules.LeftType(_page_index);
-            const int16_t room = _rules.LeftRoom(_page_index);
-            const int idx = _rules.ToPageIndex(static_cast<uint8_t>(room));
-            if (is_allowed(k) && room >= 0 && idx >= 0)
+            const auto kr = _rules.RightType(_page_index);
+            const int r_idx = to_page(_rules.RightRoom(_page_index));
+            if (is_allowed(kr) && r_idx >= 0)
             {
-                _renderer.DrawPage(static_cast<std::size_t>(idx), ox - page_w, oy);
+                const auto ku = _rules.UpType(static_cast<std::size_t>(r_idx));
+                const int ru_idx = to_page(_rules.UpRoom(static_cast<std::size_t>(r_idx)));
+                if (is_allowed(ku) && ru_idx >= 0)
+                {
+                    _renderer.DrawPage(static_cast<std::size_t>(ru_idx), ox + page_w, oy - page_h);
+                }
             }
         }
-        // UP
-        if (oy > 0)
-        {
-            const auto k = _rules.UpType(_page_index);
-            const int16_t room = _rules.UpRoom(_page_index);
-            const int idx = _rules.ToPageIndex(static_cast<uint8_t>(room));
-            if (is_allowed(k) && room >= 0 && idx >= 0)
-            {
-                _renderer.DrawPage(static_cast<std::size_t>(idx), ox, oy - page_h);
-            }
-        }
-        // LEFT UP
-        if (ox > 0 && oy > 0)
+
+        // LEFT+DOWN
+        if (needLeft && needDown)
         {
             const auto kl = _rules.LeftType(_page_index);
-            const int16_t lr = _rules.LeftRoom(_page_index);
-            const int l_idx = _rules.ToPageIndex(static_cast<uint8_t>(lr));
-            if (IsAllowedFree(kl) && lr >= 0 && l_idx >= 0)
+            const int l_idx = to_page(_rules.LeftRoom(_page_index));
+            if (is_allowed(kl) && l_idx >= 0)
+            {
+                const auto kd = _rules.DownType(static_cast<std::size_t>(l_idx));
+                const int ld_idx = to_page(_rules.DownRoom(static_cast<std::size_t>(l_idx)));
+                if (is_allowed(kd) && ld_idx >= 0)
+                {
+                    _renderer.DrawPage(static_cast<std::size_t>(ld_idx), ox - page_w, oy + page_h);
+                }
+            }
+        }
+
+        // LEFT+UP
+        if (needLeft && needUp)
+        {
+            const auto kl = _rules.LeftType(_page_index);
+            const int l_idx = to_page(_rules.LeftRoom(_page_index));
+            if (is_allowed(kl) && l_idx >= 0)
             {
                 const auto ku = _rules.UpType(static_cast<std::size_t>(l_idx));
-                const int16_t lu = _rules.UpRoom(static_cast<std::size_t>(l_idx));
-                const int lu_idx = _rules.ToPageIndex(static_cast<uint8_t>(lu));
-                if (IsAllowedFree(ku) && lu >= 0 && lu_idx >= 0)
+                const int lu_idx = to_page(_rules.UpRoom(static_cast<std::size_t>(l_idx)));
+                if (is_allowed(ku) && lu_idx >= 0)
                 {
                     _renderer.DrawPage(static_cast<std::size_t>(lu_idx), ox - page_w, oy - page_h);
                 }
@@ -549,47 +477,147 @@ namespace mm2hack::apps::systems::scrolling::atomic
         }
     }
 
-    void ScrollController::updateViewState_()
+    void ScrollController::normalizeViewWorldToPage_()
     {
-        const int page_w = _params.tile_px * _tileX;
-        const int page_h = _params.tile_px * _tileY;
+        const int page_w = _params.tile_px * config::SystemConfig::kTileCountX;
+        const int page_h = _params.tile_px * config::SystemConfig::kTileCountY;
 
-        const auto curOrigin = _rules.PageOriginPx(_page_index, page_w, page_h);
-
-        if (_anim.Active())
+        for (;;)
         {
-            const auto& st = _anim.State();
+            const auto origin = _rules.PageOriginPx(_page_index, page_w, page_h);
 
-            // from page origin (start page)
-            const auto fromOrigin = _rules.PageOriginPx(st.from_index, page_w, page_h);
-            const double prog = st.progress;
-
-            double vx = fromOrigin.x;
-            double vy = fromOrigin.y;
-
-            switch (st.dir)
+            // If viewWorld is outside current page, move page_index to the neighbor page.
+            if (_view_world.x < origin.x)
             {
-            case PageScroll::Dir::Right: vx += prog; break;
-            case PageScroll::Dir::Left:  vx -= prog; break;
-            case PageScroll::Dir::Down:  vy += prog; break;
-            case PageScroll::Dir::Up:    vy -= prog; break;
-            default: break;
+                const int next = resolveNextIndexX_(_rules, _page_index, -1);
+                if (next < 0)
+                {
+                    _view_world.x = origin.x;
+                    break;
+                }
+                _page_index = static_cast<std::size_t>(next);
+                continue;
             }
 
-            _viewState.viewWorldX = vx;
-            _viewState.viewWorldY = vy;
+            if (_view_world.x >= origin.x + static_cast<double>(page_w))
+            {
+                const int next = resolveNextIndexX_(_rules, _page_index, +1);
+                if (next < 0)
+                {
+                    _view_world.x = origin.x;
+                    break;
+                }
+                _page_index = static_cast<std::size_t>(next);
+                continue;
+            }
 
-            // Here the camera remains local to the page being animated.
-            _viewState.camX = _cam.x;
-            _viewState.camY = _cam.y;
-            return;
+            if (_view_world.y < origin.y)
+            {
+                const int next = resolveNextIndexY_(_rules, _page_index, -1);
+                if (next < 0)
+                {
+                    _view_world.y = origin.y;
+                    break;
+                }
+                _page_index = static_cast<std::size_t>(next);
+                continue;
+            }
+
+            if (_view_world.y >= origin.y + static_cast<double>(page_h))
+            {
+                const int next = resolveNextIndexY_(_rules, _page_index, +1);
+                if (next < 0)
+                {
+                    _view_world.y = origin.y;
+                    break;
+                }
+                _page_index = static_cast<std::size_t>(next);
+                continue;
+            }
+
+            // Now viewWorld is inside current page.
+            break;
         }
 
-        // Free: page origin + local cam offset
-        _viewState.viewWorldX = curOrigin.x + _cam.x;
-        _viewState.viewWorldY = curOrigin.y + _cam.y;
+        // Update cam (local offset) from viewWorld.
+        const auto origin = _rules.PageOriginPx(_page_index, page_w, page_h);
+        _cam.x = _view_world.x - origin.x;
+        _cam.y = _view_world.y - origin.y;
 
+        // Safety clamp: cam must stay within [0..page)
+        if (_cam.x < 0.0) _cam.x = 0.0;
+        if (_cam.y < 0.0) _cam.y = 0.0;
+        if (_cam.x >= static_cast<double>(page_w)) _cam.x = 0.0;
+        if (_cam.y >= static_cast<double>(page_h)) _cam.y = 0.0;
+
+        if (_cam.y < 0.0 || _cam.y >= static_cast<double>(page_h))
+        {
+            // log error: cam out of range
+            THROW_EXCEPTION(L"ScrollController: cam.y out of bounds after normalization", kClassName);
+        }
+    }
+
+    void ScrollController::updateViewState_()
+    {
         _viewState.camX = _cam.x;
         _viewState.camY = _cam.y;
+
+        _viewState.viewWorldX = _view_world.x;
+        _viewState.viewWorldY = _view_world.y;
+
+        _viewState.pageIndex = _page_index;
+    }
+
+    std::optional<std::size_t> ScrollController::resolveFixedNeighbor_(PageScroll::Dir dir, std::size_t from) const
+    {
+        auto roomToIndex = [&](int16_t room) -> std::optional<std::size_t>
+            {
+                if (room < 0) return std::nullopt;
+                const int idx = _rules.ToPageIndex(static_cast<uint8_t>(room));
+                if (idx < 0) return std::nullopt;
+                return static_cast<std::size_t>(idx);
+            };
+
+        switch (dir)
+        {
+        case PageScroll::Dir::Right:
+        {
+            if (!IsFixedScroll(_rules.RightType(from))) return std::nullopt;
+            return roomToIndex(_rules.RightRoom(from));
+        }
+        case PageScroll::Dir::Left:
+        {
+            if (!IsFixedScroll(_rules.LeftType(from))) return std::nullopt;
+            return roomToIndex(_rules.LeftRoom(from));
+        }
+        case PageScroll::Dir::Down:
+        {
+            if (!IsFixedScroll(_rules.DownType(from))) return std::nullopt;
+            return roomToIndex(_rules.DownRoom(from));
+        }
+        case PageScroll::Dir::Up:
+        {
+            if (!IsFixedScroll(_rules.UpType(from))) return std::nullopt;
+            return roomToIndex(_rules.UpRoom(from));
+        }
+        default:
+            return std::nullopt;
+        }
+    }
+
+    bool ScrollController::tryStartFixed_(const FixedScrollRequest& req, int page_w, int page_h)
+    {
+        if (req.dir == PageScroll::Dir::None) return false;
+
+        const std::size_t from = _page_index;
+        const auto to = resolveFixedNeighbor_(req.dir, from);
+        if (!to) return false;
+
+        _carryTotalPx = 2.0 * std::max(0.0, req.edgeGapPx); // ★あなたの仕様
+        _cam.x = 0.0;
+        _cam.y = 0.0;
+
+        _anim.Start(req.dir, from, *to);
+        return true;
     }
 }

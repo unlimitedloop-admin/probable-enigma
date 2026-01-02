@@ -96,7 +96,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
         void SetMode(ScrollKind m) noexcept { _mode = m; }
 
         // Request fixed page scroll. Returns false if rejected (no neighbor / not allowed / already animating)
-        bool RequestFixedScroll(PageScroll::Dir dir) noexcept;
+        bool RequestFixedScroll(const FixedScrollRequest& req) noexcept;
         // Check if fixed scroll is locked (animating or pending)
         [[nodiscard]] bool IsFixedScrollLocked() const noexcept;
         // Check if any scroll is locked (fixed animating/pending or freeze)
@@ -109,7 +109,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
         void DebugHudRender(bool show) const;
 
         // External interface
-        void SetPageIndex(std::size_t idx) noexcept { _page_index = idx; }
+        void SetPageIndex(std::size_t idx) noexcept;
         std::size_t PageIndex() const noexcept { return _page_index; }
 
         Vec2& ObjectPos() noexcept { return _object_pos; }
@@ -129,10 +129,16 @@ namespace mm2hack::apps::systems::scrolling::atomic
     private:
         void updateAxisX_(double remain);               // Sub-update for each axis
         void updateAxisY_(double remain);               // Sub-update for each axis
-
+        [[nodiscard]] int resolveNextIndexX_(const IScrollRuleProvider& rules, const std::size_t page_index, const int dir);
+        [[nodiscard]] int resolveNextIndexY_(const IScrollRuleProvider& rules, const std::size_t page_index, const int dir);
 
         void drawNeighbors_();                          // Draw neighboring pages
+        void normalizeViewWorldToPage_();               // Normalize view world coordinates to page boundaries
         void updateViewState_();                        // Update ViewState representation
+
+        std::optional<std::size_t> resolveFixedNeighbor_(PageScroll::Dir dir, std::size_t from) const;
+
+        bool tryStartFixed_(const FixedScrollRequest& req, int page_w, int page_h);
 
     private:
         const std::wstring kClassName{ L"ScrollController" };
@@ -147,7 +153,8 @@ namespace mm2hack::apps::systems::scrolling::atomic
         Vec2 _target_pos{};                             // Target position
         Camera _cam{};                                  // Camera
         PageScrollAnimator _anim{};                     // Page scroll animator
-        std::optional<PageScroll::Dir> _pending_fixed{};// Pending fixed scroll request
+        std::optional<FixedScrollRequest> _pending_fixed{};
+        double _carryTotalPx{ 0.0 }; // computed at start of fixed scroll
 
         const int _tileX{ conf::kTileCountX };          // Tile count X
         const int _tileY{ conf::kTileCountY };          // Tile count Y
@@ -156,7 +163,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
         static constexpr int kFreezeOnStart = 30;
         static constexpr int kFreezeOnEnd = 30;
 
-
+        Vec2 _view_world{};                             // World position of the view's top-left.
         ViewState _viewState{};                         // View state representation
     };
 }

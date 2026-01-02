@@ -10,6 +10,7 @@
 
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/systems/physics/ILadderService.h"
+#include "apps/systems/scrolling/atomic/ScrollController.h"
 #include "apps/systems/scrolling/atomic/ScrollTypes.h"
 #include "apps/world/entity/common/AnimeStepper.h"
 #include "AvatarStatus.h"
@@ -28,7 +29,7 @@ namespace mm2hack::apps::world::entity::avatar
     using systems::physics::ILadderService;
     using systems::physics::ITerrainProbe;
     using systems::physics::Probes;
-    using systems::scrolling::atomic::PageScroll;
+    using systems::scrolling::atomic::FixedScrollRequest;
 
     // World boundary representation
     struct WorldBounds
@@ -61,8 +62,7 @@ namespace mm2hack::apps::world::entity::avatar
         ILadderService* ladder{ nullptr };      // Laddering service module
 
         WorldBounds vBounds;                    // VRAM area boundaries
-        PageScroll::Dir pendingFixedScroll{
-            PageScroll::Dir::None };            // Pending fixed scroll request
+        FixedScrollRequest pendingFixedScroll{};// Pending fixed scroll request
     };
 
     // Simplified context for animation abilities

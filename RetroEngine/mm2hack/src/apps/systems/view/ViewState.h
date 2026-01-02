@@ -25,5 +25,6 @@ namespace mm2hack::apps::systems::view
         double viewWorldY{};
         int viewW{ conf::kScreenWidth };
         int viewH{ conf::kScreenHeight };
+        int pageIndex{};
     };
 }
