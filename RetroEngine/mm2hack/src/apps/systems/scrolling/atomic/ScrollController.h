@@ -61,10 +61,20 @@ namespace mm2hack::apps::systems::scrolling::atomic
         virtual bool Update(const foundation::math::RectF& playerBox, Camera& cam, size_t& currentPageIndex, double dt) = 0;
     };
 
+    // Scroll effect result
     struct ScrollEffect
     {
         bool fixedActive{ false };
         foundation::math::Vec2 playerDelta{}; // apply to player.pos (world)
+    };
+
+    // View boundary representation
+    struct ViewBounds
+    {
+        double leftX{};
+        double rightX{};
+        double topY{};
+        double bottomY{};
     };
 
     // The main video screen policy and management of scrolling in 2D maps
@@ -101,6 +111,8 @@ namespace mm2hack::apps::systems::scrolling::atomic
         [[nodiscard]] bool IsFixedScrollLocked() const noexcept;
         // Check if any scroll is locked (fixed animating/pending or freeze)
         [[nodiscard]] bool IsScrollLocked() const noexcept;
+        // Get current page bounds in world coordinates
+        [[nodiscard]] ViewBounds CurrentPageBoundsWorld() const noexcept;
         // Check if in freeze frames
         [[nodiscard]] bool IsFreezeFrames() const noexcept;
         // Synchronize with object center position
@@ -137,7 +149,6 @@ namespace mm2hack::apps::systems::scrolling::atomic
         void updateViewState_();                        // Update ViewState representation
 
         std::optional<std::size_t> resolveFixedNeighbor_(PageScroll::Dir dir, std::size_t from) const;
-
         bool tryStartFixed_(const FixedScrollRequest& req, int page_w, int page_h);
 
     private:

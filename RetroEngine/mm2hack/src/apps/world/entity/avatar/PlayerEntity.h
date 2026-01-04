@@ -93,6 +93,9 @@ namespace mm2hack::apps::world::entity::avatar
         // Set collidable
         void SetCollidable(bool v) noexcept;
 
+        void SetViewBounds(const systems::scrolling::atomic::ViewBounds& b) noexcept;
+        const WorldBounds& ViewBounds() const noexcept { return _vBounds; }
+
         // ===== dependency injection & configuration =====
         void SetInput(StateProvider* in) { _input = in; }
         void SetTuning(const PlayerTuning& t) { _tuning = t; }
@@ -142,6 +145,7 @@ namespace mm2hack::apps::world::entity::avatar
         Probes                 _probes{ _half };                        // Collision probes
         const ITerrainProbe*   _terrainProbe{ nullptr };                // Terrain probe
         ILadderService*        _ladderService{ nullptr };               // Laddering action service
+        WorldBounds            _vBounds{};                              // View boundaries
 
         std::optional<FixedScrollRequest> _pendingScrollReq{};
     };

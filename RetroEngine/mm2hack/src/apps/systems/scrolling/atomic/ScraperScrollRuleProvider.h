@@ -59,7 +59,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
 
     private:
         void ensureGridCacheBuilt_() const;
-        void tryAssignNeighbor_(std::size_t from, std::size_t to, int dx, int dy) const;
+        void tryAssignNeighbor_(std::unordered_map<std::size_t, std::pair<int, int>>& grid, std::size_t from, std::size_t to, int dx, int dy) const;
 
     private:
         const std::wstring kClassName{ L"ScraperScrollRuleProvider" };

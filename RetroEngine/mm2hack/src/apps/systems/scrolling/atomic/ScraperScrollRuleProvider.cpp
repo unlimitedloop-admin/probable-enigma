@@ -89,29 +89,42 @@ namespace mm2hack::apps::systems::scrolling::atomic
         };
     }
 
-    void ScraperScrollRuleProvider::tryAssignNeighbor_(std::size_t from, std::size_t to, int dx, int dy) const
+    void ScraperScrollRuleProvider::tryAssignNeighbor_(std::unordered_map<std::size_t, std::pair<int, int>>& grid, std::size_t from, std::size_t to, int dx, int dy) const
     {
-        const auto it = _grid.find(from);
-        if (it == _grid.end()) { return; }
+        auto itFrom = grid.find(from);
+        if (itFrom == grid.end()) return;
 
-        const auto [fx, fy] = it->second;
-        const auto nx = fx + dx;
-        const auto ny = fy + dy;
+        const auto [fx, fy] = itFrom->second;
+        const std::pair<int, int> want{ fx + dx, fy + dy };
 
-        // First assignment wins (assumes consistent room graph)
-        if (_grid.find(to) == _grid.end())
+        auto itTo = grid.find(to);
+        if (itTo == grid.end())
         {
-            _grid.emplace(to, std::make_pair(nx, ny));
+            // First time: assign.
+            grid.emplace(to, want);
+            return;
+        }
+
+        // Already assigned: verify consistency (DO NOT overwrite).
+        const auto& cur = itTo->second;
+        if (cur != want)
+        {
+            // Here is where a loop/inconsistent rules show up.
+            // Keep the existing one to avoid breaking the whole world mapping.
+            // Optional: log for debugging.
+            // e.g. Log("[ScrollGrid] conflict: to=%zu cur=(%d,%d) want=(%d,%d) from=%zu",
+            //          to, cur.first, cur.second, want.first, want.second, from);
         }
     }
 
     void ScraperScrollRuleProvider::ensureGridCacheBuilt_() const
     {
-        if (_gridBuilt) { return; }
-        _gridBuilt = true;
+        if (_gridBuilt) return;
 
-        _grid.clear();
-        _grid.emplace(0, std::make_pair(0, 0)); // page 0 -> origin
+        // Build into a temp map to avoid leaving _grid half-built on early exits.
+        decltype(_grid) tmp;
+        tmp.clear();
+        tmp.emplace(0, std::make_pair(0, 0)); // page 0 is the world origin anchor
 
         std::deque<std::size_t> q;
         q.push_back(0);
@@ -123,14 +136,16 @@ namespace mm2hack::apps::systems::scrolling::atomic
 
             const auto pushIfNew = [&](int16_t room, int dx, int dy)
                 {
-                    if (room < 0) { return; }
+                    if (room < 0) return;
+
                     const int idx = ToPageIndex(static_cast<uint8_t>(room));
-                    if (idx < 0) { return; }
+                    if (idx < 0) return;
 
                     const auto to = static_cast<std::size_t>(idx);
-                    const bool existed = (_grid.find(to) != _grid.end());
+                    const bool existed = (tmp.find(to) != tmp.end());
 
-                    tryAssignNeighbor_(p, to, dx, dy);
+                    // IMPORTANT: assign coords relative to p (or verify if already exists)
+                    tryAssignNeighbor_(tmp, p, to, dx, dy);
 
                     if (!existed)
                     {
@@ -144,5 +159,8 @@ namespace mm2hack::apps::systems::scrolling::atomic
             pushIfNew(UpRoom(p), 0, -1);
             pushIfNew(DownRoom(p), 0, +1);
         }
+
+        _grid.swap(tmp);
+        _gridBuilt = true;
     }
 }

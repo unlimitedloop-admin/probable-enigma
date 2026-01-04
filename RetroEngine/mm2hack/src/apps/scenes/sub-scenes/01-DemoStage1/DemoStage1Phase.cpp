@@ -84,6 +84,7 @@ namespace mm2hack::apps::scenes
                 if (const auto p = _pageGrid->ResolvePageIndexFromWorldPos(_player->pos); p)
                 {
                     _terrainProbe->SetCurrentPage(*p);
+                    _player->SetViewBounds(_scroll->CurrentPageBoundsWorld());
                 }
 
                 const double dt = runtime::GameContext::GetInstance().Time().DeltaSeconds();
@@ -122,6 +123,47 @@ namespace mm2hack::apps::scenes
             {
                 _player->pos += fx.playerDelta;
             }
+
+
+            // Test version...
+            //Vec2 delta{ 0,0 };
+            //Vec2 prev = _player ? _player->pos : Vec2::Zero();
+            //auto dt = runtime::GameContext::GetInstance().Time().DeltaSeconds();
+
+            //// request transfer は今まで通り
+            //if (_player)
+            //{
+            //    if (auto req = _player->ConsumeScrollRequest(); req)
+            //    {
+            //        _scroll->RequestFixedScroll(*req);
+            //    }
+            //}
+
+            //// --- Scroll first (only when locked) ---
+            //const bool locked = _scroll->IsScrollLocked(); // or your fx.fixedActive
+            //if (locked)
+            //{
+            //    _scroll->SetTargetPos(_player ? _player->pos : Vec2::Zero());
+            //    const auto fx = _scroll->Update(Vec2{ 0,0 });
+
+            //    if (_player)
+            //    {
+            //        _player->pos += fx.playerDelta;
+            //        _player->TickAnimation(dt);
+            //        delta = _player->pos - prev;
+            //    }
+            //    return;
+            //}
+
+            //// --- On controlling action scene path (your current order) ---
+            //if (_player)
+            //{
+            //    _player->SetInput(owner.Input());
+            //    _player->Update(dt);
+            //    delta = _player->pos - prev;
+            //}
+            //_scroll->SetTargetPos(_player ? _player->pos : Vec2::Zero());
+            //_scroll->Update(delta);
 
             _page_index_debug = static_cast<int>(_scroll->PageIndex());
             _player_pos_x_debug = _player ? _player->pos.x : 0;

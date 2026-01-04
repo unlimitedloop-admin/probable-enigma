@@ -6,6 +6,7 @@
 #include "apps/runtime/GameContext.h"
 #include "apps/systems/physics/CollisionLayer.h"
 #include "apps/systems/physics/TileAttribute.h"
+#include "apps/systems/scrolling/atomic/ScrollController.h"
 #include "apps/systems/scrolling/atomic/ScrollTypes.h"
 #include "apps/systems/view/RenderContext.h"
 #include "apps/systems/view/ViewState.h"
@@ -21,11 +22,12 @@
 #include "states/LaunchRunState.h"
 #include "states/RunningState.h"
 #include "states/StandingState.h"
-#include "apps/systems/scrolling/atomic/ScrollController.h"
 
 namespace mm2hack::apps::world::entity::avatar
 {
     using systems::physics::CollisionLayer;
+    using systems::scrolling::atomic::ScrollController;
+    using systems::scrolling::atomic::ViewBounds;
 
     PlayerEntity::PlayerEntity(SpriteManagerId id)
         : _id(id), _half{ 16.0, 16.0 }
@@ -50,7 +52,7 @@ namespace mm2hack::apps::world::entity::avatar
             /* onGround */ onGround, /* justLanded */ false, /* isHitCeiling */ false, /* prevOnGround */ onGround,
             facingLR, texture, _animeStepper,
             /* probes */ _probes, /* prelimProbes */ _probes, this->Bounds(), _terrainProbe, _ladderService,
-            /* vBounds */ {}, /* pendingFixedScroll */ ScrollDir::None
+            /* vBounds */ _vBounds, /* pendingFixedScroll */ ScrollDir::None
         };
 
         refreshProbes_(cx);
@@ -156,6 +158,14 @@ namespace mm2hack::apps::world::entity::avatar
     const IEntity& PlayerEntity::OwnerEntity() const noexcept { return *this; }
 
     void PlayerEntity::SetCollidable(bool v) noexcept { _collidable = v; }
+
+    void PlayerEntity::SetViewBounds(const ::mm2hack::apps::systems::scrolling::atomic::ViewBounds& b) noexcept
+    {
+        _vBounds.leftX = b.leftX;
+        _vBounds.rightX = b.rightX;
+        _vBounds.topY = b.topY;
+        _vBounds.bottomY = b.bottomY;
+    }
 
     [[nodiscard]] std::optional<FixedScrollRequest> PlayerEntity::ConsumeScrollRequest() noexcept
     {

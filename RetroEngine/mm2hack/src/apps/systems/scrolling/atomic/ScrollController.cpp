@@ -29,7 +29,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
         const int page_w = _params.tile_px * _tileX;
         const int page_h = _params.tile_px * _tileY;
 
-        constexpr double kCamStep    = 0x04.00p0;      // 4.0 px/frame
+        constexpr double kCamStep    = 0x04.00p0;   // 4.0 px/frame
         constexpr double kPlayerStep = 0x00.C0p0;   // 0.75 px/frame
         constexpr double kCarryRatio = kPlayerStep / kCamStep; // 0.1875
 
@@ -76,6 +76,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
                 _page_index = _anim.State().to_index;
                 _cam.x = 0.0; _cam.y = 0.0;
                 _anim.Reset();
+                _carryTotalPx = 0.0;
 
                 updateViewState_();
                 return fx;
@@ -93,6 +94,14 @@ namespace mm2hack::apps::systems::scrolling::atomic
 
             if (tryStartFixed_(req, page_w, page_h))
             {
+                // Added from now on (test)
+                const double need = (req.dir == ScrlDir::Left || req.dir == ScrlDir::Right)
+                    ? static_cast<double>(page_w)
+                    : static_cast<double>(page_h);
+
+                constexpr double kCarryRatio = 0x00.C0p0 / 0x04.00p0;   // 0.1875 (kCarryRatio = kPlayerStep / kCamStep)
+                _carryTotalPx = need * kCarryRatio;
+
                 _freezeFrames = kFreezeOnStart;
                 updateViewState_();
                 return fx;
@@ -147,6 +156,21 @@ namespace mm2hack::apps::systems::scrolling::atomic
     bool ScrollController::IsScrollLocked() const noexcept
     {
         return _anim.Active() || _pending_fixed.has_value() || (_freezeFrames > 0);
+    }
+
+    ViewBounds ScrollController::CurrentPageBoundsWorld() const noexcept
+    {
+        const int page_w = _params.tile_px * config::SystemConfig::kTileCountX;
+        const int page_h = _params.tile_px * config::SystemConfig::kTileCountY;
+
+        const auto origin = _rules.PageOriginPx(_page_index, page_w, page_h);
+
+        ViewBounds b{};
+        b.leftX = origin.x;
+        b.rightX = origin.x + static_cast<double>(page_w);
+        b.topY = origin.y;
+        b.bottomY = origin.y + static_cast<double>(page_h);
+        return b;
     }
 
     bool ScrollController::IsFreezeFrames() const noexcept
@@ -559,13 +583,45 @@ namespace mm2hack::apps::systems::scrolling::atomic
 
     void ScrollController::updateViewState_()
     {
+        const int page_w = _params.tile_px * _tileX;
+        const int page_h = _params.tile_px * _tileY;
+
+        // Base: current page origin + free cam
+        auto origin = _rules.PageOriginPx(_page_index, page_w, page_h);
+        double viewWorldX = origin.x + _cam.x;
+        double viewWorldY = origin.y + _cam.y;
+
+        // --- Fixed scroll / freeze-draw: camera is driven by animation progress ---
+        const PageScroll* pg = nullptr;
+        if (_anim.Active()) pg = &_anim.State();
+        else if (_freeze_draw.has_value()) pg = &(*_freeze_draw);
+
+        if (pg && pg->active)
+        {
+            // IMPORTANT: during animation we draw FROM page (from_index)
+            auto fromOrigin = _rules.PageOriginPx(pg->from_index, page_w, page_h);
+            viewWorldX = fromOrigin.x;
+            viewWorldY = fromOrigin.y;
+
+            const double prog = pg->progress;
+
+            switch (pg->dir)
+            {
+            case PageScroll::Dir::Right: viewWorldX += prog; break; // BG: DrawPage(from, -prog)
+            case PageScroll::Dir::Left:  viewWorldX -= prog; break; // BG: DrawPage(from, +prog)
+            case PageScroll::Dir::Down:  viewWorldY += prog; break;
+            case PageScroll::Dir::Up:    viewWorldY -= prog; break;
+            default: break;
+            }
+
+            // optional: keep cam=0 while anim, that's fine
+            // _cam.x = 0; _cam.y = 0;
+        }
+
+        _viewState.viewWorldX = viewWorldX;
+        _viewState.viewWorldY = viewWorldY;
         _viewState.camX = _cam.x;
         _viewState.camY = _cam.y;
-
-        _viewState.viewWorldX = _view_world.x;
-        _viewState.viewWorldY = _view_world.y;
-
-        _viewState.pageIndex = _page_index;
     }
 
     std::optional<std::size_t> ScrollController::resolveFixedNeighbor_(PageScroll::Dir dir, std::size_t from) const
@@ -613,7 +669,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
         const auto to = resolveFixedNeighbor_(req.dir, from);
         if (!to) return false;
 
-        _carryTotalPx = 2.0 * std::max(0.0, req.edgeGapPx); // ★あなたの仕様
+        _carryTotalPx = 2.0 * std::max(0.0, req.edgeGapPx);
         _cam.x = 0.0;
         _cam.y = 0.0;
 

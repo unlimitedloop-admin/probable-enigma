@@ -51,29 +51,27 @@ namespace mm2hack::apps::world::entity::avatar::states
         // We base this on the movement that will actually happen this frame.
         if (intent.active)
         {
-            const double actualDx = intent.speed * static_cast<double>(intent.dirSign);
+            constexpr double kTriggerGapPx = 14.0;
+            const double actualDx = intent.speed * intent.dirSign;
             if (actualDx > 0.0)
             {
-                FixedScrollRequest req{};
-                req.dir = PageScroll::Dir::Right;
+                const double frontX = cx.probes.frontLine.middlePoint.x;
+                const double rightEdge = cx.vBounds.rightX;
 
-                // Calculate edge gap in world px at request time.
-                const double frontX = cx.probes.frontLine.middlePoint.x;// world pos.
-                const double rightEdge = cx.vBounds.rightX;             // world pos.
-                req.edgeGapPx = std::max(0.0, rightEdge - frontX);
-
-                cx.pendingFixedScroll = req;
+                if (rightEdge - frontX <= kTriggerGapPx)
+                {
+                    cx.pendingFixedScroll = { PageScroll::Dir::Right, rightEdge - frontX };
+                }
             }
             else if (actualDx < 0.0)
             {
-                FixedScrollRequest req{};
-                req.dir = PageScroll::Dir::Left;
+                const double frontX = cx.probes.frontLine.middlePoint.x;
+                const double leftEdge = cx.vBounds.leftX;
 
-                // Calculate edge gap in world px at request time.
-                const double frontX = cx.probes.frontLine.middlePoint.x;// world pos.
-                const double leftEdge = cx.vBounds.leftX;               // world pos.
-                req.edgeGapPx = std::max(0.0, frontX - leftEdge);
-                cx.pendingFixedScroll = req;
+                if (frontX - leftEdge <= kTriggerGapPx)
+                {
+                    cx.pendingFixedScroll = { PageScroll::Dir::Left, frontX - leftEdge };
+                }
             }
         }
 
