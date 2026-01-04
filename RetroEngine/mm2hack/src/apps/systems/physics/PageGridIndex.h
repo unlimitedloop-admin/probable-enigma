@@ -100,6 +100,15 @@ namespace mm2hack::apps::systems::physics
             return it->second;
         }
 
+        // Convert world position to local (page-relative) position [0..pageSize)
+        [[nodiscard]]
+        double ToLocalPos(double worldPos, int pageSize) const noexcept
+        {
+            const int g = FloorDiv(worldPos, static_cast<double>(pageSize));
+            return worldPos - static_cast<double>(g) * pageSize;
+        }
+
+
     private:
         template <class GraphAdapter>
         void expandX_(GraphAdapter& src, int curPage, GridPos curGrid, int dir, std::queue<int>& q)

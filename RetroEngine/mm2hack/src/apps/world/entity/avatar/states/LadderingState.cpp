@@ -8,6 +8,7 @@
 #include "apps/systems/physics/ITerrainProbe.h"
 #include "apps/systems/physics/Probes.h"
 #include "apps/systems/physics/TileAttribute.h"
+#include "apps/systems/scrolling/atomic/ScrollTypes.h"
 #include "apps/world/entity/avatar/abilities/AnimationAbilities.h"
 #include "apps/world/entity/avatar/abilities/MovementAbilities.h"
 #include "apps/world/entity/avatar/AvatarStatus.h"
@@ -15,6 +16,7 @@
 #include "apps/world/entity/avatar/PlayerParams.h"
 #include "core/assembly/StateProvider.h"
 #include "input/Jpbtn.h"
+
 
 namespace mm2hack::apps::world::entity::avatar::states
 {
@@ -53,9 +55,52 @@ namespace mm2hack::apps::world::entity::avatar::states
     AvatarStatus LadderingState::Update(PlayerContext& cx, StateProvider* in, const PlayerTuning& t, double /*dt*/)
     {
         using namespace abilities;
+        using namespace systems::scrolling::atomic;
         // Climb movement
         const bool up = in->IsPressed(JPBTN::UP);
         const bool down = in->IsPressed(JPBTN::DOWN);
+
+        const auto fixedScrollLk = [&]()
+            {
+                using conf = config::SystemConfig;
+                const double actualDy = cx.vel.y;
+                if (actualDy != 0.0)
+                {
+                    const int page_w = conf::kTileCountX * conf::kTileSize;
+                    const int page_h = conf::kTileCountY * conf::kTileSize;
+
+                    // World Y of the probes before and after movement.
+                    const double probePrevWorldY = cx.prelimProbes.behindGround.middlePoint.y;
+                    const double probeCurrWorldY = cx.probes.behindGround.middlePoint.y + actualDy;
+
+                    const auto origin = cx.pageOriginPx;
+                    const double prevLocalY = probePrevWorldY - origin.y;
+                    const double currLocalY = probeCurrWorldY - origin.y;
+
+                    if (actualDy < 0.0)
+                    {
+                        // Up: cross local 0
+                        if (prevLocalY >= 0.0 && currLocalY < 0.0)
+                        {
+                            FixedScrollRequest req{};
+                            req.dir = PageScroll::Dir::Up;
+                            req.carryTotalPx = 0x06.00p0;
+                            cx.pendingFixedScroll = req;
+                        }
+                    }
+                    else if (actualDy > 0.0)
+                    {
+                        // Down: cross local 240
+                        if (prevLocalY < static_cast<double>(page_h) && currLocalY >= static_cast<double>(page_h))
+                        {
+                            FixedScrollRequest req{};
+                            req.dir = PageScroll::Dir::Down;
+                            req.carryTotalPx = 0x01.00p0;
+                            cx.pendingFixedScroll = req;
+                        }
+                    }
+                }
+            };
 
         // Always snap X to ladder center (warp is allowed)
         snapToLadderCenter_(cx, t);
@@ -79,6 +124,10 @@ namespace mm2hack::apps::world::entity::avatar::states
                 // Stop at ceiling. 
                 cx.vel.y = 0.0;
             }
+            else
+            {
+                fixedScrollLk();    // Handle fixed scrolling when climbing up
+            }
         }
         else if (down && !up)
         {
@@ -93,6 +142,10 @@ namespace mm2hack::apps::world::entity::avatar::states
                 cx.onGround = true;
                 cx.justLanded = true;
                 return AvatarStatus::Standing;
+            }
+            else
+            {
+                fixedScrollLk();    // Handle fixed scrolling when climbing down
             }
         }
         // !up && !down -> vel.y = 0.0, and 
@@ -117,6 +170,13 @@ namespace mm2hack::apps::world::entity::avatar::states
         auto [input, isTopAttrEmpty] = computeInputAndTopEmpty_(cx, in);
         LadderingAnim(cx, input, isTopAttrEmpty);
         return AvatarStatus::Laddering;
+    }
+
+    void LadderingState::TickAnimationOnly(AnimeContext& ax, StateProvider* in, const PlayerTuning& t, double dt)
+    {
+        using namespace abilities;
+
+        LadderingAnim(ax);  // Not move on its own.
     }
 
     bool LadderingState::isOnLadder_(const PlayerContext& cx, const PlayerTuning& t) const noexcept

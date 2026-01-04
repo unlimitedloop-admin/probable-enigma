@@ -109,6 +109,7 @@ namespace mm2hack::apps::world::entity::avatar::abilities
         return true;
     }
 
+    // Laddering animation
     inline void LadderingAnim(PlayerContext& cx, const int input, const bool isTopAttrEmpty)
     {
         // Simple climbing animation between LadderingA and LadderingB.
@@ -131,6 +132,22 @@ namespace mm2hack::apps::world::entity::avatar::abilities
         {
             // input == -1 is climbing up, Change to a specified sprite tile near the top of the ladder.
             cx.texture = isTopAttrEmpty && (input == -1) ? static_cast<int>(STile::LadderTopB) : static_cast<int>(STile::LadderingB);
+        }
+    }
+
+    inline void LadderingAnim(AnimeContext& ax)
+    {
+        ax.animeStepper.step(9, 2); // 9 ticks per frame, 2 frames.
+
+        if (ax.animeStepper.frame < 1)
+        {
+            // input == -1 is climbing up, Change to a specified sprite tile near the top of the ladder.
+            ax.texture = static_cast<int>(STile::LadderingA);
+        }
+        else
+        {
+            // input == -1 is climbing up, Change to a specified sprite tile near the top of the ladder.
+            ax.texture = static_cast<int>(STile::LadderingB);
         }
     }
 

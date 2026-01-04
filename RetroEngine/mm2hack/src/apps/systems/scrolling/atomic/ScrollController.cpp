@@ -29,10 +29,6 @@ namespace mm2hack::apps::systems::scrolling::atomic
         const int page_w = _params.tile_px * _tileX;
         const int page_h = _params.tile_px * _tileY;
 
-        constexpr double kCamStep    = 0x04.00p0;   // 4.0 px/frame
-        constexpr double kPlayerStep = 0x00.C0p0;   // 0.75 px/frame
-        constexpr double kCarryRatio = kPlayerStep / kCamStep; // 0.1875
-
         // TODO: We'll split this into method later.
         if (_anim.Active())
         {
@@ -99,9 +95,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
                     ? static_cast<double>(page_w)
                     : static_cast<double>(page_h);
 
-                constexpr double kCarryRatio = 0x00.C0p0 / 0x04.00p0;   // 0.1875 (kCarryRatio = kPlayerStep / kCamStep)
-                _carryTotalPx = need * kCarryRatio;
-
+                _carryTotalPx = req.carryTotalPx;
                 _freezeFrames = kFreezeOnStart;
                 updateViewState_();
                 return fx;
@@ -144,6 +138,8 @@ namespace mm2hack::apps::systems::scrolling::atomic
         if (_anim.Active()) return false;
         if (_pending_fixed.has_value()) return false;
 
+        if (req.dir == PageScroll::Dir::None) return false;
+
         _pending_fixed = req;
         return true;
     }
@@ -158,19 +154,21 @@ namespace mm2hack::apps::systems::scrolling::atomic
         return _anim.Active() || _pending_fixed.has_value() || (_freezeFrames > 0);
     }
 
-    ViewBounds ScrollController::CurrentPageBoundsWorld() const noexcept
+    FixedScrollMeasure ScrollController::CurrentPageBoundsWorld() const noexcept
     {
         const int page_w = _params.tile_px * config::SystemConfig::kTileCountX;
         const int page_h = _params.tile_px * config::SystemConfig::kTileCountY;
 
         const auto origin = _rules.PageOriginPx(_page_index, page_w, page_h);
 
-        ViewBounds b{};
-        b.leftX = origin.x;
-        b.rightX = origin.x + static_cast<double>(page_w);
-        b.topY = origin.y;
-        b.bottomY = origin.y + static_cast<double>(page_h);
-        return b;
+        FixedScrollMeasure measure{};
+        measure.fromBounds.leftX = origin.x;
+        measure.fromBounds.rightX = origin.x + static_cast<double>(page_w);
+        measure.fromBounds.topY = origin.y;
+        measure.fromBounds.bottomY = origin.y + static_cast<double>(page_h);
+        measure.pageOriginPx = origin;
+
+        return measure;
     }
 
     bool ScrollController::IsFreezeFrames() const noexcept
@@ -506,79 +504,87 @@ namespace mm2hack::apps::systems::scrolling::atomic
         const int page_w = _params.tile_px * config::SystemConfig::kTileCountX;
         const int page_h = _params.tile_px * config::SystemConfig::kTileCountY;
 
+        // Compute cam relative to current base page.
+        auto origin = _rules.PageOriginPx(_page_index, page_w, page_h);
+        double camX = _view_world.x - origin.x;
+        double camY = _view_world.y - origin.y;
+
+        // Helper: whether neighbor is drawable by FREE scroll rules
+        auto has_left = [&]() { return resolveNextIndexX_(_rules, _page_index, -1) >= 0; };
+        auto has_right = [&]() { return resolveNextIndexX_(_rules, _page_index, +1) >= 0; };
+        auto has_up = [&]() { return resolveNextIndexY_(_rules, _page_index, -1) >= 0; };
+        auto has_down = [&]() { return resolveNextIndexY_(_rules, _page_index, +1) >= 0; };
+
+        // 1) If cam goes beyond one page, shift page_index accordingly.
+        //    (Allow negative cam and positive cam; we normalize by moving base page.)
         for (;;)
         {
-            const auto origin = _rules.PageOriginPx(_page_index, page_w, page_h);
+            bool moved = false;
 
-            // If viewWorld is outside current page, move page_index to the neighbor page.
-            if (_view_world.x < origin.x)
+            // Left overflow: camX < -page_w => base page should move LEFT
+            while (camX < -static_cast<double>(page_w))
             {
                 const int next = resolveNextIndexX_(_rules, _page_index, -1);
-                if (next < 0)
-                {
-                    _view_world.x = origin.x;
-                    break;
-                }
+                if (next < 0) { camX = -static_cast<double>(page_w); break; }
                 _page_index = static_cast<std::size_t>(next);
-                continue;
+                origin = _rules.PageOriginPx(_page_index, page_w, page_h);
+                camX += static_cast<double>(page_w);
+                moved = true;
             }
 
-            if (_view_world.x >= origin.x + static_cast<double>(page_w))
+            // Right overflow: camX >= +page_w => base page should move RIGHT
+            while (camX >= static_cast<double>(page_w))
             {
                 const int next = resolveNextIndexX_(_rules, _page_index, +1);
-                if (next < 0)
-                {
-                    _view_world.x = origin.x;
-                    break;
-                }
+                if (next < 0) { camX = static_cast<double>(page_w) - 1.0; break; }
                 _page_index = static_cast<std::size_t>(next);
-                continue;
+                origin = _rules.PageOriginPx(_page_index, page_w, page_h);
+                camX -= static_cast<double>(page_w);
+                moved = true;
             }
 
-            if (_view_world.y < origin.y)
+            // Up overflow
+            while (camY < -static_cast<double>(page_h))
             {
                 const int next = resolveNextIndexY_(_rules, _page_index, -1);
-                if (next < 0)
-                {
-                    _view_world.y = origin.y;
-                    break;
-                }
+                if (next < 0) { camY = -static_cast<double>(page_h); break; }
                 _page_index = static_cast<std::size_t>(next);
-                continue;
+                origin = _rules.PageOriginPx(_page_index, page_w, page_h);
+                camY += static_cast<double>(page_h);
+                moved = true;
             }
 
-            if (_view_world.y >= origin.y + static_cast<double>(page_h))
+            // Down overflow
+            while (camY >= static_cast<double>(page_h))
             {
                 const int next = resolveNextIndexY_(_rules, _page_index, +1);
-                if (next < 0)
-                {
-                    _view_world.y = origin.y;
-                    break;
-                }
+                if (next < 0) { camY = static_cast<double>(page_h) - 1.0; break; }
                 _page_index = static_cast<std::size_t>(next);
-                continue;
+                origin = _rules.PageOriginPx(_page_index, page_w, page_h);
+                camY -= static_cast<double>(page_h);
+                moved = true;
             }
 
-            // Now viewWorld is inside current page.
-            break;
+            if (!moved) break;
         }
 
-        // Update cam (local offset) from viewWorld.
-        const auto origin = _rules.PageOriginPx(_page_index, page_w, page_h);
-        _cam.x = _view_world.x - origin.x;
-        _cam.y = _view_world.y - origin.y;
+        // 2) IMPORTANT FIX:
+        //    Do not expose a side if the corresponding FREE neighbor doesn't exist.
+        //    In your renderer convention:
+        //      camX > 0 means "right neighbor area appears" (ox = -camX).
+        //      camX < 0 means "left neighbor area appears".
+        if (!has_right() && camX > 0.0) camX = 0.0;
+        if (!has_left() && camX < 0.0) camX = 0.0;
 
-        // Safety clamp: cam must stay within [0..page)
-        if (_cam.x < 0.0) _cam.x = 0.0;
-        if (_cam.y < 0.0) _cam.y = 0.0;
-        if (_cam.x >= static_cast<double>(page_w)) _cam.x = 0.0;
-        if (_cam.y >= static_cast<double>(page_h)) _cam.y = 0.0;
+        if (!has_down() && camY > 0.0) camY = 0.0;
+        if (!has_up() && camY < 0.0) camY = 0.0;
 
-        if (_cam.y < 0.0 || _cam.y >= static_cast<double>(page_h))
-        {
-            // log error: cam out of range
-            THROW_EXCEPTION(L"ScrollController: cam.y out of bounds after normalization", kClassName);
-        }
+        // 3) Commit cam and view_world consistently.
+        _cam.x = camX;
+        _cam.y = camY;
+
+        _view_world.x = origin.x + _cam.x;
+        _view_world.y = origin.y + _cam.y;
     }
 
     void ScrollController::updateViewState_()
@@ -669,7 +675,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
         const auto to = resolveFixedNeighbor_(req.dir, from);
         if (!to) return false;
 
-        _carryTotalPx = 2.0 * std::max(0.0, req.edgeGapPx);
+        _carryTotalPx = 2.0 * std::max(0.0, req.carryTotalPx);
         _cam.x = 0.0;
         _cam.y = 0.0;
 

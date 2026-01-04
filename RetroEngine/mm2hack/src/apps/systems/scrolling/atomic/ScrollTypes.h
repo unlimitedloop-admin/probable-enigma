@@ -35,7 +35,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
     struct FixedScrollRequest
     {
         PageScroll::Dir dir{ PageScroll::Dir::None };
-        double edgeGapPx{ 0.0 }; // "distance to edge" in world px at request time
+        double carryTotalPx{ 0.0 };     // Total distance to move the player during the whole fixed-scroll animation (world px).
     };
 
     // Helpers

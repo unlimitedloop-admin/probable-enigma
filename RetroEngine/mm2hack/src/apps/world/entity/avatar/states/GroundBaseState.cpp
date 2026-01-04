@@ -52,25 +52,44 @@ namespace mm2hack::apps::world::entity::avatar::states
         if (intent.active)
         {
             constexpr double kTriggerGapPx = 14.0;
-            const double actualDx = intent.speed * intent.dirSign;
+
+            // actual movement direction for this frame
+            const double actualDx = intent.speed * static_cast<double>(intent.dirSign);
+
             if (actualDx > 0.0)
             {
+                // world pos.s
                 const double frontX = cx.probes.frontLine.middlePoint.x;
                 const double rightEdge = cx.vBounds.rightX;
 
-                if (rightEdge - frontX <= kTriggerGapPx)
+                // only when the probe reaches near the edge
+                if ((rightEdge - frontX) <= kTriggerGapPx)
                 {
-                    cx.pendingFixedScroll = { PageScroll::Dir::Right, rightEdge - frontX };
+                    // only if the neighbor is FixedPage
+                    if (cx.scrollRules && IsFixedScroll(cx.scrollRules->RightType(cx.scrollPageIndex)))
+                    {
+                        FixedScrollRequest req{};
+                        req.dir = PageScroll::Dir::Right;
+                        req.carryTotalPx = 48.0;
+                        cx.pendingFixedScroll = req;
+                    }
                 }
             }
             else if (actualDx < 0.0)
             {
+                // world pos.
                 const double frontX = cx.probes.frontLine.middlePoint.x;
                 const double leftEdge = cx.vBounds.leftX;
 
-                if (frontX - leftEdge <= kTriggerGapPx)
+                if ((frontX - leftEdge) <= kTriggerGapPx)
                 {
-                    cx.pendingFixedScroll = { PageScroll::Dir::Left, frontX - leftEdge };
+                    if (cx.scrollRules && IsFixedScroll(cx.scrollRules->LeftType(cx.scrollPageIndex)))
+                    {
+                        FixedScrollRequest req{};
+                        req.dir = PageScroll::Dir::Left;
+                        req.carryTotalPx = 48.0;
+                        cx.pendingFixedScroll = req;
+                    }
                 }
             }
         }

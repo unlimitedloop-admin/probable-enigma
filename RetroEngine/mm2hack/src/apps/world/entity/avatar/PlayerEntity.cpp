@@ -49,10 +49,11 @@ namespace mm2hack::apps::world::entity::avatar
 
         PlayerContext cx{
             pos, vel,
-            /* onGround */ onGround, /* justLanded */ false, /* isHitCeiling */ false, /* prevOnGround */ onGround,
+            onGround, /* justLanded */ false, /* isHitCeiling */ false, /* prevOnGround */ onGround,
             facingLR, texture, _animeStepper,
-            /* probes */ _probes, /* prelimProbes */ _probes, this->Bounds(), _terrainProbe, _ladderService,
-            /* vBounds */ _vBounds, /* pendingFixedScroll */ ScrollDir::None
+            /* probes */ _probes, /* prelimProbes */ _probes, this->Bounds(),
+            _pageOriginPx,
+            _terrainProbe, _ladderService, _vBounds, _scrollRules, _scrollPageIndex, /* pendingFixedScroll */ { ScrollDir::None, 0.0 }
         };
 
         refreshProbes_(cx);
@@ -69,7 +70,7 @@ namespace mm2hack::apps::world::entity::avatar
 
         if (cx.pendingFixedScroll.dir != ScrollDir::None)
         {
-            requestScroll_(cx.pendingFixedScroll.dir);
+            requestScroll_(cx.pendingFixedScroll);
         }
 
 
@@ -167,6 +168,12 @@ namespace mm2hack::apps::world::entity::avatar
         _vBounds.bottomY = b.bottomY;
     }
 
+    void PlayerEntity::SetScrollContext(const IScrollRuleProvider* rules, std::size_t pageIndex)
+    {
+        _scrollRules = rules;
+        _scrollPageIndex = pageIndex;
+    }
+
     [[nodiscard]] std::optional<FixedScrollRequest> PlayerEntity::ConsumeScrollRequest() noexcept
     {
         if (!_pendingScrollReq.has_value()) return std::nullopt;
@@ -180,9 +187,9 @@ namespace mm2hack::apps::world::entity::avatar
         _probes.refreshAll(cx, _tuning.probeOffsets);
     }
 
-    void PlayerEntity::requestScroll_(ScrollDir dir) noexcept
+    void PlayerEntity::requestScroll_(FixedScrollRequest req) noexcept
     {
         if (_pendingScrollReq.has_value()) return; // keep first!
-        _pendingScrollReq = FixedScrollRequest{ dir };
+        _pendingScrollReq = std::move(req);
     }
 }

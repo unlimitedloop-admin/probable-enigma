@@ -14,6 +14,7 @@
 #include <utility>
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/world/entity/avatar/AvatarStatus.h"
+#include "apps/world/entity/avatar/PlayerContext.h"
 
 namespace mm2hack::apps::world::entity::avatar
 {
@@ -43,6 +44,8 @@ namespace mm2hack::apps::world::entity::avatar::states
         void OnExit(PlayerContext& cx, StateProvider* in, const PlayerTuning& t) override;
         // Update state and return next state ID
         AvatarStatus Update(PlayerContext& cx, StateProvider* in, const PlayerTuning& t, double /*dt*/) override;
+        // Animation only tick
+        void TickAnimationOnly(AnimeContext& ax, StateProvider* in, const PlayerTuning& t, double dt) override;
 
     private:
         // Check if the player is still on the ladder

@@ -55,7 +55,7 @@ namespace mm2hack::apps::world::entity::avatar::states
 
                 if (rightEdge - frontX <= kTriggerGapPx)
                 {
-                    cx.pendingFixedScroll = { PageScroll::Dir::Right, rightEdge - frontX };
+                    cx.pendingFixedScroll = { PageScroll::Dir::Right, 48.0 };
                 }
             }
             else if (actualDx < 0.0)
@@ -65,7 +65,7 @@ namespace mm2hack::apps::world::entity::avatar::states
 
                 if (frontX - leftEdge <= kTriggerGapPx)
                 {
-                    cx.pendingFixedScroll = { PageScroll::Dir::Left, frontX - leftEdge };
+                    cx.pendingFixedScroll = { PageScroll::Dir::Left, 48.0 };
                 }
             }
         }

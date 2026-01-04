@@ -77,6 +77,15 @@ namespace mm2hack::apps::systems::scrolling::atomic
         double bottomY{};
     };
 
+    // Using for fixed scroll request
+    struct FixedScrollMeasure
+    {
+        using Vec2 = foundation::math::Vec2;
+
+        ViewBounds fromBounds{};
+        Vec2 pageOriginPx{};
+    };
+
     // The main video screen policy and management of scrolling in 2D maps
     class ScrollController final
     {
@@ -112,7 +121,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
         // Check if any scroll is locked (fixed animating/pending or freeze)
         [[nodiscard]] bool IsScrollLocked() const noexcept;
         // Get current page bounds in world coordinates
-        [[nodiscard]] ViewBounds CurrentPageBoundsWorld() const noexcept;
+        [[nodiscard]] FixedScrollMeasure CurrentPageBoundsWorld() const noexcept;
         // Check if in freeze frames
         [[nodiscard]] bool IsFreezeFrames() const noexcept;
         // Synchronize with object center position
@@ -134,6 +143,8 @@ namespace mm2hack::apps::systems::scrolling::atomic
 
         PageScrollAnimator& Animator() noexcept { return _anim; }
         const PageScrollAnimator& Animator() const noexcept { return _anim; }
+
+        const IScrollRuleProvider* Rules() const noexcept { return &_rules; }
 
         // Camera -> ViewState representation
         const ViewState& GetView() const noexcept { return _viewState; }
@@ -163,9 +174,10 @@ namespace mm2hack::apps::systems::scrolling::atomic
         Vec2 _object_pos{};                             // Object position
         Vec2 _target_pos{};                             // Target position
         Camera _cam{};                                  // Camera
+
         PageScrollAnimator _anim{};                     // Page scroll animator
-        std::optional<FixedScrollRequest> _pending_fixed{};
-        double _carryTotalPx{ 0.0 }; // computed at start of fixed scroll
+        std::optional<FixedScrollRequest> _pending_fixed{}; // Pending fixed scroll request
+        double _carryTotalPx{ 0.0 };                    // computed at start of fixed scroll
 
         const int _tileX{ conf::kTileCountX };          // Tile count X
         const int _tileY{ conf::kTileCountY };          // Tile count Y

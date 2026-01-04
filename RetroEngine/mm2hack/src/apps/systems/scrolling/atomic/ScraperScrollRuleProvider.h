@@ -54,7 +54,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
 
         // Indirect calls to IMapPageSource
         int ToPageIndex(uint8_t room) const override;
-
+        // Calculate page origin in pixels based on grid layout
         Vec2 PageOriginPx(std::size_t page_index, int page_w, int page_h) const override;
 
     private:
