@@ -5,7 +5,6 @@
 #include "apps/systems/physics/ILadderService.h"
 #include "apps/systems/physics/ITerrainProbe.h"
 #include "apps/systems/physics/PageGridIndex.h"
-#include "apps/systems/scrolling/atomic/ScrollController.h"
 #include "apps/systems/scrolling/atomic/ScrollTypes.h"
 #include "apps/world/entity/avatar/abilities/AnimationAbilities.h"
 #include "apps/world/entity/avatar/abilities/MovementAbilities.h"
@@ -93,6 +92,7 @@ namespace mm2hack::apps::world::entity::avatar::states
         }
         else
         {
+            fixedScrollingY_(cx);
             cx.onGround = false;
         }
         cx.justLanded = (!cx.prevOnGround && cx.onGround);
@@ -125,21 +125,6 @@ namespace mm2hack::apps::world::entity::avatar::states
         return AvatarStatus::Hovering;
     }
 
-    // Resolve vertical collision when a hit is reported by SweepVertical.
-    void HoveringState::resolveVerticalCollision_(PlayerContext& cx, const PlayerTuning& t, double origVelY, const apps::systems::physics::SweepVHit& hit) noexcept
-    {
-        cx.vel.y = hit.maxDistanceY;
-
-        // If hit the ceiling and "moving up (jumping)", replace with specified speed.
-        if (hit.kind == systems::physics::VHitKind::Ceiling && origVelY < 0.0)
-        {
-            cx.vel.y = 0.0;
-        }
-
-        // onGround is only for floor detection.
-        cx.onGround = (hit.kind == systems::physics::VHitKind::Floor);
-    }
-
     bool HoveringState::tryEnterLadder_(PlayerContext& cx, StateProvider* in, const PlayerTuning& t) const
     {
         if (cx.ladder == nullptr)
@@ -162,5 +147,53 @@ namespace mm2hack::apps::world::entity::avatar::states
         }
 
         return false;
+    }
+
+    // Resolve vertical collision when a hit is reported by SweepVertical.
+    void HoveringState::resolveVerticalCollision_(PlayerContext& cx, const PlayerTuning& t, double origVelY, const apps::systems::physics::SweepVHit& hit) noexcept
+    {
+        cx.vel.y = hit.maxDistanceY;
+
+        // If hit the ceiling and "moving up (jumping)", replace with specified speed.
+        if (hit.kind == systems::physics::VHitKind::Ceiling && origVelY < 0.0)
+        {
+            cx.vel.y = 0.0;
+        }
+
+        // onGround is only for floor detection.
+        cx.onGround = (hit.kind == systems::physics::VHitKind::Floor);
+    }
+
+    void HoveringState::fixedScrollingY_(PlayerContext& cx) const noexcept
+    {
+        using conf = config::SystemConfig;
+        using namespace systems::scrolling::atomic;
+
+        const int page_h = conf::kTileCountY * conf::kTileSize;
+        const double actualDy = cx.vel.y;
+        
+        // Falling down only.
+        if (actualDy > 0.0)
+        {
+            // World Y of the probes before and after movement.
+            const double probePrevWorldY = cx.prelimProbes.behindGround.middlePoint.y;
+            const double probeCurrWorldY = cx.probes.behindGround.middlePoint.y + actualDy;
+
+            const auto origin = cx.pageOriginPx;
+            const double prevLocalY = probePrevWorldY - origin.y;
+            const double currLocalY = probeCurrWorldY - origin.y;
+
+            if (prevLocalY < static_cast<double>(page_h) && currLocalY >= static_cast<double>(page_h))
+            {
+                FixedScrollRequest req{};
+                req.dir = PageScroll::Dir::Down;
+                req.carryTotalPx = 0x01.00p0;
+                cx.pendingFixedScroll = req;
+            }
+        }
+        else
+        {
+            // NOTE: Cannot scroll up when moving up in Hovering state.
+        }
     }
 }

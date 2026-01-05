@@ -176,7 +176,7 @@ namespace mm2hack::apps::scenes
 
     void DemoStage1::RenderOverlay()
     {
-        if (_phase) { _phase->RenderOverlay(); }
+        //if (_phase) { _phase->RenderOverlay(); }
     }
 
     void DemoStage1::QueuePhase(std::unique_ptr<IDemoStage1Phase> next, PhaseFadePlan nextPlan)

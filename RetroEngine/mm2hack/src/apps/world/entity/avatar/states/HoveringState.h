@@ -46,6 +46,9 @@ namespace mm2hack::apps::world::entity::avatar::states
         // origVelY: Vertical velocity before Sweep.
         void resolveVerticalCollision_(PlayerContext& cx, const PlayerTuning& t, double origVelY, const ::mm2hack::apps::systems::physics::SweepVHit& hit) noexcept;
 
+        // Handle fixed scrolling when moving down.
+        void fixedScrollingY_(PlayerContext& cx) const noexcept;
+
     private:
         const std::wstring kClassName{ L"HoveringState" };
     };
