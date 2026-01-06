@@ -177,10 +177,12 @@
     <ClCompile Include="src\apps\systems\physics\CollisionLayer.cpp" />
     <ClCompile Include="src\apps\systems\physics\CollisionSystem.cpp" />
     <ClCompile Include="src\apps\systems\physics\TileQueryService.cpp" />
+    <ClCompile Include="src\apps\systems\scrolling\atomic\FixedScrollDriver.cpp" />
     <ClCompile Include="src\apps\systems\scrolling\atomic\MapRenderer2D.cpp" />
     <ClCompile Include="src\apps\systems\scrolling\atomic\PageScrollAnimator.cpp" />
     <ClCompile Include="src\apps\systems\scrolling\atomic\ScraperScrollRuleProvider.cpp" />
     <ClCompile Include="src\apps\systems\scrolling\atomic\ScrollController.cpp" />
+    <ClCompile Include="src\apps\systems\scrolling\atomic\ScrollFreezeState.cpp" />
     <ClCompile Include="src\apps\systems\scrolling\effect\BgWobble2D.cpp" />
     <ClCompile Include="src\apps\systems\scrolling\effect\BgWobblePass.cpp" />
     <ClCompile Include="src\apps\systems\audio\AudioConfigLoader.cpp" />
@@ -310,6 +312,8 @@
     <ClInclude Include="src\apps\systems\physics\ITileMapProvider.h" />
     <ClInclude Include="src\apps\systems\physics\TileAttribute.h" />
     <ClInclude Include="src\apps\systems\physics\TileQueryService.h" />
+    <ClInclude Include="src\apps\systems\scrolling\atomic\FixedScrollDriver.h" />
+    <ClInclude Include="src\apps\systems\scrolling\atomic\ScrollFreezeState.h" />
     <ClInclude Include="src\apps\world\entity\avatar\abilities\AnimationAbilities.h" />
     <ClInclude Include="src\apps\systems\physics\LadderService.h" />
     <ClInclude Include="src\apps\systems\physics\ILadderService.h" />

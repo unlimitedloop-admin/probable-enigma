@@ -14,9 +14,11 @@
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/systems/view/ViewState.h"
 #include "config/SystemConfig.h"
+#include "FixedScrollDriver.h"
 #include "IScrollRuleProvider.h"
 #include "MapRenderer2D.h"
 #include "PageScrollAnimator.h"
+#include "ScrollFreezeState.h"
 #include "ScrollTypes.h"
 
 namespace mm2hack::apps::systems::scrolling::atomic
@@ -87,7 +89,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
     };
 
     // The main video screen policy and management of scrolling in 2D maps
-    class ScrollController final
+    class ScrollController final : public IFixedNeighborResolver
     {
         using ViewState = apps::systems::view::ViewState;
         using conf      = config::SystemConfig;
@@ -102,7 +104,10 @@ namespace mm2hack::apps::systems::scrolling::atomic
         };
 
         ScrollController(IScrollRuleProvider& rules, MapRenderer2D& renderer, Params params)
-            : _rules(rules), _renderer(renderer), _params(params)
+            : _rules(rules)
+            , _renderer(renderer)
+            , _params(params)
+            , _fixed_driver(_anim, *this)
         {
         }
 
@@ -124,6 +129,9 @@ namespace mm2hack::apps::systems::scrolling::atomic
         [[nodiscard]] FixedScrollMeasure CurrentPageBoundsWorld() const noexcept;
         // Check if in freeze frames
         [[nodiscard]] bool IsFreezeFrames() const noexcept;
+
+
+        std::optional<std::size_t> ResolveFixedNeighbor(PageScroll::Dir dir, std::size_t from) const override;
         // Synchronize with object center position
         void SyncWithObjectCenter(const Vec2& object_center, bool has_adj_x, bool has_adj_y, const Vec2& screen_px, const Vec2& map_px, ViewState& out_view);
         // Debug HUD render
@@ -160,33 +168,29 @@ namespace mm2hack::apps::systems::scrolling::atomic
         void updateViewState_();                        // Update ViewState representation
 
         std::optional<std::size_t> resolveFixedNeighbor_(PageScroll::Dir dir, std::size_t from) const;
-        bool tryStartFixed_(const FixedScrollRequest& req, int page_w, int page_h);
+        void updateFreeScroll_(const Vec2& input_delta) noexcept;   // Update free scroll
 
     private:
         const std::wstring kClassName{ L"ScrollController" };
 
-        IScrollRuleProvider& _rules;                    // Scroll rules
-        MapRenderer2D& _renderer;                       // Map renderer
-        Params _params{};                               // Parameters
+        IScrollRuleProvider& _rules;                        // Scroll rules
+        MapRenderer2D& _renderer;                           // Map renderer
+        Params _params{};                                   // Parameters
 
-        ScrollKind _mode{ ScrollKind::None };           // Current scroll mode
-        std::size_t _page_index{ 0 };                   // Current page index
-        Vec2 _object_pos{};                             // Object position
-        Vec2 _target_pos{};                             // Target position
-        Camera _cam{};                                  // Camera
+        Vec2 _view_world{};                                 // World position of the view's top-left.
+        ViewState _viewState{};                             // View state representation
 
-        PageScrollAnimator _anim{};                     // Page scroll animator
-        std::optional<FixedScrollRequest> _pending_fixed{}; // Pending fixed scroll request
-        double _carryTotalPx{ 0.0 };                    // computed at start of fixed scroll
+        ScrollKind _mode{ ScrollKind::None };               // Current scroll mode
+        std::size_t _page_index{ 0 };                       // Current page index
+        Vec2 _object_pos{};                                 // Object position
+        Vec2 _target_pos{};                                 // Target position
+        Camera _cam{};                                      // Camera
+        PageScrollAnimator _anim{};                         // Page scroll animator
 
-        const int _tileX{ conf::kTileCountX };          // Tile count X
-        const int _tileY{ conf::kTileCountY };          // Tile count Y
-        std::optional<PageScroll> _freeze_draw{};       // draw-only snapshot
-        int _freezeFrames{ 0 };
-        static constexpr int kFreezeOnStart = 30;
-        static constexpr int kFreezeOnEnd = 30;
+        const int _tileX{ conf::kTileCountX };              // Tile count X
+        const int _tileY{ conf::kTileCountY };              // Tile count Y
 
-        Vec2 _view_world{};                             // World position of the view's top-left.
-        ViewState _viewState{};                         // View state representation
+        ScrollFreezeState _fixed_freeze{};                  // Fixed scroll freeze state (Composition class)
+        FixedScrollDriver _fixed_driver;                    // Fixed scroll driver (Composition class)
     };
 }

@@ -110,6 +110,8 @@
     <ClCompile Include="src\utils\decimal_decoder.cpp" />
     <ClCompile Include="src\apps\systems\physics\LadderService.cpp" />
     <ClCompile Include="src\apps\world\stage\RoomGraphAdapter.cpp" />
+    <ClCompile Include="src\apps\systems\scrolling\atomic\ScrollFreezeState.cpp" />
+    <ClCompile Include="src\apps\systems\scrolling\atomic\FixedScrollDriver.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
@@ -304,6 +306,8 @@
     <ClInclude Include="src\apps\systems\physics\LadderService.h" />
     <ClInclude Include="src\apps\systems\physics\PageGridIndex.h" />
     <ClInclude Include="src\apps\world\entity\IAnimTickable.h" />
+    <ClInclude Include="src\apps\systems\scrolling\atomic\ScrollFreezeState.h" />
+    <ClInclude Include="src\apps\systems\scrolling\atomic\FixedScrollDriver.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />
