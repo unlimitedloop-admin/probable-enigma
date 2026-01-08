@@ -5,6 +5,7 @@
 #include <algorithm>
 #include "ScrollController.h" // if Camera/ScrollEffect are in there; otherwise include their headers.
 #include "ScrollFreezeState.h"
+#include "ScrollNeighborResolver.h"
 #include "ScrollTypes.h"
 
 namespace mm2hack::apps::systems::scrolling::atomic
@@ -55,15 +56,20 @@ namespace mm2hack::apps::systems::scrolling::atomic
             }
         }
 
-        return false;
+        return false;   // NOTE: Fixed scroll inactive! (free scroll may proceed by ScrollController)
     }
 
     bool FixedScrollDriver::tryStart_(const FixedScrollRequest& req, std::size_t& page_index, int page_w, int page_h, Camera& cam) noexcept
     {
         (void)page_w;
         (void)page_h;
-        const auto from_index = page_index;
 
+        if (req.dir == PageScroll::Dir::None)
+        {
+            return false;
+        }
+
+        const auto from_index = page_index;
         const std::optional<std::size_t> to = _resolver.ResolveFixedNeighbor(req.dir, from_index);
         if (!to.has_value())
         {

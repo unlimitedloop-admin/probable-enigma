@@ -15,8 +15,9 @@
 namespace mm2hack::apps::systems::scrolling::atomic
 {
     // The interface for providing scrolling rules per page
-    struct IScrollRuleProvider
+    class IScrollRuleProvider
     {
+    public:
         virtual ~IScrollRuleProvider() = default;
 
         virtual ScrollKind RightType(std::size_t page_index) const = 0;

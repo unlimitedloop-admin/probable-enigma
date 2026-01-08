@@ -9,7 +9,6 @@
 #pragma once
 
 #include <optional>
-#include "apps/foundation/math/CoordinateTypes.h"
 #include "ScrollTypes.h"
 
 namespace mm2hack::apps::systems::scrolling::atomic

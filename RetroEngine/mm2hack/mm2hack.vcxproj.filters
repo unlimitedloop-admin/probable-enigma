@@ -112,6 +112,8 @@
     <ClCompile Include="src\apps\world\stage\RoomGraphAdapter.cpp" />
     <ClCompile Include="src\apps\systems\scrolling\atomic\ScrollFreezeState.cpp" />
     <ClCompile Include="src\apps\systems\scrolling\atomic\FixedScrollDriver.cpp" />
+    <ClCompile Include="src\apps\systems\scrolling\atomic\ScrollNeighborResolver.cpp" />
+    <ClCompile Include="src\apps\systems\scrolling\atomic\FreeScrollDriver.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
@@ -308,6 +310,8 @@
     <ClInclude Include="src\apps\world\entity\IAnimTickable.h" />
     <ClInclude Include="src\apps\systems\scrolling\atomic\ScrollFreezeState.h" />
     <ClInclude Include="src\apps\systems\scrolling\atomic\FixedScrollDriver.h" />
+    <ClInclude Include="src\apps\systems\scrolling\atomic\ScrollNeighborResolver.h" />
+    <ClInclude Include="src\apps\systems\scrolling\atomic\FreeScrollDriver.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

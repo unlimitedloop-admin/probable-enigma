@@ -9,16 +9,17 @@
 #pragma once
 
 #include <cstdlib>
-#include <optional>
 #include <string>
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/systems/view/ViewState.h"
 #include "config/SystemConfig.h"
 #include "FixedScrollDriver.h"
+#include "FreeScrollDriver.h"
 #include "IScrollRuleProvider.h"
 #include "MapRenderer2D.h"
 #include "PageScrollAnimator.h"
 #include "ScrollFreezeState.h"
+#include "ScrollNeighborResolver.h"
 #include "ScrollTypes.h"
 
 namespace mm2hack::apps::systems::scrolling::atomic
@@ -89,11 +90,9 @@ namespace mm2hack::apps::systems::scrolling::atomic
     };
 
     // The main video screen policy and management of scrolling in 2D maps
-    class ScrollController final : public IFixedNeighborResolver
+    class ScrollController final
     {
-        using ViewState = apps::systems::view::ViewState;
         using conf      = config::SystemConfig;
-        using Vec2      = foundation::math::Vec2;
 
     public:
         struct Params
@@ -103,16 +102,10 @@ namespace mm2hack::apps::systems::scrolling::atomic
             int view_h{ conf::kScreenHeight };  // Height of the screen
         };
 
-        ScrollController(IScrollRuleProvider& rules, MapRenderer2D& renderer, Params params)
-            : _rules(rules)
-            , _renderer(renderer)
-            , _params(params)
-            , _fixed_driver(_anim, *this)
-        {
-        }
+        ScrollController(IScrollRuleProvider& rules, MapRenderer2D& renderer, Params params);
 
         // Free scroll / fixed animation comprehensive update
-        ScrollEffect Update(const Vec2& input_delta);
+        ScrollEffect Update(const foundation::math::Vec2& input_delta);
 
         // Rendering
         void Render();
@@ -130,10 +123,15 @@ namespace mm2hack::apps::systems::scrolling::atomic
         // Check if in freeze frames
         [[nodiscard]] bool IsFreezeFrames() const noexcept;
 
-
-        std::optional<std::size_t> ResolveFixedNeighbor(PageScroll::Dir dir, std::size_t from) const override;
         // Synchronize with object center position
-        void SyncWithObjectCenter(const Vec2& object_center, bool has_adj_x, bool has_adj_y, const Vec2& screen_px, const Vec2& map_px, ViewState& out_view);
+        void SyncWithObjectCenter(
+            const foundation::math::Vec2& object_center,
+            bool has_adj_x,
+            bool has_adj_y,
+            const foundation::math::Vec2& screen_px,
+            const foundation::math::Vec2& map_px,
+            apps::systems::view::ViewState& out_view);
+
         // Debug HUD render
         void DebugHudRender(bool show) const;
 
@@ -141,56 +139,54 @@ namespace mm2hack::apps::systems::scrolling::atomic
         void SetPageIndex(std::size_t idx) noexcept;
         std::size_t PageIndex() const noexcept { return _page_index; }
 
-        Vec2& ObjectPos() noexcept { return _object_pos; }
-        const Vec2& ObjectPos() const noexcept { return _object_pos; }
+        // Set/Get object position (for scrolling reference)
+        foundation::math::Vec2& ObjectPos() noexcept { return _object_pos; }
+        const foundation::math::Vec2& ObjectPos() const noexcept { return _object_pos; }
 
-        void SetTargetPos(const Vec2& p) noexcept { _target_pos = p; }
+        // Set target position (for scrolling reference)
+        void SetTargetPos(const foundation::math::Vec2& p) noexcept { _target_pos = p; }
 
+        // Get camera
         Camera& GetCamera() noexcept { return _cam; }
         const Camera& GetCameraConst() const noexcept { return _cam; }
 
+        // ===== Get indirect access components =====
         PageScrollAnimator& Animator() noexcept { return _anim; }
         const PageScrollAnimator& Animator() const noexcept { return _anim; }
-
         const IScrollRuleProvider* Rules() const noexcept { return &_rules; }
-
-        // Camera -> ViewState representation
-        const ViewState& GetView() const noexcept { return _viewState; }
+        const apps::systems::view::ViewState& GetView() const noexcept { return _viewState; }
 
     private:
-        void updateAxisX_(double remain);               // Sub-update for each axis
-        void updateAxisY_(double remain);               // Sub-update for each axis
-        [[nodiscard]] int resolveNextIndexX_(const IScrollRuleProvider& rules, const std::size_t page_index, const int dir);
-        [[nodiscard]] int resolveNextIndexY_(const IScrollRuleProvider& rules, const std::size_t page_index, const int dir);
-
-        void drawNeighbors_();                          // Draw neighboring pages
-        void normalizeViewWorldToPage_();               // Normalize view world coordinates to page boundaries
-        void updateViewState_();                        // Update ViewState representation
-
-        std::optional<std::size_t> resolveFixedNeighbor_(PageScroll::Dir dir, std::size_t from) const;
-        void updateFreeScroll_(const Vec2& input_delta) noexcept;   // Update free scroll
+        void updateViewState_();    // Update view state representation
+        void drawNeighbors_();      // Draw neighboring pages
 
     private:
         const std::wstring kClassName{ L"ScrollController" };
 
-        IScrollRuleProvider& _rules;                        // Scroll rules
-        MapRenderer2D& _renderer;                           // Map renderer
-        Params _params{};                                   // Parameters
+        const int _tileX{ conf::kTileCountX };
+        const int _tileY{ conf::kTileCountY };
 
-        Vec2 _view_world{};                                 // World position of the view's top-left.
-        ViewState _viewState{};                             // View state representation
+        IScrollRuleProvider& _rules;
+        MapRenderer2D& _renderer;
+        Params _params{};
 
-        ScrollKind _mode{ ScrollKind::None };               // Current scroll mode
-        std::size_t _page_index{ 0 };                       // Current page index
-        Vec2 _object_pos{};                                 // Object position
-        Vec2 _target_pos{};                                 // Target position
-        Camera _cam{};                                      // Camera
-        PageScrollAnimator _anim{};                         // Page scroll animator
+        // Core state
+        foundation::math::Vec2 _view_world{};
+        apps::systems::view::ViewState _viewState{};
 
-        const int _tileX{ conf::kTileCountX };              // Tile count X
-        const int _tileY{ conf::kTileCountY };              // Tile count Y
+        ScrollKind _mode{ ScrollKind::None };
+        std::size_t _page_index{ 0 };
 
-        ScrollFreezeState _fixed_freeze{};                  // Fixed scroll freeze state (Composition class)
-        FixedScrollDriver _fixed_driver;                    // Fixed scroll driver (Composition class)
+        foundation::math::Vec2 _object_pos{};
+        foundation::math::Vec2 _target_pos{};
+        Camera _cam{};
+        PageScrollAnimator _anim{};
+
+        // Composition
+        ScrollNeighborResolver _neighbor;
+        FreeScrollDriver _free;
+
+        ScrollFreezeState _fixed_freeze{};
+        FixedScrollDriver _fixed_driver;
     };
 }
