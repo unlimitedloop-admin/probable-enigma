@@ -3,7 +3,7 @@
 //  Project: mm2hack
 //  ScrollNeighborResolver.h
 // 
-//  ** Descriptions **
+//  Provides a resolver for neighboring pages based on scroll rules.
 // 
 //==============================================================================
 #pragma once

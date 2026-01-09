@@ -8,8 +8,11 @@
 //==============================================================================
 #pragma once
 
+#include "apps/foundation/math/CoordinateTypes.h"
+
 namespace mm2hack::apps::systems::scrolling::atomic
 {
+    // Defines the type of scrolling behavior
     enum class ScrollKind : int
     {
         None = 0x00,
@@ -19,6 +22,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
         Free8Way = 0x0A         // 8-direction scroll
     };
 
+    // Represents the state of a page scroll animation
     struct PageScroll
     {
         enum class Dir { None, Right, Left, Down, Up };
@@ -32,10 +36,46 @@ namespace mm2hack::apps::systems::scrolling::atomic
         std::size_t to_index{ 0 };
     };
 
+    // Request for fixed page scroll
     struct FixedScrollRequest
     {
         PageScroll::Dir dir{ PageScroll::Dir::None };
         double carryTotalPx{ 0.0 };     // Total distance to move the player during the whole fixed-scroll animation (world px).
+    };
+
+    // Scroll effect result
+    struct ScrollEffect
+    {
+        bool fixedActive{ false };
+        foundation::math::Vec2 playerDelta{};   // apply to player.pos (world)
+    };
+
+    // Scroll mode enumeration
+    enum class ScrollMode : int
+    {
+        None = 0x00,
+        PlayerFollow,
+        FixedPage,
+        AutoScroll,
+        TargetFollow
+    };
+
+    // View boundary representation
+    struct ViewBounds
+    {
+        double leftX{};
+        double rightX{};
+        double topY{};
+        double bottomY{};
+    };
+
+    // Using for fixed scroll request
+    struct FixedScrollMeasure
+    {
+        using Vec2 = foundation::math::Vec2;
+
+        ViewBounds fromBounds{};
+        Vec2 pageOriginPx{};
     };
 
     // Helpers

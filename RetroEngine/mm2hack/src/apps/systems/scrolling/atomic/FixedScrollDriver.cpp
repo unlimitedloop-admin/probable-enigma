@@ -3,7 +3,7 @@
 #include "FixedScrollDriver.h"
 
 #include <algorithm>
-#include "ScrollController.h" // if Camera/ScrollEffect are in there; otherwise include their headers.
+#include "Camera.h"
 #include "ScrollFreezeState.h"
 #include "ScrollNeighborResolver.h"
 #include "ScrollTypes.h"

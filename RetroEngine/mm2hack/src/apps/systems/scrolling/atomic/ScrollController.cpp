@@ -4,11 +4,12 @@
 
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/systems/view/ViewState.h"
-#include "core/winapi/WindowManager.h"  // Use for draw reference lines for debug HUD
 #include "FreeScrollDriver.h"
 #include "IScrollRuleProvider.h"
 #include "MapRenderer2D.h"
 #include "ScrollTypes.h"
+
+#include "core/winapi/WindowManager.h"  // Use for draw reference lines for debug HUD
 
 namespace mm2hack::apps::systems::scrolling::atomic
 {
@@ -110,35 +111,6 @@ namespace mm2hack::apps::systems::scrolling::atomic
         return _fixed_freeze.IsActive();
     }
 
-    void ScrollController::SyncWithObjectCenter(
-        const Vec2& object_center, bool has_adj_x, bool has_adj_y,
-        const Vec2& screen_px, const Vec2& map_px, apps::systems::view::ViewState& out_view)
-    {
-        _object_pos = object_center; // Object position sync
-
-        auto clamp = [](double v, double lo, double hi) { return std::max(lo, std::min(v, hi)); };
-
-        if (IsAllowedFree(_mode))
-        {
-            _cam.x = has_adj_x ? (screen_px.x * 0.5)
-                : clamp(object_center.x, screen_px.x * 0.5, map_px.x - screen_px.x * 0.5);
-            _cam.y = has_adj_y ? (screen_px.y * 0.5)
-                : clamp(object_center.y, screen_px.y * 0.5, map_px.y - screen_px.y * 0.5);
-        }
-        else
-        {
-            // Fixed page: keep page pinned. Animation is handled by DrawAnimation.
-            if (!_anim.Active())
-            {
-                _cam.x = 0.0;
-                _cam.y = 0.0;
-            }
-        }
-
-        out_view.camX = _cam.x;
-        out_view.camY = _cam.y;
-    }
-
     void ScrollController::DebugHudRender(bool show) const
     {
         if (!show) return;
@@ -174,10 +146,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
         double viewWorldY = origin.y + _cam.y;
 
         // --- Fixed scroll / freeze-draw: camera is driven by animation progress ---
-        const PageScroll* pg = nullptr;
-        if (_anim.Active()) pg = &_anim.State();
-        else if (auto& snap = _fixed_freeze.DrawSnapshot(); snap.has_value()) pg = &(*snap);
-
+        const PageScroll* pg = activeFixedScrollState_();
         if (pg && pg->active)
         {
             // IMPORTANT: during animation we draw FROM page (from_index)
@@ -195,9 +164,6 @@ namespace mm2hack::apps::systems::scrolling::atomic
             case PageScroll::Dir::Up:    viewWorldY -= prog; break;
             default: break;
             }
-
-            // optional: keep cam=0 while anim, that's fine
-            // _cam.x = 0; _cam.y = 0;
         }
 
         _viewState.viewWorldX = viewWorldX;
@@ -206,133 +172,120 @@ namespace mm2hack::apps::systems::scrolling::atomic
         _viewState.camY = _cam.y;
     }
 
+    const PageScroll* ScrollController::activeFixedScrollState_() const noexcept
+    {
+        if (_anim.Active()) return &_anim.State();
+
+        const auto& snap = _fixed_freeze.DrawSnapshot();
+        if (snap.has_value()) return &(*snap);
+
+        return nullptr;
+    }
+
     void ScrollController::drawNeighbors_()
     {
+        using Dir = PageScroll::Dir;
+
         const int page_w = _params.tile_px * _tileX;
         const int page_h = _params.tile_px * _tileY;
 
         const int ox = -static_cast<int>(_cam.x);
         const int oy = -static_cast<int>(_cam.y);
 
-        const auto is_allowed = [](ScrollKind k) noexcept { return IsAllowedFree(k); };
-
-        auto to_page = [&](int16_t room) -> int
-            {
-                if (room < 0) return -1;
-                return _rules.ToPageIndex(static_cast<uint8_t>(room));
-            };
-
+        // Check if neighboring page areas are exposed on the screen (necessary determination)
         const bool needLeft = (ox > 0);
         const bool needRight = (ox + page_w < _params.view_w);
         const bool needUp = (oy > 0);
         const bool needDown = (oy + page_h < _params.view_h);
 
-        // RIGHT
-        if (needRight)
+        // Create need mask
+        enum NeedMask : unsigned
         {
-            const auto k = _rules.RightType(_page_index);
-            const int idx = to_page(_rules.RightRoom(_page_index));
-            if (is_allowed(k) && idx >= 0)
-            {
-                _renderer.DrawPage(static_cast<std::size_t>(idx), ox + page_w, oy);
-            }
-        }
+            kNeedNone = 0,
+            kNeedL = 1u << 0,
+            kNeedR = 1u << 1,
+            kNeedU = 1u << 2,
+            kNeedD = 1u << 3,
+        };
 
-        // LEFT
-        if (needLeft)
-        {
-            const auto k = _rules.LeftType(_page_index);
-            const int idx = to_page(_rules.LeftRoom(_page_index));
-            if (is_allowed(k) && idx >= 0)
-            {
-                _renderer.DrawPage(static_cast<std::size_t>(idx), ox - page_w, oy);
-            }
-        }
+        unsigned needMask = kNeedNone;
+        if (needLeft)  needMask |= kNeedL;
+        if (needRight) needMask |= kNeedR;
+        if (needUp)    needMask |= kNeedU;
+        if (needDown)  needMask |= kNeedD;
 
-        // DOWN
-        if (needDown)
-        {
-            const auto k = _rules.DownType(_page_index);
-            const int idx = to_page(_rules.DownRoom(_page_index));
-            if (is_allowed(k) && idx >= 0)
+        // Resolve one step (adjacent page): return std::nullopt if not possible
+        auto step = [&](std::size_t from, Dir d) -> std::optional<std::size_t>
             {
-                _renderer.DrawPage(static_cast<std::size_t>(idx), ox, oy + page_h);
-            }
-        }
+                int idx = -1;
 
-        // UP
-        if (needUp)
-        {
-            const auto k = _rules.UpType(_page_index);
-            const int idx = to_page(_rules.UpRoom(_page_index));
-            if (is_allowed(k) && idx >= 0)
-            {
-                _renderer.DrawPage(static_cast<std::size_t>(idx), ox, oy - page_h);
-            }
-        }
-
-        // RIGHT+DOWN
-        if (needRight && needDown)
-        {
-            const auto kr = _rules.RightType(_page_index);
-            const int r_idx = to_page(_rules.RightRoom(_page_index));
-            if (is_allowed(kr) && r_idx >= 0)
-            {
-                const auto kd = _rules.DownType(static_cast<std::size_t>(r_idx));
-                const int rd_idx = to_page(_rules.DownRoom(static_cast<std::size_t>(r_idx)));
-                if (is_allowed(kd) && rd_idx >= 0)
+                switch (d)
                 {
-                    _renderer.DrawPage(static_cast<std::size_t>(rd_idx), ox + page_w, oy + page_h);
+                case Dir::Right: idx = _neighbor.ResolveNextIndexX(from, +1); break;
+                case Dir::Left:  idx = _neighbor.ResolveNextIndexX(from, -1); break;
+                case Dir::Down:  idx = _neighbor.ResolveNextIndexY(from, +1); break;
+                case Dir::Up:    idx = _neighbor.ResolveNextIndexY(from, -1); break;
+                default: break;
+                }
+
+                if (idx < 0)
+                {
+                    return std::nullopt;
+                }
+
+                return static_cast<std::size_t>(idx);
+            };
+
+        struct DrawReq
+        {
+            unsigned need_mask{};
+            int dx_pages{};
+            int dy_pages{};
+            Dir path1{ Dir::None };
+            Dir path2{ Dir::None }; // 2nd step for corner. Straight lines remain None.
+        };
+
+        // Draw requests (4 straight + 4 diagonal)
+        // dx_pages/dy_pages indicate how many pages to offset from the current page.
+        constexpr std::array<DrawReq, 8> kReqs =
+        {
+            DrawReq{ kNeedR,          +1,  0, Dir::Right, Dir::None },
+            DrawReq{ kNeedL,          -1,  0, Dir::Left,  Dir::None },
+            DrawReq{ kNeedD,           0, +1, Dir::Down,  Dir::None },
+            DrawReq{ kNeedU,           0, -1, Dir::Up,    Dir::None },
+
+            DrawReq{ kNeedR | kNeedD, +1, +1, Dir::Right, Dir::Down },
+            DrawReq{ kNeedR | kNeedU, +1, -1, Dir::Right, Dir::Up   },
+            DrawReq{ kNeedL | kNeedD, -1, +1, Dir::Left,  Dir::Down },
+            DrawReq{ kNeedL | kNeedU, -1, -1, Dir::Left,  Dir::Up   },
+        };
+
+        for (const auto& req : kReqs)
+        {
+            // If not needed, skip.
+            if ((needMask & req.need_mask) != req.need_mask)
+            {
+                continue;
+            }
+
+            // Resolve adjacent pages along the path (1 step for straight lines, 2 steps for diagonals).
+            std::optional<std::size_t> idx = step(_page_index, req.path1);
+            if (!idx.has_value())
+            {
+                continue;
+            }
+
+            if (req.path2 != Dir::None)
+            {
+                idx = step(*idx, req.path2);
+                if (!idx.has_value())
+                {
+                    continue;
                 }
             }
-        }
 
-        // RIGHT+UP
-        if (needRight && needUp)
-        {
-            const auto kr = _rules.RightType(_page_index);
-            const int r_idx = to_page(_rules.RightRoom(_page_index));
-            if (is_allowed(kr) && r_idx >= 0)
-            {
-                const auto ku = _rules.UpType(static_cast<std::size_t>(r_idx));
-                const int ru_idx = to_page(_rules.UpRoom(static_cast<std::size_t>(r_idx)));
-                if (is_allowed(ku) && ru_idx >= 0)
-                {
-                    _renderer.DrawPage(static_cast<std::size_t>(ru_idx), ox + page_w, oy - page_h);
-                }
-            }
-        }
-
-        // LEFT+DOWN
-        if (needLeft && needDown)
-        {
-            const auto kl = _rules.LeftType(_page_index);
-            const int l_idx = to_page(_rules.LeftRoom(_page_index));
-            if (is_allowed(kl) && l_idx >= 0)
-            {
-                const auto kd = _rules.DownType(static_cast<std::size_t>(l_idx));
-                const int ld_idx = to_page(_rules.DownRoom(static_cast<std::size_t>(l_idx)));
-                if (is_allowed(kd) && ld_idx >= 0)
-                {
-                    _renderer.DrawPage(static_cast<std::size_t>(ld_idx), ox - page_w, oy + page_h);
-                }
-            }
-        }
-
-        // LEFT+UP
-        if (needLeft && needUp)
-        {
-            const auto kl = _rules.LeftType(_page_index);
-            const int l_idx = to_page(_rules.LeftRoom(_page_index));
-            if (is_allowed(kl) && l_idx >= 0)
-            {
-                const auto ku = _rules.UpType(static_cast<std::size_t>(l_idx));
-                const int lu_idx = to_page(_rules.UpRoom(static_cast<std::size_t>(l_idx)));
-                if (is_allowed(ku) && lu_idx >= 0)
-                {
-                    _renderer.DrawPage(static_cast<std::size_t>(lu_idx), ox - page_w, oy - page_h);
-                }
-            }
+            // Render the resolved neighboring page at the correct offset.
+            _renderer.DrawPage(*idx, ox + req.dx_pages * page_w, oy + req.dy_pages * page_h);
         }
     }
 }

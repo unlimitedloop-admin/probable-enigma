@@ -314,6 +314,7 @@
     <ClInclude Include="src\apps\systems\physics\ITileMapProvider.h" />
     <ClInclude Include="src\apps\systems\physics\TileAttribute.h" />
     <ClInclude Include="src\apps\systems\physics\TileQueryService.h" />
+    <ClInclude Include="src\apps\systems\scrolling\atomic\Camera.h" />
     <ClInclude Include="src\apps\systems\scrolling\atomic\FixedScrollDriver.h" />
     <ClInclude Include="src\apps\systems\scrolling\atomic\FreeScrollDriver.h" />
     <ClInclude Include="src\apps\systems\scrolling\atomic\ScrollFreezeState.h" />

@@ -312,6 +312,7 @@
     <ClInclude Include="src\apps\systems\scrolling\atomic\FixedScrollDriver.h" />
     <ClInclude Include="src\apps\systems\scrolling\atomic\ScrollNeighborResolver.h" />
     <ClInclude Include="src\apps\systems\scrolling\atomic\FreeScrollDriver.h" />
+    <ClInclude Include="src\apps\systems\scrolling\atomic\Camera.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

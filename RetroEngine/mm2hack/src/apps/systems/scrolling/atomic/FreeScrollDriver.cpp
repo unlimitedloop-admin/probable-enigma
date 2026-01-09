@@ -2,8 +2,8 @@
 
 #include "FreeScrollDriver.h"
 
-#include <algorithm>
-#include "ScrollController.h"       // TODO: Include Camera/ScrollEffect headers if they are defined elsewhere
+#include "Camera.h"
+#include "IScrollRuleProvider.h"
 #include "ScrollNeighborResolver.h"
 
 namespace mm2hack::apps::systems::scrolling::atomic

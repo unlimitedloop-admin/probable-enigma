@@ -3,7 +3,7 @@
 //  Project: mm2hack
 //  FreeScrollDriver.h
 // 
-//  ** Descriptions **
+//  Provides free-scroll management for both axes in 2D maps.
 // 
 //==============================================================================
 #pragma once
@@ -46,7 +46,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
         void updateAxisY_(
             const double remain, const Vec2& object_pos, const Vec2& target_pos,
             std::size_t& page_index, Vec2& view_world, Camera& cam) const;
-
+        // Normalization helper
         void normalizeViewWorldToPage_(std::size_t& page_index, Vec2& view_world, Camera& cam) const;
 
     private:

@@ -8,10 +8,10 @@
 //==============================================================================
 #pragma once
 
-#include <cstdlib>
 #include <string>
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/systems/view/ViewState.h"
+#include "Camera.h"
 #include "config/SystemConfig.h"
 #include "FixedScrollDriver.h"
 #include "FreeScrollDriver.h"
@@ -26,22 +26,6 @@ namespace mm2hack::apps::systems::scrolling::atomic
 {
     using foundation::math::kEps;
 
-    // View camera representation
-    struct Camera
-    {
-        using Scalar = systems::view::Scalar;
-        using conf = config::SystemConfig;
-
-        Scalar x{ 0 }, y{ 0 };
-        int vw{ conf::kScreenWidth }, vh{ conf::kScreenHeight };
-
-        static constexpr Scalar kCenterX = conf::kScreenWidth / 2.0;
-        static constexpr Scalar kCenterY = conf::kScreenHeight / 2.0;
-
-        static inline bool NearlyZero(Scalar v, Scalar eps = kEps) noexcept { return std::abs(v) <= eps; }
-        static inline bool NearlyEqual(Scalar a, Scalar b, Scalar eps = kEps) noexcept { return std::abs(a - b) <= eps; }
-    };
-
     // 2D difference representation
     struct Diff2
     {
@@ -54,39 +38,6 @@ namespace mm2hack::apps::systems::scrolling::atomic
         }
 
         void reset() noexcept { delta = Vec2::Zero(); }
-    };
-
-    // Interface for scroll policy
-    class IScrollPolicy
-    {
-    public:
-        virtual ~IScrollPolicy() = default;
-        virtual bool Update(const foundation::math::RectF& playerBox, Camera& cam, size_t& currentPageIndex, double dt) = 0;
-    };
-
-    // Scroll effect result
-    struct ScrollEffect
-    {
-        bool fixedActive{ false };
-        foundation::math::Vec2 playerDelta{}; // apply to player.pos (world)
-    };
-
-    // View boundary representation
-    struct ViewBounds
-    {
-        double leftX{};
-        double rightX{};
-        double topY{};
-        double bottomY{};
-    };
-
-    // Using for fixed scroll request
-    struct FixedScrollMeasure
-    {
-        using Vec2 = foundation::math::Vec2;
-
-        ViewBounds fromBounds{};
-        Vec2 pageOriginPx{};
     };
 
     // The main video screen policy and management of scrolling in 2D maps
@@ -109,8 +60,6 @@ namespace mm2hack::apps::systems::scrolling::atomic
 
         // Rendering
         void Render();
-        // Set scroll mode
-        void SetMode(ScrollKind m) noexcept { _mode = m; }
 
         // Request fixed page scroll. Returns false if rejected (no neighbor / not allowed / already animating)
         bool RequestFixedScroll(const FixedScrollRequest& req) noexcept;
@@ -123,21 +72,16 @@ namespace mm2hack::apps::systems::scrolling::atomic
         // Check if in freeze frames
         [[nodiscard]] bool IsFreezeFrames() const noexcept;
 
-        // Synchronize with object center position
-        void SyncWithObjectCenter(
-            const foundation::math::Vec2& object_center,
-            bool has_adj_x,
-            bool has_adj_y,
-            const foundation::math::Vec2& screen_px,
-            const foundation::math::Vec2& map_px,
-            apps::systems::view::ViewState& out_view);
-
         // Debug HUD render
         void DebugHudRender(bool show) const;
 
         // External interface
         void SetPageIndex(std::size_t idx) noexcept;
         std::size_t PageIndex() const noexcept { return _page_index; }
+
+        // Set/Get scroll mode
+        void SetScrollMode(ScrollMode mode) noexcept { _mode = mode; }
+        ScrollMode GetScrollMode() const noexcept { return _mode; }
 
         // Set/Get object position (for scrolling reference)
         foundation::math::Vec2& ObjectPos() noexcept { return _object_pos; }
@@ -157,8 +101,9 @@ namespace mm2hack::apps::systems::scrolling::atomic
         const apps::systems::view::ViewState& GetView() const noexcept { return _viewState; }
 
     private:
-        void updateViewState_();    // Update view state representation
-        void drawNeighbors_();      // Draw neighboring pages
+        void updateViewState_();                                    // Update view state representation
+        const PageScroll* activeFixedScrollState_() const noexcept; // Get active fixed scroll state (anim or freeze)
+        void drawNeighbors_();                                      // Draw neighboring pages
 
     private:
         const std::wstring kClassName{ L"ScrollController" };
@@ -174,7 +119,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
         foundation::math::Vec2 _view_world{};
         apps::systems::view::ViewState _viewState{};
 
-        ScrollKind _mode{ ScrollKind::None };
+        ScrollMode _mode{ ScrollMode::PlayerFollow };
         std::size_t _page_index{ 0 };
 
         foundation::math::Vec2 _object_pos{};

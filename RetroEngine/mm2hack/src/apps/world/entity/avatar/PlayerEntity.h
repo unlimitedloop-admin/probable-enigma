@@ -24,7 +24,6 @@
 #include "apps/systems/physics/Probes.h"
 #include "apps/systems/physics/TileAttribute.h"
 #include "apps/systems/scrolling/atomic/IScrollRuleProvider.h"
-#include "apps/systems/scrolling/atomic/ScrollController.h"
 #include "apps/systems/scrolling/atomic/ScrollTypes.h"
 #include "apps/systems/view/RenderContext.h"
 #include "apps/world/entity/common/AnimeStepper.h"
