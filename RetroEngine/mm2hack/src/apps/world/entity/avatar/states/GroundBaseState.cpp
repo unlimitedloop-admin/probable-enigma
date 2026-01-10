@@ -56,7 +56,7 @@ namespace mm2hack::apps::world::entity::avatar::states
             // actual movement direction for this frame
             const double actualDx = intent.speed * static_cast<double>(intent.dirSign);
 
-            if (actualDx > 0.0)
+            if (cx.pendingFixedScroll.available && actualDx > 0.0)
             {
                 // world pos.s
                 const double frontX = cx.probes.frontLine.middlePoint.x;
@@ -75,7 +75,7 @@ namespace mm2hack::apps::world::entity::avatar::states
                     }
                 }
             }
-            else if (actualDx < 0.0)
+            else if (cx.pendingFixedScroll.available && actualDx < 0.0)
             {
                 // world pos.
                 const double frontX = cx.probes.frontLine.middlePoint.x;

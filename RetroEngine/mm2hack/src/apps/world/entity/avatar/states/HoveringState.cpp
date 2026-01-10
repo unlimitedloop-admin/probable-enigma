@@ -47,24 +47,24 @@ namespace mm2hack::apps::world::entity::avatar::states
         {
             constexpr double kTriggerGapPx = 14.0;
             const double actualDx = intent.speed * intent.dirSign;
-            if (actualDx > 0.0)
+            if (cx.pendingFixedScroll.available && actualDx > 0.0)
             {
                 const double frontX = cx.probes.frontLine.middlePoint.x;
                 const double rightEdge = cx.vBounds.rightX;
 
                 if (rightEdge - frontX <= kTriggerGapPx)
                 {
-                    cx.pendingFixedScroll = { PageScroll::Dir::Right, 48.0 };
+                    cx.pendingFixedScroll = { false, PageScroll::Dir::Right, 48.0 };
                 }
             }
-            else if (actualDx < 0.0)
+            else if (cx.pendingFixedScroll.available && actualDx < 0.0)
             {
                 const double frontX = cx.probes.frontLine.middlePoint.x;
                 const double leftEdge = cx.vBounds.leftX;
 
                 if (frontX - leftEdge <= kTriggerGapPx)
                 {
-                    cx.pendingFixedScroll = { PageScroll::Dir::Left, 48.0 };
+                    cx.pendingFixedScroll = { false, PageScroll::Dir::Left, 48.0 };
                 }
             }
         }

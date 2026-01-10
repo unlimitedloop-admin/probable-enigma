@@ -64,7 +64,7 @@ namespace mm2hack::apps::world::entity::avatar::states
             {
                 using conf = config::SystemConfig;
                 const double actualDy = cx.vel.y;
-                if (actualDy != 0.0)
+                if (cx.pendingFixedScroll.available && actualDy != 0.0)
                 {
                     const int page_w = conf::kTileCountX * conf::kTileSize;
                     const int page_h = conf::kTileCountY * conf::kTileSize;

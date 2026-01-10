@@ -4,7 +4,7 @@
 
 namespace mm2hack::apps::world::stage
 {
-    // RoomGraphAdapter.cpp
+    // dir > 0: right, dir < 0: left, dir == 0: none
     std::optional<std::size_t> RoomGraphAdapter::AdjacentPageX(std::size_t pageIndex, int dir, AdjacentPolicy policy) const
     {
         if (dir == 0) return std::nullopt;

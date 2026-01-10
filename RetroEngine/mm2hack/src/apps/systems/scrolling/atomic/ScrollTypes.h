@@ -39,6 +39,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
     // Request for fixed page scroll
     struct FixedScrollRequest
     {
+        bool available{ false };        // Enabled when fixed-page scroll is possible
         PageScroll::Dir dir{ PageScroll::Dir::None };
         double carryTotalPx{ 0.0 };     // Total distance to move the player during the whole fixed-scroll animation (world px).
     };

@@ -8,6 +8,7 @@
 #include "apps/resources/bg/MapPageCache.h"
 #include "apps/runtime/GameContext.h"
 #include "apps/systems/physics/PageGridIndex.h"
+#include "apps/systems/scrolling/atomic/Camera.h"
 #include "apps/systems/scrolling/atomic/ScrollController.h"
 #include "apps/systems/view/RenderContext.h"
 #include "apps/world/entity/avatar/PlayerEntity.h"
@@ -90,6 +91,8 @@ namespace mm2hack::apps::scenes
                     _player->SetViewBounds(measure.fromBounds);
                     _player->SetPageOriginPx(measure.pageOriginPx);
                     _player->SetScrollContext(_scroll->Rules(), _scroll->PageIndex());
+                    // NOTE: Fixed page scroll is only active when the player is on the current page.
+                    _player->SetFixedPageScrollAvailable(p == _scroll->PageIndex());
                 }
 
                 const double dt = runtime::GameContext::GetInstance().Time().DeltaSeconds();

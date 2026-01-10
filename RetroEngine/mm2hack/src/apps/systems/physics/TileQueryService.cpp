@@ -617,83 +617,77 @@ namespace mm2hack::apps::systems::physics
     TileAttribute TileQueryService::attrAt_(double worldX, double worldY) const
     {
         using AdjacentPolicy = world::stage::AdjacentPolicy;
+
         const int pageW = SystemConfig::kTileCountX * _ts;
         const int pageH = SystemConfig::kTileCountY * _ts;
 
-        // 1) Resolve the page containing this world position.
-        //    NOTE: We also keep whether resolution succeeded, because FloorDiv normalization
-        //          hides "worldY < 0" by wrapping it into [0, pageH).
         const auto resolvedPage = _grid.ResolvePageIndexFromWorldPos({ worldX, worldY });
 
-        // Special rule:
-        // If the probe point is above the world-top (worldY < 0) AND there is no page at that world position,
-        // then allow "void" only when the current page has NO upper neighbor.
-        // This enables "go off-screen upward" behavior (e.g., Mario-like ceiling passage)
-        // while still allowing negative pages in the future (if the grid maps them, resolvedPage will succeed).
-        if (worldY < 0.0 && !resolvedPage)
+        // No resolved page: out-of-bounds handling
+        if (!resolvedPage)
         {
-            const auto up = _graph.AdjacentPageY(_currPage, -1, AdjacentPolicy::AnyConnection);
-            if (!up)
+            const auto currOrigin = _grid.GetPageWorldOrigin(_currPage); // {x,y}
+            if (!currOrigin)
             {
-                return TileAttribute::Empty;
+                // Currently page origin is also unknown, so conservatively stop.
+                return TileAttribute::Solid;
             }
-            // If there IS an upper neighbor, fall through to the normal logic.
-            // (In this situation, resolvedPage may fail due to mapping holes, but we prefer consistency:
-            //  do not treat it as void when an upper room is supposed to exist.)
+            const double left = currOrigin->x;
+            const double right = currOrigin->x + static_cast<double>(pageW);
+            const double top = currOrigin->y;
+            const double bottom = currOrigin->y + static_cast<double>(pageH);
+
+            const bool outLeft = (worldX < left);
+            const bool outRight = (worldX >= right);
+            const bool outTop = (worldY < top);
+            const bool outBottom = (worldY >= bottom);
+
+            // Out of bounds to the right
+            if (outRight)
+            {
+                const auto nx = _graph.AdjacentPageX(_currPage, +1, AdjacentPolicy::AnyConnection);
+                return nx ? TileAttribute::Empty : TileAttribute::Solid;
+            }
+
+            // Out of bounds to the left
+            if (outLeft)
+            {
+                const auto nx = _graph.AdjacentPageX(_currPage, -1, AdjacentPolicy::AnyConnection);
+                return nx ? TileAttribute::Empty : TileAttribute::Solid;
+            }
+
+            // Out of bounds to the bottom (Death zone hack)
+            if (outBottom)
+            {
+                const auto ny = _graph.AdjacentPageY(_currPage, +1, AdjacentPolicy::AnyConnection);
+                return ny ? TileAttribute::Empty : TileAttribute::InstantDeath; // HACK: Death zone when falling out of bounds!
+            }
+
+            // Out of bounds to the top (special space where going off-screen does not cause failure)
+            if (outTop)
+            {
+                const auto up = _graph.AdjacentPageY(_currPage, -1, AdjacentPolicy::AnyConnection);
+                return up ? TileAttribute::Solid : TileAttribute::Empty;
+                // If there is no page above, allow void (Empty)
+            }
+
+            // Conservatively stop if unable to determine at corners, etc.
+            return TileAttribute::Solid;
         }
 
-        std::size_t page = _currPage;
-        if (resolvedPage)
-        {
-            page = static_cast<std::size_t>(*resolvedPage);
-        }
+        // If resolvedPage is obtained, sample as usual.
+        const std::size_t page = static_cast<std::size_t>(*resolvedPage);
 
-        // 2) Convert to local coordinate within the resolved page.
         const int gx = PageGridIndex::FloorDiv(worldX, static_cast<double>(pageW));
         const int gy = PageGridIndex::FloorDiv(worldY, static_cast<double>(pageH));
 
-        double x = worldX - static_cast<double>(gx * pageW);
-        double y = worldY - static_cast<double>(gy * pageH);
-
-        // 3) Safety: if x/y still out of range due to mapping holes, walk neighbors.
-        //while (x < 0.0)
-        //{
-        //    auto p = _graph.AdjacentPageX(page, -1, AdjacentPolicy::AnyConnection);
-        //    if (!p) return TileAttribute::Solid;
-        //    page = *p;
-        //    x += pageW;
-        //}
-        //while (x >= pageW)
-        //{
-        //    auto p = _graph.AdjacentPageX(page, +1, AdjacentPolicy::AnyConnection);
-        //    if (!p) return TileAttribute::Solid;
-        //    page = *p;
-        //    x -= pageW;
-        //}
-
-        //while (y < 0.0)
-        //{
-        //    auto p = _graph.AdjacentPageY(page, -1, AdjacentPolicy::AnyConnection);
-        //    if (!p)
-        //    {
-        //        // Default behavior: no upper neighbor => treat as empty.
-        //        // (If you want "only when worldY<0" instead, you can gate this with (worldY < 0.0).)
-        //        return TileAttribute::Empty;
-        //    }
-        //    page = *p;
-        //    y += pageH;
-        //}
-        //while (y >= pageH)
-        //{
-        //    auto p = _graph.AdjacentPageY(page, +1, AdjacentPolicy::AnyConnection);
-        //    if (!p) return TileAttribute::Empty;
-        //    page = *p;
-        //    y -= pageH;
-        //}
+        const double x = worldX - static_cast<double>(gx * pageW);
+        const double y = worldY - static_cast<double>(gy * pageH);
 
         const int tx = std::clamp(static_cast<int>(x) / _ts, 0, static_cast<int>(SystemConfig::kTileCountX) - 1);
         const int ty = std::clamp(static_cast<int>(y) / _ts, 0, static_cast<int>(SystemConfig::kTileCountY) - 1);
 
+        // Sample the tile attribute from the tile map provider.
         return _map.SampleTileAttributeOnPage(page, tx, ty);
     }
 

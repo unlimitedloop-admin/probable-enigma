@@ -110,6 +110,9 @@ namespace mm2hack::apps::world::entity::avatar
         // Get scrolling request (if any) and consume it
         [[nodiscard]] std::optional<FixedScrollRequest> ConsumeScrollRequest() noexcept;
 
+        // Parameter that acts as a dedicated flag for fixed page scrolling.
+        void SetFixedPageScrollAvailable(bool v) noexcept { _fixedScrollAvailable = v; }
+
         // ===== public parameters =====
         bool onGround{ false };
         AvatarDirection facingLR{ AvatarDirection::Right };
@@ -155,5 +158,7 @@ namespace mm2hack::apps::world::entity::avatar
         const IScrollRuleProvider* _scrollRules{ nullptr };             // Scroll rule provider
         std::size_t                _scrollPageIndex{ 0 };               // Current page index for scrolling
         std::optional<FixedScrollRequest> _pendingScrollReq{};          // Pending fixed scroll request
+
+        bool _fixedScrollAvailable{ false };    // PREVIEW: Fixed page scroll availability flag
     };
 }

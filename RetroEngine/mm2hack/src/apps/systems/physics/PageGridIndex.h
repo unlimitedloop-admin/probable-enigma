@@ -90,6 +90,7 @@ namespace mm2hack::apps::systems::physics
             return (q < 0.0 && q != static_cast<double>(i)) ? (i - 1) : i;
         }
 
+        // Resolve page index from world center position
         std::optional<int> ResolvePageIndexFromWorldPos(const Vec2& worldCenter) const noexcept
         {
             const int gx = FloorDiv(worldCenter.x, _pageW);
@@ -100,14 +101,22 @@ namespace mm2hack::apps::systems::physics
             return it->second;
         }
 
+        // Get world origin position of a page index
+        std::optional<Vec2> GetPageWorldOrigin(int pageIndex) const noexcept
+        {
+            const auto it = _pageToGrid.find(pageIndex);
+            if (it == _pageToGrid.end()) return std::nullopt;
+            const GridPos& gp = it->second;
+            return Vec2{ static_cast<double>(gp.gx) * _pageW,
+                         static_cast<double>(gp.gy) * _pageH };
+        }
+
         // Convert world position to local (page-relative) position [0..pageSize)
-        [[nodiscard]]
-        double ToLocalPos(double worldPos, int pageSize) const noexcept
+        [[nodiscard]] double ToLocalPos(double worldPos, int pageSize) const noexcept
         {
             const int g = FloorDiv(worldPos, static_cast<double>(pageSize));
             return worldPos - static_cast<double>(g) * pageSize;
         }
-
 
     private:
         template <class GraphAdapter>

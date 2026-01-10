@@ -53,7 +53,8 @@ namespace mm2hack::apps::world::entity::avatar
             facingLR, texture, _animeStepper,
             /* probes */ _probes, /* prelimProbes */ _probes, this->Bounds(),
             _pageOriginPx,
-            _terrainProbe, _ladderService, _vBounds, _scrollRules, _scrollPageIndex, /* pendingFixedScroll */ { ScrollDir::None, 0.0 }
+            _terrainProbe, _ladderService, _vBounds, _scrollRules, _scrollPageIndex,
+            /* pendingFixedScroll */ { _fixedScrollAvailable, ScrollDir::None, 0.0 }
         };
 
         refreshProbes_(cx);
@@ -160,7 +161,7 @@ namespace mm2hack::apps::world::entity::avatar
 
     void PlayerEntity::SetCollidable(bool v) noexcept { _collidable = v; }
 
-    void PlayerEntity::SetViewBounds(const ::mm2hack::apps::systems::scrolling::atomic::ViewBounds& b) noexcept
+    void PlayerEntity::SetViewBounds(const systems::scrolling::atomic::ViewBounds& b) noexcept
     {
         _vBounds.leftX = b.leftX;
         _vBounds.rightX = b.rightX;
