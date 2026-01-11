@@ -53,7 +53,7 @@ namespace mm2hack::apps::ui::controls
         }
 
     private:
-        const std::wstring kClassName = L"MenuCursorController";
+        const std::wstring kClassName{ L"MenuCursorController" };
 
         Layout _layout{ 16, 16, 10 };   // Default layout for menu list of development mode
         int    _count{ 0 };

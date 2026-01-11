@@ -47,7 +47,7 @@ namespace mm2hack::core::assembly
         }
 
     private:
-        const std::wstring kClassName = L"JoystickInputProviderAdapter";
+        const std::wstring kClassName{ L"JoystickInputProviderAdapter" };
 
         input::JoystickManager& _jm;    // External joystick manager reference
         std::array<KeyFrameState, static_cast<size_t>(Key16::JPBTN_COUNT)> _state{};    // Current state of all buttons

@@ -34,6 +34,6 @@ namespace mm2hack::utils
         ~FpsManager() = default;
 
     private:
-        const std::wstring kClassName = L"FpsManager";
+        const std::wstring kClassName{ L"FpsManager" };
     };
 }

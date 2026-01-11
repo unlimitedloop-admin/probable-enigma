@@ -73,7 +73,7 @@ namespace mm2hack::apps::sequence
         SequenceManager() = default;
         ~SequenceManager() = default;
 
-        const std::wstring kClassName = L"SequenceManager";
+        const std::wstring kClassName{ L"SequenceManager" };
 
         std::unique_ptr<ISequence> _currentSequence = nullptr;  // Pointer to the current sequence object
         SequenceType _sequenceType = SequenceType::None;        // Current sequence type, indicating the mode of the game

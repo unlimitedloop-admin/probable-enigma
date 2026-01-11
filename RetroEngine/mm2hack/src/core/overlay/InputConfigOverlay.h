@@ -96,7 +96,7 @@ namespace mm2hack::core::overlay
         void onStepEntered_();
 
     private:
-        const std::wstring kClassName = L"InputConfigOverlay";
+        const std::wstring kClassName{ L"InputConfigOverlay" };
 
         input::KeyBinding* _target{ nullptr };
         std::vector<CaptureStep> _steps;

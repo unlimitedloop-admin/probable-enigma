@@ -54,7 +54,7 @@ namespace mm2hack::apps::rendering::bg
         void dispose_() noexcept;
 
     private:
-        const std::wstring kClassName = L"BGTileAtlas";
+        const std::wstring kClassName{ L"BGTileAtlas" };
 
         std::wstring _name{};
         DivSettings _div{};

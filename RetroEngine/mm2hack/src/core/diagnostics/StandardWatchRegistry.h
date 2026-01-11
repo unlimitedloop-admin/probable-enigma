@@ -38,7 +38,7 @@ namespace mm2hack::core::diagnostics
         void Clear() override;
 
     private:
-        const std::wstring kClassName = L"StandardWatchRegistry";
+        const std::wstring kClassName{ L"StandardWatchRegistry" };
 
         mutable std::shared_mutex _mtx;     // Mutex for thread safety
         std::unordered_map<std::wstring, WatchSupplier> _map;   // Map of registered memory variables

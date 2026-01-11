@@ -45,7 +45,7 @@ namespace mm2hack::core
         ~GameStateManager() = default;
 
     private:
-        const std::wstring kClassName = L"GameStateManager";
+        const std::wstring kClassName{ L"GameStateManager" };
 
         GameState _currentState = GameState::Standby;   // The current game state
     };

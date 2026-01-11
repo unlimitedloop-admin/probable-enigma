@@ -61,7 +61,7 @@ namespace mm2hack::apps::resources
         void Release();
 
     private:
-        const std::wstring kClassName = L"ResourceManager";
+        const std::wstring kClassName{ L"ResourceManager" };
 
         SpriteManager _spriteManager;       // Instance of SpriteManager
         BGTileManager _bgTileManager;       // Instance of BGTileManager

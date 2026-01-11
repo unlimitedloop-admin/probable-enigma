@@ -47,7 +47,10 @@ namespace mm2hack::apps::systems::audio
         void Update();
 
     private:
-        const std::wstring kClassName = L"AudioMixer";
+        void applyVolumes_();   // Apply the calculated volumes to BGM and SE managers
+
+    private:
+        const std::wstring kClassName{ L"AudioMixer" };
 
         const int MAX_VOLUME = config::SystemConfig::kAudioMaxVolume;
 
@@ -56,15 +59,13 @@ namespace mm2hack::apps::systems::audio
         int _seVolume = MAX_VOLUME;
         bool _enabled = true;
 
-        BgmManager& _bgm;
-        SeManager& _se;
+        BgmManager& _bgm;       // Reference to BGM manager
+        SeManager& _se;         // Reference to SE manager
 
         // Fade management
         bool _fading = false;
         int _fadeTarget = MAX_VOLUME;
         int _fadeStep = 0;
         int _fadeFramesRemaining = 0;
-
-        void applyVolumes_();
     };
 }

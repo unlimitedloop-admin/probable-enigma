@@ -88,7 +88,7 @@ namespace mm2hack::apps::runtime
         ~GameContext() = default;
 
     private:
-        const std::wstring kClassName = L"GameContext";
+        const std::wstring kClassName{ L"GameContext" };
 
         std::unique_ptr<ResourceManager> _resourceManager;  // SpriteBank, BGTiles, SoundDriver, etc.
         std::unique_ptr<JoystickManager> _joystickManager;  // Joystick manager for handling gamepad inputs (using only for setup)

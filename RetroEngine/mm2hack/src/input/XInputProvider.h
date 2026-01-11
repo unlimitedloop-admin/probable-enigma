@@ -30,7 +30,7 @@ namespace mm2hack::input
         bool Update(C16ButtonState& out_state) override;
 
     private:
-        const std::wstring kClassName = L"XInputProvider";
+        const std::wstring kClassName{ L"XInputProvider" };
 
         const KeyBinding& _binding;     // Key binding for this provider
     };

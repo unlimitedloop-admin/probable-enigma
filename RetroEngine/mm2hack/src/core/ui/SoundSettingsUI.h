@@ -29,7 +29,7 @@ namespace mm2hack::core::ui
         void OnCommand(WPARAM wParam, LPARAM lParam) const;
 
     private:
-        const std::wstring kClassName = L"SoundSettingsUI";
+        const std::wstring kClassName{ L"SoundSettingsUI" };
 
         HWND _parent;
 

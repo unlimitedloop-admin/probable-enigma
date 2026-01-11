@@ -69,14 +69,14 @@ namespace mm2hack::apps::systems::audio
             double loopEnd = 0.0;
         };
 
-        const std::wstring kClassName = L"BgmManager";
+        const std::wstring kClassName{ L"BgmManager" };
 
         const int MAX_VOLUME = config::SystemConfig::kAudioMaxVolume;
 
-        ChannelManager& _channels;
-        std::unordered_map<std::wstring, BgmData> _bgmData;
+        ChannelManager& _channels;                          // Reference to the channel manager for audio playback
+        std::unordered_map<std::wstring, BgmData> _bgmData; // Registered BGM data
 
-        std::wstring _currentBgm;
+        std::wstring _currentBgm;                           // Name of the currently playing BGM
         bool _isPlaying = false;
 
         // Loop parameters

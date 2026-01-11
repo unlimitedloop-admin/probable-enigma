@@ -22,6 +22,6 @@ namespace mm2hack::apps::systems::audio
         static bool InitializeAudio(const std::wstring& configPath, BgmManager& bgmManager, SeManager& seManager, ChannelManager& bgmChannels, ChannelManager& seChannels);
 
     private:
-        const std::wstring kClassName = L"AudioInitializer";
+        const std::wstring kClassName{ L"AudioInitializer" };
     };
 }

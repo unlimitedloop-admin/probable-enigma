@@ -54,7 +54,7 @@ namespace mm2hack::apps::systems::audio
         const std::unordered_map<std::wstring, SeConfig>& GetSeConfigs() const { return _seConfigs; }
 
     private:
-        const std::wstring kClassName = L"AudioConfigLoader";
+        const std::wstring kClassName{ L"AudioConfigLoader" };
 
         std::unordered_map<std::wstring, BgmConfig> _bgmConfigs;
         std::unordered_map<std::wstring, SeConfig> _seConfigs;

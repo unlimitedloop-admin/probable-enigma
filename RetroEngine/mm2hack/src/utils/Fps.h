@@ -32,7 +32,10 @@ namespace mm2hack::utils
         float GetDeltaSeconds() const;
 
     private:
-        const std::wstring kClassName = L"Fps";
+        void loadIniFps_();         // Load target FPS from ini file or use SystemConfig value
+
+    private:
+        const std::wstring kClassName{ L"Fps" };
 
         using Clock = std::chrono::steady_clock;
         Clock::time_point _lastTime;
@@ -40,7 +43,5 @@ namespace mm2hack::utils
         double _frameDuration;
         int _frameCount;
         mutable double _actualFps;
-
-        void loadIniFps_();         // Load target FPS from ini file or use SystemConfig value
     };
 }

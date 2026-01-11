@@ -27,6 +27,6 @@ namespace mm2hack::apps::scenes
         SceneFactory() = default; // Prevent instantiation
 
     private:
-        const std::wstring kClassName = L"SceneFactory";
+        const std::wstring kClassName{ L"SceneFactory" };
     };
 }

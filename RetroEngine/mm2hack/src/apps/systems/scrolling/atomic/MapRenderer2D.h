@@ -38,7 +38,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
         void DrawAnimation(const PageScroll& pg, std::size_t from_idx, std::size_t to_idx);
 
     private:
-        const std::wstring kClassName = L"MapRenderer2D";
+        const std::wstring kClassName{ L"MapRenderer2D" };
 
         ResourceManager& _res_mgr;      // Reference to the resource manager
         std::wstring _map_name;         // Name of the map to render

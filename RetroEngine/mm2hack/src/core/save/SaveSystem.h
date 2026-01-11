@@ -41,8 +41,8 @@ namespace mm2hack::core::save
         static std::wstring GetCurrentSlotFilename();
 
     private:
-        inline static const std::wstring kClassName = L"SaveSystem";
+        inline static const std::wstring kClassName{ L"SaveSystem" };
 
-        static inline int _currentSlot = 0;     // Current save slot index
+        inline static int _currentSlot = 0;     // Current save slot index
     };
 }

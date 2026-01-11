@@ -67,7 +67,7 @@ namespace mm2hack::core::winapi
         WindowManager() = default;
         ~WindowManager() = default;
 
-        const std::wstring kClassName = L"WindowManager";
+        inline static const std::wstring kClassName{ L"WindowManager" };
 
         HWND _mainWindowHandle = nullptr;
         HINSTANCE _hInstance = nullptr;

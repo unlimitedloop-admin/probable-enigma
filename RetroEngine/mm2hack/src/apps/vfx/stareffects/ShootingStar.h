@@ -23,6 +23,6 @@ namespace mm2hack::apps::vfx::stareffects
         void Update() override;
 
     private:
-        const std::wstring kClassName = L"ShootingStar";
+        const std::wstring kClassName{ L"ShootingStar" };
     };
 }

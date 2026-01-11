@@ -64,7 +64,7 @@ namespace mm2hack::apps::systems::audio
         void Clear();
 
     private:
-        const std::wstring kClassName = L"ChannelManager";
+        const std::wstring kClassName{ L"ChannelManager" };
 
         std::vector<std::unique_ptr<ISoundChannel>> _channels;      // List of sound channels
     };

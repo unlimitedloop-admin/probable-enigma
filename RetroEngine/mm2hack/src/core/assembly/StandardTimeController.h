@@ -66,7 +66,7 @@ namespace mm2hack::core::assembly
         [[nodiscard]] std::uint64_t GetPlayFrameCounter() const noexcept override;
 
     private:
-        const std::wstring kClassName = L"StandardTimeController";
+        const std::wstring kClassName{ L"StandardTimeController" };
 
         mm2hack::utils::Fps* _fps;                  // External Fps pointer
         bool _callWait;                             // Call wait in BeginFrame

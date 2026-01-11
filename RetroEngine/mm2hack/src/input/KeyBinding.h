@@ -76,7 +76,8 @@ namespace mm2hack::input
             SConBindingData& operator=(SConBindingData&&) = delete;
         };
 
-        const std::wstring kClassName = L"KeyBinding";
+        const std::wstring kClassName{ L"KeyBinding" };
+
         SConBindingData _sCon;     // Serial-Controller binding data
     };
 }

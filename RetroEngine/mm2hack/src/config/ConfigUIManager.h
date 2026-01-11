@@ -58,10 +58,10 @@ namespace mm2hack::config
         static std::wstring getIniPath_();      // Get the path to the INI file
 
     private:
-        static inline const std::wstring kClassName = L"ConfigUIManager";
+        inline static const std::wstring kClassName{ L"ConfigUIManager" };
 
         static HudConfig _cachedHudConfig;      // Cached HUD configuration to avoid repeated file I/O.
-        static inline const std::wstring
+        inline static const std::wstring
             _kIniFileName{ L"./settings.ini" }; // Name of the INI file
     };
 }

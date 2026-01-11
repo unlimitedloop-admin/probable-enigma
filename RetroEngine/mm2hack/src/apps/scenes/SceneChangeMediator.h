@@ -32,7 +32,7 @@ namespace mm2hack::apps::scenes
         void RequestChange(SceneID scene, Parameters params = {});
 
     private:
-        const std::wstring kClassName = L"SceneChangeMediator";
+        const std::wstring kClassName{ L"SceneChangeMediator" };
 
         ISceneChangedListener* _listener = nullptr;     // Pointer to the registered listener
     };

@@ -34,8 +34,8 @@ namespace mm2hack::core::overlay
         static void DrawOverlay();
 
     private:
-        static inline std::wstring kClassName = L"PauseManager";
+        inline static std::wstring kClassName{ L"PauseManager" };
 
-        static inline bool _isPaused = false;       // Static member to hold the pause state (default is not paused)
+        inline static bool _isPaused = false;       // Static member to hold the pause state (default is not paused)
     };
 }

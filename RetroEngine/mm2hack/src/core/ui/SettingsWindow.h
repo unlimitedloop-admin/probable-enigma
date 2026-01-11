@@ -39,7 +39,8 @@ namespace mm2hack::core::ui
         static void OpenTab(HWND parent, Tab tab);
 
     private:
-        static constexpr LPCWSTR kClassName = L"SettingsWindowClass";
+        inline static constexpr LPCWSTR kClassName{ L"SettingsWindowClass" };
+
         static HWND _hwnd;
         static Tab _current_tab;
         std::unique_ptr<CheatCodeInjectionUI> _cheat_ui;

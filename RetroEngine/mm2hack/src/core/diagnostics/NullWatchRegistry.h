@@ -27,6 +27,6 @@ namespace mm2hack::core::diagnostics
         void Clear() override {}
 
     private:
-        const std::wstring kClassName = L"NullWatchRegistry";
+        const std::wstring kClassName{ L"NullWatchRegistry" };
     };
 }

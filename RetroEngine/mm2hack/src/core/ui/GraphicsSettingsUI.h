@@ -26,7 +26,7 @@ namespace mm2hack::core::ui
         void ApplySettings() const;
 
     private:
-        const std::wstring kClassName = L"GraphicsSettingsUI";
+        const std::wstring kClassName{ L"GraphicsSettingsUI" };
 
         HWND _parent;
         HWND _combo_resolution;

@@ -38,7 +38,7 @@ namespace mm2hack::core::ui
         void ApplyUIFont(HWND hwnd) const;
 
     private:
-        const std::wstring kClassName = L"CommonUIStyle";
+        const std::wstring kClassName{ L"CommonUIStyle" };
 
         HFONT _font;
     };

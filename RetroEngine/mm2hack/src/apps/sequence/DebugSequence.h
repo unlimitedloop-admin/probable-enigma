@@ -37,7 +37,7 @@ namespace mm2hack::apps::sequence
         bool Load(const core::save::SaveData& in) override;
 
     private:
-        const std::wstring kClassName = L"DebugSequence";
+        const std::wstring kClassName{ L"DebugSequence" };
 
         scenes::SceneManager _sceneManager;         // Scene manager instance
         scenes::SceneChangeMediator _sceneChanger;  // Mediator for scene changes

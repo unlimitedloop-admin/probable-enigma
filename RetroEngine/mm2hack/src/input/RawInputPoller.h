@@ -43,6 +43,6 @@ namespace mm2hack::input
         static std::optional<RawInputEvent> pollDirectInputRawChange_(float deadzone, AxisGroup diCaptureGroup);    // Poll DirectInput device for button/axis changes
 
     private:
-        const std::wstring kClassName = L"RawInputPoller";
+        const std::wstring kClassName{ L"RawInputPoller" };
     };
 }

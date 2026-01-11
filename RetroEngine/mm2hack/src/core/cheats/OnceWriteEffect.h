@@ -35,7 +35,7 @@ namespace mm2hack::core::cheats
         const std::wstring& GetLabel() const override;
 
     private:
-        const std::wstring kClassName = L"OnceWriteEffect";
+        const std::wstring kClassName{ L"OnceWriteEffect" };
 
         ByteLocation _loc;                  // Memory location to patch
         uint64_t _value{ 0 };               // Value to write

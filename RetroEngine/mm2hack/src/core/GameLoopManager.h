@@ -30,7 +30,7 @@ namespace mm2hack::core
         void Run();
 
     private:
-        const std::wstring kClassName = L"GameLoopManager";
+        const std::wstring kClassName{ L"GameLoopManager" };
 
         HWND _hWnd;                             // Reference to the client window handle
         float& _viewerRate;                     // Reference to the viewer rate

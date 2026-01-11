@@ -29,6 +29,6 @@ namespace mm2hack::core::overlay
         DebugHud() = default;
 
     private:
-        const std::wstring kClassName = L"DebugHud";
+        const std::wstring kClassName{ L"DebugHud" };
     };
 }

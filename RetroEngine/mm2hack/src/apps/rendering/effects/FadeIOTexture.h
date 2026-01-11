@@ -10,6 +10,7 @@
 
 #include <functional>
 #include <optional>
+#include <string>
 
 namespace mm2hack::apps::rendering::effects
 {
@@ -51,7 +52,7 @@ namespace mm2hack::apps::rendering::effects
         static float Ease_(float t);            // Easing function
 
     private:
-        const std::wstring kClassName = L"FadeIOTexture";
+        const std::wstring kClassName{ L"FadeIOTexture" };
 
         Target _t;                              // Target texture variant
         Curve  _curve{ Curve::Linear };         // Easing curve

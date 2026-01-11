@@ -67,7 +67,7 @@ namespace mm2hack::core::ui
         void syncCheckStatesToListView_();   // _rows to UI
 
     private:
-        const std::wstring kClassName = L"CheatCodeInjectionUI";
+        const std::wstring kClassName{ L"CheatCodeInjectionUI" };
 
         // Win32 Control IDs
         static constexpr int IDC_LABEL_CODE = 4100;

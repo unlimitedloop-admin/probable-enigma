@@ -28,6 +28,6 @@ namespace mm2hack::core::assembly
         static void CaptureToPng();
 
     private:
-        inline static const std::wstring kClassName = L"ScreenshotManager";
+        inline static const std::wstring kClassName{ L"ScreenshotManager" };
     };
 }

@@ -25,6 +25,6 @@ namespace mm2hack::core::cheats
         bool TryParse(const std::wstring& code, std::vector<CheatPatch>& out_patches) override;
 
     private:
-        const std::wstring kClassName = L"ParCodeParser";
+        const std::wstring kClassName{ L"ParCodeParser" };
     };
 }

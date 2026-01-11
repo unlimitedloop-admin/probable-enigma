@@ -26,7 +26,7 @@ namespace mm2hack::apps::vfx::stareffects
         FixedStarState ToState() const;
 
     private:
-        const std::wstring kClassName = L"FixedStar";
+        const std::wstring kClassName{ L"FixedStar" };
 
         int _tileIndex;     // Tile index for the star sprite
         float _x, _y;       // Position

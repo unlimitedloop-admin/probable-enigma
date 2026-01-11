@@ -75,7 +75,7 @@ namespace mm2hack::apps::systems::audio
         int toDxVolume_(int uiVolume);  // Convert volume from 0-100 range to 0-255 range used by the audio system
 
     private:
-        const std::wstring kClassName = L"AudioManager";
+        const std::wstring kClassName{ L"AudioManager" };
 
         // Sound engine components
         ChannelManager _bgmChannels;

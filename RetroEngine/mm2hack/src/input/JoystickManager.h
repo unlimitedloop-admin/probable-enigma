@@ -57,7 +57,7 @@ namespace mm2hack::input
         Device ActiveDevice() const noexcept { return _activeKind; }
 
     private:
-        const std::wstring kClassName = L"JoystickManager";
+        const std::wstring kClassName{ L"JoystickManager" };
 
         std::unique_ptr<IInputProvider> _provider;      // Pointer to the input provider
         C16ButtonState _button_state;                   // Current state of all buttons

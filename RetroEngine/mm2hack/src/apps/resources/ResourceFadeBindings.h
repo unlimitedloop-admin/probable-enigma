@@ -77,7 +77,7 @@ namespace mm2hack::apps::resources
         void SetFallbackFontMax(int v) { _fadeFont.SetFallbackMax(v); }
 
     private:
-        const std::wstring kClassName = L"ResourceFadeBindings";
+        const std::wstring kClassName{ L"ResourceFadeBindings" };
 
         Fade _fadeSprite{ {[]() { return 0; }, [](int) {}, []() { return 0; } }, Fade::Curve::Linear, 0 };  // Sprite fade controller
         Fade _fadeBG{ {[]() { return 0; }, [](int) {}, []() { return 0; } }, Fade::Curve::Linear, 0 };      // BG tile fade controller

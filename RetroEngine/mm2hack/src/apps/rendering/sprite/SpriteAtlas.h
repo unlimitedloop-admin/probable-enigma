@@ -66,7 +66,7 @@ namespace mm2hack::apps::rendering::sprite
         void dispose_() noexcept;    // release SoftImage and graphs
 
     private:
-        const std::wstring kClassName = L"SpriteAtlas";
+        const std::wstring kClassName{ L"SpriteAtlas" };
 
         std::wstring _name{};       // unique name identifier
         DivSettings _div{};         // division settings
