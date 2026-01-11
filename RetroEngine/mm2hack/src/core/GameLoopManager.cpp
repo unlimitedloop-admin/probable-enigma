@@ -91,9 +91,15 @@ namespace mm2hack::core
                 seq.HandleJpbtnConfigMode(static_cast<double>(_time->DeltaSeconds()));
 
                 // Pace & Flip the screen.
-                fps.Wait();
                 // VSync control = pseudo FPS with monitor refresh rate.
-                if (_vSync) ::DxLib::WaitVSync(1);
+                if (_vSync)
+                {
+                    ::DxLib::WaitVSync(1);
+                }
+                else
+                {
+                    fps.Wait();
+                }
                 // Screen flip to present the rendered frame of the back buffer.
                 ::DxLib::ScreenFlip();
 

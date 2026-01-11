@@ -56,6 +56,8 @@ namespace mm2hack::core::winapi
         int GetScreenHandle() const;
         // Set VSync enabled/disabled
         bool SetVSyncEnabled(bool enabled);
+        // Check if VSync is enabled
+        bool IsVSyncEnabled() const { return _vSync; }
 
         // Get the window procedure handle for DxLib
         WNDPROC GetDxLibWnd() const;
@@ -67,20 +69,21 @@ namespace mm2hack::core::winapi
         WindowManager() = default;
         ~WindowManager() = default;
 
-        inline static const std::wstring kClassName{ L"WindowManager" };
-
-        HWND _mainWindowHandle = nullptr;
-        HINSTANCE _hInstance = nullptr;
-        WNDPROC _dxLibWnd = nullptr;
-        std::wstring _windowTitle;          // Title of the main window
-        float _viewerRate = 0.0f;           // Viewer rate for the main window, used for scaling
-        int _screenHandle = -1;             // Handle for the screen
-        bool _vSync{ false };               // VSync enabled/disabled
-
         bool isDebugMode_() const;          // Check if the application is running in debug mode
         float loadViewerRate_() const;      // Load the viewer rate from configuration
         bool loadVSync_() const;            // Load the VSync setting from configuration
 
         void syncWindowSizeMenuCheck_(float viewerRate) const;   // Sync the window size menu check state
+
+    private:
+        inline static const std::wstring kClassName{ L"WindowManager" };
+
+        HWND _mainWindowHandle = nullptr;   // Handle for the main window
+        HINSTANCE _hInstance = nullptr;     // Handle for the application instance
+        WNDPROC _dxLibWnd = nullptr;        // Window procedure handle for DxLib
+        std::wstring _windowTitle;          // Title of the main window
+        float _viewerRate = 0.0f;           // Viewer rate for the main window, used for scaling
+        int _screenHandle = -1;             // Handle for the screen
+        bool _vSync{ false };               // VSync enabled/disabled
     };
 }

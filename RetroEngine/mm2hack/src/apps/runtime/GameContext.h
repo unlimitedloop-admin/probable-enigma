@@ -31,7 +31,6 @@ namespace mm2hack::core
 }
 
 
-
 namespace mm2hack::apps::runtime
 {
     // GameContext class that implements IGameContext, providing access to game resources and input management

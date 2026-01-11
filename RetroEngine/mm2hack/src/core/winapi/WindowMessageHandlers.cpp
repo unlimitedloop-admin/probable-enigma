@@ -57,6 +57,12 @@ namespace mm2hack::core::winapi
         CheckMenuItem(hMenu, ID_HUD_FPS,
             config::ConfigUIManager::GetCurrentHudConfig().showFps ? MF_BYCOMMAND | MF_CHECKED : MF_BYCOMMAND | MF_UNCHECKED
         );  // Set the FPS display state based on the HUD configuration.
+        CheckMenuItem(hMenu, ID_HUD_SCROLLINGSYNCLINE,
+            config::ConfigUIManager::GetCurrentHudConfig().showScrollLine ? MF_BYCOMMAND | MF_CHECKED : MF_BYCOMMAND | MF_UNCHECKED
+        );  // Set the scrolling sync line display state based on the HUD configuration.
+        CheckMenuItem(hMenu, ID_HUD_PLAYERPOSITION,
+            config::ConfigUIManager::GetCurrentHudConfig().showPlayerPosition ? MF_BYCOMMAND | MF_CHECKED : MF_BYCOMMAND | MF_UNCHECKED
+        );  // Set the player position display state based on the HUD configuration.
     }
 
     void HandleDestroy(HWND hWnd)
@@ -290,6 +296,19 @@ namespace mm2hack::core::winapi
             // Add check/uncheck the HUD => Scrolling Sync Line menu item.
             HMENU hMenu = GetMenu(hWnd);
             CheckMenuItem(hMenu, ID_HUD_SCROLLINGSYNCLINE, MF_BYCOMMAND | (newConfig.showScrollLine ? MF_CHECKED : MF_UNCHECKED));
+            break;
+        }
+
+        case ID_HUD_PLAYERPOSITION:
+        {
+            using confUI = config::ConfigUIManager;
+            auto& hudConfig = confUI::GetCurrentHudConfig();
+            config::HudConfig newConfig = hudConfig;
+            newConfig.showPlayerPosition = !newConfig.showPlayerPosition;
+            confUI::SetCurrentHudConfig(newConfig);
+            // Add check/uncheck the HUD => Player Position menu item.
+            HMENU hMenu = GetMenu(hWnd);
+            CheckMenuItem(hMenu, ID_HUD_PLAYERPOSITION, MF_BYCOMMAND | (newConfig.showPlayerPosition ? MF_CHECKED : MF_UNCHECKED));
             break;
         }
 

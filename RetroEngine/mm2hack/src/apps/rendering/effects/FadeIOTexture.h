@@ -47,8 +47,8 @@ namespace mm2hack::apps::rendering::effects
         void SetFallbackMax(int v) noexcept;
 
     private:
-        int MaxV_() const;                      // Get the maximum variant
-        int ClampV_(int v) const;               // Clamp to [0, MaxV_()]
+        int maxV_() const;                      // Get the maximum variant
+        int ClampV_(int v) const;               // Clamp to [0, maxV_()]
         static float Ease_(float t);            // Easing function
 
     private:

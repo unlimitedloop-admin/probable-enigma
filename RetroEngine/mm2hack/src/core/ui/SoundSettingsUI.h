@@ -29,6 +29,11 @@ namespace mm2hack::core::ui
         void OnCommand(WPARAM wParam, LPARAM lParam) const;
 
     private:
+        void createSlider_(LPCWSTR label, int x, int y, HWND& out_slider) const;    // Helper to create a slider control
+        void addSoundSourceOptions_() const;                                        // Populate sound source options in the combo box
+        void loadSettings_() const;                                                 // Load settings from config and apply to UI controls
+
+    private:
         const std::wstring kClassName{ L"SoundSettingsUI" };
 
         HWND _parent;
@@ -41,9 +46,5 @@ namespace mm2hack::core::ui
 
         mutable ULONGLONG _last_update_tick = 0;
         const ULONGLONG kUpdateInterval = 30;       // Update interval in milliseconds
-
-        void createSlider_(LPCWSTR label, int x, int y, HWND& out_slider) const;    // Helper to create a slider control
-        void addSoundSourceOptions_() const;                                        // Populate sound source options in the combo box
-        void loadSettings_() const;                                                 // Load settings from config and apply to UI controls
     };
 }

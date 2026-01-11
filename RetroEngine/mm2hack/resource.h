@@ -50,13 +50,14 @@
 #define ID_SCRIPT_004                   40044
 #define ID_SCRIPT_005                   40045
 #define ID_HUD_SCROLLINGSYNCLINE        40046
+#define ID_HUD_PLAYERPOSITION           40047
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        103
-#define _APS_NEXT_COMMAND_VALUE         40047
+#define _APS_NEXT_COMMAND_VALUE         40048
 #define _APS_NEXT_CONTROL_VALUE         1001
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

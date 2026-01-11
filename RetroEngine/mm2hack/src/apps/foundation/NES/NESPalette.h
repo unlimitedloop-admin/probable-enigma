@@ -40,8 +40,8 @@ namespace mm2hack::apps::foundation::NES
         static const RGB& GetColor(size_t index);
 
     private:
-        static inline const std::wstring kClassName{ L"NESPalette" };
+        inline static const std::wstring kClassName{ L"NESPalette" };
 
-        static inline std::array<RGB, 64> _palette_data{};      // NES 64-color background palette data
+        inline static std::array<RGB, 64> _palette_data{};      // NES 64-color background palette data
     };
 }

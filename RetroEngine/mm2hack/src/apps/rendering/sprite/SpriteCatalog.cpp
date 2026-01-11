@@ -287,12 +287,7 @@ namespace mm2hack::apps::rendering::sprite
             else
             {
                 // TrueColor: If make NES style fade, first split normally, then darken by HSB (v=max is black)
-                const int created = ::DxLib::CreateDivGraphFromSoftImage(
-                    soft,
-                    div.tiles_x * div.tiles_y,
-                    div.tiles_x, div.tiles_y,
-                    div.tile_w, div.tile_h,
-                    frames.data());
+                const int created = ::DxLib::CreateDivGraphFromSoftImage(soft, div.tiles_x * div.tiles_y, div.tiles_x, div.tiles_y, div.tile_w, div.tile_h, frames.data());
 
                 if (created == -1)
                 {

@@ -16,5 +16,6 @@ namespace mm2hack::config
         bool showFps;           // Show FPS in the HUD
         bool showFrameTime;     // Show frame time in milliseconds
         bool showScrollLine;    // Show scroll line indicator
+        bool showPlayerPosition;// Show player position coordinates
     };
 }

@@ -69,11 +69,6 @@ namespace mm2hack::input
 
             SConBindingData() = default;
             ~SConBindingData() = default;
-
-            SConBindingData(const SConBindingData&) = delete;
-            SConBindingData& operator=(const SConBindingData&) = delete;
-            SConBindingData(SConBindingData&&) = delete;
-            SConBindingData& operator=(SConBindingData&&) = delete;
         };
 
         const std::wstring kClassName{ L"KeyBinding" };

@@ -61,13 +61,13 @@ namespace mm2hack::apps::resources::bg
         [[nodiscard]] std::optional<std::size_t> RoomToPageIndex(uint8_t room) const override;
 
         // Get the overall pixel size, stage map size
-        [[nodiscard]] int TileSize() const override;
+        [[nodiscard]] int TileSize() const override { return PageTiles::kW; }  // tile size per tile (in px?) - keep simple, callers expect tile px maybe use config
         [[nodiscard]] int MapWidth() const override;
         [[nodiscard]] int MapHeight() const override;
 
     private:
         PageTiles readTiles_(std::size_t pageIndex) const;      // Read tile data from AddressScraper
-
+        // Convert int16_t index to optional<size_t>
         static std::optional<std::size_t> toOptIndex_(int16_t idx)
         {
             return (idx >= 0) ? std::optional<std::size_t>(static_cast<std::size_t>(idx)) : std::nullopt;

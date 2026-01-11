@@ -39,6 +39,15 @@ namespace mm2hack::core::ui
         static void OpenTab(HWND parent, Tab tab);
 
     private:
+        static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+        void applySettings_();
+        void applySoundToAudio_();
+        void setHandle_(HWND hwnd);
+        void createContent_(Tab tab);
+        static SettingsWindow* getThis_(HWND hwnd);
+
+    private:
         inline static constexpr LPCWSTR kClassName{ L"SettingsWindowClass" };
 
         static HWND _hwnd;
@@ -47,14 +56,6 @@ namespace mm2hack::core::ui
         std::unique_ptr<GraphicsSettingsUI> _graphics_ui;
         std::unique_ptr<SoundSettingsUI> _sound_ui;
         bool _is_closing{ false };
-
-        static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-
-        void applySettings_();
-        void applySoundToAudio_();
-        void setHandle_(HWND hwnd);
-        void createContent_(Tab tab);
-        static SettingsWindow* getThis_(HWND hwnd);
 
         static std::unique_ptr<SettingsWindow> _instance;   // Just to own the instance
     };

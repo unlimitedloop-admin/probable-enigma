@@ -22,7 +22,7 @@ namespace mm2hack::apps::rendering::effects
 
     void FadeIOTexture::FadeOut(int frames, std::optional<int> to)
     {
-        const int dst = to ? *to : MaxV_();
+        const int dst = to ? *to : maxV_();
         BeginTo(dst, frames);
     }
 
@@ -47,7 +47,7 @@ namespace mm2hack::apps::rendering::effects
 
     void FadeIOTexture::SetFallbackMax(int v) noexcept { _fallbackMax = std::max(0, v); }
 
-    int FadeIOTexture::MaxV_() const
+    int FadeIOTexture::maxV_() const
     {
         if (_t.max)
         {
@@ -59,7 +59,7 @@ namespace mm2hack::apps::rendering::effects
 
     int FadeIOTexture::ClampV_(int v) const
     {
-        return std::max(0, std::min(v, MaxV_()));
+        return std::max(0, std::min(v, maxV_()));
     }
 
     float FadeIOTexture::Ease_(float t)

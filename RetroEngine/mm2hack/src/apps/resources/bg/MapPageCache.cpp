@@ -105,11 +105,6 @@ namespace mm2hack::apps::resources::bg
         return toOptIndex_(idx);
     }
 
-    int MapPageCache::TileSize() const
-    {
-        return PageTiles::kW; // tile size per tile (in px?) - keep simple, callers expect tile px maybe use config
-    }
-
     int MapPageCache::MapWidth() const
     {
         // Best-effort: return page count in X * page tile width. If AddressScraper can't provide, return single page width.

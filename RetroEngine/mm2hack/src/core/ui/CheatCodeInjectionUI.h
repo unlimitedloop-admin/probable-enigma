@@ -48,6 +48,12 @@ namespace mm2hack::core::ui
             std::wstring label;     // Display label (e.g., player.invincible / 00A123)
         };
 
+        // ---- Labels and Types (heuristic) ----
+        static std::wstring guessType_(const std::wstring& code);   // "PAR" / "Symbolic"
+        static std::wstring guessLabel_(const std::wstring& code);  // e.g., "player.invincible" / "00A123"
+        static bool containsFreeze_(const std::wstring& code);      // Whether the code contains "freeze"
+        static std::wstring trim_(const std::wstring& s);           // Trim whitespace from both ends
+
         // ---- Utilities ----
         void addFromEdit_();
         void removeSelected_();
@@ -98,11 +104,5 @@ namespace mm2hack::core::ui
         HWND _status_text;
 
         std::vector<CheatRow> _rows;    // The list of cheat rows
-
-        // ---- Labels and Types (heuristic) ----
-        static std::wstring guessType_(const std::wstring& code);   // "PAR" / "Symbolic"
-        static std::wstring guessLabel_(const std::wstring& code);  // e.g., "player.invincible" / "00A123"
-        static bool containsFreeze_(const std::wstring& code);      // Whether the code contains "freeze"
-        static std::wstring trim_(const std::wstring& s);           // Trim whitespace from both ends
     };
 }

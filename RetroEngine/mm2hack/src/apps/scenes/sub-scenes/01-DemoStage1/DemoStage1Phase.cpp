@@ -13,6 +13,7 @@
 #include "apps/systems/view/RenderContext.h"
 #include "apps/world/entity/avatar/PlayerEntity.h"
 #include "config/ConfigUIManager.h"
+#include "core/overlay/DebugHud.h"
 #include "DemoStage1.h"
 #include "utils/decimal_decoder.h"
 #include "utils/string_converter.h"
@@ -157,17 +158,20 @@ namespace mm2hack::apps::scenes
         void MainPhase::RenderOverlay()
         {
             using namespace utils;
-            wchar_t buf[128]{};
-            int dispY = 8;
-            ::swprintf(buf, 128, L"PageIndex = %d", _page_index_debug);
-            ::DxLib::DrawString(8, dispY, buf, 0xFFFFFF00);
-            dispY += 16;
-            const std::wstring xstr = decode_floating_hex_number(_player_pos_x_debug);
-            const std::wstring ystr = decode_floating_hex_number(_player_pos_y_debug);
-            concat_to_wchar_buffer(buf, sizeof(buf) / sizeof(buf[0]), { L"Player Pos = (", xstr, L", ", ystr, L")" });
-            ::DxLib::DrawString(8, dispY, buf, 0xFFFF0000);
 
+            wchar_t buf[128]{};
             const auto& hud = config::ConfigUIManager::GetCurrentHudConfig();
+            int dispY = 8;
+
+            if (hud.showPlayerPosition)
+            {
+                core::overlay::DebugHud::GetInstance().SetPlayerPositionContext({
+                    _page_index_debug,
+                    _player_pos_x_debug,
+                    _player_pos_y_debug
+                });
+            }
+
             _scroll->DebugHudRender(hud.showScrollLine);
         }
 

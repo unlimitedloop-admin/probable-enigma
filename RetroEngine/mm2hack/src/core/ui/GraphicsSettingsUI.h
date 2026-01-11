@@ -26,19 +26,20 @@ namespace mm2hack::core::ui
         void ApplySettings() const;
 
     private:
-        const std::wstring kClassName{ L"GraphicsSettingsUI" };
-
-        HWND _parent;
-        HWND _combo_resolution;
-        HWND _check_vsync;
-        HWND _combo_framerate;
-
         void addResolutionOptions_() const;             // Populate resolution options in the combo box
         void addFramerateOptions_() const;              // Populate framerate options in the combo box
         void loadSettings_();                           // Load settings from config and apply to UI controls
 
         int mapFpsToIndex_(int fps) noexcept;           // Map exact FPS to index in kFramerateOptions
         int mapFpsToNearestIndex_(int fps) noexcept;    // Map nearest FPS to index in kFramerateOptions
+
+    private:
+        const std::wstring kClassName{ L"GraphicsSettingsUI" };
+
+        HWND _parent;
+        HWND _combo_resolution;
+        HWND _check_vsync;
+        HWND _combo_framerate;
     };
 
     // Predefined resolution options
