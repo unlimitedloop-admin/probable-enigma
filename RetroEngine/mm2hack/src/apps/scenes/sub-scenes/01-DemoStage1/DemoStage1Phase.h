@@ -80,6 +80,7 @@ namespace mm2hack::apps::scenes
             std::unique_ptr<PlayerEntity>     _player;              // Player entity
             std::unique_ptr<RoomGraphAdapter> _graph;               // Room graph adapter
 
+            // debug info.
             int _page_index_debug{ 0 };
             double _player_pos_x_debug{ 0 };
             double _player_pos_y_debug{ 0 };

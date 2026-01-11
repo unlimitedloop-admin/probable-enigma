@@ -626,7 +626,7 @@ namespace mm2hack::apps::systems::physics
         // No resolved page: out-of-bounds handling
         if (!resolvedPage)
         {
-            const auto currOrigin = _grid.GetPageWorldOrigin(_currPage); // {x,y}
+            const auto currOrigin = _grid.GetPageWorldOrigin(static_cast<int>(_currPage)); // {x,y}
             if (!currOrigin)
             {
                 // Currently page origin is also unknown, so conservatively stop.

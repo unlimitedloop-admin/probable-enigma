@@ -105,6 +105,8 @@ namespace mm2hack::apps::scenes
         SceneID GetSceneID() const override { return SceneID::DemoStage1; }
         // Get the scene name (i.e. class name)
         std::wstring GetSceneName() const override { return kClassName; }
+        // Get the current room page index
+        int GetCurrentRoomPageIndex() const { return _roomState.pageIndex; }
         // Get the map name used in this scene
         std::wstring GetMapName() const { return kMapName; }
         // Get the map binary path used in this scene

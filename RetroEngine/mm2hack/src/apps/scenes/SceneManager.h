@@ -11,6 +11,7 @@
 #include "ISceneChangedListener.h"
 
 #include <memory>
+#include <string>
 #include "IBaseScene.h"
 
 namespace mm2hack::apps::resources::parameters
@@ -53,9 +54,12 @@ namespace mm2hack::apps::scenes
         void SetMediator(SceneChangeMediator* mediator) { _mediator = mediator; }
 
     private:
+        void changeScene_(std::unique_ptr<IBaseScene> newScene);    // Transition to a new scene, releasing the current one if necessary(concept of state-pattern)
+
+    private:
+        const std::wstring kClassName{ L"SceneManager" };
+
         SceneChangeMediator* _mediator = nullptr;                   // Intermediary for scene changes
         std::unique_ptr<IBaseScene> _currentScene;                  // Manage the main part of the game program
-
-        void changeScene_(std::unique_ptr<IBaseScene> newScene);    // Transition to a new scene, releasing the current one if necessary(concept of state-pattern)
     };
 }

@@ -111,6 +111,24 @@ namespace mm2hack::apps::systems::physics
                          static_cast<double>(gp.gy) * _pageH };
         }
 
+        // Convert local (page-relative) position [0..pageSize) to world position
+        [[nodiscard]] std::optional<Vec2> ToWorldPosOnPage(int pageIndex, const Vec2& localPos) const noexcept
+        {
+            const auto origin = GetPageWorldOrigin(pageIndex);
+            if (!origin) return std::nullopt;
+
+            return Vec2{ origin->x + localPos.x, origin->y + localPos.y };
+        }
+        
+        // Convert world position to local (page-relative) position [0..pageSize)
+        [[nodiscard]] std::optional<Vec2> ToLocalPosOnPage(int pageIndex, const Vec2& worldPos) const noexcept
+        {
+            const auto origin = GetPageWorldOrigin(pageIndex);
+            if (!origin) return std::nullopt;
+
+            return Vec2{ worldPos.x - origin->x, worldPos.y - origin->y };
+        }
+
         // Convert world position to local (page-relative) position [0..pageSize)
         [[nodiscard]] double ToLocalPos(double worldPos, int pageSize) const noexcept
         {

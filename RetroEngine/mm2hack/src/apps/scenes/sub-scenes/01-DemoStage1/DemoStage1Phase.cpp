@@ -2,7 +2,6 @@
 
 #include "DemoStage1Phase.h"
 
-#include <cstdio>
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/resources/bg/AddressScraper.h"
 #include "apps/resources/bg/MapPageCache.h"
@@ -15,8 +14,6 @@
 #include "config/ConfigUIManager.h"
 #include "core/overlay/DebugHud.h"
 #include "DemoStage1.h"
-#include "utils/decimal_decoder.h"
-#include "utils/string_converter.h"
 
 namespace mm2hack::apps::scenes
 {
@@ -51,7 +48,7 @@ namespace mm2hack::apps::scenes
 
             ScrollController::Params p;
             _scroll = std::make_unique<ScrollController>(*_rules, *_renderer, p);
-            _scroll->SetPageIndex(0);
+            _scroll->SetPageIndex(owner.GetCurrentRoomPageIndex());
             using Camera = systems::scrolling::atomic::Camera;
             _scroll->ObjectPos() = { Camera::kCenterX, Camera::kCenterY };
 
@@ -65,7 +62,14 @@ namespace mm2hack::apps::scenes
             _player->SetTerrainProbe(_terrainProbe.get());
             _player->SetLadderService(_ladderService.get());
             _player->SetScrollContext(_rules.get(), _scroll->PageIndex());
-            _player->pos = _initialize_pos;
+            if (const auto worldPos = _pageGrid->ToWorldPosOnPage(static_cast<int>(_scroll->PageIndex()), _initialize_pos))
+            {
+                _player->pos = *worldPos;
+            }
+            else
+            {
+                _player->pos = _initialize_pos;     // fallback if conversion fails.
+            }
             _player->texture = 1;
             // for (auto& e : _enemies) { e->SetTerrainProbe(_terrainProbe.get()); }
 
