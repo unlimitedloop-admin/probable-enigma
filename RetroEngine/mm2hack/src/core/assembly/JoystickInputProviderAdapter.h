@@ -20,7 +20,7 @@
 namespace mm2hack::core::assembly
 {
     // Adapter class for joystick input provider using abstract class StateProvider
-    class JoystickInputProviderAdapter final : public StateProvider
+    class JoystickInputProviderAdapter : public StateProvider
     {
     public:
         explicit JoystickInputProviderAdapter(input::JoystickManager& jm) noexcept : _jm(jm) {/* Undefined */}

@@ -114,6 +114,9 @@
     <ClCompile Include="src\apps\systems\scrolling\atomic\FixedScrollDriver.cpp" />
     <ClCompile Include="src\apps\systems\scrolling\atomic\ScrollNeighborResolver.cpp" />
     <ClCompile Include="src\apps\systems\scrolling\atomic\FreeScrollDriver.cpp" />
+    <ClCompile Include="src\apps\scenes\phases\ActionStageRuntimeBuilder.cpp" />
+    <ClCompile Include="src\apps\scenes\phases\AbstractActionPhase.cpp" />
+    <ClCompile Include="src\apps\scenes\sub-scenes\02-DemoStage2\DemoStage2.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
@@ -313,6 +316,16 @@
     <ClInclude Include="src\apps\systems\scrolling\atomic\ScrollNeighborResolver.h" />
     <ClInclude Include="src\apps\systems\scrolling\atomic\FreeScrollDriver.h" />
     <ClInclude Include="src\apps\systems\scrolling\atomic\Camera.h" />
+    <ClInclude Include="src\apps\scenes\phases\IStageScript.h" />
+    <ClInclude Include="src\apps\scenes\phases\PhaseResult.h" />
+    <ClInclude Include="src\apps\scenes\phases\IPhase.h" />
+    <ClInclude Include="src\apps\scenes\phases\StageDefinition.h" />
+    <ClInclude Include="src\apps\scenes\phases\StageRuntimeContext.h" />
+    <ClInclude Include="src\apps\scenes\phases\ActionStageRuntimeBuilder.h" />
+    <ClInclude Include="src\apps\scenes\phases\AbstractActionPhase.h" />
+    <ClInclude Include="src\apps\scenes\sub-scenes\02-DemoStage2\DemoStage2.h" />
+    <ClInclude Include="src\apps\scenes\phases\IPhaseHost.h" />
+    <ClInclude Include="src\core\assembly\FilteredJoystickInputProvider.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

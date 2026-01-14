@@ -2,14 +2,23 @@
 
 #include "GameContext.h"
 
+#include <cassert>
 #include "apps/resources/ResourceManager.h"
 #include "config/ConfigUIManager.h"
 #include "config/SoundConfig.h"
+#include "core/assembly/FilteredJoystickInputProvider.h"
 #include "core/diagnostics/NullWatchRegistry.h"
 #include "input/JoystickManager.h"
 
 namespace mm2hack::apps::runtime
 {
+    core::assembly::FilteredJoystickInputProvider& GameContext::FilteredJoystickInput() noexcept
+    {
+        assert(_input != nullptr);
+        // NOTE: This cast is safe as long as we ensure that _input is always assigned a 'FilteredJoystickInputProvider' instance (MUST BE).
+        return static_cast<FilteredJoystickInputProvider&>(*_input);
+    }
+
     GameContext::IWatchRegistry& GameContext::Watch()
     {
         static mm2hack::core::diagnostics::NullWatchRegistry s_null;   // Fallback for uninitialized case

@@ -22,6 +22,7 @@ namespace mm2hack::core
     {
         class ITimeController;
         class StateProvider;
+        class FilteredJoystickInputProvider;
         class ISnapshotProvider;
     }
     namespace diagnostics
@@ -36,12 +37,13 @@ namespace mm2hack::apps::runtime
     // GameContext class that implements IGameContext, providing access to game resources and input management
     class GameContext final : public IGameContext
     {
-        using ResourceManager   = apps::resources::ResourceManager;
-        using ITimeController   = core::assembly::ITimeController;
-        using StateProvider     = core::assembly::StateProvider;
-        using ISnapshotProvider = core::assembly::ISnapshotProvider;
-        using IWatchRegistry    = core::diagnostics::IWatchRegistry;
-        using JoystickManager   = input::JoystickManager;
+        using ResourceManager               = apps::resources::ResourceManager;
+        using FilteredJoystickInputProvider = core::assembly::FilteredJoystickInputProvider;
+        using ISnapshotProvider             = core::assembly::ISnapshotProvider;
+        using ITimeController               = core::assembly::ITimeController;
+        using StateProvider                 = core::assembly::StateProvider;
+        using IWatchRegistry                = core::diagnostics::IWatchRegistry;
+        using JoystickManager               = input::JoystickManager;
 
     public:
         static GameContext& GetInstance()
@@ -63,6 +65,7 @@ namespace mm2hack::apps::runtime
         ITimeController* TryTime() { return _time; }    // Fail safe version
         StateProvider& Input() override { assert(_input); return *_input; }
         StateProvider* TryInput() { return _input; }    // Fail safe version
+        FilteredJoystickInputProvider& FilteredJoystickInput() noexcept;
         ISnapshotProvider* Snapshot() override { return _snapshot; }
         IWatchRegistry& Watch() override;
 

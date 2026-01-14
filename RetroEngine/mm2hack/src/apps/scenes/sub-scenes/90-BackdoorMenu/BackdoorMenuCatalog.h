@@ -57,7 +57,7 @@ namespace mm2hack::apps::scenes
         inline constexpr std::array<InsideMenuItemDesc, 3> kInsideMenu_Stages
         {
             InsideMenuItemDesc{ L"DEMO STAGE 1", true, Action::Enter, 1, 0 },
-            InsideMenuItemDesc{ L"DEMO STAGE 2", true, Action::Enter, 2, 1 },
+            InsideMenuItemDesc{ L"DEMO STAGE 2(ABSTRACT PHASE)", true, Action::Enter, 2, 1 },
             InsideMenuItemDesc{ L"BACK",         true, Action::Back,  1, std::nullopt },
         };
 
@@ -83,7 +83,7 @@ namespace mm2hack::apps::scenes
             switch (value)
             {
             case 0: return SceneID::DemoStage1;
-            //case 1: return SceneID::DemoStage2;
+            case 1: return SceneID::DemoStage2;
             default: return SceneID::None;
             }
         }

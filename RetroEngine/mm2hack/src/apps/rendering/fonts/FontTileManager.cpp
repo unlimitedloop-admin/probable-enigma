@@ -281,7 +281,8 @@ namespace mm2hack::apps::rendering::fonts
                 for (int i = 0; i < 26; ++i) out.charToIndex['A' + i] = i;
                 out.charToIndex['r'] = 26; out.charToIndex['.'] = 27; out.charToIndex[','] = 28;
                 out.charToIndex['\''] = 29; out.charToIndex['!'] = 30; out.charToIndex['?'] = 31;
-                if (!jsonLoaded) { out.tile_w = 8; out.tile_h = 8; out.tiles_x = 16; out.tiles_y = 2; }
+                out.charToIndex['-'] = 32; out.charToIndex['('] = 33; out.charToIndex[')'] = 34;
+                if (!jsonLoaded) { out.tile_w = 8; out.tile_h = 8; out.tiles_x = 16; out.tiles_y = 3; }
             }
             else if (setName == L"numbers")
             {

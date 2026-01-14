@@ -16,8 +16,9 @@ namespace mm2hack::apps::systems::physics
     using foundation::math::Vec2;
 
     // Interface for tile map providers
-    struct ITileMapProvider
+    class ITileMapProvider
     {
+    public:
         virtual ~ITileMapProvider() = default;
 
         virtual TileAttribute SampleTileAttribute(int tx, int ty) const = 0;

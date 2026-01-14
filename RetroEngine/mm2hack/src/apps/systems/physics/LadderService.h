@@ -17,6 +17,7 @@ namespace mm2hack::apps::systems::physics
 {
     struct Vec2;
 
+    // Ladder service implementation
     class LadderService final : public ILadderService
     {
     public:

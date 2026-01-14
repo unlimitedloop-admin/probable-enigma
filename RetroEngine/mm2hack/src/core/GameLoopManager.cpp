@@ -6,7 +6,7 @@
 #include "apps/runtime/GameContext.h"
 #include "apps/sequence/SequenceManager.h"
 #include "assembly/ISnapshotProvider.h"
-#include "assembly/JoystickInputProviderAdapter.h"
+#include "assembly/FilteredJoystickInputProvider.h"
 #include "assembly/StandardTimeController.h"
 #include "config/ConfigUIManager.h"
 #include "GameState.h"
@@ -42,7 +42,7 @@ namespace mm2hack::core
 
         // Take over to the GameContext services (time controller, input state provider, snapshot provider).
         auto time = std::make_unique<StandardTimeController>(/*fps=*/nullptr, /*callWait=*/false);
-        auto input = std::make_unique<JoystickInputProviderAdapter>(jm);
+        auto input = std::make_unique<FilteredJoystickInputProvider>(jm);
         ISnapshotProvider* snapshot = nullptr;
         gcInstance.AttachServices(time.get(), input.get(), snapshot);
 

@@ -8,6 +8,7 @@
 
 // Add more sub-scenes here...
 #include "sub-scenes/01-DemoStage1/DemoStage1.h"
+#include "sub-scenes/02-DemoStage2/DemoStage2.h"
 #include "sub-scenes/90-BackdoorMenu/BackdoorMenu.h"
 #include "sub-scenes/LaunchingGame.h"
 
@@ -23,6 +24,8 @@ namespace mm2hack::apps::scenes
             return std::make_unique<BackdoorMenu>(mediator);
         case SceneID::DemoStage1:
             return std::make_unique<DemoStage1>(mediator);
+        case SceneID::DemoStage2:
+            return std::make_unique<DemoStage2>(mediator);
 
             // Add more cases for other scenes as needed...
 

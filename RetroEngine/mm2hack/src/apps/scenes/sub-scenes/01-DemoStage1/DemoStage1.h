@@ -29,12 +29,9 @@ namespace mm2hack::apps
         class BGTileManager;
     }
 
-    namespace resources
+    namespace resources::parameters
     {
-        namespace parameters
-        {
-            class Parameters;
-        }
+        class Parameters;
     }
 
     namespace runtime
