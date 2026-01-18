@@ -10,7 +10,6 @@
 
 #include <string>
 #include "apps/scenes/IBaseScene.h"
-#include "apps/scenes/SceneID.h"
 
 namespace mm2hack::apps::resources::parameters
 {
@@ -37,10 +36,6 @@ namespace mm2hack::apps::scenes
         LaunchingGame& operator=(LaunchingGame&&) = default;
         ~LaunchingGame() override;
 
-        // Initialize the scene with parameters
-        void Initialize(const Parameters& params) override;
-        // Finalize and clean up the scene
-        void finalize_() override;
         // Update the scene logic for each frame
         void Update() override;
         // Render the main game world, draw the sprites and BGs
@@ -52,6 +47,12 @@ namespace mm2hack::apps::scenes
         SceneID GetSceneID() const override { return SceneID::LaunchingGame; }
         // Get the name of this scene as a wstring
         std::wstring GetSceneName() const override { return kClassName; }
+
+    private:
+        // Initialize the scene with parameters
+        void onEnter_(const Parameters& params) override;
+        // Finalize and clean up the scene
+        void onExit_() override;
 
     private:
         const std::wstring kClassName{ L"LaunchingGame" };

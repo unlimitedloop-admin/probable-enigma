@@ -4,7 +4,6 @@
 
 #include "IBaseScene.h"
 #include "SceneChangeMediator.h"
-#include "SceneID.h"
 
 // Add more sub-scenes here...
 #include "sub-scenes/01-DemoStage1/DemoStage1.h"

@@ -11,6 +11,7 @@
 #include "IPhase.h"
 
 #include <memory>
+#include <string>
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "IPhaseHost.h"
 #include "PhaseResult.h"
@@ -37,21 +38,26 @@ namespace mm2hack::apps::scenes::phases
         AbstractActionPhase(const AbstractActionPhase&) = delete;
         AbstractActionPhase& operator=(const AbstractActionPhase&) = delete;
 
+        // Sets up the phase with given parameters
         void Initialize(const resources::parameters::Parameters& params) override;
+        // Updates the phase and returns the result
         PhaseResult Update() override;
-
+        // Renders the world elements
         void RenderWorld() override;
+        // Renders the overlay elements
         void RenderOverlay() override;
 
     private:
-        std::unique_ptr<StageRuntimeContext> _ctx{};
-        IStageScript* _script{};
-        IPhaseHost* _host{};
-        bool _entered{ false };
+        const std::wstring kClassName{ L"AbstractActionPhase" };
 
-        Vec2 _player_prev_pos{};                                // Previous player position, scrolling-player sync use
+        std::unique_ptr<StageRuntimeContext> _ctx{};    // Runtime context for the stage
+        IStageScript* _script{};                        // Optional stage script for custom behavior
+        IPhaseHost* _host{};                            // Host for phase transitions
+        bool _entered{ false };                         // Indicates if the phase has been entered
 
-        // debug info.
+        Vec2 _player_prev_pos{};                        // Previous player position, scrolling-player sync use
+
+        // ======== debug info ========
         int _page_index_debug{ 0 };
         double _player_pos_x_debug{ 0 };
         double _player_pos_y_debug{ 0 };

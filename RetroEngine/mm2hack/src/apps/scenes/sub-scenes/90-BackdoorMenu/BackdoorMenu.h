@@ -15,7 +15,6 @@
 #include <ostream>
 #include <string>
 #include "apps/scenes/PhaseFadeController.h"
-#include "apps/scenes/SceneID.h"
 #include "apps/vfx/cursor/TwinkleCursorAnimator.h"
 #include "apps/vfx/stareffects/BgStarField.h"
 
@@ -81,8 +80,6 @@ namespace mm2hack::apps::scenes
         ~BackdoorMenu() override;
 
         // === IBaseScene implementations ===
-        // Initialize the backdoor menu
-        void Initialize(const Parameters& params) override;
         // Main game logic execution
         void Update() override;
         // Render the game world
@@ -121,7 +118,8 @@ namespace mm2hack::apps::scenes
         void SetNextScene(SceneID scene, const Parameters& params = {});
 
     private:
-        void finalize_() override;       // Finalize the backdoor menu
+        void onEnter_(const Parameters& params) override;
+        void onExit_() override;
 
     private:
         const std::wstring kClassName{ L"BackdoorMenu" };

@@ -18,7 +18,6 @@
 #include "apps/rendering/bg/BGTileManager.h"
 #include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/scenes/PhaseFadeController.h"
-#include "apps/scenes/SceneID.h"
 #include "apps/systems/physics/ITerrainProbe.h"
 #include "apps/systems/physics/ITileMapProvider.h"
 
@@ -90,8 +89,6 @@ namespace mm2hack::apps::scenes
         ~DemoStage1() override;
 
         // === IBaseScene implementations ===
-        // Initialize the backdoor menu
-        void Initialize(const Parameters& params) override;
         // Main game logic execution
         void Update() override;
         // Render the world elements
@@ -124,9 +121,10 @@ namespace mm2hack::apps::scenes
         const auto& Input() const noexcept { return _input; }
 
     private:
+        void onEnter_(const Parameters& params) override;
+        void onExit_() override;
         bool initializeResources_(const Parameters& params);    // Initialize necessary resources
         void loadStage_(BGTileManager& bgTileManager);          // Load the stage map and tile attributes
-        void finalize_() override;                              // Finalize the demo stage scene
 
     private:
         const std::wstring kClassName{ L"DemoStage1" };

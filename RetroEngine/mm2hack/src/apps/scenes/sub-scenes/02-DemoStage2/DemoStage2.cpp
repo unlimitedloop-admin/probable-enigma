@@ -8,13 +8,13 @@
 #include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/resources/stages/StageTileAttributes.h"
 #include "apps/runtime/GameContext.h"
+#include "apps/scenes/IBaseScene.h"
 #include "apps/scenes/PhaseFadeController.h"
 #include "apps/scenes/phases/ActionStageRuntimeBuilder.h"
 #include "apps/scenes/phases/IPhase.h"
 #include "apps/scenes/phases/PhaseResult.h"
 #include "apps/scenes/phases/StageDefinition.h"
 #include "apps/scenes/SceneChangeMediator.h"
-#include "apps/scenes/SceneID.h"
 #include "apps/systems/physics/TileAttribute.h"
 #include "config/GameAssets.h"
 #include "core/assembly/FilteredJoystickInputProvider.h"
@@ -34,49 +34,6 @@ namespace mm2hack::apps::scenes
     {
         // Clean up resources, finalize the demo stage, etc.
         utils::debug_log(kClassName + L" destructor called.");
-        finalize_();
-    }
-
-    void DemoStage2::Initialize(const Parameters& params)
-    {
-        using namespace apps::runtime;
-        auto& gc = GameContext::GetInstance();
-        auto& resource = gc.GetResourceManager();
-
-        // Initialize the demo stage
-        if (!initializeResources_(params))
-        {
-            THROW_EXCEPTION(L"Failed to initialize resources", kClassName);
-        }
-
-        // Construct the Action Stage Runtime Context.
-        // Create definition.
-        phases::StageDefinition def{};
-        def.map_binary_path = std::wstring(kStageMapBinary);
-        def.start_page_index = _roomState.pageIndex;
-        def.start_local_pos = { 128.0, 10.0 }; // TODO: _initialize_pos
-        
-        // Create build config.
-        phases::ActionStageBuildConfig cfg{};
-        cfg.map_name = std::wstring(kMapName);
-        cfg.tile_px = config::SystemConfig::kTileSize;
-        cfg.player_sprite_id = static_cast<int>(_spriteId);
-
-        // Create filtered joystick input provider.
-        _input = &gc.Input();
-        
-        // Build the context using the builder.
-        auto ctx = _actionBuilder.Build(resource, *_input, def, cfg, L"AreaA");
-
-        // Create the initial phase.
-        _phase = std::make_unique<phases::AbstractActionPhase>(std::move(ctx), _stageScript.get(), *this);
-
-        PhaseFadePlan first(20, 20, 0, 12, 20, FadeLayerMask::All);
-        _fader.BeginPhase(first, resource);
-
-        _phase->Initialize(params);
-
-        utils::debug_log(kClassName + L" initialized.");
     }
 
     void DemoStage2::Update()
@@ -167,7 +124,49 @@ namespace mm2hack::apps::scenes
         // Load the demo stage state
     }
 
-    void DemoStage2::finalize_()
+    void DemoStage2::onEnter_(const Parameters& params)
+    {
+        using namespace apps::runtime;
+        auto& gc = GameContext::GetInstance();
+        auto& resource = gc.GetResourceManager();
+
+        // Initialize the demo stage
+        if (!initializeResources_(params))
+        {
+            THROW_EXCEPTION(L"Failed to initialize resources", kClassName);
+        }
+
+        // Construct the Action Stage Runtime Context.
+        // Create definition.
+        phases::StageDefinition def{};
+        def.map_binary_path = std::wstring(kStageMapBinary);
+        def.start_page_index = _roomState.pageIndex;
+        def.start_local_pos = { 128.0, 10.0 };
+
+        // Create build config.
+        phases::ActionStageBuildConfig cfg{};
+        cfg.map_name = std::wstring(kMapName);
+        cfg.tile_px = config::SystemConfig::kTileSize;
+        cfg.player_sprite_id = static_cast<int>(_spriteId);
+
+        // Create filtered joystick input provider.
+        _input = &gc.Input();
+
+        // Build the context using the builder.
+        auto ctx = _actionBuilder.Build(resource, *_input, def, cfg, L"AreaA");
+
+        // Create the initial phase.
+        _phase = std::make_unique<phases::AbstractActionPhase>(std::move(ctx), _stageScript.get(), *this);
+
+        PhaseFadePlan first(20, 20, 0, 12, 20, FadeLayerMask::All);
+        _fader.BeginPhase(first, resource);
+
+        _phase->Initialize(params);
+
+        utils::debug_log(kClassName + L" initialized.");
+    }
+
+    void DemoStage2::onExit_()
     {
         using namespace runtime;
         GameContext::GetInstance().GetResourceManager().GetFontTileManager().ShutDown();
@@ -200,7 +199,6 @@ namespace mm2hack::apps::scenes
         }
         if (auto idx = bgRoomBank.FindIndexByRoomId(static_cast<uint8_t>(*roomNo)); idx)
         {
-            // Successfully found the room index.
             _roomState.pageIndex = static_cast<int>(*idx);
         }
         else

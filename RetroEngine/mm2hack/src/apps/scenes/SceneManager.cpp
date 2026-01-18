@@ -6,7 +6,6 @@
 #include "core/overlay/PauseManager.h"
 #include "IBaseScene.h"
 #include "SceneFactory.h"
-#include "SceneID.h"
 
 namespace mm2hack::apps::scenes
 {
@@ -61,17 +60,20 @@ namespace mm2hack::apps::scenes
 
     void SceneManager::RequestSceneChange(SceneID nextScene, const Parameters& params)
     {
+        // Create the next scene instance using the SceneFactory.
         auto next = SceneFactory::CreateScene(nextScene, _mediator);
-        if (next)
+        if (!next)
         {
-            next->Initialize(params);
-            changeScene_(std::move(next));
+            return;
         }
-    }
 
-    void SceneManager::changeScene_(std::unique_ptr<IBaseScene> newScene)
-    {
-        // HACK: OnExit(), OnEnter() equivalent handling
-        _currentScene = std::move(newScene);
+        // Finalize the current scene before switching to the next one.
+        if (_currentScene)
+        {
+            _currentScene->Finalize();
+        }
+
+        next->Initialize(params);
+        _currentScene = std::move(next);
     }
 }

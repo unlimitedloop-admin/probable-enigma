@@ -4,10 +4,10 @@
 
 #include "apps/foundation/NES/NESPalette.h"
 #include "apps/resources/parameters/Parameters.h"
-#include "apps/scenes/SceneID.h"
+#include "apps/scenes/IBaseScene.h"
 #include "apps/scenes/SceneManager.h"
 #include "core/save/SaveData.h"
-#include "SequenceType.h"
+#include "SequenceManager.h"
 
 namespace mm2hack::apps::sequence
 {
@@ -51,11 +51,6 @@ namespace mm2hack::apps::sequence
     {
         // Render any overlays for the debug mode.
         _sceneManager.RenderOverlay();
-    }
-
-    scenes::SceneManager* DebugSequence::GetSceneManager()
-    {
-        return &_sceneManager;
     }
 
     bool DebugSequence::Save(core::save::SaveData& out) const

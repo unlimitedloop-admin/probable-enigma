@@ -11,7 +11,7 @@
 #include <array>
 #include <optional>
 #include <string_view>
-#include "apps/scenes/SceneID.h"
+#include "apps/scenes/IBaseScene.h"
 
 namespace mm2hack::apps::scenes
 {

@@ -12,10 +12,17 @@
 #include <string>
 #include "core/overlay/FeedbackOverlay.h"
 #include "ISequence.h"
-#include "SequenceType.h"
 
 namespace mm2hack::apps::sequence
 {
+    // Enumeration of different sequence types
+    enum class SequenceType
+    {
+        None,
+        Standard,
+        Debug
+    };
+
     // SequenceManager is a singleton class that manages the current sequence
     class SequenceManager final
     {

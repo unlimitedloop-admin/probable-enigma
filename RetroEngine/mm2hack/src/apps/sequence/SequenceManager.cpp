@@ -9,7 +9,6 @@
 #include "core/overlay/InputConfigOverlay.h"
 #include "core/overlay/PauseManager.h"
 #include "DebugSequence.h"
-#include "SequenceType.h"
 #include "StandardSequence.h"
 #include "test/TestSequence.h"
 #include "utils/output_debug.h"
@@ -111,7 +110,8 @@ namespace mm2hack::apps::sequence
                 // Advance the input state for this frame.
                 input.BeginTick(time.FrameCounter());
 
-                _currentSequence->Execute();    // !Execute the main game logic.
+                // !Execute the main game logic.
+                _currentSequence->Execute();
 
                 // Finalize the input state for this frame.
                 input.EndTick();
@@ -128,11 +128,13 @@ namespace mm2hack::apps::sequence
 
         if (_currentSequence)
         {
+            // Render the world content. (scenes, models, effects, etc.)
             _currentSequence->RenderWorld();
         }
 
         if (PauseManager::IsPaused())
         {
+            // Draw the pause overlay if the game is paused.
             PauseManager::DrawOverlay();
         }
 

@@ -19,7 +19,7 @@
 namespace mm2hack::apps::scenes::phases
 {
     std::unique_ptr<StageRuntimeContext> ActionStageRuntimeBuilder::Build(
-        resources::ResourceManager& resource,
+        ResourceManager& resource,
         core::assembly::StateProvider& input,
         const StageDefinition& def,
         const ActionStageBuildConfig& config,
@@ -36,7 +36,7 @@ namespace mm2hack::apps::scenes::phases
         return ctx;
     }
 
-    void ActionStageRuntimeBuilder::buildCore_(StageRuntimeContext& ctx, resources::ResourceManager& resource, const StageDefinition& def, const ActionStageBuildConfig& config) const
+    void ActionStageRuntimeBuilder::buildCore_(StageRuntimeContext& ctx, ResourceManager& resource, const StageDefinition& def, const ActionStageBuildConfig& config) const
     {
         using resources::bg::AddressScraper;
         using resources::bg::MapPageCache;

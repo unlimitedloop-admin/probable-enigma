@@ -146,7 +146,6 @@
     <ClInclude Include="src\apps\scenes\SceneManager.h" />
     <ClInclude Include="src\apps\sequence\StandardSequence.h" />
     <ClInclude Include="src\apps\sequence\DebugSequence.h" />
-    <ClInclude Include="src\apps\sequence\SequenceType.h" />
     <ClInclude Include="src\utils\Fps.h" />
     <ClInclude Include="src\input\Jpbtn.h" />
     <ClInclude Include="src\input\InputFrame.h" />

@@ -8,9 +8,9 @@
 #include "apps/foundation/NES/NESPalette.h"
 #include "apps/resources/parameters/Parameters.h"
 #include "apps/runtime/GameContext.h"
+#include "apps/scenes/IBaseScene.h"
 #include "apps/scenes/PhaseFadeController.h"
 #include "apps/scenes/SceneChangeMediator.h"
-#include "apps/scenes/SceneID.h"
 #include "apps/vfx/cursor/TwinkleCursorAnimator.h"
 #include "BackdoorMenuPhase.h"
 #include "config/GameAssets.h"
@@ -30,46 +30,6 @@ namespace mm2hack::apps::scenes
     {
         // Clean up resources, finalize the backdoor menu, etc.
         utils::debug_log(kClassName + L" destructor called.");
-        finalize_();
-    }
-
-    void BackdoorMenu::Initialize(const Parameters& params)
-    {
-        utils::debug_log(kClassName + L" initialized.");
-
-        using namespace apps::runtime;
-        auto& resource = GameContext::GetInstance().GetResourceManager();
-        auto& font = resource.GetFontTileManager();
-        font.SetUp();
-
-        auto& audio = resource.GetAudioManager();
-        audio.Initialize(MM2H_PROPERTY(BackdoorMenuSoundProperty));
-
-        foundation::NES::NESPalette::SetBackgroundFor(13U); // Innocent black
-
-        _phase = std::make_unique<BackdoorMenu_::CreditPhase>(*this);
-        _phaseId = _phase->Id();
-
-        PhaseFadePlan first(
-            20, // preBlackHold
-            20, // fadeInFrames
-            0,  // preFadeOutHold
-            12, // fadeOutFrames
-            20, // postBlackHold
-            FadeLayerMask::BG | FadeLayerMask::Font // layers
-        );
-        _fader.BeginPhase(first, resource);
-
-        _cursor.Load(L"Cursor", MM2H_GRAPHICS(FlatCursor), MM2H_GRAPHPROPS(FlatCursor));
-        _cursor.SetBaseTileDuration(40); // Slower twinkle
-        vfx::cursor::TwinkleCursorAnimator::Step customLoop[] = {
-            {0, 40}, {1, 6}, {2, 6}, {3, 6}, {2, 6}, {1, 6}, {0, 15}
-        };
-        _cursor.SetLoop(customLoop, std::size(customLoop));
-
-        _starField.InitStars();
-        _resource = GameContext::GetInstance().GetResourceManagerPtr();
-        _input = &GameContext::GetInstance().Input();
     }
 
     void BackdoorMenu::Update()
@@ -172,7 +132,46 @@ namespace mm2hack::apps::scenes
         _nextParams = params;
     }
 
-    void BackdoorMenu::finalize_()
+    void BackdoorMenu::onEnter_(const Parameters& params)
+    {
+        utils::debug_log(kClassName + L" initialized.");
+
+        using namespace apps::runtime;
+        auto& resource = GameContext::GetInstance().GetResourceManager();
+        auto& font = resource.GetFontTileManager();
+        font.SetUp();
+
+        auto& audio = resource.GetAudioManager();
+        audio.Initialize(MM2H_PROPERTY(BackdoorMenuSoundProperty));
+
+        foundation::NES::NESPalette::SetBackgroundFor(13U); // Innocent black
+
+        _phase = std::make_unique<BackdoorMenu_::CreditPhase>(*this);
+        _phaseId = _phase->Id();
+
+        PhaseFadePlan first(
+            20, // preBlackHold
+            20, // fadeInFrames
+            0,  // preFadeOutHold
+            12, // fadeOutFrames
+            20, // postBlackHold
+            FadeLayerMask::BG | FadeLayerMask::Font // layers
+        );
+        _fader.BeginPhase(first, resource);
+
+        _cursor.Load(L"Cursor", MM2H_GRAPHICS(FlatCursor), MM2H_GRAPHPROPS(FlatCursor));
+        _cursor.SetBaseTileDuration(40); // Slower twinkle
+        vfx::cursor::TwinkleCursorAnimator::Step customLoop[] = {
+            {0, 40}, {1, 6}, {2, 6}, {3, 6}, {2, 6}, {1, 6}, {0, 15}
+        };
+        _cursor.SetLoop(customLoop, std::size(customLoop));
+
+        _starField.InitStars();
+        _resource = GameContext::GetInstance().GetResourceManagerPtr();
+        _input = &GameContext::GetInstance().Input();
+    }
+
+    void BackdoorMenu::onExit_()
     {
         using namespace apps::runtime;
         GameContext::GetInstance().GetResourceManager().GetFontTileManager().ShutDown();

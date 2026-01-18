@@ -409,7 +409,6 @@
     <ClInclude Include="src\apps\sequence\DebugSequence.h" />
     <ClInclude Include="src\apps\sequence\ISequence.h" />
     <ClInclude Include="src\apps\sequence\SequenceManager.h" />
-    <ClInclude Include="src\apps\sequence\SequenceType.h" />
     <ClInclude Include="src\apps\sequence\StandardSequence.h" />
     <ClInclude Include="src\apps\resources\ResourceFadeBindings.h" />
     <ClInclude Include="src\apps\resources\ResourceManager.h" />

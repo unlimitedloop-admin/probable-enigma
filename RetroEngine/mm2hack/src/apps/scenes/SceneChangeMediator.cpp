@@ -2,8 +2,8 @@
 
 #include "SceneChangeMediator.h"
 
+#include "IBaseScene.h"
 #include "ISceneChangedListener.h"
-#include "SceneID.h"
 
 namespace mm2hack::apps::scenes
 {

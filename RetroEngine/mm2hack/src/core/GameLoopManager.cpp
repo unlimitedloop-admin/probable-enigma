@@ -58,17 +58,16 @@ namespace mm2hack::core
         using namespace overlay;
         using namespace utils;
 
-        ScopeGuard finally([]
+        // Load graphics configuration and apply FPS limit if changed.
+        auto& fps = FpsManager::GetInstance();
+        auto& seq = apps::sequence::SequenceManager::GetInstance();
+
+        ScopeGuard finally([&seq]
             {
-                auto& seq = apps::sequence::SequenceManager::GetInstance();
                 seq.Release();
                 auto& ctx = apps::runtime::GameContext::GetInstance();
                 ctx.Shutdown();
             });
-
-        // Load graphics configuration and apply FPS limit if changed.
-        auto& fps = FpsManager::GetInstance();
-        auto& seq = apps::sequence::SequenceManager::GetInstance();
 
         try
         {

@@ -34,7 +34,6 @@ namespace mm2hack::apps::sequence
         void Execute() override;
         void RenderWorld() override;
         void RenderOverlay() override;
-        scenes::SceneManager* GetSceneManager() override;
         bool Save(core::save::SaveData& out) const override;
         bool Load(const core::save::SaveData& in) override;
 

@@ -7,7 +7,6 @@
 #include "../resource.h"
 #include "apps/runtime/GameContext.h"
 #include "apps/sequence/SequenceManager.h"
-#include "apps/sequence/SequenceType.h"
 #include "config/ConfigUIManager.h"
 #include "config/HudConfig.h"
 #include "core/assembly/ScreenshotManager.h"

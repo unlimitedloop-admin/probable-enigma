@@ -24,7 +24,6 @@
 #include "apps/scenes/phases/IPhase.h"
 #include "apps/scenes/phases/IStageScript.h"
 #include "apps/scenes/SceneChangeMediator.h"
-#include "apps/scenes/SceneID.h"
 #include "core/assembly/StateProvider.h"
 
 namespace mm2hack::apps::resources::parameters
@@ -45,7 +44,6 @@ namespace mm2hack::apps::scenes
         ~DemoStage2() override;
 
         // === IBaseScene implementations ===
-        void Initialize(const Parameters& params) override;
         void Update() override;
         void RenderWorld() override;
         void RenderOverlay() override;
@@ -53,6 +51,13 @@ namespace mm2hack::apps::scenes
         SceneID GetSceneID() const override { return SceneID::DemoStage2; }
         // Get the scene name (i.e. class name)
         std::wstring GetSceneName() const override { return kClassName; }
+
+        // === IPhaseHost implementations ===
+        void RequestTransition(const std::wstring& next_key, const PhaseFadePlan& plan, const Parameters& params) override;
+
+        // === DemoStage2 specific ===
+        // Queue a new phase to transition to
+        void QueuePhase(std::unique_ptr<phases::IPhase> next, PhaseFadePlan nextPlan);
         // Get the current room page index
         int GetCurrentRoomPageIndex() const { return _roomState.pageIndex; }
         // Get the map name used in this scene
@@ -62,19 +67,13 @@ namespace mm2hack::apps::scenes
         // Get the sprite Id used in this scene
         SpriteManagerId GetSpriteId() const noexcept { return _spriteId; }
 
-        // === IPhaseHost implementations ===
-        void RequestTransition(const std::wstring& next_key, const PhaseFadePlan& plan, const Parameters& params) override;
-
-        // === DemoStage2 specific ===
-        // Queue a new phase to transition to
-        void QueuePhase(std::unique_ptr<phases::IPhase> next, PhaseFadePlan nextPlan);
-
         // === Save/Load state ===
         void Save(std::ostream& out);
         void Load(std::istream& in);
 
     private:
-        void finalize_() override;                                      // Cleanup resources
+        void onEnter_(const Parameters& params) override;
+        void onExit_() override;
 
         bool initializeResources_(const Parameters& params);
         void loadStage_(rendering::bg::BGTileManager& bgTileManager);   // Load the stage map and tile attributes
@@ -89,12 +88,13 @@ namespace mm2hack::apps::scenes
 
         const std::wstring kMapName{ L"SAMPLESTAGE2" };
         const std::wstring_view kStageMapBinary{ L"assets\\_exams\\bg\\SAMPLESTAGE1.bin" };
+        
         struct RoomState
         {
             int pageIndex{ 0 };
             int tileW{ 8 };   // in tiles
             int tileH{ 8 };   // in tiles
-        } _roomState;
+        } _roomState;                                                   // Current room state is used to track room/page info
 
         SceneChangeMediator* _mediator{ nullptr };                      // Mediator for scene changes
 

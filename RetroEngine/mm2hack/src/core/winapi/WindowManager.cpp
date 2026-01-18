@@ -120,9 +120,6 @@ namespace mm2hack::core::winapi
             return reportInitError(L"Failed to initialize the window.");
         }
 
-        InitializeMenuOnStartup();
-        UpdateMenuBarState();
-
         // DxLib initialization.
         if (::DxLib::DxLib_Init() == -1)
         {
@@ -142,6 +139,9 @@ namespace mm2hack::core::winapi
             ::DxLib::DxLib_End();
             return reportInitError(L"Unable to obtain window handle.");
         }
+
+        InitializeMenuOnStartup();
+        UpdateMenuBarState();
 
         _dxLibWnd = reinterpret_cast<WNDPROC>(GetWindowLongPtr(_mainWindowHandle, GWLP_WNDPROC));
         SetWindowLongPtr(_mainWindowHandle, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WindowProc));
@@ -363,8 +363,14 @@ namespace mm2hack::core::winapi
 
     bool WindowManager::isDebugMode_() const
     {
-        return (lstrcmp(GetCommandLine(), L"debug") == 0) ||
-            config::EnvironmentConfig::GetBool(L"MM2HACK_DEBUG", false);
+        // Check if "debug" argument is passed in the command line
+        const std::wstring cmdLine = GetCommandLine();
+        const bool hasDebugArg = cmdLine.find(L"debug") != std::wstring::npos;
+        
+        // Check environment configuration
+        const bool envDebug = config::EnvironmentConfig::GetBool(L"MM2HACK_DEBUG", false);
+        
+        return hasDebugArg || envDebug;
     }
 
     float WindowManager::loadViewerRate_() const
