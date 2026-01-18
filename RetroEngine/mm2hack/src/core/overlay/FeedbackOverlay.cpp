@@ -85,21 +85,21 @@ namespace mm2hack::core::overlay
         int alpha = static_cast<int>(255 * alphaFactor);
 
         // Draw on a virtual screen.
-        DxLib::SetDrawScreen(_fontScreen);
-        DxLib::ClearDrawScreen();
+        ::DxLib::SetDrawScreen(_fontScreen);
+        ::DxLib::ClearDrawScreen();
 
         //DxLib::SetFontSize(60);
-        DxLib::SetDrawBlendMode(DX_BLENDMODE_ALPHA, alpha / 2);
-        DxLib::DrawBox(drawX - 16, drawY - 12, drawX + 640, drawY + 60, GetColor(0, 0, 0), TRUE);
+        ::DxLib::SetDrawBlendMode(DX_BLENDMODE_ALPHA, alpha / 2);
+        ::DxLib::DrawBox(drawX - 16, drawY - 12, drawX + 640, drawY + 60, GetColor(0, 0, 0), TRUE);
 
-        DxLib::SetDrawBlendMode(DX_BLENDMODE_ALPHA, alpha);
-        DxLib::DrawStringToHandle(drawX, drawY, msg.text.c_str(), GetColor(255, 255, 255), _fontHandle);
-        DxLib::SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
+        ::DxLib::SetDrawBlendMode(DX_BLENDMODE_ALPHA, alpha);
+        ::DxLib::DrawStringToHandle(drawX, drawY, msg.text.c_str(), GetColor(255, 255, 255), _fontHandle);
+        ::DxLib::SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
 
         // Draws into the window you are showing.
-        DxLib::SetDrawScreen(DX_SCREEN_BACK);
-        DxLib::SetDrawMode(DX_DRAWMODE_BILINEAR);
-        DxLib::DrawExtendGraph(0, 0, destW, destH, _fontScreen, TRUE);
-        DxLib::SetDrawMode(DX_DRAWMODE_NEAREST);
+        ::DxLib::SetDrawScreen(DX_SCREEN_BACK);
+        ::DxLib::SetDrawMode(DX_DRAWMODE_BILINEAR);
+        ::DxLib::DrawExtendGraph(0, 0, destW, destH, _fontScreen, TRUE);
+        ::DxLib::SetDrawMode(DX_DRAWMODE_NEAREST);
     }
 }

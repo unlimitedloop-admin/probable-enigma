@@ -2,7 +2,6 @@
 
 #include "C16ButtonState.h"
 
-#include <array>
 #include "InputFrame.h"
 #include "Jpbtn.h"
 

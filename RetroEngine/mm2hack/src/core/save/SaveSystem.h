@@ -9,7 +9,11 @@
 #pragma once
 
 #include <string>
-#include "SaveData.h"
+
+namespace mm2hack::core::save
+{
+    struct SaveData;
+}
 
 namespace mm2hack::core::save
 {
@@ -37,6 +41,8 @@ namespace mm2hack::core::save
         static std::wstring GetCurrentSlotFilename();
 
     private:
-        static inline int _currentSlot = 0;     // Current save slot index
+        inline static const std::wstring kClassName{ L"SaveSystem" };
+
+        inline static int _currentSlot = 0;     // Current save slot index
     };
 }

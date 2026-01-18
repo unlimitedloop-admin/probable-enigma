@@ -9,16 +9,25 @@
 #pragma once
 
 #include <string>
-#include "apps/parameters/Parameters.h"
 #include "apps/scenes/IBaseScene.h"
-#include "apps/scenes/SceneChangeMediator.h"
-#include "apps/scenes/SceneID.h"
+
+namespace mm2hack::apps::resources::parameters
+{
+    class Parameters;
+}
+
+namespace mm2hack::apps::scenes
+{
+    class SceneChangeMediator;
+}
 
 namespace mm2hack::apps::scenes
 {
     // This is scene that appears when the game is launching
     class LaunchingGame : public IBaseScene
     {
+        using Parameters = resources::parameters::Parameters;
+
     public:
         LaunchingGame(SceneChangeMediator* mediator);
         LaunchingGame(const LaunchingGame&) = delete;
@@ -27,10 +36,6 @@ namespace mm2hack::apps::scenes
         LaunchingGame& operator=(LaunchingGame&&) = default;
         ~LaunchingGame() override;
 
-        // Initialize the scene with parameters
-        void Initialize(const parameters::Parameters& params) override;
-        // Finalize and clean up the scene
-        void Finalize() override;
         // Update the scene logic for each frame
         void Update() override;
         // Render the main game world, draw the sprites and BGs
@@ -42,6 +47,12 @@ namespace mm2hack::apps::scenes
         SceneID GetSceneID() const override { return SceneID::LaunchingGame; }
         // Get the name of this scene as a wstring
         std::wstring GetSceneName() const override { return kClassName; }
+
+    private:
+        // Initialize the scene with parameters
+        void onEnter_(const Parameters& params) override;
+        // Finalize and clean up the scene
+        void onExit_() override;
 
     private:
         const std::wstring kClassName{ L"LaunchingGame" };

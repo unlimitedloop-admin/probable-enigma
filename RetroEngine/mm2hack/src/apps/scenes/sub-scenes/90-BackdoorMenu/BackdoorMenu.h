@@ -14,14 +14,36 @@
 #include <memory>
 #include <ostream>
 #include <string>
-#include "apps/parameters/Parameters.h"
 #include "apps/scenes/PhaseFadeController.h"
-#include "apps/scenes/SceneChangeMediator.h"
-#include "apps/scenes/SceneID.h"
-#include "apps/supervisor/ResourceManager.h"
 #include "apps/vfx/cursor/TwinkleCursorAnimator.h"
 #include "apps/vfx/stareffects/BgStarField.h"
-#include "core/assembly/StateProvider.h"
+
+namespace mm2hack::apps
+{
+    namespace resources
+    {
+        namespace parameters
+        {
+            class Parameters;
+        }
+        class ResourceManager;
+    }
+
+    namespace runtime
+    {
+        class GameContext;
+    }
+
+    namespace scenes
+    {
+        class SceneChangeMediator;
+    }
+}
+
+namespace mm2hack::core::assembly
+{
+    class StateProvider;
+}
 
 namespace mm2hack::apps::scenes
 {
@@ -51,13 +73,13 @@ namespace mm2hack::apps::scenes
     // Backdoor menu for debugging purposes only (A list of selectable scenes)
     class BackdoorMenu : public IBaseScene
     {
+        using Parameters = resources::parameters::Parameters;
+
     public:
         BackdoorMenu(SceneChangeMediator* mediator);
         ~BackdoorMenu() override;
 
         // === IBaseScene implementations ===
-        // Initialize the backdoor menu
-        void Initialize(const parameters::Parameters& params) override;
         // Main game logic execution
         void Update() override;
         // Render the game world
@@ -93,10 +115,11 @@ namespace mm2hack::apps::scenes
         // Access the fade controller for scene transitions
         PhaseFadeController& Fader() noexcept { return _fader; }
 
-        void SetNextScene(SceneID scene, const parameters::Parameters& params = {});
+        void SetNextScene(SceneID scene, const Parameters& params = {});
 
     private:
-        void Finalize() override;       // Finalize the backdoor menu
+        void onEnter_(const Parameters& params) override;
+        void onExit_() override;
 
     private:
         const std::wstring kClassName{ L"BackdoorMenu" };
@@ -109,12 +132,12 @@ namespace mm2hack::apps::scenes
         PhaseFadePlan _pendingPlan{};                                   // Pending fade plan for the next phase
 
         SceneID _nextScene{ SceneID::None };                            // Next scene to switch to
-        parameters::Parameters _nextParams{};                           // Reserve the parameters for the next scene
+        Parameters _nextParams{};                                       // Reserve the parameters for the next scene
         bool _leaving{ false };                                         // Flag indicating if leaving the backdoor menu
 
         vfx::cursor::TwinkleCursorAnimator _cursor;                     // Twinkling cursor animator
         vfx::stareffects::BgStarField _starField;                       // Background star field effect
-        supervisor::ResourceManager* _resource{ nullptr };              // Reference to the resource manager
+        apps::resources::ResourceManager* _resource{ nullptr };         // Reference to the resource manager
         core::assembly::StateProvider* _input{ nullptr };               // Reference to the state provider
     };
 }

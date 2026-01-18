@@ -9,6 +9,7 @@
 #pragma once
 
 #include <optional>
+#include <string>
 #include "JoystickManager.h"
 #include "KeyToken.h"
 #include "RawInputEvent.h"
@@ -37,8 +38,11 @@ namespace mm2hack::input
 
     private:
         // Device-specific polling methods
-        static std::optional<RawInputEvent> PollKeyboardRawChange();    // Poll keyboard for key presses
-        static std::optional<RawInputEvent> PollXInputRawChange(float deadzone);    // Poll XInput device for button/axis changes
-        static std::optional<RawInputEvent> PollDirectInputRawChange(float deadzone, AxisGroup diCaptureGroup); // Poll DirectInput device for button/axis changes
+        static std::optional<RawInputEvent> pollKeyboardRawChange_();                                               // Poll keyboard for key presses
+        static std::optional<RawInputEvent> pollXInputRawChange_(float deadzone);                                   // Poll XInput device for button/axis changes
+        static std::optional<RawInputEvent> pollDirectInputRawChange_(float deadzone, AxisGroup diCaptureGroup);    // Poll DirectInput device for button/axis changes
+
+    private:
+        const std::wstring kClassName{ L"RawInputPoller" };
     };
 }

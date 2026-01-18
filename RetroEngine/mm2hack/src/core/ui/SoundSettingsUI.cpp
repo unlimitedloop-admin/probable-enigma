@@ -5,7 +5,7 @@
 #include <CommCtrl.h>
 #include <sysinfoapi.h>
 #include <Windowsx.h>
-#include "apps/deal/GameContext.h"
+#include "apps/runtime/GameContext.h"
 #include "CommonUIStyle.h"
 #include "config/ConfigUIManager.h"
 #include "config/SoundConfig.h"
@@ -24,11 +24,11 @@ namespace mm2hack::core::ui
         ui::CommonUIStyle uiStyle;
 
         // Master Volume
-        CreateSlider(L"Master Vol:", 20, 20, _slider_master);
+        createSlider_(L"Master Vol:", 20, 20, _slider_master);
         // BGM
-        CreateSlider(L"BGM Vol:", 20, 70, _slider_bgm);
+        createSlider_(L"BGM Vol:", 20, 70, _slider_bgm);
         // SE
-        CreateSlider(L"SE Vol:", 20, 120, _slider_se);
+        createSlider_(L"SE Vol:", 20, 120, _slider_se);
 
         // Sound Enabled Checkbox
         _check_sound_enabled = CreateWindowEx(0, L"BUTTON", L"Sound Output?",
@@ -49,9 +49,9 @@ namespace mm2hack::core::ui
             130, 210, 150, 100,
             _parent, nullptr, nullptr, nullptr);
         uiStyle.ApplyUIFont(_combo_source);
-        AddSoundSourceOptions();
+        addSoundSourceOptions_();
 
-        LoadSettings();
+        loadSettings_();
     }
 
     void SoundSettingsUI::ApplySettings() const
@@ -67,7 +67,7 @@ namespace mm2hack::core::ui
         config::ConfigUIManager::SaveSoundConfig(config);
 
         // To apply the settings, we need to access the ResourceManager.
-        auto& ctx = apps::deal::GameContext::GetInstance();
+        auto& ctx = apps::runtime::GameContext::GetInstance();
         if (ctx.GetResourceManagerPtr())
         {
             auto& audio = ctx.GetResourceManager().GetAudioManager();
@@ -101,7 +101,7 @@ namespace mm2hack::core::ui
         }
     }
 
-    void SoundSettingsUI::CreateSlider(LPCWSTR label, int x, int y, HWND& out_slider) const
+    void SoundSettingsUI::createSlider_(LPCWSTR label, int x, int y, HWND& out_slider) const
     {
         CreateWindowEx(0, L"STATIC", label,
             WS_CHILD | WS_VISIBLE,
@@ -117,14 +117,14 @@ namespace mm2hack::core::ui
         SendMessage(out_slider, TBM_SETPOS, TRUE, 80);
     }
 
-    void SoundSettingsUI::AddSoundSourceOptions() const
+    void SoundSettingsUI::addSoundSourceOptions_() const
     {
         SendMessage(_combo_source, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"Original Style"));
         SendMessage(_combo_source, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(L"+DPCM"));
         SendMessage(_combo_source, CB_SETCURSEL, 0, 0);
     }
 
-    void SoundSettingsUI::LoadSettings() const
+    void SoundSettingsUI::loadSettings_() const
     {
         config::SoundConfig config;
         config::ConfigUIManager::LoadSoundConfig(config);

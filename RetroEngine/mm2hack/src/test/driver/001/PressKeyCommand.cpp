@@ -2,7 +2,7 @@
 
 #include "PresskeyCommand.h"
 
-#include "apps/deal/GameContext.h"
+#include "apps/runtime/GameContext.h"
 #include "core/assembly/InputTypes.h"
 #include "input/Jpbtn.h"
 
@@ -15,7 +15,7 @@ namespace mm2hack::apps::scenes
 
     void PressKeyCommand::Update()
     {
-        //auto& joystick = apps::deal::GameContext::GetInstance().Input();
+        //auto& joystick = apps::runtime::GameContext::GetInstance().Input();
         //joystick.UpdateJoystick();
         // deleted. The update is done in the SequenceManager.
     }
@@ -24,7 +24,7 @@ namespace mm2hack::apps::scenes
     {
         using namespace core::assembly;
 
-        auto& joystick = apps::deal::GameContext::GetInstance().Input();
+        auto& joystick = apps::runtime::GameContext::GetInstance().Input();
         // Show the state of each button.
         for (size_t i = 0; i < JPBTN_COUNT; ++i)
         {

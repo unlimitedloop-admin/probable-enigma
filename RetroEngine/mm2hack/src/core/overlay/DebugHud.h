@@ -8,8 +8,17 @@
 //==============================================================================
 #pragma once
 
+#include <string>
+
 namespace mm2hack::core::overlay
 {
+    struct PlayerPositionContext
+    {
+        int pageIndex = 0;
+        double x = 0.0;
+        double y = 0.0;
+    };
+
     // Debug HUD for displaying debug information on the screen
     class DebugHud
     {
@@ -20,9 +29,17 @@ namespace mm2hack::core::overlay
             return instance;
         }
 
+        // Draw the debug HUD 
         void Draw() const;
+
+        void SetPlayerPositionContext(const PlayerPositionContext& context) { _playerPositionContext = context; }
 
     private:
         DebugHud() = default;
+
+    private:
+        const std::wstring kClassName{ L"DebugHud" };
+
+        PlayerPositionContext _playerPositionContext{};
     };
 }

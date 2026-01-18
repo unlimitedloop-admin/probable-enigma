@@ -2,7 +2,6 @@
 
 #include "KeyboardInputProvider.h"
 
-#include <cstdint>
 #include "C16ButtonState.h"
 #include "Jpbtn.h"
 

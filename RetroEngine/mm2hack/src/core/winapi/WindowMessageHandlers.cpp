@@ -5,9 +5,8 @@
 #include <cstdio>
 #include <filesystem>
 #include "../resource.h"
-#include "apps/deal/GameContext.h"
+#include "apps/runtime/GameContext.h"
 #include "apps/sequence/SequenceManager.h"
-#include "apps/sequence/SequenceType.h"
 #include "config/ConfigUIManager.h"
 #include "config/HudConfig.h"
 #include "core/assembly/ScreenshotManager.h"
@@ -33,15 +32,14 @@ namespace
 {
     using namespace mm2hack::core;
 
-    // Update the state of the save/load slot menu items based on the current save slot.
+    // Update the state of the save/load slot menu items based on the current save slot
     static void UpdateSlotMenuState(HWND hWnd)
     {
         HMENU hMenu = GetMenu(hWnd);
         int selectedSlot = save::SaveSystem::GetCurrentSlot();
         for (int i = 0; i <= 9; ++i)
         {
-            CheckMenuItem(hMenu, ID_SLOT_0 + i,
-                MF_BYCOMMAND | ((i == selectedSlot) ? MF_CHECKED : MF_UNCHECKED));
+            CheckMenuItem(hMenu, ID_SLOT_0 + i, MF_BYCOMMAND | ((i == selectedSlot) ? MF_CHECKED : MF_UNCHECKED));
         }
     }
 }
@@ -58,6 +56,12 @@ namespace mm2hack::core::winapi
         CheckMenuItem(hMenu, ID_HUD_FPS,
             config::ConfigUIManager::GetCurrentHudConfig().showFps ? MF_BYCOMMAND | MF_CHECKED : MF_BYCOMMAND | MF_UNCHECKED
         );  // Set the FPS display state based on the HUD configuration.
+        CheckMenuItem(hMenu, ID_HUD_SCROLLINGSYNCLINE,
+            config::ConfigUIManager::GetCurrentHudConfig().showScrollLine ? MF_BYCOMMAND | MF_CHECKED : MF_BYCOMMAND | MF_UNCHECKED
+        );  // Set the scrolling sync line display state based on the HUD configuration.
+        CheckMenuItem(hMenu, ID_HUD_PLAYERPOSITION,
+            config::ConfigUIManager::GetCurrentHudConfig().showPlayerPosition ? MF_BYCOMMAND | MF_CHECKED : MF_BYCOMMAND | MF_UNCHECKED
+        );  // Set the player position display state based on the HUD configuration.
     }
 
     void HandleDestroy(HWND hWnd)
@@ -237,7 +241,7 @@ namespace mm2hack::core::winapi
 
         case ID_MENU_GAMEPAD_SETTINGS:
         {
-            auto& keyBinding = apps::deal::GameContext::GetInstance().Joystick().GetKeyBinding();
+            auto& keyBinding = apps::runtime::GameContext::GetInstance().Joystick().GetKeyBinding();
             auto steps = overlay::BuildStepsFull16();
             overlay::InputConfigOverlay::GetInstance().Open(keyBinding, steps);
             break;
@@ -278,6 +282,32 @@ namespace mm2hack::core::winapi
             // Add check/uncheck the HUD => FPS menu item.
             HMENU hMenu = GetMenu(hWnd);
             CheckMenuItem(hMenu, ID_HUD_FPS, MF_BYCOMMAND | (newConfig.showFps ? MF_CHECKED : MF_UNCHECKED));
+            break;
+        }
+
+        case ID_HUD_SCROLLINGSYNCLINE:
+        {
+            using confUI = config::ConfigUIManager;
+            auto& hudConfig = confUI::GetCurrentHudConfig();
+            config::HudConfig newConfig = hudConfig;
+            newConfig.showScrollLine = !newConfig.showScrollLine;
+            confUI::SetCurrentHudConfig(newConfig);
+            // Add check/uncheck the HUD => Scrolling Sync Line menu item.
+            HMENU hMenu = GetMenu(hWnd);
+            CheckMenuItem(hMenu, ID_HUD_SCROLLINGSYNCLINE, MF_BYCOMMAND | (newConfig.showScrollLine ? MF_CHECKED : MF_UNCHECKED));
+            break;
+        }
+
+        case ID_HUD_PLAYERPOSITION:
+        {
+            using confUI = config::ConfigUIManager;
+            auto& hudConfig = confUI::GetCurrentHudConfig();
+            config::HudConfig newConfig = hudConfig;
+            newConfig.showPlayerPosition = !newConfig.showPlayerPosition;
+            confUI::SetCurrentHudConfig(newConfig);
+            // Add check/uncheck the HUD => Player Position menu item.
+            HMENU hMenu = GetMenu(hWnd);
+            CheckMenuItem(hMenu, ID_HUD_PLAYERPOSITION, MF_BYCOMMAND | (newConfig.showPlayerPosition ? MF_CHECKED : MF_UNCHECKED));
             break;
         }
 
@@ -325,7 +355,7 @@ namespace mm2hack::core::winapi
 
     void HandleKeyDown(HWND hWnd, WPARAM wParam, LPARAM lParam)
     {
-        auto& gameContext = apps::deal::GameContext::GetInstance();
+        auto& gameContext = apps::runtime::GameContext::GetInstance();
         auto& gameState = GameStateManager::GetInstance();
         auto& windowManager = WindowManager::GetInstance();
 
@@ -345,7 +375,7 @@ namespace mm2hack::core::winapi
 
         // Pressing the ESC key immediately triggers a return and transitions the game state,
         // without interference from other key inputs.
-        if (wParam == VK_ESCAPE)
+        if (wParam == VK_ESCAPE || wParam == VK_PAUSE)
         {
             if (gameState.Is(GameState::Running))
             {
@@ -431,7 +461,7 @@ namespace mm2hack::core::winapi
             if (core::overlay::PauseManager::IsPaused())
             {
                 // One step frame forward and resume if currently paused.
-                apps::deal::GameContext::GetInstance().Time().StepOneFrame();
+                apps::runtime::GameContext::GetInstance().Time().StepOneFrame();
             }
             break;
 

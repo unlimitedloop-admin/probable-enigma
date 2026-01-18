@@ -66,11 +66,6 @@ namespace mm2hack::apps::sequence
         if (_driver) _driver.get()->RenderOverlay();
     }
 
-    scenes::SceneManager* TestSequence::GetSceneManager()
-    {
-        return nullptr;
-    }
-
     bool TestSequence::Save(core::save::SaveData& out) const
     {
         return true;

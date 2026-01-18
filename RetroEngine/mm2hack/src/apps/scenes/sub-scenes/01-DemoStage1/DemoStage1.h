@@ -15,11 +15,39 @@
 #include <ostream>
 #include <string>
 #include <string_view>
-#include "apps/graphics/bg/BGTileManager.h"
-#include "apps/parameters/Parameters.h"
+#include "apps/rendering/bg/BGTileManager.h"
+#include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/scenes/PhaseFadeController.h"
-#include "apps/scenes/SceneChangeMediator.h"
-#include "apps/scenes/SceneID.h"
+#include "apps/systems/physics/ITerrainProbe.h"
+#include "apps/systems/physics/ITileMapProvider.h"
+
+namespace mm2hack::apps
+{
+    namespace rendering::bg
+    {
+        class BGTileManager;
+    }
+
+    namespace resources::parameters
+    {
+        class Parameters;
+    }
+
+    namespace runtime
+    {
+        class GameContext;
+    }
+
+    namespace scenes
+    {
+        class SceneChangeMediator;
+    }
+}
+
+namespace mm2hack::core::assembly
+{
+    class StateProvider;
+}
 
 namespace mm2hack::apps::scenes
 {
@@ -29,10 +57,12 @@ namespace mm2hack::apps::scenes
         Main
     };
 
-    class IDemoStagePhase
+    class IDemoStage1Phase
     {
     public:
-        virtual ~IDemoStagePhase() = default;
+        virtual ~IDemoStage1Phase() = default;
+        // Initialize the phase
+        virtual void Initialize() = 0;
         // Update the phase logic
         virtual void Update() = 0;
         // Render the phase-specific elements
@@ -46,14 +76,19 @@ namespace mm2hack::apps::scenes
     // Demo stage scene (ID: 01)
     class DemoStage1 : public IBaseScene
     {
+        using StateProvider     = core::assembly::StateProvider;
+        using BGTileManager     = rendering::bg::BGTileManager;
+        using BGTileManagerId   = rendering::bg::BGTileManager::Id;
+        using SpriteManagerId   = rendering::sprite::SpriteManager::Id;
+        using Parameters        = resources::parameters::Parameters;
+        using ITerrainProbe     = systems::physics::ITerrainProbe;
+        using ITileMapProvider  = systems::physics::ITileMapProvider;
+
     public:
         explicit DemoStage1(SceneChangeMediator* mediator);
         ~DemoStage1() override;
 
         // === IBaseScene implementations ===
-        // Initialize the backdoor menu
-        void Initialize(const parameters::Parameters& params) override;
-        bool InitializeResources();
         // Main game logic execution
         void Update() override;
         // Render the world elements
@@ -64,30 +99,59 @@ namespace mm2hack::apps::scenes
         SceneID GetSceneID() const override { return SceneID::DemoStage1; }
         // Get the scene name (i.e. class name)
         std::wstring GetSceneName() const override { return kClassName; }
+        // Get the current room page index
+        int GetCurrentRoomPageIndex() const { return _roomState.pageIndex; }
+        // Get the map name used in this scene
+        std::wstring GetMapName() const { return kMapName; }
+        // Get the map binary path used in this scene
+        std::wstring GetMapBinaryPath() const { return std::wstring(kStageMapBinary); }
+        // Get the sprite Id used in this scene
+        SpriteManagerId GetSpriteId() const noexcept { return _spriteId; }
         // Change child phase of the this scene
-        void QueuePhase(std::unique_ptr<IDemoStagePhase> next, PhaseFadePlan nextPlan);
+        void QueuePhase(std::unique_ptr<IDemoStage1Phase> next, PhaseFadePlan nextPlan);
 
         // === Save/Load state ===
         void Save(std::ostream& out);
         void Load(std::istream& in);
 
+        // Access the fade controller for scene transitions
+        PhaseFadeController& Fader() noexcept { return _fader; }
+
+        auto& Input() noexcept { return _input; }
+        const auto& Input() const noexcept { return _input; }
+
     private:
-        void Finalize() override;       // Finalize the demo stage scene
+        void onEnter_(const Parameters& params) override;
+        void onExit_() override;
+        bool initializeResources_(const Parameters& params);    // Initialize necessary resources
+        void loadStage_(BGTileManager& bgTileManager);          // Load the stage map and tile attributes
 
     private:
         const std::wstring kClassName{ L"DemoStage1" };
         const std::wstring kMapName{ L"SAMPLESTAGE1" };
         const std::wstring_view kStageMapBinary{ L"assets\\_exams\\bg\\SAMPLESTAGE1.bin" };
 
-        SceneChangeMediator* _mediator{ nullptr };              // Mediator for scene changes
-        std::unique_ptr<IDemoStagePhase> _phase;                // Current phase of the demo stage
-        DemoStage1PhaseId _phaseId{ DemoStage1PhaseId::Main };  // Current phase identifier
-        PhaseFadeController _fader;                             // Fade controller for scene transitions
-        std::unique_ptr<IDemoStagePhase> _pendingPhase;         // Pending phase to switch to
-        PhaseFadePlan _pendingPlan{};                           // Pending fade plan for the next phase
+        struct RoomState {
+            int pageIndex{ 0 };
+            int tileW{ 8 };   // in tiles
+            int tileH{ 8 };   // in tiles
+        } _roomState;
+
+        SceneChangeMediator* _mediator{ nullptr };                      // Mediator for scene changes
+        std::unique_ptr<IDemoStage1Phase> _phase;                       // Current phase of the demo stage
+        DemoStage1PhaseId _phaseId{ DemoStage1PhaseId::Main };          // Current phase identifier
+        PhaseFadeController _fader;                                     // Fade controller for scene transitions
+        std::unique_ptr<IDemoStage1Phase> _pendingPhase;                // Pending phase to switch to
+        PhaseFadePlan _pendingPlan{};                                   // Pending fade plan for the next phase
+
+        SceneID _nextScene{ SceneID::None };                            // Next scene to switch to
+        Parameters _nextParams{};                                       // Reserve the parameters for the next scene
+        bool _leaving{ false };                                         // Flag indicating if leaving the backdoor menu
 
         const int fadeDurationFrames{ 16 };
 
-        graphics::bg::BGTileManager::Id _bgTileId{ static_cast<graphics::bg::BGTileManager::Id>(-1) };
+        StateProvider* _input{ nullptr };                               // Reference to the state provider
+        BGTileManagerId _bgTileId{ static_cast<BGTileManagerId>(-1) };  // Background tile set Id
+        SpriteManagerId _spriteId{ static_cast<SpriteManagerId>(-1) };  // Sprite set Id
     };
 }

@@ -2,11 +2,13 @@
 // 
 //  Project: mm2hack
 //  PauseManager.h
-// 
+//
 //  Manages the pause state and overlay for the game.
 // 
 //==============================================================================
 #pragma once
+
+#include <string>
 
 namespace mm2hack::core::overlay
 {
@@ -32,6 +34,8 @@ namespace mm2hack::core::overlay
         static void DrawOverlay();
 
     private:
-        static inline bool _isPaused = false;       // Static member to hold the pause state (default is not paused)
+        inline static std::wstring kClassName{ L"PauseManager" };
+
+        inline static bool _isPaused = false;       // Static member to hold the pause state (default is not paused)
     };
 }

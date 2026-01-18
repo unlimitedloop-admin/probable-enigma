@@ -2,7 +2,6 @@
 
 #include "SaveSystem.h"
 
-#include <cstdint>
 #include <cstdio>
 #include <filesystem>
 #include "SaveData.h"

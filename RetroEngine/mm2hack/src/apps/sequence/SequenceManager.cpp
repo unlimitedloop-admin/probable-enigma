@@ -2,14 +2,13 @@
 
 #include "SequenceManager.h"
 
-#include "apps/deal/GameContext.h"
+#include "apps/runtime/GameContext.h"
 #include "core/GameState.h"
 #include "core/GameStateManager.h"
 #include "core/overlay/DebugHud.h"
 #include "core/overlay/InputConfigOverlay.h"
 #include "core/overlay/PauseManager.h"
 #include "DebugSequence.h"
-#include "SequenceType.h"
 #include "StandardSequence.h"
 #include "test/TestSequence.h"
 #include "utils/output_debug.h"
@@ -92,7 +91,7 @@ namespace mm2hack::apps::sequence
     void SequenceManager::Update()
     {
         using namespace core;
-        using namespace deal;
+        using namespace runtime;
 
         if (_currentSequence)
         {
@@ -111,7 +110,8 @@ namespace mm2hack::apps::sequence
                 // Advance the input state for this frame.
                 input.BeginTick(time.FrameCounter());
 
-                _currentSequence->Execute();    // !Execute the main game logic.
+                // !Execute the main game logic.
+                _currentSequence->Execute();
 
                 // Finalize the input state for this frame.
                 input.EndTick();
@@ -128,11 +128,13 @@ namespace mm2hack::apps::sequence
 
         if (_currentSequence)
         {
+            // Render the world content. (scenes, models, effects, etc.)
             _currentSequence->RenderWorld();
         }
 
         if (PauseManager::IsPaused())
         {
+            // Draw the pause overlay if the game is paused.
             PauseManager::DrawOverlay();
         }
 
@@ -160,7 +162,7 @@ namespace mm2hack::apps::sequence
             _currentSequence.reset();
             _sequenceType = SequenceType::None;
 
-            if (auto* time = deal::GameContext::GetInstance().TryTime())
+            if (auto* time = runtime::GameContext::GetInstance().TryTime())
             {
                 time->ResetPlayFrameCounter();
             }
@@ -169,7 +171,7 @@ namespace mm2hack::apps::sequence
 
     void SequenceManager::HandleJpbtnConfigMode(double dt)
     {
-        using namespace apps::deal;
+        using namespace apps::runtime;
         using namespace core;
         // If we are in JPBTN configuration mode, update the joystick manager and tick the input config overlay.
         if (GameStateManager::GetInstance().Is(GameState::JpbtnConfig))

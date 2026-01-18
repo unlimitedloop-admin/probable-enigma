@@ -10,6 +10,7 @@
 
 #include <array>
 #include <cstdint>
+#include <string>
 #include <vector>
 #include "input/JoystickManager.h"
 #include "input/Jpbtn.h"
@@ -19,12 +20,12 @@
 namespace mm2hack::core::assembly
 {
     // Adapter class for joystick input provider using abstract class StateProvider
-    class JoystickInputProviderAdapter final : public StateProvider
+    class JoystickInputProviderAdapter : public StateProvider
     {
     public:
         explicit JoystickInputProviderAdapter(input::JoystickManager& jm) noexcept : _jm(jm) {/* Undefined */}
 
-        // Called at the start of each tick. Backend polling -> logical state update
+        // Called at the start of each tick. Backend polling -> logical state update in KeyFrameState
         void BeginTick(std::uint64_t tick) noexcept override;
         // Called at the end of each tick. Finalize state for this tick
         void EndTick() noexcept override {}
@@ -46,6 +47,8 @@ namespace mm2hack::core::assembly
         }
 
     private:
+        const std::wstring kClassName{ L"JoystickInputProviderAdapter" };
+
         input::JoystickManager& _jm;    // External joystick manager reference
         std::array<KeyFrameState, static_cast<size_t>(Key16::JPBTN_COUNT)> _state{};    // Current state of all buttons
         std::uint64_t _tick{ 0 };   // Current simulation tick number

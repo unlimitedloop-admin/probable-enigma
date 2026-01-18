@@ -18,7 +18,7 @@ namespace mm2hack::utils
         _frameCount(0),
         _actualFps(0.0)
     {
-        LoadIniFps();
+        loadIniFps_();
     }
 
     void Fps::Wait()
@@ -75,7 +75,7 @@ namespace mm2hack::utils
         return static_cast<float>(_frameDuration) / 1000.0f;
     }
 
-    void Fps::LoadIniFps()
+    void Fps::loadIniFps_()
     {
         using namespace config;
         using namespace core::ui;

@@ -25,5 +25,8 @@ namespace mm2hack::core::diagnostics
         std::vector<WatchEntry> SnapshotAll() const override { return {}; }
         std::vector<WatchEntry> SnapshotPrefix(const std::wstring&) const override { return {}; }
         void Clear() override {}
+
+    private:
+        const std::wstring kClassName{ L"NullWatchRegistry" };
     };
 }

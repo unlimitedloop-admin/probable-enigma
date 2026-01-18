@@ -10,6 +10,8 @@
 
 #include "Star.h"
 
+#include <string>
+
 namespace mm2hack::apps::vfx::stareffects
 {
     // Shooting star effect class using the Star base class
@@ -19,5 +21,8 @@ namespace mm2hack::apps::vfx::stareffects
         ShootingStar(int typeIndex, float x, float y, float vx, float vy);
 
         void Update() override;
+
+    private:
+        const std::wstring kClassName{ L"ShootingStar" };
     };
 }

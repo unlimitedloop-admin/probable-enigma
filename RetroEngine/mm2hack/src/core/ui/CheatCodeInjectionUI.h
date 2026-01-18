@@ -48,6 +48,33 @@ namespace mm2hack::core::ui
             std::wstring label;     // Display label (e.g., player.invincible / 00A123)
         };
 
+        // ---- Labels and Types (heuristic) ----
+        static std::wstring guessType_(const std::wstring& code);   // "PAR" / "Symbolic"
+        static std::wstring guessLabel_(const std::wstring& code);  // e.g., "player.invincible" / "00A123"
+        static bool containsFreeze_(const std::wstring& code);      // Whether the code contains "freeze"
+        static std::wstring trim_(const std::wstring& s);           // Trim whitespace from both ends
+
+        // ---- Utilities ----
+        void addFromEdit_();
+        void removeSelected_();
+        void clearAll_();
+        void moveSelectedUp_();
+        void moveSelectedDown_();
+        void setAllEnabled_(bool enabled);
+        void updateStatus_(const std::wstring& text) const;
+
+        // ---- ListView ----
+        void createListView_();
+        void rebuildListView_();
+        void insertListViewColumns_() const;
+        void insertListViewRow_(size_t index, const CheatRow& row) const;
+        int  getSelectedIndex_() const;
+        void syncCheckStatesFromListView_(); // UI to _rows
+        void syncCheckStatesToListView_();   // _rows to UI
+
+    private:
+        const std::wstring kClassName{ L"CheatCodeInjectionUI" };
+
         // Win32 Control IDs
         static constexpr int IDC_LABEL_CODE = 4100;
         static constexpr int IDC_EDIT_CODE = 4101;
@@ -77,30 +104,5 @@ namespace mm2hack::core::ui
         HWND _status_text;
 
         std::vector<CheatRow> _rows;    // The list of cheat rows
-
-    private:
-        // ---- Utilities ----
-        void AddFromEdit();
-        void RemoveSelected();
-        void ClearAll();
-        void MoveSelectedUp();
-        void MoveSelectedDown();
-        void SetAllEnabled(bool enabled);
-        void UpdateStatus(const std::wstring& text) const;
-
-        // ---- ListView ----
-        void CreateListView();
-        void RebuildListView();
-        void InsertListViewColumns() const;
-        void InsertListViewRow(size_t index, const CheatRow& row) const;
-        int  GetSelectedIndex() const;
-        void SyncCheckStatesFromListView(); // UI to _rows
-        void SyncCheckStatesToListView();   // _rows to UI
-
-        // ---- Labels and Types (heuristic) ----
-        static std::wstring GuessType(const std::wstring& code);
-        static std::wstring GuessLabel(const std::wstring& code);
-        static bool ContainsFreeze(const std::wstring& code);
-        static std::wstring Trim(const std::wstring& s);
     };
 }

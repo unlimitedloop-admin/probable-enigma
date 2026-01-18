@@ -8,6 +8,7 @@
 //==============================================================================
 #pragma once
 
+#include <string>
 #include "GameState.h"
 
 namespace mm2hack::core
@@ -42,6 +43,10 @@ namespace mm2hack::core
     private:
         GameStateManager() = default;
         ~GameStateManager() = default;
-        GameState _currentState = GameState::Standby;
+
+    private:
+        const std::wstring kClassName{ L"GameStateManager" };
+
+        GameState _currentState = GameState::Standby;   // The current game state
     };
 }

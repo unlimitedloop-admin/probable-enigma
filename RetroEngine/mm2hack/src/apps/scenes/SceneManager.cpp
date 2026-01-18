@@ -2,13 +2,10 @@
 
 #include "SceneManager.h"
 
-#include <utility>
-#include "apps/deal/GameContext.h"
-#include "apps/parameters/Parameters.h"
+#include "apps/runtime/GameContext.h"
 #include "core/overlay/PauseManager.h"
 #include "IBaseScene.h"
 #include "SceneFactory.h"
-#include "SceneID.h"
 
 namespace mm2hack::apps::scenes
 {
@@ -17,7 +14,7 @@ namespace mm2hack::apps::scenes
         using namespace core::overlay;
         if (_currentScene)
         {
-            auto& time = deal::GameContext::GetInstance().Time();
+            auto& time = runtime::GameContext::GetInstance().Time();
             if (!PauseManager::IsPaused() || (time.DeltaSeconds() > 0.0))   // No-op if paused and not stepping one frame
             {
                 _currentScene->Update();        // !Execute the main game logic.
@@ -40,7 +37,6 @@ namespace mm2hack::apps::scenes
 
     void SceneManager::RenderOverlay()
     {
-        using namespace core::overlay;
         if (_currentScene)
         {
             // It's drawn after RenderWorld, so it appears on top of everything else.
@@ -62,19 +58,22 @@ namespace mm2hack::apps::scenes
         return -1;
     }
 
-    void SceneManager::RequestSceneChange(SceneID nextScene, const parameters::Parameters& params)
+    void SceneManager::RequestSceneChange(SceneID nextScene, const Parameters& params)
     {
+        // Create the next scene instance using the SceneFactory.
         auto next = SceneFactory::CreateScene(nextScene, _mediator);
-        if (next)
+        if (!next)
         {
-            next->Initialize(params);
-            ChangeScene(std::move(next));
+            return;
         }
-    }
 
-    void SceneManager::ChangeScene(std::unique_ptr<IBaseScene> newScene)
-    {
-        // HACK: OnExit(), OnEnter() equivalent handling
-        _currentScene = std::move(newScene);
+        // Finalize the current scene before switching to the next one.
+        if (_currentScene)
+        {
+            _currentScene->Finalize();
+        }
+
+        next->Initialize(params);
+        _currentScene = std::move(next);
     }
 }

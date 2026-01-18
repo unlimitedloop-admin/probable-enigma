@@ -51,8 +51,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,0,1,16
- PRODUCTVERSION 0,0,1,16
+ FILEVERSION 0,0,1,57
+ PRODUCTVERSION 0,0,1,57
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -69,12 +69,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Sirius X"
             VALUE "FileDescription", "mm2hack"
-            VALUE "FileVersion", "0.0.1.16"
+            VALUE "FileVersion", "0.0.1.57"
             VALUE "InternalName", "mm2hack.exe"
             VALUE "LegalCopyright", "Copyright (C) 2025"
             VALUE "OriginalFilename", "mm2hack.exe"
             VALUE "ProductName", "mm2hack project"
-            VALUE "ProductVersion", "0.0.1.16"
+            VALUE "ProductVersion", "0.0.1.57"
         END
     END
     BLOCK "VarFileInfo"
@@ -150,6 +150,8 @@ BEGIN
         BEGIN
             MENUITEM "フレームカウンター (&T)",              ID_HUD_FRAMECOUNTER
             MENUITEM "FPS (&F)",                    ID_HUD_FPS
+            MENUITEM "Scrolling sync line",         ID_HUD_SCROLLINGSYNCLINE
+            MENUITEM "Player position (local)",     ID_HUD_PLAYERPOSITION
         END
         MENUITEM SEPARATOR
         MENUITEM "チートコード... (&C)",              ID_INSERT_CHEATS

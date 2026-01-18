@@ -11,9 +11,18 @@
 #include "apps/sequence/ISequence.h"
 
 #include <memory>
-#include "apps/scenes/SceneManager.h"
-#include "core/save/SaveData.h"
+#include <string>
 #include "driver/ITestDriver.h"
+
+namespace mm2hack::apps::scenes
+{
+    class SceneManager;
+}
+
+namespace mm2hack::core::save
+{
+    struct SaveData;
+}
 
 namespace mm2hack::apps::sequence
 {
@@ -25,11 +34,12 @@ namespace mm2hack::apps::sequence
         void Execute() override;
         void RenderWorld() override;
         void RenderOverlay() override;
-        scenes::SceneManager* GetSceneManager() override;
         bool Save(core::save::SaveData& out) const override;
         bool Load(const core::save::SaveData& in) override;
 
     private:
+        const std::wstring kClassName{ L"TestSequence" };
+
         std::unique_ptr<scenes::ITestDriver> _driver;
     };
 }

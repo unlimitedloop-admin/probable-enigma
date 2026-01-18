@@ -2,8 +2,6 @@
 
 #include "SystemConfig.h"
 
-#include <string>
-
 namespace mm2hack::config
 {
     const std::wstring SystemConfig::kLogFilePath = L"log";

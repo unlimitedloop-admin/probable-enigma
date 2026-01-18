@@ -35,9 +35,10 @@ namespace mm2hack::core::overlay
         void Render(int destW, int destH);
 
     private:
+        const std::wstring kClassName{ L"FeedbackOverlay" };
+
         std::deque<Message> _messages;      // Queue of messages to display
         int _fontScreen = -1;
         int _fontHandle = -1;
     };
-
 }

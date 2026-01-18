@@ -2,9 +2,6 @@
 
 #include "KeyboardsIn.h"
 
-#include <array>
-#include <cstdint>
-
 namespace mm2hack::input
 {
     bool KeyboardsIn::UpdateAllStateKey()

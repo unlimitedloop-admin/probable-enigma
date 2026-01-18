@@ -2,9 +2,9 @@
 
 #include "LaunchingGame.h"
 
-#include "apps/parameters/Parameters.h"
+#include "apps/resources/parameters/Parameters.h"
+#include "apps/scenes/IBaseScene.h"
 #include "apps/scenes/SceneChangeMediator.h"
-#include "apps/scenes/SceneID.h"
 #include "utils/output_debug.h"
 
 namespace mm2hack::apps::scenes
@@ -18,10 +18,18 @@ namespace mm2hack::apps::scenes
     LaunchingGame::~LaunchingGame()
     {
         utils::debug_log(kClassName + L" destructor called.");
-        Finalize();
     }
 
-    void LaunchingGame::Initialize(const parameters::Parameters& params)
+    void LaunchingGame::Update()
+    {
+        // Update logic for launching the game
+
+        // Check out what the asset files used in each scene are.
+        // After that, transition to the subsequent scene.
+        _mediator->RequestChange(_subsequentScene);
+    }
+
+    void LaunchingGame::onEnter_(const Parameters& params)
     {
         utils::debug_log(kClassName + L" initialized.");
 
@@ -35,17 +43,8 @@ namespace mm2hack::apps::scenes
         }
     }
 
-    void LaunchingGame::Finalize()
+    void LaunchingGame::onExit_()
     {
         utils::debug_log(kClassName + L" finalized.");
-    }
-
-    void LaunchingGame::Update()
-    {
-        // Update logic for launching the game
-
-        // Check out what the asset files used in each scene are.
-        // After that, transition to the subsequent scene.
-        _mediator->RequestChange(_subsequentScene);
     }
 }

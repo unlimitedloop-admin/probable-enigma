@@ -12,10 +12,17 @@
 #include <string>
 #include "core/overlay/FeedbackOverlay.h"
 #include "ISequence.h"
-#include "SequenceType.h"
 
 namespace mm2hack::apps::sequence
 {
+    // Enumeration of different sequence types
+    enum class SequenceType
+    {
+        None,
+        Standard,
+        Debug
+    };
+
     // SequenceManager is a singleton class that manages the current sequence
     class SequenceManager final
     {
@@ -72,6 +79,8 @@ namespace mm2hack::apps::sequence
     private:
         SequenceManager() = default;
         ~SequenceManager() = default;
+
+        const std::wstring kClassName{ L"SequenceManager" };
 
         std::unique_ptr<ISequence> _currentSequence = nullptr;  // Pointer to the current sequence object
         SequenceType _sequenceType = SequenceType::None;        // Current sequence type, indicating the mode of the game

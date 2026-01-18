@@ -2,7 +2,7 @@
 
 #include "FixedStar.h"
 
-#include "apps/deal/GameContext.h"
+#include "apps/runtime/GameContext.h"
 #include "Star.h"
 #include "StarState.h"
 
@@ -18,7 +18,7 @@ namespace mm2hack::apps::vfx::stareffects
 
     void FixedStar::Draw() const
     {
-        auto& context = deal::GameContext::GetInstance();
+        auto& context = runtime::GameContext::GetInstance();
         auto& sprites = context.GetResourceManager().GetSpriteManager();
         sprites.UseByName(std::wstring(kStarSpriteName), _tileIndex, static_cast<int>(_x), static_cast<int>(_y));
     }
