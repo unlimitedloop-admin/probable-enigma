@@ -8,6 +8,7 @@
 #include "apps/systems/scrolling/atomic/ScrollController.h"
 #include "apps/systems/view/RenderContext.h"
 #include "apps/world/entity/avatar/PlayerEntity.h"
+#include "apps/world/entity/EntityManager.h"
 #include "config/ConfigUIManager.h"
 #include "core/overlay/DebugHud.h"
 #include "IPhaseHost.h"
@@ -65,29 +66,30 @@ namespace mm2hack::apps::scenes::phases
         const bool lock = _ctx->scroll->IsScrollLocked();
 
         /* Entity Updates */
-        if (_ctx->player)
+        auto* player = _ctx->entity_mgr->FindFirst<world::entity::avatar::PlayerEntity>();
+        if (player != nullptr)
         {
-            const Vec2 prev_pos = _ctx->player->pos;
+            const Vec2 prev_pos = player->pos;
 
-            if (const auto p = _ctx->page_grid->ResolvePageIndexFromWorldPos(_ctx->player->pos); p)
+            if (const auto p = _ctx->page_grid->ResolvePageIndexFromWorldPos(player->pos); p)
             {
                 _ctx->terrain_probe->SetCurrentPage(*p);
 
                 const auto measure = _ctx->scroll->CurrentPageBoundsWorld();
-                _ctx->player->SetViewBounds(measure.fromBounds);
-                _ctx->player->SetPageOriginPx(measure.pageOriginPx);
-                _ctx->player->SetScrollContext(_ctx->scroll->Rules(), _ctx->scroll->PageIndex());
+                player->SetViewBounds(measure.fromBounds);
+                player->SetPageOriginPx(measure.pageOriginPx);
+                player->SetScrollContext(_ctx->scroll->Rules(), _ctx->scroll->PageIndex());
                 // NOTE: Fixed page scroll is only active when the player is on the current page.
-                _ctx->player->SetFixedPageScrollAvailable(p == _ctx->scroll->PageIndex());
+                player->SetFixedPageScrollAvailable(p == _ctx->scroll->PageIndex());
             }
 
             const double dt = runtime::GameContext::GetInstance().Time().DeltaSeconds();
             if (!lock)
             {
-                _ctx->player->SetInput(_ctx->input);
-                _ctx->player->Update(dt);
+                player->SetInput(_ctx->input);
+                player->Update(dt);
 
-                delta = _ctx->player->pos - prev_pos;
+                delta = player->pos - prev_pos;
             }
             else
             {
@@ -95,34 +97,34 @@ namespace mm2hack::apps::scenes::phases
                 delta = Vec2{ 0, 0 };
                 if (!_ctx->scroll->IsFreezeFrames())
                 {
-                    _ctx->player->TickAnimation(dt);
+                    player->TickAnimation(dt);
                 }
             }
         }
 
         /* BG Updates */
-        if (_ctx->player)
+        if (player != nullptr)
         {
-            if (const auto req = _ctx->player->ConsumeScrollRequest(); req)
+            if (const auto req = player->ConsumeScrollRequest(); req)
             {
                 _ctx->scroll->RequestFixedScroll(*req);
             }
         }
 
-        _ctx->scroll->SetTargetPos(_ctx->player ? _ctx->player->pos : Vec2::Zero());
+        _ctx->scroll->SetTargetPos(player ? player->pos : Vec2::Zero());
         const auto fx = _ctx->scroll->Update(delta);
 
         // Apply carry movement while scrolling
-        if (_ctx->player && fx.fixedActive)
+        if (player && fx.fixedActive)
         {
-            _ctx->player->pos += fx.playerDelta;
+            player->pos += fx.playerDelta;
         }
 
         _page_index_debug = static_cast<int>(_ctx->scroll->PageIndex());
-        _player_pos_x_debug = _ctx->player ? _ctx->page_grid->ToLocalPos(_ctx->player->pos.x, config::SystemConfig::kScreenWidth) : 0;
-        _player_pos_y_debug = _ctx->player ? _ctx->page_grid->ToLocalPos(_ctx->player->pos.y, config::SystemConfig::kScreenHeight) : 0;
+        _player_pos_x_debug = player ? _ctx->page_grid->ToLocalPos(player->pos.x, config::SystemConfig::kScreenWidth) : 0;
+        _player_pos_y_debug = player ? _ctx->page_grid->ToLocalPos(player->pos.y, config::SystemConfig::kScreenHeight) : 0;
 
-        _player_prev_pos = _ctx->player ? _ctx->player->pos : Vec2::Zero();
+        _player_prev_pos = player ? player->pos : Vec2::Zero();
 
         // Example: if some condition verified -> request transition to menu
         const bool verified = false; // replace with real trigger
@@ -155,15 +157,11 @@ namespace mm2hack::apps::scenes::phases
 
         _ctx->scroll->Render();
 
-        if (_ctx->player)
-        {
-            systems::view::RenderContext ctx{
-                .view = &_ctx->scroll->GetView(),
-                .layer = systems::view::Layer::Actors,
-            };
-
-            _ctx->player->Render(ctx);
-        }
+        systems::view::RenderContext ctx{
+            .view = &_ctx->scroll->GetView(),
+            .layer = systems::view::Layer::Actors,
+        };
+        _ctx->entity_mgr->RenderLayer(ctx, systems::view::Layer::Actors);
     }
 
     void AbstractActionPhase::RenderOverlay()

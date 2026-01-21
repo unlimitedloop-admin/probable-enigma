@@ -19,7 +19,7 @@
 #include "apps/systems/scrolling/atomic/MapRenderer2D.h"
 #include "apps/systems/scrolling/atomic/ScraperScrollRuleProvider.h"
 #include "apps/systems/scrolling/atomic/ScrollController.h"
-#include "apps/world/entity/avatar/PlayerEntity.h"
+#include "apps/world/entity/EntityManager.h"
 #include "apps/world/stage/RoomGraphAdapter.h"
 #include "core/assembly/StateProvider.h"
 
@@ -48,10 +48,7 @@ namespace mm2hack::apps::scenes::phases
         std::unique_ptr<systems::physics::ITileMapProvider> map_provider{};
         std::unique_ptr<systems::physics::ITerrainProbe> terrain_probe{};
         std::unique_ptr<systems::physics::ILadderService> ladder_service{};
-
-        // TODO: move to EntityManager later.
-        std::unique_ptr<world::entity::avatar::PlayerEntity> player{};
-
-        //std::unique_ptr<EntityManager> entity_mgr{};
+        
+        std::unique_ptr<world::entity::EntityManager> entity_mgr{};
     };
 }

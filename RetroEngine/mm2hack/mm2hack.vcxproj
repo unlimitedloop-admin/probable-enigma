@@ -240,6 +240,7 @@
     <ClCompile Include="src\apps\world\entity\avatar\states\RunningState.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\states\StandingState.cpp" />
     <ClCompile Include="src\apps\world\entity\common\ProjectileEntity.cpp" />
+    <ClCompile Include="src\apps\world\entity\EntityManager.cpp" />
     <ClCompile Include="src\apps\world\stage\RoomGraphAdapter.cpp" />
     <ClCompile Include="src\config\ConfigUIManager.cpp" />
     <ClCompile Include="src\config\EnvironmentConfig.cpp" />
@@ -308,6 +309,7 @@
     <ClInclude Include="src\apps\rendering\bg\BGTileMapProvider.h" />
     <ClInclude Include="src\apps\resources\bg\IMapPageSource.h" />
     <ClInclude Include="src\apps\resources\stages\StageTileAttributes.h" />
+    <ClInclude Include="src\apps\world\entity\EntityManager.h" />
     <ClInclude Include="src\core\assembly\FilteredJoystickInputProvider.h" />
     <ClInclude Include="src\apps\scenes\phases\AbstractActionPhase.h" />
     <ClInclude Include="src\apps\scenes\phases\ActionStageRuntimeBuilder.h" />

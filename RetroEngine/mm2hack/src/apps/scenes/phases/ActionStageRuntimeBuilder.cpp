@@ -10,6 +10,7 @@
 #include "apps/systems/scrolling/atomic/Camera.h"
 #include "apps/systems/scrolling/atomic/ScrollController.h"
 #include "apps/world/entity/avatar/PlayerEntity.h"
+#include "apps/world/entity/EntityManager.h"
 #include "apps/world/stage/RoomGraphAdapter.h"
 #include "config/SystemConfig.h"
 #include "core/assembly/StateProvider.h"
@@ -97,15 +98,16 @@ namespace mm2hack::apps::scenes::phases
 
     void ActionStageRuntimeBuilder::buildEntities_(StageRuntimeContext& ctx, const StageDefinition& def, const ActionStageBuildConfig& config) const
     {
+        using world::entity::EntityManager;
         using world::entity::avatar::PlayerEntity;
 
-        // TODO: directly create player here (will migrate to EntityManager later)
-        ctx.player = std::make_unique<PlayerEntity>(config.player_sprite_id);
+        ctx.entity_mgr = std::make_unique<EntityManager>();
+        (void)ctx.entity_mgr->Spawn<PlayerEntity>(config.player_sprite_id);
+        auto* player = ctx.entity_mgr->FindFirst<PlayerEntity>();
 
-        ctx.player->SetTerrainProbe(ctx.terrain_probe.get());
-        ctx.player->SetLadderService(ctx.ladder_service.get());
-        ctx.player->SetScrollContext(ctx.rules.get(), ctx.scroll->PageIndex());
-
+        player->SetTerrainProbe(ctx.terrain_probe.get());
+        player->SetLadderService(ctx.ladder_service.get());
+        player->SetScrollContext(ctx.rules.get(), ctx.scroll->PageIndex());
         // Convert local start pos -> world pos on start page
         // NOTE: function name in your code is ToWorldPosOnPage(...)
         if (ctx.page_grid)
@@ -113,18 +115,18 @@ namespace mm2hack::apps::scenes::phases
             const int page = static_cast<int>(ctx.scroll->PageIndex());
             if (const auto world_pos = ctx.page_grid->ToWorldPosOnPage(page, def.start_local_pos))
             {
-                ctx.player->pos = *world_pos;
+                player->pos = *world_pos;
             }
             else
             {
-                ctx.player->pos = def.start_local_pos; // fallback
+                player->pos = def.start_local_pos; // fallback
             }
         }
         else
         {
-            ctx.player->pos = def.start_local_pos; // fallback
+            player->pos = def.start_local_pos; // fallback
         }
 
-        ctx.player->texture = 1;
+        player->texture = 1;
     }
 }
