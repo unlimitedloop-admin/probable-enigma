@@ -13,15 +13,15 @@ namespace mm2hack::apps::world::entity::effects
 {
     ProjectileEntity::ProjectileEntity(const common::SpawnProjectileCommand& cmd)
     {
-        pos = cmd.spawn_pos;
+        pos = cmd.spawnPos;
         vel = cmd.velocity;
 
-        _draw_layer = cmd.draw_layer;
-        _base_texture = cmd.base_texture;
-        _anim_frames = std::max<std::int32_t>(1, cmd.anim_frames);
-        _anim_fps = std::max(0.0, cmd.anim_fps);
+        _draw_layer = cmd.drawLayer;
+        _base_texture = cmd.baseTexture;
+        _anim_frames = std::max<std::int32_t>(1, cmd.animFrames);
+        _anim_fps = std::max(0.0, cmd.animFps);
 
-        _life_sec = std::max(0.0, cmd.life_sec);
+        _life_sec = std::max(0.0, cmd.lifeSec);
         _age_sec = 0.0;
 
         _half = foundation::math::Vec2{ 16.0, 16.0 };   // Assuming an average size; adjust as needed.

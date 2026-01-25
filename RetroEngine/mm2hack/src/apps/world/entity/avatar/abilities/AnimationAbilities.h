@@ -15,27 +15,6 @@
 
 namespace mm2hack::apps::world::entity::avatar::abilities
 {
-    // Avatar facing direction enumeration
-    inline bool FacingDirection(int& texture, const AvatarDirection facingLR)
-    {
-        // This function can be expanded to set the avatar's facing direction
-        // based on the facingLR value (-1 for left, +1 for right).
-        // Currently, it's a placeholder for potential future use.
-        switch (facingLR)
-        {
-        case AvatarDirection::Left:
-            // Set the avatar's facing direction to left.
-            texture = texture + static_cast<int>(AvatarAnimation::ToTheLeft);
-            return true;
-        case AvatarDirection::Right:
-            // Set the avatar's facing direction to right.
-            texture = texture + static_cast<int>(AvatarAnimation::ToTheRight);
-            return true;
-        default:
-            return false;
-        }
-    }
-
     inline AvatarDirection OppositeFacingDirection(const AvatarDirection dir) noexcept
     {
         return (dir == AvatarDirection::Left) ? AvatarDirection::Right : AvatarDirection::Left;
@@ -163,5 +142,10 @@ namespace mm2hack::apps::world::entity::avatar::abilities
         {
             cx.texture = static_cast<int>(STile::StandingB);
         }
+    }
+
+    inline void ConstantAnim(AnimeContext& ax)
+    {
+
     }
 }

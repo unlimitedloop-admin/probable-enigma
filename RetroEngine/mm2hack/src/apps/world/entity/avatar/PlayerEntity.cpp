@@ -54,21 +54,19 @@ namespace mm2hack::apps::world::entity::avatar
             _id,
             pos, vel,
             onGround, /* justLanded */ false, /* isHitCeiling */ false, /* prevOnGround */ onGround,
-            facingLR, texture, /* textureAdd */ 0, _animeStepper,
+            facingLR, baseTexture, /* textureAdd */ 0, _animeStepper,
             /* probes */ _probes, /* prelimProbes */ _probes, this->Bounds(),
             _pageOriginPx,
-            _terrainProbe, _ladderService, _vBounds, _scrollRules, _scrollPageIndex,
+            _terrainProbe, _ladderService, false, _vBounds, _scrollRules, _scrollPageIndex,
             /* pendingFixedScroll */ { _fixedScrollAvailable, ScrollDir::None, 0.0 }
         };
 
-        refreshProbes_(cx);
-        auto& st = FindState(_status);
-
-        // Update state machine
-        const auto next = st->Update(cx, _input, _tuning, dt);
-
         _spawnProjectile.reset();
         _spawnProjectile = _attackAction->Update(cx, _input, _attack_tuning, _entityContext.canSpawnProjectile, dt);
+
+        refreshProbes_(cx);
+        auto& st = FindState(_status);
+        const auto next = st->Update(cx, _input, _tuning, dt);  // Update state machine
 
         if (next != _status)
         {
@@ -84,7 +82,9 @@ namespace mm2hack::apps::world::entity::avatar
 
         // Apply updated context values
         pos = cx.pos + cx.vel;
-        texture = cx.texture + cx.textureAdd;
+        texture = cx.texture;
+        attackTexture = cx.textureAdd;
+        composeFinalTexture_();
 
         // Shift the avatar's position (coordinates) to match the terrain. This is mainly done against the terrain underfoot.
         // after updating pos with vel.
@@ -110,8 +110,13 @@ namespace mm2hack::apps::world::entity::avatar
     {
         if (!IsAlive()) return;
 
-        AnimeContext ax{ _animeStepper, facingLR, texture };
+        int text_add = 0;
+        AnimeContext ax{ _animeStepper, facingLR, baseTexture, text_add };
+        _attackAction->TickAnimationOnly(ax, _attack_tuning, dt);
         FindState(_status)->TickAnimationOnly(ax, _input, _tuning, dt);
+        
+        attackTexture = text_add;
+        composeFinalTexture_();
     }
 
     // IRenderable
@@ -143,12 +148,10 @@ namespace mm2hack::apps::world::entity::avatar
         }
     }
 
-    // IEntity
     bool PlayerEntity::IsAlive() const noexcept { return EntityBase::IsAlive(); }
 
     void PlayerEntity::Kill() noexcept { EntityBase::Kill(); }
 
-    // ICollider
     PlayerEntity::RectF PlayerEntity::Bounds() const
     {
         return { pos.x - _half.x, pos.y - _half.y,
@@ -204,6 +207,23 @@ namespace mm2hack::apps::world::entity::avatar
     std::optional<PlayerEntity::SpawnProjectileCommand> PlayerEntity::TakeSpawnProjectile()
     {
         return std::exchange(_spawnProjectile, std::nullopt);
+    }
+
+    void PlayerEntity::composeFinalTexture_() noexcept
+    {
+        int t = baseTexture + attackTexture;
+
+        // Facing offset is applied exactly once here.
+        if (facingLR == AvatarDirection::Left)
+        {
+            t += static_cast<int>(AvatarAnimation::ToTheLeft);
+        }
+        else
+        {
+            t += static_cast<int>(AvatarAnimation::ToTheRight);
+        }
+
+        texture = t;
     }
 
     void PlayerEntity::refreshProbes_(PlayerContext& cx) noexcept

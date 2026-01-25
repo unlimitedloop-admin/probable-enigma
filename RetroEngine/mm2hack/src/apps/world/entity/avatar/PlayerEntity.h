@@ -115,15 +115,18 @@ namespace mm2hack::apps::world::entity::avatar
 
         // Parameter that acts as a dedicated flag for fixed page scrolling.
         void SetFixedPageScrollAvailable(bool v) noexcept { _fixedScrollAvailable = v; }
-        //
+        // Spawn projectile command handling
         std::optional<SpawnProjectileCommand> TakeSpawnProjectile();
 
         // ===== public parameters =====
         bool onGround{ false };
         AvatarDirection facingLR{ AvatarDirection::Right };
-        int  texture{ 0 };
+        int texture{ 0 };
+        int baseTexture{ 0 };
+        int attackTexture{ 0 };     // Current attack texture (for rock buster drawing)
 
     private:
+        void composeFinalTexture_() noexcept;                               // Set current avatar tile number
         void refreshProbes_(PlayerContext& cx) noexcept;
         void requestScroll_(FixedScrollRequest req) noexcept;
 

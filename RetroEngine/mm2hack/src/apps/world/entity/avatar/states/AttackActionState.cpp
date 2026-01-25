@@ -17,36 +17,51 @@ namespace mm2hack::apps::world::entity::avatar
     {
         world::entity::common::SpawnProjectileCommand cmd{};
 
-        // 1) 入力エッジは「攻撃中でも」毎回処理する（連射対応）
+        // 1) Input edges are processed every time, even during attacks. (for rapid fire)
         if (in->JustPressed(JPBTN::B))
         {
-            // 押すたびに攻撃ポーズをリセット（押し続けると攻撃モーションが継続/更新される）
+            auto updateFacing = [&](void) noexcept
+            {
+                if (in->IsPressed(JPBTN::LEFT))
+                {
+                    cx.facingLR = AvatarDirection::Left;
+                }
+                else if (in->IsPressed(JPBTN::RIGHT))
+                {
+                    cx.facingLR = AvatarDirection::Right;
+                }
+            };
+
+            // Attack pose restart on input edge.
             restartAttackPose_();
 
-            // 弾はEntityManager側で上限判定して、撃てるときだけコマンドを返す
+            updateFacing();     // Update 'cx.facingLR' based on current input.
+
+            // Projectile spawn command.
             if (can_spawn_projectile)
             {
-                cmd.draw_layer = systems::view::Layer::Effects;
-                cmd.sprite_id = cx.id;
+                cmd.drawLayer = systems::view::Layer::Effects;
+                cmd.spriteId = cx.id;
 
-                cmd.base_texture = tuning.projectile_base_texture;
-                cmd.anim_frames = tuning.projectile_anim_frames;
-                cmd.anim_fps = tuning.projectile_anim_fps;
-                cmd.life_sec = tuning.projectile_life_sec;
+                cmd.baseTexture = tuning.projectile_base_texture;
+                cmd.animFrames = tuning.projectile_anim_frames;
+                cmd.animFps = tuning.projectile_anim_fps;
+                cmd.lifeSec = tuning.projectile_life_sec;
 
                 const bool is_left = (cx.facingLR == AvatarDirection::Left);
                 const auto offset = is_left ? tuning.projectile_spawn_offset_px_left : tuning.projectile_spawn_offset_px_right;
 
-                cmd.spawn_pos = cx.pos + offset;
+                cmd.spawnPos = cx.pos + offset;
                 const double dir = static_cast<double>(cx.facingLR);
                 cmd.velocity = foundation::math::Vec2{ tuning.projectile_speed_px_per_sec * dir, 0.0 };
             }
         }
 
-        // 2) 攻撃ポーズ（+10）は一定時間だけ維持
+        // 2) The attack pose (+10) is maintained for a certain period of time.
         if (_is_attacking)
         {
             cx.textureAdd = tuning.attack_texture_add;
+            cx.lockClimbMove = true;    // Don't allow climbing movement during attack.
 
             _pose_time_sec += dt;
             if (_pose_time_sec >= tuning.attack_duration_sec)
@@ -64,11 +79,21 @@ namespace mm2hack::apps::world::entity::avatar
         return _is_attacking;
     }
 
+    void AttackActionState::TickAnimationOnly(AnimeContext& ax, const AttackTuning& tuning, double dt) const noexcept
+    {
+        // No state update needed
+        if (_is_attacking)
+        {
+            // Still in attack pose
+            ax.textureAdd = tuning.attack_texture_add;
+        }
+    }
+
     Vec2 AttackActionState::GetRockBusterOffset(int texture, AvatarDirection facingLR) const noexcept
     {
-        // 備考: ロックバスターのテクスチャは、胴体の部分とアームの部分が分割されてタイル配置されている。
-        // 攻撃時(_is_attacking is true)はこれを結合してプレイヤーのグラフィックを生成する必要がある。
-        // それを実現するため、プレイヤーのテクスチャに対するアーム部分のオフセットを計算し、その座標値を返す。
+        // NOTE: The Rock Buster's texture is divided into the torso part and the arm part, which are arranged as tiles.
+        // During an attack (_is_attacking is true), these need to be combined to generate the player's graphic.
+        // To achieve this, calculate the offset of the arm part relative to the player's texture and return that coordinate value.
         Vec2 offset{ 0.0, 0.0 };
         double x_temp = 0.0;
         double y_temp = 0.0;
@@ -94,12 +119,10 @@ namespace mm2hack::apps::world::entity::avatar
             y_temp = 9.0;
             break;
         case 30:
-        case 32:
-            x_temp = 24.0;
-            y_temp = 10.0;
-            break;
         case 31:
+        case 32:
         case 33:
+            x_temp = 24.0;
             y_temp = 10.0;
             break;
         case 51:
@@ -118,6 +141,12 @@ namespace mm2hack::apps::world::entity::avatar
         case 57:
             x_temp = -1.0;
             y_temp = 9.0;
+            break;
+        case 70:
+        case 71:
+        case 72:
+        case 73:
+            y_temp = 10.0;
             break;
         default:
             break;

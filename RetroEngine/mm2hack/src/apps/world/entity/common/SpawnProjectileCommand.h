@@ -3,7 +3,7 @@
 //  Project: mm2hack
 //  SpawnProjectileCommand.h
 // 
-//  ** Descriptions **
+//  Command structure for spawning a projectile entity in the game world.
 // 
 //==============================================================================
 #pragma once
@@ -18,15 +18,15 @@ namespace mm2hack::apps::world::entity::common
 {
     struct SpawnProjectileCommand final
     {
-        foundation::math::Vec2 spawn_pos{};
+        foundation::math::Vec2 spawnPos{};
         foundation::math::Vec2 velocity{};
-        systems::view::Layer draw_layer{ systems::view::Layer::Effects };
+        systems::view::Layer drawLayer{ systems::view::Layer::Effects };
 
-        rendering::sprite::SpriteManager::Id sprite_id{};       // Which sprite-set to use for drawing (same as PlayerEntity::_id etc.)
-        int base_texture{ 0 };
-        std::int32_t anim_frames{ 1 };
-        double anim_fps{ 0.0 };
+        rendering::sprite::SpriteManager::Id spriteId{};       // Which sprite-set to use for drawing (same as PlayerEntity::_id etc.)
+        int baseTexture{ 0 };
+        std::int32_t animFrames{ 1 };
+        double animFps{ 0.0 };
 
-        double life_sec{ 1.0 };
+        double lifeSec{ 1.0 };
     };
 }

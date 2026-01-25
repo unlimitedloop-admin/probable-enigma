@@ -3,7 +3,7 @@
 //  Project: mm2hack
 //  DemoStage2.h
 // 
-//  ** Descriptions **
+//  Scene ID - 02 Demo stage 2 scene implemented with abstract action scene.
 // 
 //==============================================================================
 #pragma once
@@ -33,6 +33,7 @@ namespace mm2hack::apps::resources::parameters
 
 namespace mm2hack::apps::scenes
 {
+    // Demo stage scene (ID: 02)
     class DemoStage2 final : public IBaseScene, public phases::IPhaseHost
     {
         using BGTileManagerId       = rendering::bg::BGTileManager::Id;

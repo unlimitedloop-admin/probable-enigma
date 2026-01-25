@@ -115,7 +115,11 @@ namespace mm2hack::apps::world::entity::avatar::states
         cx.vel.x = 0.0;
         cx.vel.y = 0.0;
 
-        if (up && !down)
+        if (cx.lockClimbMove)
+        {
+            cx.vel.y = 0.0;
+        }
+        else if (up && !down)
         {
             cx.vel.y = -t.climbSpeed;
             auto vHit = cx.terrain->SweepVertical(cx.probes, cx.vel);
@@ -161,7 +165,7 @@ namespace mm2hack::apps::world::entity::avatar::states
         }
 
         // Rising to ground at ladder top (original-like rule)
-        if (up && shouldRisingToGround_(cx))
+        if (!cx.lockClimbMove && up && shouldRisingToGround_(cx))
         {
             doRisingToGround_(cx);
             return AvatarStatus::Standing;
@@ -252,7 +256,7 @@ namespace mm2hack::apps::world::entity::avatar::states
         cx.justLanded = true;
 
         cx.facingLR = OppositeFacingDirection(cx.facingLR);
-        cx.texture = static_cast<int>(STile::StandingA) + FacingDirection(cx.texture, cx.facingLR);
+        cx.texture = static_cast<int>(STile::StandingA);
     }
 
     void LadderingState::buildGrabCandidates_(Vec2 out[9], const PlayerContext& cx, const PlayerTuning& t) const noexcept

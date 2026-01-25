@@ -52,7 +52,10 @@ namespace mm2hack::apps::world::entity::avatar
 
         // Is currently attacking
         [[nodiscard]] bool IsAttacking() const noexcept;
+        // Tick animation only (no state update)
+        [[nodiscard]] void TickAnimationOnly(AnimeContext& ax, const AttackTuning& tuning, double /*dt*/) const noexcept;
 
+        // Get rock buster offset for given texture and facing direction
         Vec2 GetRockBusterOffset(int texture, AvatarDirection facingLR) const noexcept;
 
     private:

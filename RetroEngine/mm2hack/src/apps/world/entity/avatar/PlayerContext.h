@@ -67,6 +67,7 @@ namespace mm2hack::apps::world::entity::avatar
 
         const ITerrainProbe* terrain;                       // Look up interface for terrain probing
         ILadderService* ladder{ nullptr };                  // Laddering service module
+        bool lockClimbMove{ false };                        // Lock climbing movement (for laddering state)
 
         WorldBounds vBounds;                                // VRAM area boundaries
         const IScrollRuleProvider* scrollRules{ nullptr };  // Scroll rule provider
@@ -81,11 +82,12 @@ namespace mm2hack::apps::world::entity::avatar
         AnimeStepper& animeStepper;                         // Animation counter (local)
         AvatarDirection& facingLR;                          // avatar facing direction (-1: left, +1: right)
         int& texture;                                       // tile index for rendering
+        int& textureAdd;                                    // Texture index addition for rendering
     };
 
     // Extended context for entity-level data struct (snapshots)
     struct ExPlayerContextForEntity
     {
-        bool canSpawnProjectile{ false };                   // Whether the player can spawn projectiles now
+        bool canSpawnProjectile{ true };                    // Whether the player can spawn projectiles now
     };
 }

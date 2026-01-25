@@ -73,11 +73,10 @@ namespace mm2hack::apps::world::entity::avatar::states
         UpdateVerticalVelocity(cx, t, in->IsPressed(JPBTN::A));
 
         // Call after cx.texture is set; adds facing offset (0 right, 40 left for AvatarAnimation enums).
-        auto applyFacing = [&](void) noexcept
+        auto updateFacing = [&](void) noexcept
             {
                 if (in->IsPressed(JPBTN::LEFT))  cx.facingLR = AvatarDirection::Left;
                 if (in->IsPressed(JPBTN::RIGHT)) cx.facingLR = AvatarDirection::Right;
-                FacingDirection(cx.texture, cx.facingLR);   // Set facing direction at 'cx.texture'.
             };
 
         // Y-axis air movement.
@@ -103,25 +102,25 @@ namespace mm2hack::apps::world::entity::avatar::states
             {
                 DoJump(cx, t);
                 cx.texture = static_cast<int>(STile::Airpause);
-                applyFacing();
+                updateFacing();
                 return AvatarStatus::Hovering;
             }
             else if (in->IsPressed(JPBTN::LEFT) || in->IsPressed(JPBTN::RIGHT))
             {
                 cx.texture = static_cast<int>(STile::RunningA);
-                applyFacing();
+                updateFacing();
                 return AvatarStatus::Running;
             }
             else
             {
                 LandingAnim(cx, t);
-                applyFacing();
+                updateFacing();
                 return AvatarStatus::Landing;
             }
         }
 
         cx.texture = static_cast<int>(STile::Airpause);
-        applyFacing();
+        updateFacing();
         return AvatarStatus::Hovering;
     }
 
