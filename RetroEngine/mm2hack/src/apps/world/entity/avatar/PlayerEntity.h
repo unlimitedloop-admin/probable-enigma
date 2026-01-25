@@ -27,12 +27,14 @@
 #include "apps/systems/scrolling/atomic/ScrollTypes.h"
 #include "apps/systems/view/RenderContext.h"
 #include "apps/world/entity/common/AnimeStepper.h"
+#include "apps/world/entity/common/SpawnProjectileCommand.h"
 #include "apps/world/entity/IAnimTickable.h"
 #include "apps/world/entity/IEntity.h"
 #include "AvatarStatus.h"
 #include "IPlayerState.h"
 #include "PlayerContext.h"
 #include "PlayerParams.h"
+#include "states/AttackActionState.h"
 
 namespace mm2hack::core::assembly
 {
@@ -44,25 +46,25 @@ namespace mm2hack::apps::world::entity::avatar
     // User player character entity
     class PlayerEntity final : public EntityBase, public systems::physics::ICollider, public IAnimTickable
     {
-        using AnimeStepper        = common::AnimeStepper;
-        using RectF               = foundation::math::RectF;
-        using Vec2                = foundation::math::Vec2;
-        using CollisionLayer      = systems::physics::CollisionLayer;
-        using ILadderService      = systems::physics::ILadderService;
-        using ITerrainProbe       = systems::physics::ITerrainProbe;
-        using TileAttribute       = systems::physics::TileAttribute;
-        using PageGridIndex       = systems::physics::PageGridIndex;
-        using Probes              = systems::physics::Probes;
-        using IScrollRuleProvider = systems::scrolling::atomic::IScrollRuleProvider;
-        using LayerView           = systems::view::Layer;
-        using RenderContext       = systems::view::RenderContext;
-        using StateProvider       = core::assembly::StateProvider;
+        using AnimeStepper              = common::AnimeStepper;
+        using SpawnProjectileCommand    = common::SpawnProjectileCommand;
+        using RectF                     = foundation::math::RectF;
+        using Vec2                      = foundation::math::Vec2;
+        using CollisionLayer            = systems::physics::CollisionLayer;
+        using ILadderService            = systems::physics::ILadderService;
+        using ITerrainProbe             = systems::physics::ITerrainProbe;
+        using TileAttribute             = systems::physics::TileAttribute;
+        using PageGridIndex             = systems::physics::PageGridIndex;
+        using Probes                    = systems::physics::Probes;
+        using IScrollRuleProvider       = systems::scrolling::atomic::IScrollRuleProvider;
+        using LayerView                 = systems::view::Layer;
+        using RenderContext             = systems::view::RenderContext;
+        using StateProvider             = core::assembly::StateProvider;
 
-
-        using SpriteManagerId   = rendering::sprite::SpriteManager::Id;
+        using SpriteManagerId           = rendering::sprite::SpriteManager::Id;
 
     public:
-        using ScrollDir         = systems::scrolling::atomic::PageScroll::Dir;
+        using ScrollDir                 = systems::scrolling::atomic::PageScroll::Dir;
 
         PlayerEntity(SpriteManagerId id);
 
@@ -106,12 +108,15 @@ namespace mm2hack::apps::world::entity::avatar
         void SetLadderService(ILadderService* s) { _ladderService = s; }
         void SetScrollContext(const IScrollRuleProvider* rules, std::size_t pageIndex);
         void SetScrollRuleProvider(IScrollRuleProvider* p) noexcept { _scrollRules = p; }
+        void SetEntityContext(const ExPlayerContextForEntity& cx) noexcept { _entityContext = cx; }
 
         // Get scrolling request (if any) and consume it
         [[nodiscard]] std::optional<FixedScrollRequest> ConsumeScrollRequest() noexcept;
 
         // Parameter that acts as a dedicated flag for fixed page scrolling.
         void SetFixedPageScrollAvailable(bool v) noexcept { _fixedScrollAvailable = v; }
+        //
+        std::optional<SpawnProjectileCommand> TakeSpawnProjectile();
 
         // ===== public parameters =====
         bool onGround{ false };
@@ -140,25 +145,30 @@ namespace mm2hack::apps::world::entity::avatar
     private:
         const std::wstring kClassName{ L"PlayerEntity" };
 
-        SpriteManagerId _id{};                                          // Sprite Id
+        SpriteManagerId _id{};                                      // Sprite Id
+        Vec2 _half{};                                               // Half-size of the bounding box
+        bool _collidable{ true };                                   // Whether collision is enabled
+        AvatarStatus _status{ AvatarStatus::Standing };             // Current avatar status
+        std::array<std::unique_ptr<IPlayerState>, 7> _states{};     // Basic behavior states array
+        std::unique_ptr<AttackActionState> _attackAction{};         // Attack action state handler
 
-        Vec2 _half{};                                                   // Half-size of the bounding box
-        bool _collidable{ true };                                       // Whether collision is enabled
-        AvatarStatus _status{ AvatarStatus::Standing };                 // Current avatar status
-        std::array<std::unique_ptr<IPlayerState>, 7> _states{};
+        StateProvider* _input{};                                    // Player input snapshot (This is separate from core::assembly::InputSnapshot)
+        PlayerTuning _tuning{};                                     // Player tuning parameters
+        AttackTuning _attack_tuning{};                              // Attack action tuning parameters
+        AnimeStepper _animeStepper{};                               // Animation stepper
+        Probes _probes{ _half };                                    // Collision probes
+        const ITerrainProbe* _terrainProbe{ nullptr };              // Terrain probe
+        ILadderService* _ladderService{ nullptr };                  // Laddering action service
 
-        StateProvider*             _input{};                            // Player input snapshot (This is separate from core::assembly::InputSnapshot)
-        PlayerTuning               _tuning{};                           // Player tuning parameters
-        AnimeStepper               _animeStepper{};                     // Animation stepper
-        Probes                     _probes{ _half };                    // Collision probes
-        const ITerrainProbe*       _terrainProbe{ nullptr };            // Terrain probe
-        ILadderService*            _ladderService{ nullptr };           // Laddering action service
-        WorldBounds                _vBounds{};                          // View boundaries
-        Vec2                       _pageOriginPx{};                     // Current page origin in world px
-        const IScrollRuleProvider* _scrollRules{ nullptr };             // Scroll rule provider
-        std::size_t                _scrollPageIndex{ 0 };               // Current page index for scrolling
-        std::optional<FixedScrollRequest> _pendingScrollReq{};          // Pending fixed scroll request
+        WorldBounds _vBounds{};                                     // View boundaries
 
-        bool _fixedScrollAvailable{ false };    // PREVIEW: Fixed page scroll availability flag
+        Vec2 _pageOriginPx{};                                       // Current page origin in world px
+        const IScrollRuleProvider* _scrollRules{ nullptr };         // Scroll rule provider
+        std::size_t _scrollPageIndex{ 0 };                          // Current page index for scrolling
+        std::optional<FixedScrollRequest> _pendingScrollReq{};      // Pending fixed scroll request
+        bool _fixedScrollAvailable{ false };                        // Is fixed-page scrolling available?
+
+        ExPlayerContextForEntity _entityContext{};                  // Extended context for entity-level data
+        std::optional<SpawnProjectileCommand> _spawnProjectile{};   // Pending projectile spawn command
     };
 }

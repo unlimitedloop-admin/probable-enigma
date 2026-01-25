@@ -7,7 +7,9 @@
 #include "apps/scenes/PhaseFadeController.h"
 #include "apps/systems/scrolling/atomic/ScrollController.h"
 #include "apps/systems/view/RenderContext.h"
+#include "apps/world/entity/avatar/PlayerContext.h"
 #include "apps/world/entity/avatar/PlayerEntity.h"
+#include "apps/world/entity/effects/ProjectileEntity.h"
 #include "apps/world/entity/EntityManager.h"
 #include "config/ConfigUIManager.h"
 #include "core/overlay/DebugHud.h"
@@ -87,7 +89,19 @@ namespace mm2hack::apps::scenes::phases
             if (!lock)
             {
                 player->SetInput(_ctx->input);
-                player->Update(dt);
+
+                auto entity_ctx = world::entity::avatar::ExPlayerContextForEntity{
+                    .canSpawnProjectile = (_ctx->entity_mgr->CountAlive<world::entity::effects::ProjectileEntity>() < 3),   // TODO: make configurable (attack limit for player)
+                };
+
+                player->SetEntityContext(entity_ctx);
+
+                //player->Update(dt);  // Handled by entity manager
+                _ctx->entity_mgr->UpdateAll(dt);
+                if (auto cmd = player->TakeSpawnProjectile(); cmd)
+                {
+                    _ctx->entity_mgr->Spawn<world::entity::effects::ProjectileEntity>(*cmd);
+                }
 
                 delta = player->pos - prev_pos;
             }

@@ -231,6 +231,7 @@
     <ClCompile Include="src\apps\vfx\stareffects\Star.cpp" />
     <ClCompile Include="src\apps\systems\physics\LadderService.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\PlayerEntity.cpp" />
+    <ClCompile Include="src\apps\world\entity\avatar\states\AttackActionState.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\states\BrakeRunState.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\states\GroundBaseState.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\states\HoveringState.cpp" />
@@ -239,7 +240,7 @@
     <ClCompile Include="src\apps\world\entity\avatar\states\LaunchRunState.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\states\RunningState.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\states\StandingState.cpp" />
-    <ClCompile Include="src\apps\world\entity\common\ProjectileEntity.cpp" />
+    <ClCompile Include="src\apps\world\entity\effects\ProjectileEntity.cpp" />
     <ClCompile Include="src\apps\world\entity\EntityManager.cpp" />
     <ClCompile Include="src\apps\world\stage\RoomGraphAdapter.cpp" />
     <ClCompile Include="src\config\ConfigUIManager.cpp" />
@@ -309,6 +310,8 @@
     <ClInclude Include="src\apps\rendering\bg\BGTileMapProvider.h" />
     <ClInclude Include="src\apps\resources\bg\IMapPageSource.h" />
     <ClInclude Include="src\apps\resources\stages\StageTileAttributes.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\states\AttackActionState.h" />
+    <ClInclude Include="src\apps\world\entity\common\SpawnProjectileCommand.h" />
     <ClInclude Include="src\apps\world\entity\EntityManager.h" />
     <ClInclude Include="src\core\assembly\FilteredJoystickInputProvider.h" />
     <ClInclude Include="src\apps\scenes\phases\AbstractActionPhase.h" />
@@ -351,7 +354,7 @@
     <ClInclude Include="src\apps\world\entity\avatar\states\RunningState.h" />
     <ClInclude Include="src\apps\world\entity\avatar\states\StandingState.h" />
     <ClInclude Include="src\apps\world\entity\common\AnimeStepper.h" />
-    <ClInclude Include="src\apps\world\entity\common\ProjectileEntity.h" />
+    <ClInclude Include="src\apps\world\entity\effects\ProjectileEntity.h" />
     <ClInclude Include="src\apps\world\entity\EntityBase.h" />
     <ClInclude Include="src\apps\world\entity\IAnimTickable.h" />
     <ClInclude Include="src\apps\world\entity\IEntity.h" />

@@ -12,9 +12,11 @@
 #include "apps/systems/view/ViewState.h"
 #include "apps/world/entity/EntityBase.h"
 #include "apps/world/entity/IEntity.h"
+#include "AvatarStatus.h"
 #include "IPlayerState.h"
 #include "PlayerContext.h"
 #include "PlayerParams.h"
+#include "states/AttackActionState.h"
 #include "states/BrakeRunState.h"
 #include "states/HoveringState.h"
 #include "states/LadderingState.h"
@@ -32,6 +34,7 @@ namespace mm2hack::apps::world::entity::avatar
     PlayerEntity::PlayerEntity(SpriteManagerId id)
         : _id(id), _half{ 16.0, 16.0 }
     {
+        _attackAction = std::make_unique<AttackActionState>();
         _states[0] = std::make_unique<states::StandingState>();
         _states[1] = std::make_unique<states::RunningState>();
         _states[2] = std::make_unique<states::HoveringState>();
@@ -48,9 +51,10 @@ namespace mm2hack::apps::world::entity::avatar
         if (!IsAlive()) return;
 
         PlayerContext cx{
+            _id,
             pos, vel,
             onGround, /* justLanded */ false, /* isHitCeiling */ false, /* prevOnGround */ onGround,
-            facingLR, texture, _animeStepper,
+            facingLR, texture, /* textureAdd */ 0, _animeStepper,
             /* probes */ _probes, /* prelimProbes */ _probes, this->Bounds(),
             _pageOriginPx,
             _terrainProbe, _ladderService, _vBounds, _scrollRules, _scrollPageIndex,
@@ -62,6 +66,10 @@ namespace mm2hack::apps::world::entity::avatar
 
         // Update state machine
         const auto next = st->Update(cx, _input, _tuning, dt);
+
+        _spawnProjectile.reset();
+        _spawnProjectile = _attackAction->Update(cx, _input, _attack_tuning, _entityContext.canSpawnProjectile, dt);
+
         if (next != _status)
         {
             st->OnExit(cx, _input, _tuning);
@@ -74,9 +82,9 @@ namespace mm2hack::apps::world::entity::avatar
             requestScroll_(cx.pendingFixedScroll);
         }
 
-
         // Apply updated context values
         pos = cx.pos + cx.vel;
+        texture = cx.texture + cx.textureAdd;
 
         // Shift the avatar's position (coordinates) to match the terrain. This is mainly done against the terrain underfoot.
         // after updating pos with vel.
@@ -123,6 +131,16 @@ namespace mm2hack::apps::world::entity::avatar
 
         auto& res = runtime::GameContext::GetInstance().GetResourceManager();
         res.GetSpriteManager().UseById(_id, texture, static_cast<int>(screenX), static_cast<int>(screenY));
+
+        if (_attackAction->IsAttacking())
+        {
+            // REVIEW: Hardcoded offsets!
+            const int weaponTexture = facingLR == AvatarDirection::Left ? 50 : 10;
+            auto weaponOffset = _attackAction->GetRockBusterOffset(texture, facingLR);
+            const int weaponOffsetX = static_cast<int>(weaponOffset.x);
+            const int weaponOffsetY = static_cast<int>(weaponOffset.y);
+            res.GetSpriteManager().UseById(_id, weaponTexture, static_cast<int>(screenX) + weaponOffsetX, static_cast<int>(screenY) + weaponOffsetY);
+        }
     }
 
     // IEntity
@@ -181,6 +199,11 @@ namespace mm2hack::apps::world::entity::avatar
         auto out = _pendingScrollReq;
         _pendingScrollReq.reset();
         return out;
+    }
+
+    std::optional<PlayerEntity::SpawnProjectileCommand> PlayerEntity::TakeSpawnProjectile()
+    {
+        return std::exchange(_spawnProjectile, std::nullopt);
     }
 
     void PlayerEntity::refreshProbes_(PlayerContext& cx) noexcept

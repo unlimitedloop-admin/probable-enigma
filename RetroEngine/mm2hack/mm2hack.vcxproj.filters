@@ -96,7 +96,7 @@
     <ClCompile Include="src\apps\systems\physics\CollisionLayer.cpp" />
     <ClCompile Include="src\apps\systems\physics\CollisionSystem.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\PlayerEntity.cpp" />
-    <ClCompile Include="src\apps\world\entity\common\ProjectileEntity.cpp" />
+    <ClCompile Include="src\apps\world\entity\effects\ProjectileEntity.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\states\StandingState.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\states\RunningState.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\states\HoveringState.cpp" />
@@ -117,6 +117,8 @@
     <ClCompile Include="src\apps\scenes\phases\ActionStageRuntimeBuilder.cpp" />
     <ClCompile Include="src\apps\scenes\phases\AbstractActionPhase.cpp" />
     <ClCompile Include="src\apps\scenes\sub-scenes\02-DemoStage2\DemoStage2.cpp" />
+    <ClCompile Include="src\apps\world\entity\EntityManager.cpp" />
+    <ClCompile Include="src\apps\world\entity\avatar\states\AttackActionState.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
@@ -283,7 +285,7 @@
     <ClInclude Include="src\apps\systems\physics\ITileMapProvider.h" />
     <ClInclude Include="src\apps\systems\physics\CollisionSystem.h" />
     <ClInclude Include="src\apps\world\entity\avatar\PlayerEntity.h" />
-    <ClInclude Include="src\apps\world\entity\common\ProjectileEntity.h" />
+    <ClInclude Include="src\apps\world\entity\effects\ProjectileEntity.h" />
     <ClInclude Include="src\apps\world\entity\avatar\AvatarStatus.h" />
     <ClInclude Include="src\apps\world\entity\avatar\PlayerParams.h" />
     <ClInclude Include="src\apps\systems\physics\ILadderService.h" />
@@ -325,6 +327,9 @@
     <ClInclude Include="src\apps\scenes\sub-scenes\02-DemoStage2\DemoStage2.h" />
     <ClInclude Include="src\apps\scenes\phases\IPhaseHost.h" />
     <ClInclude Include="src\core\assembly\FilteredJoystickInputProvider.h" />
+    <ClInclude Include="src\apps\world\entity\EntityManager.h" />
+    <ClInclude Include="src\apps\world\entity\common\SpawnProjectileCommand.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\states\AttackActionState.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />
