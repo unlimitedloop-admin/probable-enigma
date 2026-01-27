@@ -24,8 +24,11 @@ namespace mm2hack::apps::world::entity::effects
     public:
         explicit ProjectileEntity(const common::SpawnProjectileCommand& cmd);
 
+        // Get drawing layer (IRenderable)
         systems::view::Layer DrawLayer() const noexcept override;
+        // Main update (IUpdatable)
         void Update(double dt) override;
+        // Render (IRenderable)
         void Render(systems::view::RenderContext& ctx) override;
 
     private:
@@ -33,11 +36,11 @@ namespace mm2hack::apps::world::entity::effects
         foundation::math::Vec2 _half{};                                     // Half-size of the bounding box
 
         rendering::sprite::SpriteManager::Id _id{};                         // Object sprite id
-        int _base_texture{ 0 };
-        std::int32_t _anim_frames{ 1 };
-        double _anim_fps{ 0.0 };
+        int _base_texture{ 0 };             // Base texture index
+        std::int32_t _anim_frames{ 1 };     // Animation frames
+        double _anim_fps{ 0.0 };            // Animation frames per second
 
-        double _life_sec{ 1.0 };
-        double _age_sec{ 0.0 };
+        double _life_sec{ 1.0 };            // Lifetime in seconds
+        double _age_sec{ 0.0 };             // Age in seconds
     };
 }

@@ -44,7 +44,6 @@ namespace mm2hack::apps::world::entity::avatar
         _states[6] = std::make_unique<states::LandingState>();
     }
 
-    // IUpdatable
     void PlayerEntity::Update(double dt)
     {
         using namespace systems::scrolling::atomic;
@@ -53,20 +52,29 @@ namespace mm2hack::apps::world::entity::avatar
         PlayerContext cx{
             _id,
             pos, vel,
-            onGround, /* justLanded */ false, /* isHitCeiling */ false, /* prevOnGround */ onGround,
-            facingLR, baseTexture, /* textureAdd */ 0, _animeStepper,
-            /* probes */ _probes, /* prelimProbes */ _probes, this->Bounds(),
-            _pageOriginPx,
-            _terrainProbe, _ladderService, false, _vBounds, _scrollRules, _scrollPageIndex,
+            onGround, /* justLanded */ false, /* isHitCeiling */ false, /* prevOnGround */ onGround, facingLR,
+            baseTexture, /* textureAdd */ 0, _animeStepper, /* probes */ _probes, /* prelimProbes */ _probes,
+            this->Bounds(),
+            _pageOriginPx, _terrainProbe, _ladderService, /* lockClimbMove */ false, _vBounds, _scrollRules, _scrollPageIndex,
             /* pendingFixedScroll */ { _fixedScrollAvailable, ScrollDir::None, 0.0 }
         };
 
-        _spawnProjectile.reset();
-        _spawnProjectile = _attackAction->Update(cx, _input, _attack_tuning, _entityContext.canSpawnProjectile, dt);
-
         refreshProbes_(cx);
+
+        // Get up and down lock on laddering (if any)
+        _attackAction->PreUpdate(cx, _input);
+
+        // 1) locomotion: state update and transition (basic behavior)
         auto& st = FindState(_status);
-        const auto next = st->Update(cx, _input, _tuning, dt);  // Update state machine
+        const auto next = st->Update(cx, _input, _tuning, dt);
+
+        // 2) attack action: update (independent of basic behavior) 
+        const auto act = _attackAction->PostUpdate(cx, _input, _attack_tuning, _entityContext.canSpawnProjectile, dt);
+
+        cx.textureAdd += act.textureAdd;
+        cx.lockClimbMove = cx.lockClimbMove || act.lockClimbMove;
+        _rock_buster = act.rockBuster;
+        _spawnProjectile = act.spawnProjectile;
 
         if (next != _status)
         {
@@ -82,8 +90,9 @@ namespace mm2hack::apps::world::entity::avatar
 
         // Apply updated context values
         pos = cx.pos + cx.vel;
-        texture = cx.texture;
+        baseTexture = cx.basePose;
         attackTexture = cx.textureAdd;
+        facingLR = cx.facingLR;
         composeFinalTexture_();
 
         // Shift the avatar's position (coordinates) to match the terrain. This is mainly done against the terrain underfoot.
@@ -106,20 +115,6 @@ namespace mm2hack::apps::world::entity::avatar
         }
     }
 
-    void PlayerEntity::TickAnimation(double dt)
-    {
-        if (!IsAlive()) return;
-
-        int text_add = 0;
-        AnimeContext ax{ _animeStepper, facingLR, baseTexture, text_add };
-        _attackAction->TickAnimationOnly(ax, _attack_tuning, dt);
-        FindState(_status)->TickAnimationOnly(ax, _input, _tuning, dt);
-        
-        attackTexture = text_add;
-        composeFinalTexture_();
-    }
-
-    // IRenderable
     PlayerEntity::LayerView PlayerEntity::DrawLayer() const noexcept { return LayerView::Actors; }
 
     void PlayerEntity::Render(RenderContext& ctx)
@@ -127,24 +122,26 @@ namespace mm2hack::apps::world::entity::avatar
         if (!IsAlive()) return;
         if (!ctx.view) return;
 
-        const auto& view = *ctx.view;
-        const double worldX = pos.x;
-        const double worldY = pos.y;
-
-        const double screenX = worldX - view.viewWorldX - _half.x;
-        const double screenY = worldY - view.viewWorldY - _half.y;
+        const auto toScreenPos = [&](const Vec2& worldPos) -> Vec2
+        {
+            return {
+                worldPos.x - ctx.view->viewWorldX - _half.x,
+                worldPos.y - ctx.view->viewWorldY - _half.y
+            };
+        };
 
         auto& res = runtime::GameContext::GetInstance().GetResourceManager();
-        res.GetSpriteManager().UseById(_id, texture, static_cast<int>(screenX), static_cast<int>(screenY));
+        
+        // Draw player sprite
+        const auto screenPos = toScreenPos(pos);
+        res.GetSpriteManager().UseById(_id, texture, static_cast<int>(screenPos.x), static_cast<int>(screenPos.y));
 
-        if (_attackAction->IsAttacking())
+        // Draw rock buster arm if visible
+        if (_rock_buster.visible)
         {
-            // REVIEW: Hardcoded offsets!
-            const int weaponTexture = facingLR == AvatarDirection::Left ? 50 : 10;
-            auto weaponOffset = _attackAction->GetRockBusterOffset(texture, facingLR);
-            const int weaponOffsetX = static_cast<int>(weaponOffset.x);
-            const int weaponOffsetY = static_cast<int>(weaponOffset.y);
-            res.GetSpriteManager().UseById(_id, weaponTexture, static_cast<int>(screenX) + weaponOffsetX, static_cast<int>(screenY) + weaponOffsetY);
+            const Vec2 armWorldPos = pos + _rock_buster.offset;
+            const auto armScreenPos = toScreenPos(armWorldPos);
+            res.GetSpriteManager().UseById(_id, _rock_buster.armTexture, static_cast<int>(armScreenPos.x), static_cast<int>(armScreenPos.y));
         }
     }
 
@@ -179,6 +176,19 @@ namespace mm2hack::apps::world::entity::avatar
     IEntity& PlayerEntity::OwnerEntity() noexcept { return *this; }
 
     const IEntity& PlayerEntity::OwnerEntity() const noexcept { return *this; }
+
+    void PlayerEntity::TickAnimation(double dt)
+    {
+        if (!IsAlive()) return;
+
+        int texture_add = 0;
+        AnimeContext ax{ _animeStepper, facingLR, baseTexture, texture_add };
+        _attackAction->TickAnimationOnly(ax, _attack_tuning, dt, _rock_buster);
+        FindState(_status)->TickAnimationOnly(ax, _input, _tuning, dt);
+
+        attackTexture = texture_add;
+        composeFinalTexture_();
+    }
 
     void PlayerEntity::SetCollidable(bool v) noexcept { _collidable = v; }
 

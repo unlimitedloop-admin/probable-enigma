@@ -56,7 +56,7 @@ namespace mm2hack::apps::world::entity::avatar
         bool isHitCeiling{ false };                         // Is the avatar hitting the ceiling?
         const bool prevOnGround{ false };                   // Was the avatar on the ground previous frame?
         AvatarDirection& facingLR;                          // avatar facing direction (-1: left, +1: right)
-        int& texture;                                       // tile index for rendering
+        int basePose{ 0 };                                 // Base pose for the avatar
         int textureAdd{ 0 };                                // Texture index addition for rendering
 
         AnimeStepper& animeStepper;                         // Animation counter (local)
@@ -81,7 +81,7 @@ namespace mm2hack::apps::world::entity::avatar
     {
         AnimeStepper& animeStepper;                         // Animation counter (local)
         AvatarDirection& facingLR;                          // avatar facing direction (-1: left, +1: right)
-        int& texture;                                       // tile index for rendering
+        int& basePose;                                     // Base pose for rendering
         int& textureAdd;                                    // Texture index addition for rendering
     };
 

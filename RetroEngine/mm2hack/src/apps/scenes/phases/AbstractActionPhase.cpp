@@ -96,7 +96,6 @@ namespace mm2hack::apps::scenes::phases
 
                 player->SetEntityContext(entity_ctx);
 
-                //player->Update(dt);  // Handled by entity manager
                 _ctx->entity_mgr->UpdateAll(dt);
                 if (auto cmd = player->TakeSpawnProjectile(); cmd)
                 {
@@ -107,7 +106,6 @@ namespace mm2hack::apps::scenes::phases
             }
             else
             {
-                // During fixed scroll: player is carried by scroll.
                 delta = Vec2{ 0, 0 };
                 if (!_ctx->scroll->IsFreezeFrames())
                 {
@@ -140,17 +138,16 @@ namespace mm2hack::apps::scenes::phases
 
         _player_prev_pos = player ? player->pos : Vec2::Zero();
 
-        // Example: if some condition verified -> request transition to menu
-        const bool verified = false; // replace with real trigger
+        const bool verified = false; // TODO: replace with real trigger
         if (verified && _host != nullptr)
         {
             PhaseFadePlan next(
-                5,   // preBlackHold
-                20,  // fadeInFrames
-                0,   // preFadeOutHold
-                20,  // fadeOutFrames
-                0,   // postBlackHold
-                FadeLayerMask::All // layers
+                5,   /* preBlackHold */ 
+                20,  /* fadeInFrames */ 
+                0,   /* preFadeOutHold */
+                20,  /* fadeOutFrames */
+                0,   /* postBlackHold */
+                FadeLayerMask::All /* layers */
             );
             resources::parameters::Parameters p;
             _host->RequestTransition(L"TopMenu", next, p);

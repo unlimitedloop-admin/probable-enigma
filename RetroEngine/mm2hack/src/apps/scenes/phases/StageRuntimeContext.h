@@ -25,30 +25,26 @@
 
 namespace mm2hack::apps::scenes::phases
 {
-    // TODO: Replace with your planned manager type (EntityManager / EntityWorld).
-    //class EntityManager;
-
+    // Container struct for stage runtime context, holding various systems and entities.
     struct StageRuntimeContext final
     {
-        core::assembly::StateProvider* input{ nullptr };    // Reference to the raw input provider
+        core::assembly::StateProvider* input{ nullptr };                                // Reference to the raw input provider
 
-        std::wstring area_key{};
+        std::wstring area_key{};                                                        // Current area key
 
-        // Keep these alive (rules/mapProvider/graph may depend on them).
-        std::shared_ptr<resources::bg::AddressScraper> scraper{};
-        std::shared_ptr<resources::bg::MapPageCache> page_source{};
+        std::shared_ptr<resources::bg::AddressScraper> scraper{};                       // Shared AddressScraper for map data
+        std::shared_ptr<resources::bg::MapPageCache> page_source{};                     // Shared MapPageCache for map data
+        std::unique_ptr<systems::physics::PageGridIndex> page_grid{};                   // Unique PageGridIndex for physics
+        std::unique_ptr<world::stage::RoomGraphAdapter> graph{};                        // Unique RoomGraphAdapter for stage graph
 
-        std::unique_ptr<systems::physics::PageGridIndex> page_grid{};
-        std::unique_ptr<world::stage::RoomGraphAdapter> graph{};
+        std::unique_ptr<systems::scrolling::atomic::MapRenderer2D> renderer{};          // Unique MapRenderer2D for scrolling
+        std::unique_ptr<systems::scrolling::atomic::ScraperScrollRuleProvider> rules{}; // Unique ScraperScrollRuleProvider for scrolling
+        std::unique_ptr<systems::scrolling::atomic::ScrollController> scroll{};         // Unique ScrollController for scrolling
 
-        std::unique_ptr<systems::scrolling::atomic::MapRenderer2D> renderer{};
-        std::unique_ptr<systems::scrolling::atomic::ScraperScrollRuleProvider> rules{};
-        std::unique_ptr<systems::scrolling::atomic::ScrollController> scroll{};
+        std::unique_ptr<systems::physics::ITileMapProvider> map_provider{};             // Unique ITileMapProvider for physics
+        std::unique_ptr<systems::physics::ITerrainProbe> terrain_probe{};               // Unique ITerrainProbe for physics
+        std::unique_ptr<systems::physics::ILadderService> ladder_service{};             // Unique ILadderService for physics
 
-        std::unique_ptr<systems::physics::ITileMapProvider> map_provider{};
-        std::unique_ptr<systems::physics::ITerrainProbe> terrain_probe{};
-        std::unique_ptr<systems::physics::ILadderService> ladder_service{};
-        
-        std::unique_ptr<world::entity::EntityManager> entity_mgr{};
+        std::unique_ptr<world::entity::EntityManager> entity_mgr{};                     // Unique EntityManager for entities
     };
 }

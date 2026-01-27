@@ -37,7 +37,12 @@ namespace mm2hack::apps::scenes::phases
         return ctx;
     }
 
-    void ActionStageRuntimeBuilder::buildCore_(StageRuntimeContext& ctx, ResourceManager& resource, const StageDefinition& def, const ActionStageBuildConfig& config) const
+    void ActionStageRuntimeBuilder::buildCore_(
+        StageRuntimeContext& ctx,
+        ResourceManager& resource,
+        const StageDefinition& def,
+        const ActionStageBuildConfig& config
+    ) const
     {
         using resources::bg::AddressScraper;
         using resources::bg::MapPageCache;
@@ -75,7 +80,7 @@ namespace mm2hack::apps::scenes::phases
             config.tile_px
         );
 
-        ScrollController::Params p{};
+        ScrollController::Params p{};   // Use default params
         ctx.scroll = std::make_unique<ScrollController>(*ctx.rules, *ctx.renderer, p);
         ctx.scroll->SetPageIndex(static_cast<std::size_t>(def.start_page_index));
         ctx.scroll->ObjectPos() = {
@@ -96,7 +101,11 @@ namespace mm2hack::apps::scenes::phases
         ctx.ladder_service = std::make_unique<systems::physics::LadderService>(*ctx.terrain_probe);
     }
 
-    void ActionStageRuntimeBuilder::buildEntities_(StageRuntimeContext& ctx, const StageDefinition& def, const ActionStageBuildConfig& config) const
+    void ActionStageRuntimeBuilder::buildEntities_(
+        StageRuntimeContext& ctx,
+        const StageDefinition& def,
+        const ActionStageBuildConfig& config
+    ) const
     {
         using world::entity::EntityManager;
         using world::entity::avatar::PlayerEntity;

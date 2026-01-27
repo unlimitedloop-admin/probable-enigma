@@ -72,7 +72,7 @@ namespace mm2hack::apps::world::entity::avatar::states
         // Jump or falling [Yaxis] movement. (Common airborne behavior)
         UpdateVerticalVelocity(cx, t, in->IsPressed(JPBTN::A));
 
-        // Call after cx.texture is set; adds facing offset (0 right, 40 left for AvatarAnimation enums).
+        // Call after cx.basePose is set; adds facing offset (0 right, 40 left for AvatarAnimation enums).
         auto updateFacing = [&](void) noexcept
             {
                 if (in->IsPressed(JPBTN::LEFT))  cx.facingLR = AvatarDirection::Left;
@@ -101,13 +101,13 @@ namespace mm2hack::apps::world::entity::avatar::states
             if (in->JustPressed(JPBTN::A))
             {
                 DoJump(cx, t);
-                cx.texture = static_cast<int>(STile::Airpause);
+                cx.basePose = static_cast<int>(STile::Airpause);
                 updateFacing();
                 return AvatarStatus::Hovering;
             }
             else if (in->IsPressed(JPBTN::LEFT) || in->IsPressed(JPBTN::RIGHT))
             {
-                cx.texture = static_cast<int>(STile::RunningA);
+                cx.basePose = static_cast<int>(STile::RunningA);
                 updateFacing();
                 return AvatarStatus::Running;
             }
@@ -119,7 +119,7 @@ namespace mm2hack::apps::world::entity::avatar::states
             }
         }
 
-        cx.texture = static_cast<int>(STile::Airpause);
+        cx.basePose = static_cast<int>(STile::Airpause);
         updateFacing();
         return AvatarStatus::Hovering;
     }

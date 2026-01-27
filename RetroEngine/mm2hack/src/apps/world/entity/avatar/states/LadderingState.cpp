@@ -41,7 +41,7 @@ namespace mm2hack::apps::world::entity::avatar::states
         }
         snapToLadderCenter_(cx, t); // Align avatar's X-position to ladder center on entry.
 
-        cx.texture = static_cast<int>(STile::LadderingA);
+        cx.basePose = static_cast<int>(STile::LadderingA);
         cx.animeStepper.reset();
         cx.ladder->setEntryKind(LadderEntryKind::None);
     }
@@ -256,7 +256,7 @@ namespace mm2hack::apps::world::entity::avatar::states
         cx.justLanded = true;
 
         cx.facingLR = OppositeFacingDirection(cx.facingLR);
-        cx.texture = static_cast<int>(STile::StandingA);
+        cx.basePose = static_cast<int>(STile::StandingA);
     }
 
     void LadderingState::buildGrabCandidates_(Vec2 out[9], const PlayerContext& cx, const PlayerTuning& t) const noexcept

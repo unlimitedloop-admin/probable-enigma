@@ -45,8 +45,11 @@ namespace mm2hack::apps::scenes
         ~DemoStage2() override;
 
         // === IBaseScene implementations ===
+        // Main update loop
         void Update() override;
+        // Render world elements
         void RenderWorld() override;
+        // Render overlay elements
         void RenderOverlay() override;
         // Scene identification
         SceneID GetSceneID() const override { return SceneID::DemoStage2; }
@@ -54,6 +57,7 @@ namespace mm2hack::apps::scenes
         std::wstring GetSceneName() const override { return kClassName; }
 
         // === IPhaseHost implementations ===
+        // Request a phase transition
         void RequestTransition(const std::wstring& next_key, const PhaseFadePlan& plan, const Parameters& params) override;
 
         // === DemoStage2 specific ===
@@ -69,14 +73,16 @@ namespace mm2hack::apps::scenes
         SpriteManagerId GetSpriteId() const noexcept { return _spriteId; }
 
         // === Save/Load state ===
+        // Save the current state to an output stream
         void Save(std::ostream& out);
+        // Load the state from an input stream
         void Load(std::istream& in);
 
     private:
-        void onEnter_(const Parameters& params) override;
-        void onExit_() override;
+        void onEnter_(const Parameters& params) override;               // Scene enter hook
+        void onExit_() override;                                        // Scene exit hook
 
-        bool initializeResources_(const Parameters& params);
+        bool initializeResources_(const Parameters& params);            // Initialize resources needed for the scene
         void loadStage_(rendering::bg::BGTileManager& bgTileManager);   // Load the stage map and tile attributes
 
         void applyPendingPhaseIfReady_();                               // Apply pending phase if fader is ready
@@ -104,15 +110,15 @@ namespace mm2hack::apps::scenes
         PhaseFadePlan _pendingPlan{};                                   // Fade plan for the pending phase
 
         PhaseFadeController _fader{};                                   // Fade controller for transitions
-        const int fadeDurationFrames{ 16 };
+        const int fadeDurationFrames{ 16 };                             // Duration of fade in frames
 
         SceneID _nextScene{ SceneID::None };                            // Next scene to switch to
         Parameters _nextParams{};                                       // Reserve the parameters for the next scene
 
-        core::assembly::StateProvider* _input{};
-        resources::ResourceManager* _resource{};
-        phases::ActionStageRuntimeBuilder _actionBuilder{};
-        std::unique_ptr<phases::IStageScript> _stageScript{};
+        core::assembly::StateProvider* _input{};                        // Input state provider
+        resources::ResourceManager* _resource{};                        // Resource manager
+        phases::ActionStageRuntimeBuilder _actionBuilder{};             // Builder for action stage runtime
+        std::unique_ptr<phases::IStageScript> _stageScript{};           // Stage script
 
         BGTileManagerId _bgTileId{ static_cast<BGTileManagerId>(-1) };  // Background tile set Id
         SpriteManagerId _spriteId{ static_cast<SpriteManagerId>(-1) };  // Sprite set Id

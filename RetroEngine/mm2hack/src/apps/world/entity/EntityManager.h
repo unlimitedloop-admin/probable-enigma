@@ -43,12 +43,13 @@ namespace mm2hack::apps::world::entity
         // Renders entities for the specified layer
         void RenderLayer(systems::view::RenderContext& ctx, systems::view::Layer layer);
 
-        // Removes all entities immediately.
+        // Removes all entities immediately
         void Clear() noexcept;
 
         // Finds the first entity of type T (dynamic_cast). Returns nullptr if not found
         template <typename T>
         T* FindFirst() noexcept;
+        // Finds the first entity of type T (dynamic_cast). Returns nullptr if not found
         template <typename T>
         const T* FindFirst() const noexcept;
 
@@ -56,18 +57,19 @@ namespace mm2hack::apps::world::entity
         template <typename T>
         std::size_t CountAlive() const noexcept;
 
+        // Counts the total number of entities (alive + dead)
         std::size_t Count() const noexcept;
 
     private:
-        void flushPending_();
-        void removeDead_();
+        void flushPending_();       // Flushes pending entities to the main list
+        void removeDead_();         // Removes dead entities from the main list
 
     private:
         const std::wstring kClassName{ L"EntityManager" };
 
-        std::vector<std::unique_ptr<IEntity>> _entities{};
-        std::vector<std::unique_ptr<IEntity>> _pending_add{};
-        bool _is_updating{ false };
+        std::vector<std::unique_ptr<IEntity>> _entities{};          // Main entity list (avatars, projectiles, effects, etc)
+        std::vector<std::unique_ptr<IEntity>> _pending_add{};       // Pending entities to be added
+        bool _is_updating{ false };                                 // Indicates if currently updating entities
     };
 
     template <typename T, typename... Args>

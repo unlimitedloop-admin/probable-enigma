@@ -28,7 +28,6 @@
 #include "apps/systems/view/RenderContext.h"
 #include "apps/world/entity/common/AnimeStepper.h"
 #include "apps/world/entity/common/SpawnProjectileCommand.h"
-#include "apps/world/entity/IAnimTickable.h"
 #include "apps/world/entity/IEntity.h"
 #include "AvatarStatus.h"
 #include "IPlayerState.h"
@@ -44,7 +43,7 @@ namespace mm2hack::core::assembly
 namespace mm2hack::apps::world::entity::avatar
 {
     // User player character entity
-    class PlayerEntity final : public EntityBase, public systems::physics::ICollider, public IAnimTickable
+    class PlayerEntity final : public EntityBase, public systems::physics::ICollider
     {
         using AnimeStepper              = common::AnimeStepper;
         using SpawnProjectileCommand    = common::SpawnProjectileCommand;
@@ -70,7 +69,6 @@ namespace mm2hack::apps::world::entity::avatar
 
         // Main action updates (IUpdatable)
         void Update(double /*dt*/) override;
-        void TickAnimation(double dt) override;
         // Drawing layer (IRenderable)
         LayerView DrawLayer() const noexcept override;
         // Rendering (IRenderable)
@@ -94,9 +92,13 @@ namespace mm2hack::apps::world::entity::avatar
         IEntity& OwnerEntity() noexcept override;
         const IEntity& OwnerEntity() const noexcept override;
 
+        // Animation tick
+        void TickAnimation(double dt);
+
         // Set collidable
         void SetCollidable(bool v) noexcept;
 
+        // Set/Get view boundaries
         void SetViewBounds(const systems::scrolling::atomic::ViewBounds& b) noexcept;
         const WorldBounds& ViewBounds() const noexcept { return _vBounds; }
 
@@ -119,16 +121,16 @@ namespace mm2hack::apps::world::entity::avatar
         std::optional<SpawnProjectileCommand> TakeSpawnProjectile();
 
         // ===== public parameters =====
-        bool onGround{ false };
-        AvatarDirection facingLR{ AvatarDirection::Right };
-        int texture{ 0 };
-        int baseTexture{ 0 };
-        int attackTexture{ 0 };     // Current attack texture (for rock buster drawing)
+        bool onGround{ false };                                     // Is on the ground?
+        AvatarDirection facingLR{ AvatarDirection::Right };         // Player direction: -1: left, +1: right
+        int texture{ 0 };                                           // baseTexture + attackTexture
+        int baseTexture{ 0 };                                       // Base texture index (without animation offset)
+        int attackTexture{ 0 };                                     // Current attack texture (for rock buster drawing)
 
     private:
-        void composeFinalTexture_() noexcept;                               // Set current avatar tile number
-        void refreshProbes_(PlayerContext& cx) noexcept;
-        void requestScroll_(FixedScrollRequest req) noexcept;
+        void composeFinalTexture_() noexcept;                       // Set current avatar tile number
+        void refreshProbes_(PlayerContext& cx) noexcept;            // Refresh collision all probes
+        void requestScroll_(FixedScrollRequest req) noexcept;       // Request fixed page scrolling
 
         std::unique_ptr<IPlayerState>& FindState(AvatarStatus s)
         {
@@ -154,6 +156,7 @@ namespace mm2hack::apps::world::entity::avatar
         AvatarStatus _status{ AvatarStatus::Standing };             // Current avatar status
         std::array<std::unique_ptr<IPlayerState>, 7> _states{};     // Basic behavior states array
         std::unique_ptr<AttackActionState> _attackAction{};         // Attack action state handler
+        RockBusterDrawInfo _rock_buster{};                          // Rock Buster drawing info
 
         StateProvider* _input{};                                    // Player input snapshot (This is separate from core::assembly::InputSnapshot)
         PlayerTuning _tuning{};                                     // Player tuning parameters

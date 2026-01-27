@@ -27,7 +27,7 @@ namespace mm2hack::apps::world::entity::avatar::states
         // ApplyGroundMove; AdjustVerticalSpeedForGravity; SweepVertical;
         GroundPipeline(cx, in, t, MakeInputMoveIntent(in, t, Id()));
 
-        // Call after cx.texture is set; adds facing offset (0 right, 40 left for AvatarAnimation enums).
+        // Call after cx.basePose is set; adds facing offset (0 right, 40 left for AvatarAnimation enums).
         auto updateFacing = [&](void) noexcept
             {
                 if (in->IsPressed(JPBTN::LEFT))  cx.facingLR = AvatarDirection::Left;
@@ -37,14 +37,14 @@ namespace mm2hack::apps::world::entity::avatar::states
         if (!cx.onGround)
         {
             cx.animeStepper.reset();
-            cx.texture = static_cast<int>(STile::Airpause);
+            cx.basePose = static_cast<int>(STile::Airpause);
             updateFacing();
             return AvatarStatus::Hovering;
         }
 
         if (in->JustPressed(JPBTN::A) && DoJump(cx, t))
         {
-            cx.texture = static_cast<int>(STile::Airpause);
+            cx.basePose = static_cast<int>(STile::Airpause);
             updateFacing();
             return AvatarStatus::Hovering;
         }
@@ -53,7 +53,7 @@ namespace mm2hack::apps::world::entity::avatar::states
         if (in->IsPressed(JPBTN::LEFT) || in->IsPressed(JPBTN::RIGHT))
         {
             cx.animeStepper.reset();
-            cx.texture = static_cast<int>(STile::RunningIntro);
+            cx.basePose = static_cast<int>(STile::RunningIntro);
             updateFacing();
             return AvatarStatus::LaunchRun;
         }

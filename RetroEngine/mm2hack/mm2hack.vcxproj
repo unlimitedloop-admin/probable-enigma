@@ -310,6 +310,7 @@
     <ClInclude Include="src\apps\rendering\bg\BGTileMapProvider.h" />
     <ClInclude Include="src\apps\resources\bg\IMapPageSource.h" />
     <ClInclude Include="src\apps\resources\stages\StageTileAttributes.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\abilities\RockBusterOffsetTable.h" />
     <ClInclude Include="src\apps\world\entity\avatar\states\AttackActionState.h" />
     <ClInclude Include="src\apps\world\entity\common\SpawnProjectileCommand.h" />
     <ClInclude Include="src\apps\world\entity\EntityManager.h" />
@@ -356,11 +357,9 @@
     <ClInclude Include="src\apps\world\entity\common\AnimeStepper.h" />
     <ClInclude Include="src\apps\world\entity\effects\ProjectileEntity.h" />
     <ClInclude Include="src\apps\world\entity\EntityBase.h" />
-    <ClInclude Include="src\apps\world\entity\IAnimTickable.h" />
     <ClInclude Include="src\apps\world\entity\IEntity.h" />
     <ClInclude Include="src\apps\world\entity\IRenderable.h" />
     <ClInclude Include="src\apps\world\entity\IUpdatable.h" />
-    <ClInclude Include="src\apps\rendering\sprite\SpriteBase.h" />
     <ClInclude Include="src\apps\systems\view\RenderContext.h" />
     <ClInclude Include="src\apps\systems\scrolling\atomic\IScrollRuleProvider.h" />
     <ClInclude Include="src\apps\systems\scrolling\atomic\MapRenderer2D.h" />

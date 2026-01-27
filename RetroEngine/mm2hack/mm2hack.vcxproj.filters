@@ -278,7 +278,6 @@
     <ClInclude Include="src\apps\world\entity\IUpdatable.h" />
     <ClInclude Include="src\apps\world\entity\IRenderable.h" />
     <ClInclude Include="src\apps\world\entity\EntityBase.h" />
-    <ClInclude Include="src\apps\rendering\sprite\SpriteBase.h" />
     <ClInclude Include="src\apps\systems\physics\TileAttribute.h" />
     <ClInclude Include="src\apps\systems\physics\CollisionLayer.h" />
     <ClInclude Include="src\apps\systems\physics\ICollider.h" />
@@ -311,7 +310,6 @@
     <ClInclude Include="src\utils\decimal_decoder.h" />
     <ClInclude Include="src\apps\systems\physics\LadderService.h" />
     <ClInclude Include="src\apps\systems\physics\PageGridIndex.h" />
-    <ClInclude Include="src\apps\world\entity\IAnimTickable.h" />
     <ClInclude Include="src\apps\systems\scrolling\atomic\ScrollFreezeState.h" />
     <ClInclude Include="src\apps\systems\scrolling\atomic\FixedScrollDriver.h" />
     <ClInclude Include="src\apps\systems\scrolling\atomic\ScrollNeighborResolver.h" />
@@ -330,6 +328,7 @@
     <ClInclude Include="src\apps\world\entity\EntityManager.h" />
     <ClInclude Include="src\apps\world\entity\common\SpawnProjectileCommand.h" />
     <ClInclude Include="src\apps\world\entity\avatar\states\AttackActionState.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\abilities\RockBusterOffsetTable.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

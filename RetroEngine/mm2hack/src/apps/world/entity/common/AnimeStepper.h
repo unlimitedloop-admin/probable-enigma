@@ -10,6 +10,7 @@
 
 namespace mm2hack::apps::world::entity::common
 {
+    // The tick is counted, the frame is the weight, and it repeats for the specified number of loops as an animation counter
     struct AnimeStepper
     {
         int tick{ 0 };
@@ -50,11 +51,13 @@ namespace mm2hack::apps::world::entity::common
             loops = 0;
         }
 
+        // Reset only tick or frame
         void resetTick() noexcept
         {
             tick = 0;
         }
 
+        // Reset only frame
         void resetFrame() noexcept
         {
             frame = 0;

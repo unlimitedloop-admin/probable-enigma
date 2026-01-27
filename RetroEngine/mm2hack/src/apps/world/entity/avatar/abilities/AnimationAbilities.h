@@ -27,12 +27,12 @@ namespace mm2hack::apps::world::entity::avatar::abilities
         if (cx.animeStepper.tick < t.reactionFrameRun)
         {
             ++cx.animeStepper.tick;
-            cx.texture = static_cast<int>(AvatarAnimation::RunningIntro);
+            cx.basePose = static_cast<int>(AvatarAnimation::RunningIntro);
             return false;
         }
         // After that, switch to RunningA animation (When holding pressing the right/Left arrow key).
         cx.animeStepper.reset();
-        cx.texture = static_cast<int>(AvatarAnimation::RunningA);
+        cx.basePose = static_cast<int>(AvatarAnimation::RunningA);
         return true;
     }
 
@@ -44,7 +44,7 @@ namespace mm2hack::apps::world::entity::avatar::abilities
             STile::RunningA, STile::RunningC, STile::RunningB, STile::RunningC
         };
         cx.animeStepper.step(7, static_cast<int>(runningTextures.size()), 1); // 7 ticks per frame, 4 frames.
-        cx.texture = static_cast<int>(runningTextures[cx.animeStepper.frame]);
+        cx.basePose = static_cast<int>(runningTextures[cx.animeStepper.frame]);
     }
 
     // Steps the running animation (animation-only context)
@@ -55,7 +55,7 @@ namespace mm2hack::apps::world::entity::avatar::abilities
             STile::RunningA, STile::RunningC, STile::RunningB, STile::RunningC
         };
         ax.animeStepper.step(7, static_cast<int>(runningTextures.size()), 1); // 7 ticks per frame, 4 frames.
-        ax.texture = static_cast<int>(runningTextures[ax.animeStepper.frame]);
+        ax.basePose = static_cast<int>(runningTextures[ax.animeStepper.frame]);
     }
 
     // Returns true if the brake is fully engaged
@@ -65,11 +65,11 @@ namespace mm2hack::apps::world::entity::avatar::abilities
         const bool committed = cx.animeStepper.step(4, 2); // 4 ticks per frame, 2 frames.
         if (!committed)
         {
-            cx.texture = static_cast<int>(STile::RunningIntro);
+            cx.basePose = static_cast<int>(STile::RunningIntro);
             return false;
         }
         // After that, switch to StandingA animation.
-        cx.texture = static_cast<int>(STile::StandingA);
+        cx.basePose = static_cast<int>(STile::StandingA);
         return true;
     }
 
@@ -80,11 +80,11 @@ namespace mm2hack::apps::world::entity::avatar::abilities
         const bool committed = cx.animeStepper.step(2, 2); // 2 ticks per frame, 2 frames.
         if (!committed)
         {
-            cx.texture = static_cast<int>(STile::RunningB);
+            cx.basePose = static_cast<int>(STile::RunningB);
             return false;
         }
         // After that, switch to StandingA animation.
-        cx.texture = static_cast<int>(STile::StandingA);
+        cx.basePose = static_cast<int>(STile::StandingA);
         return true;
     }
 
@@ -105,12 +105,12 @@ namespace mm2hack::apps::world::entity::avatar::abilities
         if (cx.animeStepper.frame < 1)
         {
             // input == -1 is climbing up, Change to a specified sprite tile near the top of the ladder.
-            cx.texture = isTopAttrEmpty && (input == -1) ? static_cast<int>(STile::LadderTopA) : static_cast<int>(STile::LadderingA);
+            cx.basePose = isTopAttrEmpty && (input == -1) ? static_cast<int>(STile::LadderTopA) : static_cast<int>(STile::LadderingA);
         }
         else
         {
             // input == -1 is climbing up, Change to a specified sprite tile near the top of the ladder.
-            cx.texture = isTopAttrEmpty && (input == -1) ? static_cast<int>(STile::LadderTopB) : static_cast<int>(STile::LadderingB);
+            cx.basePose = isTopAttrEmpty && (input == -1) ? static_cast<int>(STile::LadderTopB) : static_cast<int>(STile::LadderingB);
         }
     }
 
@@ -121,12 +121,12 @@ namespace mm2hack::apps::world::entity::avatar::abilities
         if (ax.animeStepper.frame < 1)
         {
             // input == -1 is climbing up, Change to a specified sprite tile near the top of the ladder.
-            ax.texture = static_cast<int>(STile::LadderingA);
+            ax.basePose = static_cast<int>(STile::LadderingA);
         }
         else
         {
             // input == -1 is climbing up, Change to a specified sprite tile near the top of the ladder.
-            ax.texture = static_cast<int>(STile::LadderingB);
+            ax.basePose = static_cast<int>(STile::LadderingB);
         }
     }
 
@@ -136,11 +136,11 @@ namespace mm2hack::apps::world::entity::avatar::abilities
         cx.animeStepper.step(9, 11, 1); // 9 ticks per frame, 11 frames.
         if (cx.animeStepper.frame < 10)
         {
-            cx.texture = static_cast<int>(STile::StandingA);
+            cx.basePose = static_cast<int>(STile::StandingA);
         }
         else
         {
-            cx.texture = static_cast<int>(STile::StandingB);
+            cx.basePose = static_cast<int>(STile::StandingB);
         }
     }
 
