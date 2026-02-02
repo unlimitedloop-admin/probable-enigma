@@ -11,11 +11,16 @@
 
 namespace mm2hack::apps::world::entity::effects
 {
+    using systems::view::Layer;
+    using systems::view::RenderContext;
+    using systems::view::ViewState;
+
     ProjectileEntity::ProjectileEntity(const common::SpawnProjectileCommand& cmd)
     {
         pos = cmd.spawnPos;
         vel = cmd.velocity;
 
+        _id = cmd.spriteId;
         _draw_layer = cmd.drawLayer;
         _base_texture = cmd.baseTexture;
         _anim_frames = std::max<std::int32_t>(1, cmd.animFrames);
@@ -27,29 +32,34 @@ namespace mm2hack::apps::world::entity::effects
         _half = foundation::math::Vec2{ 16.0, 16.0 };   // Assuming an average size; adjust as needed.
     }
 
-    systems::view::Layer ProjectileEntity::DrawLayer() const noexcept
+    Layer ProjectileEntity::DrawLayer() const noexcept
     {
         return _draw_layer;
     }
 
-    void ProjectileEntity::Update(double dt)
+    void ProjectileEntity::Update(const ViewState* view, double dt)
     {
         if (!IsAlive())
         {
             return;
         }
 
-        _age_sec += dt;
-        if (_life_sec > 0.0 && _age_sec >= _life_sec)
+        pos += vel * dt;
+
+        constexpr double margin = 32.0;
+
+        const double left = view->viewWorldX - margin;
+        const double right = view->viewWorldX + view->viewW + margin;
+        const double top = view->viewWorldY - margin;
+        const double bottom = view->viewWorldY + view->viewH + margin;
+
+        if (pos.x < left || pos.x > right || pos.y < top || pos.y > bottom)
         {
             Kill();
-            return;
         }
-
-        pos += vel * dt;
     }
 
-    void ProjectileEntity::Render(systems::view::RenderContext& ctx)
+    void ProjectileEntity::Render(RenderContext& ctx)
     {
         if (!IsAlive() || ctx.view == nullptr)
         {

@@ -13,6 +13,7 @@
 #include <type_traits>
 #include <vector>
 #include "apps/systems/view/RenderContext.h"
+#include "apps/systems/view/ViewState.h"
 #include "IEntity.h"
 
 namespace mm2hack::apps::world::entity
@@ -38,7 +39,7 @@ namespace mm2hack::apps::world::entity
         T& Spawn(Args&&... args);
 
         // Updates all alive entities, flushes pending entities, and removes dead entities
-        void UpdateAll(double dt);
+        void UpdateAll(const systems::view::ViewState* view, double dt);
 
         // Renders entities for the specified layer
         void RenderLayer(systems::view::RenderContext& ctx, systems::view::Layer layer);

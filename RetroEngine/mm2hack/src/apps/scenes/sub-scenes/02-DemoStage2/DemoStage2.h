@@ -18,12 +18,15 @@
 #include <string_view>
 #include "apps/rendering/bg/BGTileManager.h"
 #include "apps/rendering/sprite/SpriteManager.h"
+#include "apps/resources/assets/StageSpriteBank.h"
 #include "apps/resources/ResourceManager.h"
+#include "apps/scenes/IStageAssetProvider.h"
 #include "apps/scenes/PhaseFadeController.h"
 #include "apps/scenes/phases/ActionStageRuntimeBuilder.h"
 #include "apps/scenes/phases/IPhase.h"
 #include "apps/scenes/phases/IStageScript.h"
 #include "apps/scenes/SceneChangeMediator.h"
+#include "apps/world/entity/enemy/lists/EnemyLists.h"
 #include "core/assembly/StateProvider.h"
 
 namespace mm2hack::apps::resources::parameters
@@ -34,11 +37,11 @@ namespace mm2hack::apps::resources::parameters
 namespace mm2hack::apps::scenes
 {
     // Demo stage scene (ID: 02)
-    class DemoStage2 final : public IBaseScene, public phases::IPhaseHost
+    class DemoStage2 final : public IBaseScene, public phases::IPhaseHost, public IStageAssetProvider
     {
-        using BGTileManagerId       = rendering::bg::BGTileManager::Id;
-        using SpriteManagerId       = rendering::sprite::SpriteManager::Id;
-        using Parameters            = resources::parameters::Parameters;
+        using BGTileManagerId   = rendering::bg::BGTileManager::Id;
+        using SpriteManagerId   = rendering::sprite::SpriteManager::Id;
+        using Parameters        = resources::parameters::Parameters;
 
     public:
         explicit DemoStage2(SceneChangeMediator* mediator);
@@ -60,6 +63,12 @@ namespace mm2hack::apps::scenes
         // Request a phase transition
         void RequestTransition(const std::wstring& next_key, const PhaseFadePlan& plan, const Parameters& params) override;
 
+        // === IStageAssetProvider implementations ===
+        SpriteManagerId PlayerSprite() const noexcept override { return _spriteBank.player; }
+        SpriteManagerId PlayerAttackSprite() const noexcept override { return _spriteBank.player_attack; }
+        SpriteManagerId EffectsSprite() const noexcept override { return _spriteBank.effects; }
+        bool TryEnemySprite(world::entity::enemy::EnemyKind kind, SpriteManagerId& out) const noexcept override;
+
         // === DemoStage2 specific ===
         // Queue a new phase to transition to
         void QueuePhase(std::unique_ptr<phases::IPhase> next, PhaseFadePlan nextPlan);
@@ -69,8 +78,6 @@ namespace mm2hack::apps::scenes
         std::wstring GetMapName() const { return kMapName; }
         // Get the map binary path used in this scene
         std::wstring GetMapBinaryPath() const { return std::wstring(kStageMapBinary); }
-        // Get the sprite Id used in this scene
-        SpriteManagerId GetSpriteId() const noexcept { return _spriteId; }
 
         // === Save/Load state ===
         // Save the current state to an output stream
@@ -84,6 +91,7 @@ namespace mm2hack::apps::scenes
 
         bool initializeResources_(const Parameters& params);            // Initialize resources needed for the scene
         void loadStage_(rendering::bg::BGTileManager& bgTileManager);   // Load the stage map and tile attributes
+        bool loadAssets_();                                             // Load stage sprite assets (player, enemies, effects...)
 
         void applyPendingPhaseIfReady_();                               // Apply pending phase if fader is ready
         void dispatchTransition_(
@@ -95,7 +103,7 @@ namespace mm2hack::apps::scenes
 
         const std::wstring kMapName{ L"SAMPLESTAGE2" };
         const std::wstring_view kStageMapBinary{ L"assets\\_exams\\bg\\SAMPLESTAGE1.bin" };
-        
+
         struct RoomState
         {
             int pageIndex{ 0 };
@@ -110,7 +118,7 @@ namespace mm2hack::apps::scenes
         PhaseFadePlan _pendingPlan{};                                   // Fade plan for the pending phase
 
         PhaseFadeController _fader{};                                   // Fade controller for transitions
-        const int fadeDurationFrames{ 16 };                             // Duration of fade in frames
+        const int _fadeDurationFrames{ 16 };                            // Duration of fade in frames
 
         SceneID _nextScene{ SceneID::None };                            // Next scene to switch to
         Parameters _nextParams{};                                       // Reserve the parameters for the next scene
@@ -121,6 +129,6 @@ namespace mm2hack::apps::scenes
         std::unique_ptr<phases::IStageScript> _stageScript{};           // Stage script
 
         BGTileManagerId _bgTileId{ static_cast<BGTileManagerId>(-1) };  // Background tile set Id
-        SpriteManagerId _spriteId{ static_cast<SpriteManagerId>(-1) };  // Sprite set Id
+        resources::assets::StageSpriteBank _spriteBank{};               // Stage sprite ID set
     };
 }

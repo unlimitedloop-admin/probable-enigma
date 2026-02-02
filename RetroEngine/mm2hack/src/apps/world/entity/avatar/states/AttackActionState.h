@@ -11,12 +11,12 @@
 #include <optional>
 #include <string>
 #include "apps/foundation/math/CoordinateTypes.h"
-#include "apps/world/entity/avatar/AvatarStatus.h"
+#include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/world/entity/avatar/PlayerContext.h"
 #include "apps/world/entity/common/SpawnProjectileCommand.h"
 #include "core/assembly/StateProvider.h"
 
-namespace mm2hack::apps::world::entity::avatar
+namespace mm2hack::apps::world::entity::avatar::states
 {
     // Rock Buster drawing info
     struct RockBusterDrawInfo final
@@ -46,19 +46,19 @@ namespace mm2hack::apps::world::entity::avatar
     struct AttackTuning final
     {
         int facingOffsetRight{ 0 };
-        int facingOffsetLeft{ 40 };
+        int facingOffsetLeft{ 1 };
 
         int attackTextureAdd{ 10 };
 
         // Projectile
         double projectileSpeedPxPerSec{ 240.0 };
-        foundation::math::Vec2 projectileSpawnOffsetPxRight{ 12.0, -4.0 };
-        foundation::math::Vec2 projectileSpawnOffsetPxLeft{ -12.0, -4.0 };
+        foundation::math::Vec2 projectileSpawnOffsetPxRight{ 32.0, 5.0 };
+        foundation::math::Vec2 projectileSpawnOffsetPxLeft{ -16.0, 5.0 };
 
-        int projectileBaseTexture{ 200 }; // TODO: set your tile index
-        int projectileAnimFrames{ 2 };
+        int rockBusterTexture{ 0 };
+        int projectileAnimFrames{ 1 };
         double projectileAnimFps{ 12.0 };
-        double projectileLifeSec{ 1.2 };
+        double projectileLifeSec{ -1.0 };
 
         // Attack timing
         double attackDurationSec{ 0.18 };
@@ -67,16 +67,16 @@ namespace mm2hack::apps::world::entity::avatar
     // Handles attack action state (attacking or not)
     class AttackActionState final
     {
-        using StateProvider = core::assembly::StateProvider;
+        using StateProvider   = core::assembly::StateProvider;
+        using SpriteManagerId = rendering::sprite::SpriteManager::Id;
 
     public:
-        AttackActionState() = default;
+        AttackActionState(SpriteManagerId id) : _id(id) {}
 
-        // Returns texture_add (+10) while attacking and optional spawn command on attack start.
-        //ActionUpdateResult Update(PlayerContext& cx, StateProvider* in, const AttackTuning& tuning, bool can_spawn_projectile, double dt);
+        SpriteManagerId Id() const noexcept { return _id; }
 
-        void PreUpdate(PlayerContext& cx, StateProvider* in) noexcept;
-        ActionUpdateResult PostUpdate(PlayerContext& cx, StateProvider* in, const AttackTuning& tuning, bool can_spawn, double dt);
+        void PreUpdate(PlayerContext& cx, StateProvider* in, bool can_spawn) noexcept;
+        ActionUpdateResult PostUpdate(PlayerContext& cx, StateProvider* in, const AttackTuning& tuning, double dt);
 
         // Is currently attacking
         [[nodiscard]] bool IsAttacking() const noexcept;
@@ -90,8 +90,11 @@ namespace mm2hack::apps::world::entity::avatar
     private:
         const std::wstring kClassName{ L"AttackActionState" };
 
+        SpriteManagerId _id{};              // Weapon sprite id
         bool _is_attacking{ false };        // Whether currently attacking
         double _pose_time_sec{ 10.0 };      // Time spent in shot pose
         RockBusterTuning rb_tuning{};       // Rock Buster tuning
+
+        bool _fire_requested{ false };      // Whether fire button was requested
     };
 }

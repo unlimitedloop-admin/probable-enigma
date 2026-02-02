@@ -11,6 +11,7 @@
 #include <memory>
 #include <string>
 #include "apps/resources/ResourceManager.h"
+#include "apps/scenes/IStageAssetProvider.h"
 #include "core/assembly/StateProvider.h"
 #include "StageDefinition.h"
 #include "StageRuntimeContext.h"
@@ -23,7 +24,7 @@ namespace mm2hack::apps::scenes::phases
     {
         std::wstring map_name{};
         int tile_px{};
-        int player_sprite_id{};
+        const scenes::IStageAssetProvider* asset_provider{ nullptr };
     };
 
     // Builder for Action Stage Runtime Context

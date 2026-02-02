@@ -3,6 +3,7 @@
 #include "EntityManager.h"
 
 #include "apps/systems/view/RenderContext.h"
+#include "apps/systems/view/ViewState.h"
 #include "IEntity.h"
 
 namespace mm2hack::apps::world::entity
@@ -23,7 +24,7 @@ namespace mm2hack::apps::world::entity
         _entities.emplace_back(std::move(entity));
     }
 
-    void EntityManager::UpdateAll(double dt)
+    void EntityManager::UpdateAll(const systems::view::ViewState* view, double dt)
     {
         _is_updating = true;
 
@@ -34,7 +35,7 @@ namespace mm2hack::apps::world::entity
                 continue;
             }
 
-            e->Update(dt);
+            e->Update(view, dt);
         }
 
         _is_updating = false;

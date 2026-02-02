@@ -31,10 +31,10 @@ namespace mm2hack::apps::world::entity::avatar
     using systems::scrolling::atomic::ScrollController;
     using systems::scrolling::atomic::ViewBounds;
 
-    PlayerEntity::PlayerEntity(SpriteManagerId id)
+    PlayerEntity::PlayerEntity(SpriteManagerId id, SpriteManagerId weaponId)
         : _id(id), _half{ 16.0, 16.0 }
     {
-        _attackAction = std::make_unique<AttackActionState>();
+        _attackAction = std::make_unique<states::AttackActionState>(weaponId);
         _states[0] = std::make_unique<states::StandingState>();
         _states[1] = std::make_unique<states::RunningState>();
         _states[2] = std::make_unique<states::HoveringState>();
@@ -44,13 +44,13 @@ namespace mm2hack::apps::world::entity::avatar
         _states[6] = std::make_unique<states::LandingState>();
     }
 
-    void PlayerEntity::Update(double dt)
+    void PlayerEntity::Update(const systems::view::ViewState* view, double dt)
     {
         using namespace systems::scrolling::atomic;
         if (!IsAlive()) return;
 
         PlayerContext cx{
-            _id,
+            _id, _attackAction->Id(),
             pos, vel,
             onGround, /* justLanded */ false, /* isHitCeiling */ false, /* prevOnGround */ onGround, facingLR,
             baseTexture, /* textureAdd */ 0, _animeStepper, /* probes */ _probes, /* prelimProbes */ _probes,
@@ -62,14 +62,14 @@ namespace mm2hack::apps::world::entity::avatar
         refreshProbes_(cx);
 
         // Get up and down lock on laddering (if any)
-        _attackAction->PreUpdate(cx, _input);
+        _attackAction->PreUpdate(cx, _input, _entityContext.canSpawnProjectile);
 
         // 1) locomotion: state update and transition (basic behavior)
         auto& st = FindState(_status);
         const auto next = st->Update(cx, _input, _tuning, dt);
 
-        // 2) attack action: update (independent of basic behavior) 
-        const auto act = _attackAction->PostUpdate(cx, _input, _attack_tuning, _entityContext.canSpawnProjectile, dt);
+        // 2) attack action: update (independent of basic behavior)
+        const auto act = _attackAction->PostUpdate(cx, _input, _attack_tuning, dt);
 
         cx.textureAdd += act.textureAdd;
         cx.lockClimbMove = cx.lockClimbMove || act.lockClimbMove;

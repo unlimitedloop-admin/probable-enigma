@@ -58,7 +58,7 @@ namespace mm2hack::apps::scenes
             _ladderService = std::make_unique<LadderService>(*_terrainProbe);
 
             // TODO: Need to provide a vector member for entity. (or EntityManager?)
-            _player = std::make_unique<PlayerEntity>(owner.GetSpriteId());
+            _player = std::make_unique<PlayerEntity>(owner.GetSpriteId(), owner.GetSpriteAttackId());
             _player->SetTerrainProbe(_terrainProbe.get());
             _player->SetLadderService(_ladderService.get());
             _player->SetScrollContext(_rules.get(), _scroll->PageIndex());
@@ -104,7 +104,7 @@ namespace mm2hack::apps::scenes
                 if (!lock)
                 {
                     _player->SetInput(owner.Input());
-                    _player->Update(dt);
+                    _player->Update(&_scroll->GetView(), dt);
 
                     delta = _player->pos - prev_pos;
                 }

@@ -26,6 +26,7 @@
 #include "apps/systems/scrolling/atomic/IScrollRuleProvider.h"
 #include "apps/systems/scrolling/atomic/ScrollTypes.h"
 #include "apps/systems/view/RenderContext.h"
+#include "apps/systems/view/ViewState.h"
 #include "apps/world/entity/common/AnimeStepper.h"
 #include "apps/world/entity/common/SpawnProjectileCommand.h"
 #include "apps/world/entity/IEntity.h"
@@ -65,10 +66,10 @@ namespace mm2hack::apps::world::entity::avatar
     public:
         using ScrollDir                 = systems::scrolling::atomic::PageScroll::Dir;
 
-        PlayerEntity(SpriteManagerId id);
+        PlayerEntity(SpriteManagerId id, SpriteManagerId weaponId);
 
         // Main action updates (IUpdatable)
-        void Update(double /*dt*/) override;
+        void Update(const systems::view::ViewState* view, double dt) override;
         // Drawing layer (IRenderable)
         LayerView DrawLayer() const noexcept override;
         // Rendering (IRenderable)
@@ -155,12 +156,12 @@ namespace mm2hack::apps::world::entity::avatar
         bool _collidable{ true };                                   // Whether collision is enabled
         AvatarStatus _status{ AvatarStatus::Standing };             // Current avatar status
         std::array<std::unique_ptr<IPlayerState>, 7> _states{};     // Basic behavior states array
-        std::unique_ptr<AttackActionState> _attackAction{};         // Attack action state handler
-        RockBusterDrawInfo _rock_buster{};                          // Rock Buster drawing info
+        std::unique_ptr<states::AttackActionState> _attackAction{}; // Attack action state handler
+        states::RockBusterDrawInfo _rock_buster{};                  // Rock Buster drawing info
 
         StateProvider* _input{};                                    // Player input snapshot (This is separate from core::assembly::InputSnapshot)
         PlayerTuning _tuning{};                                     // Player tuning parameters
-        AttackTuning _attack_tuning{};                              // Attack action tuning parameters
+        states::AttackTuning _attack_tuning{};                      // Attack action tuning parameters
         AnimeStepper _animeStepper{};                               // Animation stepper
         Probes _probes{ _half };                                    // Collision probes
         const ITerrainProbe* _terrainProbe{ nullptr };              // Terrain probe

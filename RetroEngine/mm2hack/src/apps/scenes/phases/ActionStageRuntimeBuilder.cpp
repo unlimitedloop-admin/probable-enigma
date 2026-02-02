@@ -110,9 +110,12 @@ namespace mm2hack::apps::scenes::phases
         using world::entity::EntityManager;
         using world::entity::avatar::PlayerEntity;
 
+        ctx.asset_provider = config.asset_provider;
         ctx.entity_mgr = std::make_unique<EntityManager>();
-        (void)ctx.entity_mgr->Spawn<PlayerEntity>(config.player_sprite_id);
-        auto* player = ctx.entity_mgr->FindFirst<PlayerEntity>();
+
+        const auto player_sprite = ctx.asset_provider->PlayerSprite();
+        const auto player_attack_sprite = ctx.asset_provider->PlayerAttackSprite();
+        auto* player = &ctx.entity_mgr->Spawn<PlayerEntity>(player_sprite, player_attack_sprite);
 
         player->SetTerrainProbe(ctx.terrain_probe.get());
         player->SetLadderService(ctx.ladder_service.get());

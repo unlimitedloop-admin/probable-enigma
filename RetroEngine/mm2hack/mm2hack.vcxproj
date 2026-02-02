@@ -308,11 +308,14 @@
   <ItemGroup>
     <ClInclude Include="resource.h" />
     <ClInclude Include="src\apps\rendering\bg\BGTileMapProvider.h" />
+    <ClInclude Include="src\apps\resources\assets\StageSpriteBank.h" />
     <ClInclude Include="src\apps\resources\bg\IMapPageSource.h" />
     <ClInclude Include="src\apps\resources\stages\StageTileAttributes.h" />
+    <ClInclude Include="src\apps\scenes\IStageAssetProvider.h" />
     <ClInclude Include="src\apps\world\entity\avatar\abilities\RockBusterOffsetTable.h" />
     <ClInclude Include="src\apps\world\entity\avatar\states\AttackActionState.h" />
     <ClInclude Include="src\apps\world\entity\common\SpawnProjectileCommand.h" />
+    <ClInclude Include="src\apps\world\entity\enemy\lists\EnemyLists.h" />
     <ClInclude Include="src\apps\world\entity\EntityManager.h" />
     <ClInclude Include="src\core\assembly\FilteredJoystickInputProvider.h" />
     <ClInclude Include="src\apps\scenes\phases\AbstractActionPhase.h" />

@@ -10,17 +10,17 @@
 #include "apps/runtime/GameContext.h"
 #include "apps/scenes/IBaseScene.h"
 #include "apps/scenes/PhaseFadeController.h"
+#include "apps/scenes/phases/AbstractActionPhase.h"
 #include "apps/scenes/phases/ActionStageRuntimeBuilder.h"
 #include "apps/scenes/phases/IPhase.h"
 #include "apps/scenes/phases/PhaseResult.h"
 #include "apps/scenes/phases/StageDefinition.h"
 #include "apps/scenes/SceneChangeMediator.h"
 #include "apps/systems/physics/TileAttribute.h"
+#include "apps/world/entity/enemy/lists/EnemyLists.h"
 #include "config/GameAssets.h"
 #include "core/assembly/FilteredJoystickInputProvider.h"
 #include "utils/output_debug.h"
-
-#include "apps/scenes/phases/AbstractActionPhase.h"
 
 namespace mm2hack::apps::scenes
 {
@@ -102,6 +102,17 @@ namespace mm2hack::apps::scenes
         dispatchTransition_(next_key, plan, params);
     }
 
+    bool DemoStage2::TryEnemySprite(world::entity::enemy::EnemyKind kind, SpriteManagerId& out) const noexcept
+    {
+        const auto it = _spriteBank.enemies.find(kind);
+        if (it == _spriteBank.enemies.end())
+        {
+            return false;
+        }
+        out = it->second;
+        return true;
+    }
+
     void DemoStage2::QueuePhase(std::unique_ptr<phases::IPhase> next, PhaseFadePlan nextPlan)
     {
         _pendingPhase = std::move(next);
@@ -144,20 +155,17 @@ namespace mm2hack::apps::scenes
         def.start_local_pos = { 128.0, 10.0 };
 
         // Create build config.
-        phases::ActionStageBuildConfig cfg{};
-        cfg.map_name = std::wstring(kMapName);
-        cfg.tile_px = config::SystemConfig::kTileSize;
-        cfg.player_sprite_id = static_cast<int>(_spriteId);
+        phases::ActionStageBuildConfig build{};
+        build.map_name = std::wstring(kMapName);
+        build.tile_px = config::SystemConfig::kTileSize;
+        build.asset_provider = this;
 
         // Create filtered joystick input provider.
         _input = &gc.Input();
-
         // Build the context using the builder.
-        auto ctx = _actionBuilder.Build(resource, *_input, def, cfg, L"AreaA");
-
+        auto ctx = _actionBuilder.Build(resource, *_input, def, build, L"AreaA");
         // Create the initial phase.
         _phase = std::make_unique<phases::AbstractActionPhase>(std::move(ctx), _stageScript.get(), *this);
-
         PhaseFadePlan first(20, 20, 0, 12, 20, FadeLayerMask::All);
         _fader.BeginPhase(first, resource);
 
@@ -209,18 +217,10 @@ namespace mm2hack::apps::scenes
 
         const int bvmax = bgTileManager.VariantCountById(_bgTileId);
         bgTileManager.SetGlobalVariant(bvmax);
-        resource.FadeInBG(fadeDurationFrames);
+        resource.FadeInBG(_fadeDurationFrames);
 
         // Load the graph from the resource manager.
-        auto& spriteLoader = resource.GetSpriteManager();
-        _spriteId = spriteLoader.Load(L"Player", MM2H_GRAPHICS(Player), MM2H_GRAPHPROPS(Player));
-        if (_spriteId == SpriteManagerId(-1))
-        {
-            return false;
-        }
-        const int sprvmax = spriteLoader.VariantCountById(_spriteId);
-        spriteLoader.SetGlobalVariant(sprvmax);
-        resource.FadeInSprite(fadeDurationFrames);
+        loadAssets_();
 
         return true;
     }
@@ -230,6 +230,23 @@ namespace mm2hack::apps::scenes
         using namespace systems::physics;
         using namespace resources::stages;
         ApplyTileAttributeRanges(bgTileManager, STAGE1_TILEATTRIBUTES);
+    }
+
+    bool DemoStage2::loadAssets_()
+    {
+        auto& resource = runtime::GameContext::GetInstance().GetResourceManager();
+        auto& spriteLoader = resource.GetSpriteManager();
+
+        _spriteBank.player = spriteLoader.Load(L"Player", MM2H_GRAPHICS(Player), MM2H_GRAPHPROPS(Player));
+        if (_spriteBank.player == SpriteManagerId(-1)) return false;
+
+        _spriteBank.player_attack = spriteLoader.Load(L"PlayerAttack", MM2H_GRAPHICS(PlayerEquip), MM2H_GRAPHPROPS(PlayerEquip));
+        if (_spriteBank.player_attack == SpriteManagerId(-1)) return false;
+
+        const int sprvmax = spriteLoader.VariantCountById(_spriteBank.player);
+        spriteLoader.SetGlobalVariant(sprvmax);
+        resource.FadeInSprite(_fadeDurationFrames);
+        return true;
     }
 
     void DemoStage2::applyPendingPhaseIfReady_()
@@ -285,12 +302,13 @@ namespace mm2hack::apps::scenes
             def.start_page_index = _roomState.pageIndex; // or pick by key
             def.start_local_pos = { 128.0, 10.0 };
 
-            phases::ActionStageBuildConfig cfg{};
-            cfg.map_name = std::wstring(kMapName);
-            cfg.tile_px = config::SystemConfig::kTileSize;
-            cfg.player_sprite_id = static_cast<int>(_spriteId);
+            phases::ActionStageBuildConfig build{};
+            build.map_name = std::wstring(kMapName);
+            build.tile_px = config::SystemConfig::kTileSize;
+            build.asset_provider = this;
 
-            auto ctx = _actionBuilder.Build(res, *_input, def, cfg, next_key);
+            auto ctx = _actionBuilder.Build(res, *_input, def, build, next_key);
+
             auto phase = std::make_unique<phases::AbstractActionPhase>(std::move(ctx), _stageScript.get(), *this /* host */);
 
             QueuePhase(std::move(phase), plan);

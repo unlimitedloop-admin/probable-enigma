@@ -10,11 +10,11 @@
 #include "core/assembly/StateProvider.h"
 #include "input/Jpbtn.h"
 
-namespace mm2hack::apps::world::entity::avatar
+namespace mm2hack::apps::world::entity::avatar::states
 {
-    void AttackActionState::PreUpdate(PlayerContext& cx, StateProvider* in) noexcept
+    void AttackActionState::PreUpdate(PlayerContext& cx, StateProvider* in, bool can_spawn) noexcept
     {
-        if (in->JustPressed(JPBTN::B))
+        if (can_spawn && in->JustPressed(JPBTN::B))
         {
             restartAttackPose_();
         }
@@ -29,35 +29,34 @@ namespace mm2hack::apps::world::entity::avatar
         if (in->IsPressed(JPBTN::RIGHT)) cx.facingLR = AvatarDirection::Right;
     }
 
-    ActionUpdateResult AttackActionState::PostUpdate(PlayerContext& cx, StateProvider* in, const AttackTuning& tuning, bool can_spawn_projectile, double dt)
+    ActionUpdateResult AttackActionState::PostUpdate(PlayerContext& cx, StateProvider* in, const AttackTuning& tuning, double dt)
     {
         using namespace abilities;
         ActionUpdateResult result{};
 
+        if (_fire_requested)
+        {
+            result.spawnProjectile.emplace();
+            result.spawnProjectile->drawLayer = systems::view::Layer::Effects;
+            result.spawnProjectile->spriteId = cx.weaponId;
+
+            const bool is_left = (cx.facingLR == AvatarDirection::Left);
+            result.spawnProjectile->baseTexture = tuning.rockBusterTexture + (is_left ? tuning.facingOffsetLeft : tuning.facingOffsetRight);
+            result.spawnProjectile->animFrames = tuning.projectileAnimFrames;
+            result.spawnProjectile->animFps = tuning.projectileAnimFps;
+            result.spawnProjectile->lifeSec = tuning.projectileLifeSec;
+
+            const auto offset = is_left ? tuning.projectileSpawnOffsetPxLeft : tuning.projectileSpawnOffsetPxRight;
+            result.spawnProjectile->spawnPos = cx.pos + offset;
+            const double dir = static_cast<double>(cx.facingLR);
+            result.spawnProjectile->velocity = foundation::math::Vec2{ tuning.projectileSpeedPxPerSec * dir, 0.0 };
+
+            _fire_requested = false;
+        }
+
         if (_is_attacking)
         {
-            // Projectile spawn command.
-            if (can_spawn_projectile)
-            {
-                result.spawnProjectile.emplace();
-                result.spawnProjectile->drawLayer = systems::view::Layer::Effects;
-                result.spawnProjectile->spriteId = cx.id;
-
-                result.spawnProjectile->baseTexture = tuning.projectileBaseTexture;
-                result.spawnProjectile->animFrames = tuning.projectileAnimFrames;
-                result.spawnProjectile->animFps = tuning.projectileAnimFps;
-                result.spawnProjectile->lifeSec = tuning.projectileLifeSec;
-
-                const bool is_left = (cx.facingLR == AvatarDirection::Left);
-                const auto offset = is_left ? tuning.projectileSpawnOffsetPxLeft : tuning.projectileSpawnOffsetPxRight;
-
-                result.spawnProjectile->spawnPos = cx.pos + offset;
-                const double dir = static_cast<double>(cx.facingLR);
-                result.spawnProjectile->velocity = foundation::math::Vec2{ tuning.projectileSpeedPxPerSec * dir, 0.0 };
-            }
-
             result.textureAdd = tuning.attackTextureAdd;
-
             result.rockBuster.visible = true;
             result.rockBuster.armTexture = (cx.facingLR == AvatarDirection::Left) ? rb_tuning.arm_texture_left : rb_tuning.arm_texture_right;
             result.rockBuster.offset = FindRockBusterOffsetByBasePose(cx.basePose, cx.facingLR);
@@ -94,6 +93,7 @@ namespace mm2hack::apps::world::entity::avatar
     {
         _is_attacking = true;
         _pose_time_sec = 0.0;
+        _fire_requested = true;
     }
 
     void AttackActionState::finishAttackPose_() noexcept

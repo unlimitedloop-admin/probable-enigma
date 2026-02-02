@@ -51,6 +51,8 @@ namespace mm2hack::apps::scenes::phases
 
     PhaseResult AbstractActionPhase::Update()
     {
+        using namespace world::entity;
+
         if (!_ctx)
         {
             return PhaseResult::None();
@@ -68,7 +70,7 @@ namespace mm2hack::apps::scenes::phases
         const bool lock = _ctx->scroll->IsScrollLocked();
 
         /* Entity Updates */
-        auto* player = _ctx->entity_mgr->FindFirst<world::entity::avatar::PlayerEntity>();
+        auto* player = _ctx->entity_mgr->FindFirst<avatar::PlayerEntity>();
         if (player != nullptr)
         {
             const Vec2 prev_pos = player->pos;
@@ -90,16 +92,16 @@ namespace mm2hack::apps::scenes::phases
             {
                 player->SetInput(_ctx->input);
 
-                auto entity_ctx = world::entity::avatar::ExPlayerContextForEntity{
-                    .canSpawnProjectile = (_ctx->entity_mgr->CountAlive<world::entity::effects::ProjectileEntity>() < 3),   // TODO: make configurable (attack limit for player)
+                auto entity_ctx = avatar::ExPlayerContextForEntity{
+                    .canSpawnProjectile = (_ctx->entity_mgr->CountAlive<effects::ProjectileEntity>() < 3),   // TODO: make configurable (attack limit for player)
                 };
 
                 player->SetEntityContext(entity_ctx);
 
-                _ctx->entity_mgr->UpdateAll(dt);
+                _ctx->entity_mgr->UpdateAll(&_ctx->scroll->GetView(), dt);
                 if (auto cmd = player->TakeSpawnProjectile(); cmd)
                 {
-                    _ctx->entity_mgr->Spawn<world::entity::effects::ProjectileEntity>(*cmd);
+                    _ctx->entity_mgr->Spawn<effects::ProjectileEntity>(*cmd);
                 }
 
                 delta = player->pos - prev_pos;
@@ -173,6 +175,7 @@ namespace mm2hack::apps::scenes::phases
             .layer = systems::view::Layer::Actors,
         };
         _ctx->entity_mgr->RenderLayer(ctx, systems::view::Layer::Actors);
+        _ctx->entity_mgr->RenderLayer(ctx, systems::view::Layer::Effects);
     }
 
     void AbstractActionPhase::RenderOverlay()
