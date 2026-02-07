@@ -2,6 +2,8 @@
 
 #include "SoundChannel.h"
 
+//#include "utils/output_debug.h"
+
 namespace mm2hack::apps::systems::audio
 {
     SoundChannel::SoundChannel() = default;
@@ -23,6 +25,7 @@ namespace mm2hack::apps::systems::audio
             _handle = -1;
         }
         _handle = DxLib::LoadSoundMem(filepath.c_str());
+        //utils::debug_log(L"[SoundChannel] Load: path={}, handle={}", filepath, _handle);
         return _handle != -1;
     }
 
@@ -31,6 +34,7 @@ namespace mm2hack::apps::systems::audio
         if (_handle != -1)
         {
             DxLib::PlaySoundMem(_handle, loop ? DX_PLAYTYPE_LOOP : DX_PLAYTYPE_BACK);
+            //utils::debug_log(L"[SoundChannel] Play: handle={}, loop={}", _handle, loop);
         }
     }
 
@@ -76,6 +80,7 @@ namespace mm2hack::apps::systems::audio
         {
             auto i = DxLib::ChangeVolumeSoundMem(_volume, _handle);
         }
+        //utils::debug_log(L"[SoundChannel] SetVolume: vol={}, handle={}", volume, _handle);
     }
 
     int SoundChannel::GetVolume() const

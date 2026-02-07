@@ -2,6 +2,7 @@
 
 #include "HoveringState.h"
 
+#include "apps/runtime/GameContext.h"
 #include "apps/systems/physics/ILadderService.h"
 #include "apps/systems/physics/ITerrainProbe.h"
 #include "apps/systems/physics/PageGridIndex.h"
@@ -98,6 +99,10 @@ namespace mm2hack::apps::world::entity::avatar::states
 
         if (cx.justLanded)
         {
+            auto& resource = runtime::GameContext::GetInstance().GetResourceManager();
+            auto& audio = resource.GetAudioManager();
+            audio.PlaySe(L"landing_thump");
+
             if (in->JustPressed(JPBTN::A))
             {
                 DoJump(cx, t);

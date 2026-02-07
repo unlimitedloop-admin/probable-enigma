@@ -59,13 +59,13 @@ namespace mm2hack::apps::systems::audio
         int _seVolume = MAX_VOLUME;
         bool _enabled = true;
 
-        BgmManager& _bgm;       // Reference to BGM manager
-        SeManager& _se;         // Reference to SE manager
-
         // Fade management
         bool _fading = false;
         int _fadeTarget = MAX_VOLUME;
         int _fadeStep = 0;
         int _fadeFramesRemaining = 0;
+
+        BgmManager& _bgm;       // Reference to BGM manager
+        SeManager& _se;         // Reference to SE manager
     };
 }

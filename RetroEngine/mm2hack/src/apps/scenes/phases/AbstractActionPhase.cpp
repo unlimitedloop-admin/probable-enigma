@@ -13,6 +13,7 @@
 #include "apps/world/entity/EntityManager.h"
 #include "config/ConfigUIManager.h"
 #include "core/overlay/DebugHud.h"
+#include "input/Jpbtn.h"
 #include "IPhaseHost.h"
 #include "IStageScript.h"
 #include "PhaseResult.h"
@@ -35,7 +36,12 @@ namespace mm2hack::apps::scenes::phases
 
     void AbstractActionPhase::Initialize(const resources::parameters::Parameters& params)
     {
-        (void)params;
+        if (params.Get<std::wstring>(L"bgm_key"))
+        {
+            _bgm_key = *params.Get<std::wstring>(L"bgm_key");
+            auto& audio = runtime::GameContext::GetInstance().GetResourceManager().GetAudioManager();
+            audio.PlayBgm(_bgm_key);
+        }
 
         if (!_ctx)
         {
@@ -139,6 +145,12 @@ namespace mm2hack::apps::scenes::phases
         _player_pos_y_debug = player ? _ctx->page_grid->ToLocalPos(player->pos.y, config::SystemConfig::kScreenHeight) : 0;
 
         _player_prev_pos = player ? player->pos : Vec2::Zero();
+
+        if (_ctx->input->JustPressed(JPBTN::BACK))
+        {
+            auto* audio = &runtime::GameContext::GetInstance().GetResourceManager().GetAudioManager();
+            audio->OutputBGMMasterVolume();
+        }
 
         const bool verified = false; // TODO: replace with real trigger
         if (verified && _host != nullptr)

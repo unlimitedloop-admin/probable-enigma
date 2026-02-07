@@ -3,6 +3,7 @@
 #include "AttackActionState.h"
 
 #include "apps/foundation/math/CoordinateTypes.h"
+#include "apps/runtime/GameContext.h"
 #include "apps/systems/view/RenderContext.h"
 #include "apps/world/entity/avatar/abilities/RockBusterOffsetTable.h"
 #include "apps/world/entity/avatar/AvatarStatus.h"
@@ -50,6 +51,10 @@ namespace mm2hack::apps::world::entity::avatar::states
             result.spawnProjectile->spawnPos = cx.pos + offset;
             const double dir = static_cast<double>(cx.facingLR);
             result.spawnProjectile->velocity = foundation::math::Vec2{ tuning.projectileSpeedPxPerSec * dir, 0.0 };
+
+            auto& resource = runtime::GameContext::GetInstance().GetResourceManager();
+            auto& audio = resource.GetAudioManager();
+            audio.PlaySe(L"rock_buster_bang");
 
             _fire_requested = false;
         }

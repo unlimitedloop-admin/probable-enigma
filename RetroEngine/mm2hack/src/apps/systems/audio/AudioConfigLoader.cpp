@@ -68,6 +68,10 @@ namespace mm2hack::apps::systems::audio
                         chConfig.file = utf8_to_wstring(ch.value("file", ""));
                         chConfig.volume = ch.value("volume", MAX_VOLUME);
                         chConfig.target_bgm_channels = ch.value("target_bgm_channels", -1);
+                        chConfig.priority =
+                            ch.value("priority", 1) == 2 ? SePriority::High :
+                            ch.value("priority", 1) == 1 ? SePriority::Normal :
+                            SePriority::Low;
                         seConfig.channels.push_back(chConfig);
                     }
                 }
@@ -78,6 +82,10 @@ namespace mm2hack::apps::systems::audio
                     chConfig.file = utf8_to_wstring(seJson.value("file", ""));
                     chConfig.volume = seJson.value("volume", MAX_VOLUME);
                     chConfig.target_bgm_channels = seJson.value("target_bgm_channels", -1);
+                    chConfig.priority =
+                        seJson.value("priority", 1) == 2 ? SePriority::High :
+                        seJson.value("priority", 1) == 1 ? SePriority::Normal :
+                        SePriority::Low;
                     seConfig.channels.push_back(chConfig);
                 }
                 _seConfigs[utf8_to_wstring(name)] = seConfig;

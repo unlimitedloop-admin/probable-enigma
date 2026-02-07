@@ -176,6 +176,8 @@ namespace mm2hack::apps::scenes
         using namespace apps::runtime;
         GameContext::GetInstance().GetResourceManager().GetFontTileManager().ShutDown();
         _phase.reset();
+        auto& audio = GameContext::GetInstance().GetResourceManager().GetAudioManager();
+        audio.Release();
 
         utils::debug_log(kClassName + L" finalized.");
     }

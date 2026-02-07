@@ -45,13 +45,16 @@ namespace mm2hack::apps::systems::audio
             std::vector<std::wstring> filepaths;
             std::vector<int> volumes;
             std::vector<int> targetBgmChannels;
+            std::vector<SePriority> priorities;
             for (const auto& ch : config.channels)
             {
                 filepaths.push_back(ch.file);
                 volumes.push_back(ch.volume);
                 targetBgmChannels.push_back(ch.target_bgm_channels);
+                priorities.push_back(ch.priority);
+
             }
-            seManager.LoadSe(name, filepaths, volumes, targetBgmChannels);
+            seManager.LoadSe(name, filepaths, volumes, targetBgmChannels, priorities);
 
             // Initial volume settings.
             for (size_t i = 0; i < config.channels.size(); ++i)

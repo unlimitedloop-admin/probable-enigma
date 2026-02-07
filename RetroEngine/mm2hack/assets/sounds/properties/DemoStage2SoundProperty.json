@@ -1,0 +1,52 @@
+{
+    "bgm": {
+        "demo_stage_2_bgm": {
+            "channels": [
+                {
+                    "file": "assets/sounds/BGMs/02_DemoStage2/BGM_01/Rockman5__BGM_WaveManStage_Square1.wav",
+                    "volume": 255
+                },
+                {
+                    "file": "assets/sounds/BGMs/02_DemoStage2/BGM_01/Rockman5__BGM_WaveManStage_Square2.wav",
+                    "volume": 255
+                },
+                {
+                    "file": "assets/sounds/BGMs/02_DemoStage2/BGM_01/Rockman5__BGM_WaveManStage_Triangle.wav",
+                    "volume": 255
+                },
+                {
+                    "file": "assets/sounds/BGMs/02_DemoStage2/BGM_01/Rockman5__BGM_WaveManStage_Noise.wav",
+                    "volume": 255
+                },
+                {
+                    "file": "assets/sounds/BGMs/02_DemoStage2/BGM_01/Rockman5__BGM_WaveManStage_DPCM_Unused_ch.wav",
+                    "volume": 255
+                }
+            ],
+            "loop_start": 21.71,
+            "loop_end": 72.12
+        }
+    },
+    "se": {
+        "landing_thump": {
+            "channels": [
+                {
+                    "file": "assets/sounds/SoundEffects/LANDING_EFFECT_N0_SE_Square2.wav",
+                    "volume": 255,
+                    "target_bgm_channels": 1,
+                    "priority": 1
+                }
+            ]
+        },
+        "rock_buster_bang": {
+            "channels": [
+                {
+                    "file": "assets/sounds/SoundEffects/SHOT_EFFECT_N0_SE_Square2.wav",
+                    "volume": 255,
+                    "target_bgm_channels": 1,
+                    "priority": 2
+                }
+            ]
+        }
+    }
+}

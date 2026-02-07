@@ -51,6 +51,7 @@ namespace mm2hack::apps::scenes::phases
         const std::wstring kClassName{ L"AbstractActionPhase" };
 
         std::unique_ptr<StageRuntimeContext> _ctx{};    // Runtime context for the stage
+        std::wstring _bgm_key{};                        // Current BGM key
         IStageScript* _script{};                        // Optional stage script for custom behavior
         IPhaseHost* _host{};                            // Host for phase transitions
         bool _entered{ false };                         // Indicates if the phase has been entered

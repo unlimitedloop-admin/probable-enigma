@@ -3,6 +3,7 @@
 #include "ChannelManager.h"
 
 #include "ISoundChannel.h"
+//#include "utils/output_debug.h"
 
 namespace mm2hack::apps::systems::audio
 {
@@ -17,7 +18,10 @@ namespace mm2hack::apps::systems::audio
     int ChannelManager::AddChannel(std::unique_ptr<ISoundChannel> channel)
     {
         _channels.push_back(std::move(channel));
-        return static_cast<int>(_channels.size() - 1);
+        int index = static_cast<int>(_channels.size() - 1);
+        int total = static_cast<int>(_channels.size());
+        //utils::debug_log(L"[ChannelManager] AddChannel: index={}, total={}", index, total);
+        return index;
     }
 
     bool ChannelManager::Load(int channelIndex, const std::wstring& filepath)

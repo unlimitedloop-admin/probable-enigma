@@ -1,2 +1,3 @@
 //Symbol,                       BaseDir,       JSON_rel
 X(BackdoorMenuSoundProperty,    SoundsDir,     LR"(properties\BackdoorMenuSoundProperty.json)")
+X(DemoStage2SoundProperty,      SoundsDir,     LR"(properties\DemoStage2SoundProperty.json)")

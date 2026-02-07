@@ -3,7 +3,7 @@
 #include "BgmManager.h"
 
 #include "ChannelManager.h"
-#include "utils/output_debug.h"
+//#include "utils/output_debug.h"
 
 namespace mm2hack::apps::systems::audio
 {
@@ -22,23 +22,32 @@ namespace mm2hack::apps::systems::audio
 
     bool BgmManager::Play(const std::wstring& name)
     {
+        _currentBgm = name;
+
         auto it = _bgmData.find(name);
         if (it == _bgmData.end()) return false;
 
         const auto& config = it->second;
+        _channels.EnsureChannelCount(static_cast<int>(config.filepaths.size()));
+
+        _currentVolumes.resize(config.filepaths.size());
+
+        // Load all files and set volumes.
         for (size_t i = 0; i < config.filepaths.size(); ++i)
         {
-            if (i >= static_cast<size_t>(_channels.GetChannelCount()))
-                _channels.AddChannel();
-
             _channels.Load(static_cast<int>(i), config.filepaths[i]);
+
             int baseVol = (i < config.volumes.size()) ? config.volumes[i] : MAX_VOLUME;
-            int adjustedVol = (baseVol * _masterVolume) / MAX_VOLUME;
+            int master = _mixer ? _mixer->GetMasterVolume() : MAX_VOLUME;
+            int adjustedVol = (baseVol * master) / MAX_VOLUME;
+
             _channels.SetVolume(static_cast<int>(i), adjustedVol);
+            _currentVolumes[i] = adjustedVol;
+
             SetSoundCurrentPosition(0, _channels.GetHandle(static_cast<int>(i)));
         }
 
-        // NOTE: To play the audio data synchronously, only the Play call is expanded in a loop.
+        // Play all channels with loop.
         for (size_t i = 0; i < config.filepaths.size(); ++i)
         {
             _channels.Play(static_cast<int>(i), true);
@@ -47,7 +56,9 @@ namespace mm2hack::apps::systems::audio
         _loopStart = config.loopStart;
         _loopEnd = config.loopEnd;
         _isPlaying = true;
-        _currentBgm = name;
+
+        SetMasterVolume(_masterVolume);
+
         return true;
     }
 
@@ -86,6 +97,7 @@ namespace mm2hack::apps::systems::audio
     void BgmManager::SetMasterVolume(int volume)
     {
         _masterVolume = std::clamp(volume, 0, MAX_VOLUME);
+
         if (_bgmData.find(_currentBgm) == _bgmData.end()) return;
         const auto& config = _bgmData[_currentBgm];
 
@@ -94,7 +106,6 @@ namespace mm2hack::apps::systems::audio
             int baseVol = (i < config.volumes.size()) ? config.volumes[i] : MAX_VOLUME;
             int adjustedVol = (baseVol * _masterVolume) / MAX_VOLUME;
             _channels.SetVolume(static_cast<int>(i), adjustedVol);
-            utils::debug_log(L"change BGM vol: {}, at channel: {}", adjustedVol, i);
         }
     }
 
@@ -128,7 +139,7 @@ namespace mm2hack::apps::systems::audio
                 {
                     auto loop = static_cast<LONGLONG>(_loopStart * 1000);
                     DxLib::SetSoundCurrentTime(loop, _channels.GetHandle(i));
-                    utils::debug_log(L"BGM looped: {} at channel: {}", loop, i);
+                    //utils::debug_log(L"BGM looped: {} at channel: {}", loop, i);
                 }
             }
         }
@@ -144,5 +155,13 @@ namespace mm2hack::apps::systems::audio
         {
             int vol = _channels.GetVolume(i);
         }
+    }
+    int audio::BgmManager::GetCurrentBgmVolume(int channelIndex) const
+    {
+        if (channelIndex < 0 || channelIndex >= static_cast<int>(_currentVolumes.size()))
+        {
+            return MAX_VOLUME;
+        }
+        return _currentVolumes[channelIndex];
     }
 }

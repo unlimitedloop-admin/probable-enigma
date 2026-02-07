@@ -6,6 +6,7 @@
 #include "ChannelManager.h"
 #include "config/SoundConfig.h"
 #include "SoundChannel.h"
+#include "utils/output_debug.h"
 
 namespace mm2hack::apps::systems::audio
 {
@@ -14,6 +15,11 @@ namespace mm2hack::apps::systems::audio
         _bgmManager(_bgmChannels), _seManager(_bgmChannels, 8),
         _mixer(_bgmManager, _seManager)
     {
+        // Link BGM manager with SE manager.
+        _bgmManager.SetSeManager(&_seManager);
+        _bgmManager.SetAudioMixer(&_mixer);
+        _seManager.SetBgmManager(&_bgmManager);
+        _seManager.SetAudioMixer(&_mixer);
     }
 
     bool AudioManager::Initialize(const std::wstring& configPath)
@@ -29,6 +35,7 @@ namespace mm2hack::apps::systems::audio
     void AudioManager::PlayBgm(const std::wstring& name)
     {
         _bgmManager.Play(name);
+        SetBgmVolume(_mixer.GetMasterVolume());
     }
 
     void AudioManager::StopBgm()
@@ -59,6 +66,15 @@ namespace mm2hack::apps::systems::audio
     void AudioManager::SetMasterVolume(int volume)
     {
         _mixer.SetMasterVolume(toDxVolume_(volume));
+    }
+
+    void AudioManager::OutputBGMMasterVolume()
+    {
+        for (int i = 0; i < _bgmChannels.GetChannelCount(); ++i)
+        {
+            int vol = _bgmChannels.GetVolume(i);
+            utils::debug_log(L"[AudioManager] BGM Channel {} Master Volume: {}", i, vol);
+        }
     }
 
     void AudioManager::MuteChannel(SoundChip chip, int index, bool mute)
@@ -96,8 +112,8 @@ namespace mm2hack::apps::systems::audio
 
     void AudioManager::Update()
     {
-        _bgmManager.Update();
         _seManager.Update();
+        _bgmManager.Update();
     }
 
     void AudioManager::Release()

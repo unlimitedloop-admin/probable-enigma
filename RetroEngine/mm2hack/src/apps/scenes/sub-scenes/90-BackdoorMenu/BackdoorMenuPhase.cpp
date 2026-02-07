@@ -415,6 +415,7 @@ namespace mm2hack::apps::scenes
 
                     resources::parameters::Parameters p;
                     p = p.With<int>(L"RoomNo", roomNo_);
+                    p = p.With<std::wstring>(L"bgm_key", L"demo_stage_2_bgm");  // HACK: Select BGM for demo stage
                     owner.SetNextScene(GetSceneIDForJumpParameter(insideStack_[0].subId), p);
                 }
             }

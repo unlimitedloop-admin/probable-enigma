@@ -30,11 +30,19 @@ namespace mm2hack::apps::systems::audio
         double loopEnd = 0.0;
     };
 
+    enum class SePriority
+    {
+        Low,    // Low priority SE, can be interrupted by higher priority SE
+        Normal, // Normal priority SE, will not be interrupted by lower priority SE
+        High    // High priority SE, will interrupt any currently playing SE
+    };
+
     struct SeChannelConfig
     {
         std::wstring file;
         int volume = config::SystemConfig::kAudioMaxVolume; // Volume level (0-255)
-        int target_bgm_channels = -1; // Channel to restore BGM volume after SE playback, -1 means no specific channel
+        int target_bgm_channels = -1;                       // Channel to restore BGM volume after SE playback, -1 means no specific channel
+        SePriority priority = SePriority::Normal;           // Priority of the SE
     };
 
     // Configuration structure for SE (Sound Effects), which includes the file and volume

@@ -11,7 +11,9 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include "AudioMixer.h"
 #include "config/SystemConfig.h"
+#include "SeManager.h"
 
 namespace mm2hack::apps::systems::audio
 {
@@ -56,6 +58,11 @@ namespace mm2hack::apps::systems::audio
         // Get the name of the currently playing BGM
         std::wstring GetCurrentBgmName() const { return _currentBgm; }
 
+        int GetCurrentBgmVolume(int channelIndex) const;
+
+        void SetSeManager(SeManager* manager) { _seManager = manager; }
+        void SetAudioMixer(AudioMixer* mixer) { _mixer = mixer; }
+
     private:
         void applyFade_();           // Apply fade effect if active
         void checkAndApplyLoop_();   // Check and apply loop points if necessary
@@ -72,11 +79,13 @@ namespace mm2hack::apps::systems::audio
         const std::wstring kClassName{ L"BgmManager" };
 
         const int MAX_VOLUME = config::SystemConfig::kAudioMaxVolume;
+        int _masterVolume = MAX_VOLUME;
 
         ChannelManager& _channels;                          // Reference to the channel manager for audio playback
         std::unordered_map<std::wstring, BgmData> _bgmData; // Registered BGM data
 
         std::wstring _currentBgm;                           // Name of the currently playing BGM
+        std::vector<int> _currentVolumes;                   // Current volumes for each BGM channel
         bool _isPlaying = false;
 
         // Loop parameters
@@ -88,6 +97,8 @@ namespace mm2hack::apps::systems::audio
         int _fadeTarget = MAX_VOLUME;
         int _fadeStep = 0;
         int _fadeFramesRemaining = 0;
-        int _masterVolume = MAX_VOLUME;
+
+        SeManager* _seManager = nullptr;                    // Pointer to the SE manager for sound effect interactions
+        AudioMixer* _mixer = nullptr;                       // Pointer to the audio mixer for volume control
     };
 }

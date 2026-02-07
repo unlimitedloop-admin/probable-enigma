@@ -4,6 +4,7 @@
 
 #include <istream>
 #include <ostream>
+#include "apps/foundation/NES/NESPalette.h"
 #include "apps/rendering/bg/BGTileManager.h"
 #include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/resources/stages/StageTileAttributes.h"
@@ -19,6 +20,7 @@
 #include "apps/systems/physics/TileAttribute.h"
 #include "apps/world/entity/enemy/lists/EnemyLists.h"
 #include "config/GameAssets.h"
+#include "config/PathDefsJsonProps.h"
 #include "core/assembly/FilteredJoystickInputProvider.h"
 #include "utils/output_debug.h"
 
@@ -53,6 +55,9 @@ namespace mm2hack::apps::scenes
         {
             auto& gc = apps::runtime::GameContext::GetInstance();
             gc.FilteredJoystickInput().SetEnabled(_fader.InputEnabled());
+
+            auto* audio = &gc.GetResourceManager().GetAudioManager();
+            audio->Update();
 
             const phases::PhaseResult r = _phase->Update();
             if (r.HasRequest())
@@ -166,7 +171,16 @@ namespace mm2hack::apps::scenes
         auto ctx = _actionBuilder.Build(resource, *_input, def, build, L"AreaA");
         // Create the initial phase.
         _phase = std::make_unique<phases::AbstractActionPhase>(std::move(ctx), _stageScript.get(), *this);
-        PhaseFadePlan first(20, 20, 0, 12, 20, FadeLayerMask::All);
+
+        // Start with a fade-in.
+        PhaseFadePlan first(
+            20,     // preBlackHold
+            20,     // fadeInFrames
+            0,      // preFadeOutHold
+            12,     // fadeOutFrames
+            20,     // postFadeOutHold
+            FadeLayerMask::All  // layers
+        );
         _fader.BeginPhase(first, resource);
 
         _phase->Initialize(params);
@@ -178,6 +192,7 @@ namespace mm2hack::apps::scenes
     {
         using namespace runtime;
         GameContext::GetInstance().GetResourceManager().GetFontTileManager().ShutDown();
+        GameContext::GetInstance().GetResourceManager().GetAudioManager().Release();
         if (_phase) _phase.reset();
 
         utils::debug_log(kClassName + L" finalized.");
@@ -188,6 +203,14 @@ namespace mm2hack::apps::scenes
         using namespace config;
         using namespace runtime;
         auto& resource = GameContext::GetInstance().GetResourceManager();
+
+        auto& audio = resource.GetAudioManager();
+        if (!audio.Initialize(MM2H_PROPERTY(DemoStage2SoundProperty)))
+        {
+            return false;
+        }
+
+        foundation::NES::NESPalette::SetBackgroundFor(13U); // Innocent black
 
         // Load the background tile graph.
         auto& bgTileManager = resource.GetBGTileManager();
