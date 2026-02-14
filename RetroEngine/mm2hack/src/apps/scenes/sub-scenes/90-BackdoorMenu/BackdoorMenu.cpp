@@ -178,6 +178,8 @@ namespace mm2hack::apps::scenes
         _phase.reset();
         auto& audio = GameContext::GetInstance().GetResourceManager().GetAudioManager();
         audio.Release();
+        auto& font = GameContext::GetInstance().GetResourceManager().GetFontTileManager();
+        font.ShutDown();
 
         utils::debug_log(kClassName + L" finalized.");
     }

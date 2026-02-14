@@ -38,7 +38,7 @@ namespace mm2hack::apps::world::entity::avatar
 
     // Avatar animation tile enumeration
     // NOTE: 0-9
-    enum class AvatarAnimation : std::int8_t
+    enum class AvatarAnimation : std::int16_t
     {
         ToTheRight = 0,
         StandingA,
@@ -56,6 +56,15 @@ namespace mm2hack::apps::world::entity::avatar
         LadderTopA,
         LadderTopB,
         ToTheLeft = 40,
+        IntroDropEmpty = 160,
+        IntroDropA,
+        IntroDropB,
+        IntroDropC,
+        IntroDropD,
+        IntroDropE,
+        IntroDropF,
+        IntroDropG,
+        IntroDropH,
         // ... Add more animations as needed ;)
     };
 

@@ -50,14 +50,21 @@ namespace mm2hack::apps::scenes
         // 1) First, handle fade switch (if ready, switch here)
         applyPendingPhaseIfReady_();
 
+        auto& gc = apps::runtime::GameContext::GetInstance();
+        // Sound update.
+        auto* audio = &gc.GetResourceManager().GetAudioManager();
+        audio->Update();
+
+        if (!_phase->GetEnableOperatePhase())
+        {
+            // Once the fade-in is complete, enable phase operation.
+            _phase->SetEnableOperatePhase(_fader.InputEnabled());
+        }
+
         // 2) Always update the phase (even during fade)
         if (_phase)
         {
-            auto& gc = apps::runtime::GameContext::GetInstance();
             gc.FilteredJoystickInput().SetEnabled(_fader.InputEnabled());
-
-            auto* audio = &gc.GetResourceManager().GetAudioManager();
-            audio->Update();
 
             const phases::PhaseResult r = _phase->Update();
             if (r.HasRequest())
@@ -145,6 +152,8 @@ namespace mm2hack::apps::scenes
         using namespace apps::runtime;
         auto& gc = GameContext::GetInstance();
         auto& resource = gc.GetResourceManager();
+        auto& font = resource.GetFontTileManager();
+        font.SetUp();
 
         // Initialize the demo stage
         if (!initializeResources_(params))
@@ -157,7 +166,7 @@ namespace mm2hack::apps::scenes
         phases::StageDefinition def{};
         def.map_binary_path = std::wstring(kStageMapBinary);
         def.start_page_index = _roomState.pageIndex;
-        def.start_local_pos = { 128.0, 10.0 };
+        def.start_local_pos = { 128.0, 103.0 };
 
         // Create build config.
         phases::ActionStageBuildConfig build{};
@@ -302,47 +311,15 @@ namespace mm2hack::apps::scenes
 
     void DemoStage2::dispatchTransition_(const std::wstring& next_key, const PhaseFadePlan& plan, const Parameters& params)
     {
-        using namespace apps::runtime;
-
-        // Example mapping.
-        // Scene chooses which concrete phase to instantiate based on string keys.
-
-        if (next_key == L"Intro")
-        {
+        // NOTE: Dispatch the transition request based on the next_key.
+        //if (next_key == L"Intro")
+        //{
             // QueuePhase(std::make_unique<TopMenuPhase>(*this /* host */), plan);
             // ^ TopMenuPhase should take IPhaseHost& instead of DemoStage1&
-            return;
-        }
+        //    return;
+        //}
 
-        if (next_key == L"AreaA" || next_key == L"AreaB")
-        {
-            auto& gc = GameContext::GetInstance();
-            auto& res = gc.GetResourceManager();
-
-            // StageDefinition minimal (your choice)
-            phases::StageDefinition def{};
-            def.map_binary_path = std::wstring(kStageMapBinary);
-            def.start_page_index = _roomState.pageIndex; // or pick by key
-            def.start_local_pos = { 128.0, 10.0 };
-
-            phases::ActionStageBuildConfig build{};
-            build.map_name = std::wstring(kMapName);
-            build.tile_px = config::SystemConfig::kTileSize;
-            build.asset_provider = this;
-
-            auto ctx = _actionBuilder.Build(res, *_input, def, build, next_key);
-
-            auto phase = std::make_unique<phases::AbstractActionPhase>(std::move(ctx), _stageScript.get(), *this /* host */);
-
-            QueuePhase(std::move(phase), plan);
-            return;
-        }
-
-        if (next_key == L"Clear")
-        {
-            // QueuePhase(std::make_unique<ClearPhase>(*this), plan);
-            return;
-        }
+        // Other known keys...
 
         // Unknown key -> ignore or log
         (void)params;

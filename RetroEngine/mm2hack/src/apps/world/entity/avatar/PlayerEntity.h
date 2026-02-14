@@ -95,6 +95,16 @@ namespace mm2hack::apps::world::entity::avatar
 
         // Animation tick
         void TickAnimation(double dt);
+        // Start intro drop state
+        void BeginIntroDrop();
+        // Update intro drop animation
+        void UpdateIntroAnimation(double dt);
+        // Update intro falling animation
+        void UpdateIntroFalling(double dt);
+        // Update intro landing animation
+        void UpdateIntroLanding(double dt);
+        // Check if intro animation is finished
+        bool IsIntroFinished() const noexcept;
 
         // Set collidable
         void SetCollidable(bool v) noexcept;
@@ -151,6 +161,18 @@ namespace mm2hack::apps::world::entity::avatar
     private:
         const std::wstring kClassName{ L"PlayerEntity" };
 
+        static constexpr std::array<IntroFrame, 8> kLandingFrames
+        {
+            IntroFrame{ STile::IntroDropA, 5.0 / 60.0 },
+            IntroFrame{ STile::IntroDropB, 5.0 / 60.0 },
+            IntroFrame{ STile::IntroDropC, 5.0 / 60.0 },
+            IntroFrame{ STile::IntroDropD, 5.0 / 60.0 },
+            IntroFrame{ STile::IntroDropE, 5.0 / 60.0 },
+            IntroFrame{ STile::IntroDropF, 16.0 / 60.0 },
+            IntroFrame{ STile::IntroDropG, 4.0 / 60.0 },
+            IntroFrame{ STile::IntroDropH, 16.0 / 60.0 }
+        };                                                          // Landing animation frames in the intro drop sequence
+
         SpriteManagerId _id{};                                      // Sprite Id
         Vec2 _half{};                                               // Half-size of the bounding box
         bool _collidable{ true };                                   // Whether collision is enabled
@@ -161,6 +183,7 @@ namespace mm2hack::apps::world::entity::avatar
 
         StateProvider* _input{};                                    // Player input snapshot (This is separate from core::assembly::InputSnapshot)
         PlayerTuning _tuning{};                                     // Player tuning parameters
+        IntroDropState _introStates{};                              // Appearing the player on stage parameters
         states::AttackTuning _attack_tuning{};                      // Attack action tuning parameters
         AnimeStepper _animeStepper{};                               // Animation stepper
         Probes _probes{ _half };                                    // Collision probes

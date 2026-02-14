@@ -119,6 +119,7 @@
     <ClCompile Include="src\apps\scenes\sub-scenes\02-DemoStage2\DemoStage2.cpp" />
     <ClCompile Include="src\apps\world\entity\EntityManager.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\states\AttackActionState.cpp" />
+    <ClCompile Include="src\apps\ui\productions\StageIntroUI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
@@ -332,6 +333,7 @@
     <ClInclude Include="src\apps\world\entity\enemy\lists\EnemyLists.h" />
     <ClInclude Include="src\apps\resources\assets\StageSpriteBank.h" />
     <ClInclude Include="src\apps\scenes\IStageAssetProvider.h" />
+    <ClInclude Include="src\apps\ui\productions\StageIntroUI.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />

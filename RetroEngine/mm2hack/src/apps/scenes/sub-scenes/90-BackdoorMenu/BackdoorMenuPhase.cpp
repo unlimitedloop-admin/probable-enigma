@@ -245,7 +245,7 @@ namespace mm2hack::apps::scenes
                 break;
             }
 
-            // TODO: Add other inside menu pages
+            // HACK: Add other inside menu pages
 
             case 7: // RESET PARAMETER
                 page_.cursorX = 16; page_.firstY = 16; page_.lineH = 10;

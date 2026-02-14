@@ -224,6 +224,7 @@
     <ClCompile Include="src\apps\sequence\SequenceManager.cpp" />
     <ClCompile Include="src\apps\sequence\StandardSequence.cpp" />
     <ClCompile Include="src\apps\resources\ResourceManager.cpp" />
+    <ClCompile Include="src\apps\ui\productions\StageIntroUI.cpp" />
     <ClCompile Include="src\apps\vfx\cursor\TwinkleCursorAnimator.cpp" />
     <ClCompile Include="src\apps\vfx\stareffects\BgStarField.cpp" />
     <ClCompile Include="src\apps\vfx\stareffects\FixedStar.cpp" />
@@ -312,6 +313,7 @@
     <ClInclude Include="src\apps\resources\bg\IMapPageSource.h" />
     <ClInclude Include="src\apps\resources\stages\StageTileAttributes.h" />
     <ClInclude Include="src\apps\scenes\IStageAssetProvider.h" />
+    <ClInclude Include="src\apps\ui\productions\StageIntroUI.h" />
     <ClInclude Include="src\apps\world\entity\avatar\abilities\RockBusterOffsetTable.h" />
     <ClInclude Include="src\apps\world\entity\avatar\states\AttackActionState.h" />
     <ClInclude Include="src\apps\world\entity\common\SpawnProjectileCommand.h" />

@@ -30,5 +30,9 @@ namespace mm2hack::apps::scenes::phases
         virtual void RenderWorld() = 0;
         // Renders the overlay elements
         virtual void RenderOverlay() = 0;
+        // Enables or disables the operate phase
+        virtual void SetEnableOperatePhase(bool enable) = 0;
+        // Gets whether the operate phase is enabled
+        virtual bool GetEnableOperatePhase() const = 0;
     };
 }

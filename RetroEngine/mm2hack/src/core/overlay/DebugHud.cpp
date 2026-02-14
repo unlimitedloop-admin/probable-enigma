@@ -15,7 +15,7 @@ namespace mm2hack::core::overlay
     void DebugHud::Draw() const
     {
         const auto& hud = config::ConfigUIManager::GetCurrentHudConfig();
-        if (!hud.showFps && !hud.showFrameTime)
+        if (!hud.showPlayerPosition && !hud.showFps && !hud.showFrameTime)
             return;
 
         const int x = 10;

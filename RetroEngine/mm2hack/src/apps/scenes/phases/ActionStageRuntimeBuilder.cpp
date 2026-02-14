@@ -139,6 +139,6 @@ namespace mm2hack::apps::scenes::phases
             player->pos = def.start_local_pos; // fallback
         }
 
-        player->texture = 1;
+        player->texture = 0;
     }
 }

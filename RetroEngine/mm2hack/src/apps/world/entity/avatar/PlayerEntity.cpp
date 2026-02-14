@@ -133,7 +133,13 @@ namespace mm2hack::apps::world::entity::avatar
         auto& res = runtime::GameContext::GetInstance().GetResourceManager();
         
         // Draw player sprite
-        const auto screenPos = toScreenPos(pos);
+        auto screenPos = toScreenPos(pos);
+        if (_introStates.active)
+        {
+            // During intro drop, override the texture to the intro drop texture
+            screenPos += _introStates.offsetPos;
+        }
+
         res.GetSpriteManager().UseById(_id, texture, static_cast<int>(screenPos.x), static_cast<int>(screenPos.y));
 
         // Draw rock buster arm if visible
@@ -190,6 +196,101 @@ namespace mm2hack::apps::world::entity::avatar
         composeFinalTexture_();
     }
 
+    void PlayerEntity::BeginIntroDrop()
+    {
+        _introStates.offsetPos = Vec2{ -1.0, -6.0 };  // Slight horizontal offset while dropping sprite set.
+        _introStates.destPos.y = pos.y;
+        // Start above the screen and drop down to the current position.
+
+        pos.y = _vBounds.topY - _half.y - 16.0; // Start 16px above the top view bound (adjust as needed)
+        baseTexture = static_cast<int>(STile::IntroDropA);  // Intro drop texture index
+        _introStates.active = true;
+
+        composeFinalTexture_();
+    }
+
+    void PlayerEntity::UpdateIntroAnimation(double dt)
+    {
+        if (!_introStates.active)
+            return;
+
+        switch (_introStates.phase)
+        {
+        case IntroPhase::Falling:
+            UpdateIntroFalling(dt);
+            break;
+
+        case IntroPhase::Landing:
+            UpdateIntroLanding(dt);
+            break;
+
+        case IntroPhase::Done:
+            break;
+        }
+
+        composeFinalTexture_();
+    }
+
+    void PlayerEntity::UpdateIntroFalling(double dt)
+    {
+        _introStates.timer += dt;
+
+        const double duration = _introStates.dropDuration;
+
+        double t = _introStates.timer / duration;
+        if (t > 1.0)
+        {
+            t = 1.0;
+        }
+
+        // Ease-in (quadratic)
+        const double eased = t * t;
+
+        const double startY = _introStates.offsetPos.y;
+        const double destY = _introStates.destPos.y;
+
+        pos.y = startY + (destY - startY) * eased;
+
+        if (t >= 1.0)
+        {
+            pos.y = destY;
+            _introStates.phase = IntroPhase::Landing;
+            _introStates.timer = 0.0;
+
+            auto& resource = runtime::GameContext::GetInstance().GetResourceManager();
+            auto& audio = resource.GetAudioManager();
+            audio.PlaySe(L"onstage_thump");
+        }
+    }
+
+    void PlayerEntity::UpdateIntroLanding(double dt)
+    {
+        _introStates.timer += dt;
+
+        double accumulated = 0.0;
+
+        for (const auto& frame : kLandingFrames)
+        {
+            accumulated += frame.duration;
+
+            if (_introStates.timer < accumulated)
+            {
+                baseTexture = static_cast<int>(frame.tile);
+                return;
+            }
+        }
+
+        // Animation finished
+        baseTexture = static_cast<int>(STile::StandingA);
+        _introStates.phase = IntroPhase::Done;
+        _introStates.active = false;
+    }
+
+    bool PlayerEntity::IsIntroFinished() const noexcept
+    {
+        return !_introStates.active;
+    }
+
     void PlayerEntity::SetCollidable(bool v) noexcept { _collidable = v; }
 
     void PlayerEntity::SetViewBounds(const systems::scrolling::atomic::ViewBounds& b) noexcept
@@ -226,11 +327,11 @@ namespace mm2hack::apps::world::entity::avatar
         // Facing offset is applied exactly once here.
         if (facingLR == AvatarDirection::Left)
         {
-            t += static_cast<int>(AvatarAnimation::ToTheLeft);
+            t += static_cast<int>(STile::ToTheLeft);
         }
         else
         {
-            t += static_cast<int>(AvatarAnimation::ToTheRight);
+            t += static_cast<int>(STile::ToTheRight);
         }
 
         texture = t;

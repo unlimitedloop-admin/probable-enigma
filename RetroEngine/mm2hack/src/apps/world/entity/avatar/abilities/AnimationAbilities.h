@@ -27,12 +27,12 @@ namespace mm2hack::apps::world::entity::avatar::abilities
         if (cx.animeStepper.tick < t.reactionFrameRun)
         {
             ++cx.animeStepper.tick;
-            cx.basePose = static_cast<int>(AvatarAnimation::RunningIntro);
+            cx.basePose = static_cast<int>(STile::RunningIntro);
             return false;
         }
         // After that, switch to RunningA animation (When holding pressing the right/Left arrow key).
         cx.animeStepper.reset();
-        cx.basePose = static_cast<int>(AvatarAnimation::RunningA);
+        cx.basePose = static_cast<int>(STile::RunningA);
         return true;
     }
 

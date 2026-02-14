@@ -53,16 +53,141 @@ namespace mm2hack::apps::scenes::phases
             _script->OnEnter(_ctx->area_key, *_ctx);
             _entered = true;
         }
+
+        _ready_ui.Begin(3.0);   // 3 seconds duration for "READY" blink
     }
 
     PhaseResult AbstractActionPhase::Update()
     {
-        using namespace world::entity;
-
         if (!_ctx)
         {
             return PhaseResult::None();
         }
+
+        if (_state == ActionPhaseState::Intro)
+        {
+            updateIntro_();
+            return PhaseResult::None();
+        }
+
+        updateActive_();
+
+        const bool verified = false; // TODO: replace with real trigger
+        if (verified && _host != nullptr)
+        {
+            PhaseFadePlan next(
+                5,   /* preBlackHold */
+                20,  /* fadeInFrames */
+                0,   /* preFadeOutHold */
+                20,  /* fadeOutFrames */
+                0,   /* postBlackHold */
+                FadeLayerMask::All /* layers */
+            );
+            resources::parameters::Parameters p;
+            _host->RequestTransition(L"TopMenu", next, p);
+
+            // Return None because transition will be handled by Scene via host.
+            return PhaseResult::None();
+        }
+
+        return PhaseResult::None();
+    }
+
+    void AbstractActionPhase::RenderWorld()
+    {
+        if (!_ctx)
+        {
+            return;
+        }
+
+        _ctx->scroll->Render();
+
+        if (_intro.step == IntroStep::ReadyBlink && !_ready_ui.IsFinished())
+        {
+            _ready_ui.Render();
+        }
+
+        systems::view::RenderContext ctx{
+            .view = &_ctx->scroll->GetView(),
+            .layer = systems::view::Layer::Actors,
+        };
+        _ctx->entity_mgr->RenderLayer(ctx, systems::view::Layer::Actors);
+        _ctx->entity_mgr->RenderLayer(ctx, systems::view::Layer::Effects);
+    }
+
+    void AbstractActionPhase::RenderOverlay()
+    {
+        if (!_ctx)
+        {
+            return;
+        }
+
+        using namespace utils;
+
+        wchar_t buf[128]{};
+        const auto& hud = config::ConfigUIManager::GetCurrentHudConfig();
+        int dispY = 8;
+
+        if (hud.showPlayerPosition)
+        {
+            core::overlay::DebugHud::GetInstance().SetPlayerPositionContext(
+                { _page_index_debug, _player_pos_x_debug, _player_pos_y_debug }
+            );
+        }
+
+        _ctx->scroll->DebugHudRender(hud.showScrollLine);
+    }
+
+    void AbstractActionPhase::SetEnableOperatePhase(bool enable)
+    {
+        _operate = enable;
+
+        if (!_operate)
+            return;
+
+        _intro.step = IntroStep::ReadyBlink;
+    }
+
+    void AbstractActionPhase::updateIntro_()
+    {
+        using namespace world::entity;
+        const double dt = runtime::GameContext::GetInstance().Time().DeltaSeconds();
+        _intro.timer += dt;
+
+        auto* player = _ctx->entity_mgr->FindFirst<avatar::PlayerEntity>();
+
+        switch (_intro.step)
+        {
+            case IntroStep::ReadyBlink:
+            {
+                _ready_ui.Update(dt);
+                if (_ready_ui.IsFinished())
+                {
+                    _intro.step = IntroStep::WarpIn;
+                    _intro.timer = 0.0;
+                    player->BeginIntroDrop();
+                }
+                break;
+
+            case IntroStep::WarpIn:
+                player->UpdateIntroAnimation(dt);
+                if (player->IsIntroFinished())
+                {
+                    _intro.step = IntroStep::Done;
+                }
+                break;
+
+            case IntroStep::Done:
+                player->SetInput(_ctx->input);
+                _state = ActionPhaseState::Active;
+                break;
+            }
+        }
+    }
+
+    void AbstractActionPhase::updateActive_()
+    {
+        using namespace world::entity;
 
         // Script tick
         if (_script)
@@ -151,67 +276,5 @@ namespace mm2hack::apps::scenes::phases
             auto* audio = &runtime::GameContext::GetInstance().GetResourceManager().GetAudioManager();
             audio->OutputBGMMasterVolume();
         }
-
-        const bool verified = false; // TODO: replace with real trigger
-        if (verified && _host != nullptr)
-        {
-            PhaseFadePlan next(
-                5,   /* preBlackHold */ 
-                20,  /* fadeInFrames */ 
-                0,   /* preFadeOutHold */
-                20,  /* fadeOutFrames */
-                0,   /* postBlackHold */
-                FadeLayerMask::All /* layers */
-            );
-            resources::parameters::Parameters p;
-            _host->RequestTransition(L"TopMenu", next, p);
-
-            // Return None because transition will be handled by Scene via host.
-            return PhaseResult::None();
-        }
-
-        return PhaseResult::None();
-    }
-
-    void AbstractActionPhase::RenderWorld()
-    {
-        if (!_ctx)
-        {
-            return;
-        }
-
-        _ctx->scroll->Render();
-
-        systems::view::RenderContext ctx{
-            .view = &_ctx->scroll->GetView(),
-            .layer = systems::view::Layer::Actors,
-        };
-        _ctx->entity_mgr->RenderLayer(ctx, systems::view::Layer::Actors);
-        _ctx->entity_mgr->RenderLayer(ctx, systems::view::Layer::Effects);
-    }
-
-    void AbstractActionPhase::RenderOverlay()
-    {
-        if (!_ctx)
-        {
-            return;
-        }
-
-        using namespace utils;
-
-        wchar_t buf[128]{};
-        const auto& hud = config::ConfigUIManager::GetCurrentHudConfig();
-        int dispY = 8;
-
-        if (hud.showPlayerPosition)
-        {
-            core::overlay::DebugHud::GetInstance().SetPlayerPositionContext({
-                _page_index_debug,
-                _player_pos_x_debug,
-                _player_pos_y_debug
-                });
-        }
-
-        _ctx->scroll->DebugHudRender(hud.showScrollLine);
     }
 }

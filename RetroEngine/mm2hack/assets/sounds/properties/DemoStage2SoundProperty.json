@@ -47,6 +47,22 @@
                     "priority": 2
                 }
             ]
+        },
+        "onstage_thump": {
+            "channels": [
+                {
+                    "file": "assets/sounds/SoundEffects/ONSTAGE_EFFECT_N0_SE_Square2.wav",
+                    "volume": 255,
+                    "target_bgm_channels": 1,
+                    "priority": 1
+                },
+                {
+                    "file": "assets/sounds/SoundEffects/ONSTAGE_EFFECT_N0_SE_Noise.wav",
+                    "volume": 255,
+                    "target_bgm_channels": 3,
+                    "priority": 1
+                }
+            ]
         }
     }
 }
