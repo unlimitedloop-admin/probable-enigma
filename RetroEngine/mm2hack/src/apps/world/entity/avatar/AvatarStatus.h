@@ -65,6 +65,7 @@ namespace mm2hack::apps::world::entity::avatar
         IntroDropF,
         IntroDropG,
         IntroDropH,
+        IntroDropI,
         // ... Add more animations as needed ;)
     };
 

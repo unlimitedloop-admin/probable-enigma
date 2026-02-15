@@ -161,7 +161,7 @@ namespace mm2hack::apps::world::entity::avatar
     private:
         const std::wstring kClassName{ L"PlayerEntity" };
 
-        static constexpr std::array<IntroFrame, 8> kLandingFrames
+        static constexpr std::array<IntroFrame, 9> kLandingFrames
         {
             IntroFrame{ STile::IntroDropA, 5.0 / 60.0 },
             IntroFrame{ STile::IntroDropB, 5.0 / 60.0 },
@@ -170,7 +170,8 @@ namespace mm2hack::apps::world::entity::avatar
             IntroFrame{ STile::IntroDropE, 5.0 / 60.0 },
             IntroFrame{ STile::IntroDropF, 16.0 / 60.0 },
             IntroFrame{ STile::IntroDropG, 4.0 / 60.0 },
-            IntroFrame{ STile::IntroDropH, 16.0 / 60.0 }
+            IntroFrame{ STile::IntroDropH, 3.0 / 60.0 },
+            IntroFrame{ STile::IntroDropI, 13.0 / 60.0 }
         };                                                          // Landing animation frames in the intro drop sequence
 
         SpriteManagerId _id{};                                      // Sprite Id
