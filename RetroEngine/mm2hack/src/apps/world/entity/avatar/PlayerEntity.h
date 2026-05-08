@@ -115,7 +115,7 @@ namespace mm2hack::apps::world::entity::avatar
 
         // ===== dependency injection & configuration =====
         void SetInput(StateProvider* in) { _input = in; }
-        void SetTuning(const PlayerTuning& t) { _tuning = t; }
+        void SetTuning(const PlayerTuning& t) { _normalTuning = t; }
         void SetPageOriginPx(const Vec2& p) noexcept { _pageOriginPx = p; }
         void SetTerrainProbe(ITerrainProbe* p) noexcept { _terrainProbe = p; }
         void SetLadderService(ILadderService* s) { _ladderService = s; }
@@ -183,7 +183,9 @@ namespace mm2hack::apps::world::entity::avatar
         states::RockBusterDrawInfo _rock_buster{};                  // Rock Buster drawing info
 
         StateProvider* _input{};                                    // Player input snapshot (This is separate from core::assembly::InputSnapshot)
-        PlayerTuning _tuning{};                                     // Player tuning parameters
+        PlayerTuning _normalTuning{};                               // Player tuning parameters
+        PlayerTuning _underwaterTuning{};                           // Underwater tuning parameters
+        const PlayerTuning* _currentTuning{ nullptr };              // Pointer to current tuning (switches between normal and underwater)
         IntroDropState _introStates{};                              // Appearing the player on stage parameters
         states::AttackTuning _attack_tuning{};                      // Attack action tuning parameters
         AnimeStepper _animeStepper{};                               // Animation stepper

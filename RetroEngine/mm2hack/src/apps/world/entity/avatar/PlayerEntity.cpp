@@ -66,7 +66,7 @@ namespace mm2hack::apps::world::entity::avatar
 
         // 1) locomotion: state update and transition (basic behavior)
         auto& st = FindState(_status);
-        const auto next = st->Update(cx, _input, _tuning, dt);
+        const auto next = st->Update(cx, _input, _normalTuning, dt);
 
         // 2) attack action: update (independent of basic behavior)
         const auto act = _attackAction->PostUpdate(cx, _input, _attack_tuning, dt);
@@ -78,9 +78,9 @@ namespace mm2hack::apps::world::entity::avatar
 
         if (next != _status)
         {
-            st->OnExit(cx, _input, _tuning);
+            st->OnExit(cx, _input, _normalTuning);
             _status = next;
-            FindState(_status)->OnEnter(cx, _input, _tuning);
+            FindState(_status)->OnEnter(cx, _input, _normalTuning);
         }
 
         if (cx.pendingFixedScroll.dir != ScrollDir::None)
@@ -190,7 +190,7 @@ namespace mm2hack::apps::world::entity::avatar
         int texture_add = 0;
         AnimeContext ax{ _animeStepper, facingLR, baseTexture, texture_add };
         _attackAction->TickAnimationOnly(ax, _attack_tuning, dt, _rock_buster);
-        FindState(_status)->TickAnimationOnly(ax, _input, _tuning, dt);
+        FindState(_status)->TickAnimationOnly(ax, _input, _normalTuning, dt);
 
         attackTexture = texture_add;
         composeFinalTexture_();
@@ -339,7 +339,7 @@ namespace mm2hack::apps::world::entity::avatar
 
     void PlayerEntity::refreshProbes_(PlayerContext& cx) noexcept
     {
-        _probes.refreshAll(cx, _tuning.probeOffsets);
+        _probes.refreshAll(cx, _normalTuning.probeOffsets);
     }
 
     void PlayerEntity::requestScroll_(FixedScrollRequest req) noexcept
