@@ -1,0 +1,137 @@
+{
+  "version": "1.0",
+  "stage": {
+    "id": 0,
+    "name": "8wayScrollingTest"
+  },
+  "nodes": [
+    {
+      "roomId": 0,
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "connections": {
+        "right": 1,
+        "up": 3
+      },
+      "scrolling": {
+        "left": "none",
+        "right": "free",
+        "up": "free",
+        "down": "none"
+      },
+      "flags": {
+        "enabled": true,
+        "water": false,
+        "wind": false
+      }
+    },
+    {
+      "roomId": 1,
+      "x": 1,
+      "y": 0,
+      "z": 0,
+      "connections": {
+        "left": 0,
+        "right": 2,
+        "up": 4
+      },
+      "scrolling": {
+        "left": "free",
+        "right": "free",
+        "up": "free",
+        "down": "none"
+      },
+      "flags": {
+        "enabled": true,
+        "water": false,
+        "wind": false
+      }
+    },
+    {
+      "roomId": 2,
+      "x": 2,
+      "y": 0,
+      "z": 0,
+      "connections": {
+        "left": 1,
+        "up": 5
+      },
+      "scrolling": {
+        "left": "free",
+        "right": "none",
+        "up": "free",
+        "down": "none"
+      },
+      "flags": {
+        "enabled": true,
+        "water": false,
+        "wind": false
+      }
+    },
+    {
+      "roomId": 3,
+      "x": 0,
+      "y": -1,
+      "z": 0,
+      "connections": {
+        "right": 4,
+        "down": 0
+      },
+      "scrolling": {
+        "left": "none",
+        "right": "free",
+        "up": "none",
+        "down": "free"
+      },
+      "flags": {
+        "enabled": true,
+        "water": false,
+        "wind": false
+      }
+    },
+    {
+      "roomId": 4,
+      "x": 1,
+      "y": -1,
+      "z": 0,
+      "connections": {
+        "left": 3,
+        "right": 5,
+        "down": 1
+      },
+      "scrolling": {
+        "left": "free",
+        "right": "free",
+        "up": "none",
+        "down": "free"
+      },
+      "flags": {
+        "enabled": true,
+        "water": false,
+        "wind": false
+      }
+    },
+    {
+      "roomId": 5,
+      "x": 2,
+      "y": -1,
+      "z": 0,
+      "connections": {
+        "left": 4,
+        "down": 2
+      },
+      "scrolling": {
+        "left": "free",
+        "right": "none",
+        "up": "none",
+        "down": "free"
+      },
+      "flags": {
+        "enabled": true,
+        "water": false,
+        "wind": false
+      }
+    }
+  ]
+}

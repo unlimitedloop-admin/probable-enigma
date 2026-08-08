@@ -166,7 +166,7 @@ namespace mm2hack::apps::scenes
         phases::StageDefinition def{};
         def.map_binary_path = std::wstring(kStageMapBinary);
         def.start_page_index = _roomState.pageIndex;
-        def.start_local_pos = { 128.0, 52.0 };
+        def.start_local_pos = { 128.0, 183.0 };
 
         // Create build config.
         phases::ActionStageBuildConfig build{};
