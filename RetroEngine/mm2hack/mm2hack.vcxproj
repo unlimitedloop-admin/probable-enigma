@@ -310,6 +310,7 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="src\apps\rendering\bg\BGTileMapProvider.h" />
     <ClInclude Include="src\apps\resources\assets\StageSpriteBank.h" />
+    <ClInclude Include="src\apps\resources\bg\BGPageHeader.h" />
     <ClInclude Include="src\apps\resources\bg\IMapPageSource.h" />
     <ClInclude Include="src\apps\resources\stages\StageTileAttributes.h" />
     <ClInclude Include="src\apps\scenes\IStageAssetProvider.h" />

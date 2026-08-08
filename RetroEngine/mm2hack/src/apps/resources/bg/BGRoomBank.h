@@ -5,6 +5,12 @@
 // 
 //  Background room bank management.
 // 
+//  [MIGRATION NOTE]
+//  Header layout now matches BD-005 (see BGPageHeader.h). The old
+//  bankMarker/page_hi/attr_type/anim_type fields from the legacy layout
+//  no longer exist in the same form -- see comments below for what
+//  replaced each address.
+// 
 //==============================================================================
 #pragma once
 
@@ -13,58 +19,56 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#include "BGPageHeader.h"
 
 namespace mm2hack::apps::resources::bg
 {
     // bin = 0x100 byte x N pages
-    // 0x00..0x0F: header / 0x10..0xFF: 16x15=240 byte tile IDs
+    // 0x00..0x0F: header (BD-005 BGPageHeader) / 0x10..0xFF: 16x15=240 byte tile IDs
+    //
+    // HACK: This class overlaps with AddressScraper (both decode BGPageHeader
+    // from the same .bin). They are NOT redundant in practice, though:
+    //   - BGRoomBank: used once at scene entry (see e.g. DemoStage2::initializeResources_)
+    //     to validate the .bin and resolve the starting RoomNo -> pageIndex via
+    //     FindIndexByRoomId(). Owned as a long-lived singleton-scoped resource
+    //     (ResourceManager::GetBGRoomBank()); its FilePath() is also reused by
+    //     ActionStageRuntimeBuilder to re-extract the binary for AddressScraper.
+    //   - AddressScraper: used every frame during gameplay (via MapPageCache /
+    //     ScraperScrollRuleProvider) for neighbor + scroll-type queries.
+    // If a 3rd call site needing BGPageHeader decode shows up, that's the
+    // trigger (per the "3rd file" DRY rule) to actually merge these into one
+    // decoder. Until then, leave both -- just keep BGPageHeader.h as the only
+    // place the byte layout itself is defined.
     class BGRoomBank
     {
     public:
         enum class Dir : uint8_t { Up, Down, Left, Right };
-        enum class Scroll : uint8_t
-        {
-            None         = 0x00,
-            Free         = 0x01,
-            PerPage      = 0x02,
-            NoScrollEdge = 0x03,
-            NoScroll     = 0x04,
-            Dynamic      = 0x05,
-            AxisFix      = 0x06,
-            Loop         = 0x07,
-            Auto         = 0x08,
-            AutoByObj    = 0x09,
-            Large        = 0x0A,
-            Raster3D     = 0x0B,
-            RasterFlag   = 0x0C,
-            MultiBG      = 0x0D,
-            Undef14      = 0x0E,
-            Other        = 0x0F
-        };
 
-        struct Header
-        {
-            // $00..$0F
-            uint8_t magic0;      // $00 : 0x01 fixed
-            uint8_t magic1;      // $01 : 0xFF fixed
-            uint8_t page_hi;     // $02 : page high
-            uint8_t bankMarker;  // $03 : 0x10 / 0x1A / 0x80
-            uint8_t room_id;     // $04 : room ID 0x00..0xFF
+        // Scroll type now matches BD-005 RoomScrollType (7 values, no nibble packing).
+        // Kept as an alias here so existing call sites that spell out
+        // BGRoomBank::Scroll don't all need renaming in one pass.
+        using Scroll = RoomScrollType;
 
-            uint8_t up_id;       // $05
-            uint8_t down_id;     // $06
-            uint8_t left_id;     // $07
-            uint8_t right_id;    // $08
-
-            uint8_t v_scroll;    // $09 : upper=Up, lower=Down
-            uint8_t h_scroll;    // $0A : upper=Left, lower=Right
-
-            uint8_t attr_type;   // $0B
-            uint8_t anim_type;   // $0C
-            uint8_t user0;       // $0D
-            uint8_t user1;       // $0E
-            uint8_t tail;        // $0F : 0xFF fixed
-        };
+        // Header alias: this class now decodes the same layout as
+        // AddressScraper via BGPageHeader. Kept as a member alias so
+        // existing call sites (h.room_id, h.up_id, ...) don't all need
+        // renaming in one pass -- BGPageHeader's field names differ
+        // slightly (roomId, upRoomId, ...), so call sites DO need to be
+        // updated to the new field names. See mapping table below.
+        //
+        //   OLD (BGRoomBank::Header) -> NEW (BGPageHeader)
+        //   magic0/magic1            -> magicStart / (roomId now owns $01)
+        //   page_hi, bankMarker      -> REMOVED (no BD-005 equivalent)
+        //   room_id                  -> roomId
+        //   up_id/down_id            -> upRoomId / downRoomId
+        //   left_id/right_id         -> leftRoomId / rightRoomId
+        //   v_scroll/h_scroll        -> REPLACED by 4 independent bytes:
+        //                                scrollUp/scrollDown/scrollLeft/scrollRight
+        //   attr_type ($0B)          -> now ScrollDown ($0B). See AttrType() TODO.
+        //   anim_type ($0C)          -> now Z ($0C)
+        //   user0/user1              -> flags ($0D) / reserved ($0E)
+        //   tail                     -> magicEnd
+        using Header = BGPageHeader;
 
         // The page info including header and file offset
         struct PageInfo
@@ -84,12 +88,11 @@ namespace mm2hack::apps::resources::bg
         [[nodiscard]] std::optional<size_t> FindIndexByRoomId(uint8_t room_id) const noexcept;
         // Neighbor resolution (takes room ID from page header and resolves to index)
         [[nodiscard]] std::optional<size_t> NeighborIndex(size_t index, Dir d) const noexcept;
-        // Scroll type
+        // Scroll type (BD-005 RoomScrollType, full byte per direction)
         [[nodiscard]] Scroll GetScroll(size_t index, Dir d) const noexcept;
-        // Attribute type ($0B)
-        [[nodiscard]] uint8_t AttrType(size_t index) const noexcept { return _pages.at(index).hdr.attr_type; }
+
         // Offset of the specified page (can be passed directly to BGTileManager::LoadMapBinary)
-        [[nodiscard]] int PayloadOffset(size_t index) const noexcept { return static_cast<int>(_pages.at(index).file_offset_page + 0x10); }
+        [[nodiscard]] int PayloadOffset(size_t index) const noexcept { return static_cast<int>(_pages.at(index).file_offset_page + kBGPageHeaderSize); }
         // Map file path
         [[nodiscard]] const std::wstring& FilePath() const noexcept { return _file; }
 

@@ -102,7 +102,9 @@ namespace mm2hack::apps::scenes
         const std::wstring kClassName{ L"DemoStage2" };
 
         const std::wstring kMapName{ L"SAMPLESTAGE2" };
-        const std::wstring_view kStageMapBinary{ L"assets\\_exams\\bg\\SAMPLESTAGE1.bin" };
+        const std::wstring_view kStageMapBinary{ L"assets\\_exams\\bg\\SAMPLESTAGE2.bin" };
+        // HACK: The stage definition file is not used in this implementation, but it is kept here for reference.
+        const std::wstring_view kStageObjectDefine{ L"assets\\_exams\\bg\\SAMPLESTAGE2.def" };
 
         struct RoomState
         {

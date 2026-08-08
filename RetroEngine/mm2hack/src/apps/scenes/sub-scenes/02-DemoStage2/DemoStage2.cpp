@@ -166,7 +166,7 @@ namespace mm2hack::apps::scenes
         phases::StageDefinition def{};
         def.map_binary_path = std::wstring(kStageMapBinary);
         def.start_page_index = _roomState.pageIndex;
-        def.start_local_pos = { 128.0, 103.0 };
+        def.start_local_pos = { 128.0, 52.0 };
 
         // Create build config.
         phases::ActionStageBuildConfig build{};
@@ -261,7 +261,7 @@ namespace mm2hack::apps::scenes
     {
         using namespace systems::physics;
         using namespace resources::stages;
-        ApplyTileAttributeRanges(bgTileManager, STAGE1_TILEATTRIBUTES);
+        ApplyTileAttributeRanges(bgTileManager, STAGE2_TILEATTRIBUTES);
     }
 
     bool DemoStage2::loadAssets_()

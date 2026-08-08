@@ -58,6 +58,7 @@ namespace mm2hack::apps::rendering::bg
 
     void BGTileManager::LoadMapBinary(std::wstring_view map_file, int offset)
     {
+        // OPTIMIZE: Since this method is called every frame, please check the performance impact of any sections that perform disk I/O.
         std::ifstream file(std::wstring(map_file), std::ios::binary);
         if (!file)
         {
@@ -132,6 +133,7 @@ namespace mm2hack::apps::rendering::bg
         }
         _tile_attr[tile_id] = attr;
     }
+
     TileAttribute BGTileManager::GetTileAttribute(int x, int y) const
     {
         if (x < 0 || y < 0 || x >= _map_w || y >= _map_h) { return TileAttribute(); }
