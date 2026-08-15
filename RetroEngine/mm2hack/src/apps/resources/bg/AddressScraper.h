@@ -24,7 +24,6 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include "apps/systems/scrolling/atomic/ScrollTypes.h"
 #include "BGPageHeader.h"
 
 namespace mm2hack::apps::resources::bg
@@ -66,8 +65,12 @@ namespace mm2hack::apps::resources::bg
 
         // Z / Flags (new in BD-005; not read by anything yet, exposed for future use)
         [[nodiscard]] std::uint8_t getZ(std::size_t pageIndex) const;
-        [[nodiscard]] bool isWater(std::size_t pageIndex) const;
+        [[nodiscard]] bool isContinuePoint(std::size_t pageIndex) const;
+        [[nodiscard]] bool isNoScrollBack(std::size_t pageIndex) const;
+        [[nodiscard]] bool hasPostEffects(std::size_t pageIndex) const;
+        [[nodiscard]] bool isDarkness(std::size_t pageIndex) const;
         [[nodiscard]] bool isWind(std::size_t pageIndex) const;
+        [[nodiscard]] bool hasGravityModifier(std::size_t pageIndex) const;
 
         // TODO(Task B): these still gate on the OLD ScrollKind scrollable set
         // {FreeHorizontal, FollowObject, Free8Way}. Now that getXScrollType()
@@ -91,11 +94,14 @@ namespace mm2hack::apps::resources::bg
         [[nodiscard]] bool inRange_(std::size_t pageIndex) const noexcept;
         [[nodiscard]] std::uint8_t H_(std::size_t pageIndex, std::size_t off) const noexcept;   // Get header 1B
         [[nodiscard]] BGPageHeader header_(std::size_t pageIndex) const noexcept;               // Parse full header
-        [[nodiscard]] static bool isScrollableNibble_(std::uint8_t v) noexcept
+        [[nodiscard]] static bool IsScrollable_(std::uint8_t value) noexcept
         {
-            using Scrl = mm2hack::apps::systems::scrolling::atomic::ScrollKind;
-            auto const sv = static_cast<Scrl>(v);
-            return sv == Scrl::FreeHorizontal || sv == Scrl::FollowObject || sv == Scrl::Free8Way;
+            if (!IsValidRoomScrollType(value))
+            {
+                return false;
+            }
+
+            return static_cast<RoomScrollType>(value) != RoomScrollType::None;
         }
 
     private:

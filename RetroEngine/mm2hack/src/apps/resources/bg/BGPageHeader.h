@@ -62,9 +62,13 @@ namespace mm2hack::apps::resources::bg
     //--------------------------------------------------------------------------
     namespace PageFlagBits
     {
-        inline constexpr std::uint8_t Water = 0x01; // bit0
-        inline constexpr std::uint8_t Wind  = 0x02; // bit1
-        // bit2-7: reserved for future use
+        inline constexpr std::uint8_t ContinuePoint   = 0x01; // bit0
+        inline constexpr std::uint8_t NoScrollBack    = 0x02; // bit1
+        inline constexpr std::uint8_t PostEffects     = 0x04; // bit2
+        inline constexpr std::uint8_t Darkness        = 0x08; // bit3
+        inline constexpr std::uint8_t Wind            = 0x10; // bit4
+        inline constexpr std::uint8_t GravityModifier = 0x20; // bit5
+        // bit6, bit7 are undefined / reserved
     }
 
     //--------------------------------------------------------------------------
@@ -110,8 +114,35 @@ namespace mm2hack::apps::resources::bg
         [[nodiscard]] bool HasFrontNeighbor() const noexcept { return frontRoomId != 0xFF; }
         [[nodiscard]] bool HasBackNeighbor()  const noexcept { return backRoomId != 0xFF; }
 
-        [[nodiscard]] bool IsWater() const noexcept { return (flags & PageFlagBits::Water) != 0; }
-        [[nodiscard]] bool IsWind()  const noexcept { return (flags & PageFlagBits::Wind) != 0; }
+        [[nodiscard]] bool IsContinuePoint() const noexcept
+        {
+            return (flags & PageFlagBits::ContinuePoint) != 0;
+        }
+
+        [[nodiscard]] bool IsNoScrollBack() const noexcept
+        {
+            return (flags & PageFlagBits::NoScrollBack) != 0;
+        }
+
+        [[nodiscard]] bool HasPostEffects() const noexcept
+        {
+            return (flags & PageFlagBits::PostEffects) != 0;
+        }
+
+        [[nodiscard]] bool IsDarkness() const noexcept
+        {
+            return (flags & PageFlagBits::Darkness) != 0;
+        }
+
+        [[nodiscard]] bool IsWind() const noexcept
+        {
+            return (flags & PageFlagBits::Wind) != 0;
+        }
+
+        [[nodiscard]] bool HasGravityModifier() const noexcept
+        {
+            return (flags & PageFlagBits::GravityModifier) != 0;
+        }
 
         [[nodiscard]] bool HasValidMagic() const noexcept
         {

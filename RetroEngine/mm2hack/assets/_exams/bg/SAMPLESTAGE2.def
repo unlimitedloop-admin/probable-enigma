@@ -10,20 +10,7 @@
       "x": 0,
       "y": 0,
       "z": 0,
-      "connections": {
-        "right": 1
-      },
-      "scrolling": {
-        "left": "none",
-        "right": "free",
-        "up": "none",
-        "down": "none"
-      },
-      "flags": {
-        "enabled": true,
-        "water": false,
-        "wind": false
-      },
+      "enabled": true,
       "remarks": "Z:1\u3068\u306E\u30EB\u30FC\u30D7\u5206\u5C90\u70B9"
     },
     {
@@ -31,62 +18,21 @@
       "x": 1,
       "y": 0,
       "z": 0,
-      "connections": {
-        "left": 0,
-        "right": 2
-      },
-      "scrolling": {
-        "left": "free",
-        "right": "free",
-        "up": "none",
-        "down": "none"
-      },
-      "flags": {
-        "enabled": true,
-        "water": false,
-        "wind": false
-      }
+      "enabled": true
     },
     {
       "roomId": 2,
       "x": 2,
       "y": 0,
       "z": 0,
-      "connections": {
-        "left": 1,
-        "right": 3
-      },
-      "scrolling": {
-        "left": "free",
-        "right": "free",
-        "up": "none",
-        "down": "none"
-      },
-      "flags": {
-        "enabled": true,
-        "water": false,
-        "wind": false
-      }
+      "enabled": true
     },
     {
       "roomId": 3,
       "x": 3,
       "y": 0,
       "z": 0,
-      "connections": {
-        "left": 2
-      },
-      "scrolling": {
-        "left": "free",
-        "right": "none",
-        "up": "none",
-        "down": "none"
-      },
-      "flags": {
-        "enabled": true,
-        "water": false,
-        "wind": false
-      }
+      "enabled": true
     }
   ]
 }

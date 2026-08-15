@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include "AddressScraper.h"
+#include "BGPageHeader.h"
 
 namespace
 {
@@ -118,16 +119,40 @@ namespace mm2hack::apps::resources::bg
         return H_(pageIndex, 0x0C);
     }
 
-    bool AddressScraper::isWater(std::size_t pageIndex) const
+    bool AddressScraper::isContinuePoint(std::size_t pageIndex) const
     {
         if (!inRange_(pageIndex)) return false;
-        return (H_(pageIndex, 0x0D) & PageFlagBits::Water) != 0;
+        return header_(pageIndex).IsContinuePoint();
+    }
+
+    bool AddressScraper::isNoScrollBack(std::size_t pageIndex) const
+    {
+        if (!inRange_(pageIndex)) return false;
+        return header_(pageIndex).IsNoScrollBack();
+    }
+
+    bool AddressScraper::hasPostEffects(std::size_t pageIndex) const
+    {
+        if (!inRange_(pageIndex)) return false;
+        return header_(pageIndex).HasPostEffects();
+    }
+
+    bool AddressScraper::isDarkness(std::size_t pageIndex) const
+    {
+        if (!inRange_(pageIndex)) return false;
+        return header_(pageIndex).IsDarkness();
     }
 
     bool AddressScraper::isWind(std::size_t pageIndex) const
     {
         if (!inRange_(pageIndex)) return false;
-        return (H_(pageIndex, 0x0D) & PageFlagBits::Wind) != 0;
+        return header_(pageIndex).IsWind();
+    }
+
+    bool AddressScraper::hasGravityModifier(std::size_t pageIndex) const
+    {
+        if (!inRange_(pageIndex)) return false;
+        return header_(pageIndex).HasGravityModifier();
     }
 
     // Is it possible to go over? (room exists && type is in the OLD scrollable set)
@@ -137,7 +162,7 @@ namespace mm2hack::apps::resources::bg
         const auto r = getOverRoom(pageIndex);
         if (r < 0) return false;
 
-        return isScrollableNibble_(static_cast<std::uint8_t>(getOverScrollType(pageIndex)));
+        return IsScrollable_(static_cast<std::uint8_t>(getOverScrollType(pageIndex)));
     }
 
     bool AddressScraper::isPossibleGoUnder(std::size_t pageIndex) const
@@ -145,7 +170,7 @@ namespace mm2hack::apps::resources::bg
         const auto r = getUnderRoom(pageIndex);
         if (r < 0) return false;
 
-        return isScrollableNibble_(static_cast<std::uint8_t>(getUnderScrollType(pageIndex)));
+        return IsScrollable_(static_cast<std::uint8_t>(getUnderScrollType(pageIndex)));
     }
 
     bool AddressScraper::isPossibleGoLeft(std::size_t pageIndex) const
@@ -153,7 +178,7 @@ namespace mm2hack::apps::resources::bg
         const auto r = getLeftRoom(pageIndex);
         if (r < 0) return false;
 
-        return isScrollableNibble_(static_cast<std::uint8_t>(getLeftScrollType(pageIndex)));
+        return IsScrollable_(static_cast<std::uint8_t>(getLeftScrollType(pageIndex)));
     }
 
     bool AddressScraper::isPossibleGoRight(std::size_t pageIndex) const
@@ -161,7 +186,7 @@ namespace mm2hack::apps::resources::bg
         const auto r = getRightRoom(pageIndex);
         if (r < 0) return false;
 
-        return isScrollableNibble_(static_cast<std::uint8_t>(getRightScrollType(pageIndex)));
+        return IsScrollable_(static_cast<std::uint8_t>(getRightScrollType(pageIndex)));
     }
 
     const std::uint8_t* AddressScraper::payloadPtr(std::size_t pageIndex) const noexcept
