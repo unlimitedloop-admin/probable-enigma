@@ -33,9 +33,6 @@ namespace mm2hack::apps::systems::scrolling::atomic
         [[nodiscard]] std::optional<std::size_t> ResolveFixedNeighbor(PageScroll::Dir dir, std::size_t from) const;
 
     private:
-        [[nodiscard]] static std::optional<std::size_t> roomToIndex_(const IScrollRuleProvider& rules, int16_t room) noexcept;
-
-    private:
         const IScrollRuleProvider& _rules;
     };
 }

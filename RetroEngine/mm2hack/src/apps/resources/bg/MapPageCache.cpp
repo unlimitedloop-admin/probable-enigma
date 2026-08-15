@@ -79,23 +79,42 @@ namespace mm2hack::apps::resources::bg
 
     std::optional<std::size_t> MapPageCache::NeighborRight(std::size_t pageIndex) const
     {
-        if (!_scraper) return std::nullopt;
-        return toOptIndex_(_scraper->getRightRoom(pageIndex));
+        if (!_scraper)
+        {
+            return std::nullopt;
+        }
+
+        return resolveRoomToPageIndex_(_scraper->getRightRoom(pageIndex));
     }
+
     std::optional<std::size_t> MapPageCache::NeighborLeft(std::size_t pageIndex) const
     {
-        if (!_scraper) return std::nullopt;
-        return toOptIndex_(_scraper->getLeftRoom(pageIndex));
+        if (!_scraper)
+        {
+            return std::nullopt;
+        }
+
+        return resolveRoomToPageIndex_(_scraper->getLeftRoom(pageIndex));
     }
+
     std::optional<std::size_t> MapPageCache::NeighborUp(std::size_t pageIndex) const
     {
-        if (!_scraper) return std::nullopt;
-        return toOptIndex_(_scraper->getOverRoom(pageIndex));
+        if (!_scraper)
+        {
+            return std::nullopt;
+        }
+
+        return resolveRoomToPageIndex_(_scraper->getOverRoom(pageIndex));
     }
+
     std::optional<std::size_t> MapPageCache::NeighborDown(std::size_t pageIndex) const
     {
-        if (!_scraper) return std::nullopt;
-        return toOptIndex_(_scraper->getUnderRoom(pageIndex));
+        if (!_scraper)
+        {
+            return std::nullopt;
+        }
+
+        return resolveRoomToPageIndex_(_scraper->getUnderRoom(pageIndex));
     }
 
     std::optional<std::size_t> MapPageCache::RoomToPageIndex(uint8_t room) const
@@ -135,5 +154,15 @@ namespace mm2hack::apps::resources::bg
             out.cells[i] = p[i];
         }
         return out;
+    }
+
+    std::optional<std::size_t> MapPageCache::resolveRoomToPageIndex_(int16_t room_id) const
+    {
+        if (room_id < 0)
+        {
+            return std::nullopt;
+        }
+
+        return RoomToPageIndex(static_cast<std::uint8_t>(room_id));
     }
 }

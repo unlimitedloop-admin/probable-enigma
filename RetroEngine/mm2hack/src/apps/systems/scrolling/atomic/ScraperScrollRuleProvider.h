@@ -43,13 +43,17 @@ namespace mm2hack::apps::systems::scrolling::atomic
         // Indirect calls to IMapPageSource
         ScrollKind DownType(std::size_t p) const override;
 
-        // Indirect calls to IMapPageSource
+        // Get neighboring page index.
+        // NOTE: Method name is retained for IScrollRuleProvider compatibility.
         int16_t RightRoom(std::size_t p) const override;
-        // Indirect calls to IMapPageSource
+        // Get neighboring page index.
+        // NOTE: Method name is retained for IScrollRuleProvider compatibility.
         int16_t LeftRoom(std::size_t p) const override;
-        // Indirect calls to IMapPageSource
+        // Get neighboring page index.
+        // NOTE: Method name is retained for IScrollRuleProvider compatibility.
         int16_t UpRoom(std::size_t p) const override;
-        // Indirect calls to IMapPageSource
+        // Get neighboring page index.
+        // NOTE: Method name is retained for IScrollRuleProvider compatibility.
         int16_t DownRoom(std::size_t p) const override;
 
         // Indirect calls to IMapPageSource

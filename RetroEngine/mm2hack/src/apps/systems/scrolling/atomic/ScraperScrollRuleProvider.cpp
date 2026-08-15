@@ -121,43 +121,40 @@ namespace mm2hack::apps::systems::scrolling::atomic
     {
         if (_gridBuilt) return;
 
-        // Build into a temp map to avoid leaving _grid half-built on early exits.
         decltype(_grid) tmp;
         tmp.clear();
-        tmp.emplace(0, std::make_pair(0, 0)); // page 0 is the world origin anchor
 
-        std::deque<std::size_t> q;
-        q.push_back(0);
+        // Page 0 is the XY world origin anchor.
+        tmp.emplace(0, std::make_pair(0, 0));
 
-        while (!q.empty())
+        std::deque<std::size_t> queue;
+        queue.push_back(0);
+
+        while (!queue.empty())
         {
-            const auto p = q.front();
-            q.pop_front();
+            const std::size_t page_index = queue.front();
+            queue.pop_front();
 
-            const auto pushIfNew = [&](int16_t room, int dx, int dy)
+            const auto pushIfNew =
+                [&](int16_t neighbor_page_index, int dx, int dy)
                 {
-                    if (room < 0) return;
+                    if (neighbor_page_index < 0) return;
 
-                    const int idx = ToPageIndex(static_cast<uint8_t>(room));
-                    if (idx < 0) return;
+                    const auto destination = static_cast<std::size_t>(neighbor_page_index);
+                    const bool existed = tmp.find(destination) != tmp.end();
 
-                    const auto to = static_cast<std::size_t>(idx);
-                    const bool existed = (tmp.find(to) != tmp.end());
-
-                    // IMPORTANT: assign coords relative to p (or verify if already exists)
-                    tryAssignNeighbor_(tmp, p, to, dx, dy);
+                    tryAssignNeighbor_(tmp, page_index, destination, dx, dy);
 
                     if (!existed)
                     {
-                        q.push_back(to);
+                        queue.push_back(destination);
                     }
                 };
 
-            // Neighbor rooms (grid)
-            pushIfNew(RightRoom(p), +1, 0);
-            pushIfNew(LeftRoom(p), -1, 0);
-            pushIfNew(UpRoom(p), 0, -1);
-            pushIfNew(DownRoom(p), 0, +1);
+            pushIfNew(RightRoom(page_index), +1, 0);
+            pushIfNew(LeftRoom(page_index), -1, 0);
+            pushIfNew(UpRoom(page_index), 0, -1);
+            pushIfNew(DownRoom(page_index), 0, +1);
         }
 
         _grid.swap(tmp);

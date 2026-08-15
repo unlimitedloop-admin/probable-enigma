@@ -73,6 +73,9 @@ namespace mm2hack::apps::resources::bg
             return (idx >= 0) ? std::optional<std::size_t>(static_cast<std::size_t>(idx)) : std::nullopt;
         }
 
+        // Resolve a room ID returned by AddressScraper to a page index.
+        [[nodiscard]] std::optional<std::size_t> resolveRoomToPageIndex_(int16_t room_id) const;
+
     private:
         const std::wstring kClassName{ L"MapPageCache" };
 
