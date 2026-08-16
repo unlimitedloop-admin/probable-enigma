@@ -42,6 +42,8 @@ namespace mm2hack::apps::world::entity::avatar
         _states[4] = std::make_unique<states::BrakeRunState>();
         _states[5] = std::make_unique<states::LadderingState>();
         _states[6] = std::make_unique<states::LandingState>();
+
+        SetTuning(PlayerTuning{});
     }
 
     void PlayerEntity::Update(const systems::view::ViewState* view, double dt)
@@ -61,12 +63,24 @@ namespace mm2hack::apps::world::entity::avatar
 
         refreshProbes_(cx);
 
+        // Update physical environment and select appropriate tuning.
+        updateEnvironment_();
+        selectTuning_();
+
+        const PlayerTuning& tuning = *_currentTuning;
+        const bool skipPhysics = shouldSkipUnderwaterPhysics_();
+
         // Get up and down lock on laddering (if any)
         _attackAction->PreUpdate(cx, _input, _entityContext.canSpawnProjectile);
 
         // 1) locomotion: state update and transition (basic behavior)
-        auto& st = FindState(_status);
-        const auto next = st->Update(cx, _input, _normalTuning, dt);
+        auto& st = findState_(_status);
+        AvatarStatus next = _status;
+        if (!skipPhysics)
+        {
+            // Execute the behavior of the current state and determine the next state.
+            next = st->Update(cx, _input, tuning, dt);
+        }
 
         // 2) attack action: update (independent of basic behavior)
         const auto act = _attackAction->PostUpdate(cx, _input, _attack_tuning, dt);
@@ -78,9 +92,9 @@ namespace mm2hack::apps::world::entity::avatar
 
         if (next != _status)
         {
-            st->OnExit(cx, _input, _normalTuning);
+            st->OnExit(cx, _input, tuning);
             _status = next;
-            FindState(_status)->OnEnter(cx, _input, _normalTuning);
+            findState_(_status)->OnEnter(cx, _input, tuning);
         }
 
         if (cx.pendingFixedScroll.dir != ScrollDir::None)
@@ -89,7 +103,11 @@ namespace mm2hack::apps::world::entity::avatar
         }
 
         // Apply updated context values
-        pos = cx.pos + cx.vel;
+        if (!skipPhysics)
+        {
+            // Test operation: Update position and velocity based on the current context.
+            pos = cx.pos + cx.vel;
+        }
         baseTexture = cx.basePose;
         attackTexture = cx.textureAdd;
         facingLR = cx.facingLR;
@@ -190,7 +208,11 @@ namespace mm2hack::apps::world::entity::avatar
         int texture_add = 0;
         AnimeContext ax{ _animeStepper, facingLR, baseTexture, texture_add };
         _attackAction->TickAnimationOnly(ax, _attack_tuning, dt, _rock_buster);
-        FindState(_status)->TickAnimationOnly(ax, _input, _normalTuning, dt);
+        findState_(_status)->TickAnimationOnly(
+            ax,
+            _input,
+            *_currentTuning,
+            dt);
 
         attackTexture = texture_add;
         composeFinalTexture_();
@@ -292,6 +314,61 @@ namespace mm2hack::apps::world::entity::avatar
     }
 
     void PlayerEntity::SetCollidable(bool v) noexcept { _collidable = v; }
+
+    void PlayerEntity::SetTuning(const PlayerTuning& t)
+    {
+        _normalTuning = t;
+        _underwaterTuning = MakeUnderwaterTuning(t);
+        _currentTuning = &_normalTuning;
+    }
+
+    void PlayerEntity::updateEnvironment_() noexcept
+    {
+        if (_terrainProbe == nullptr)
+        {
+            _environment = PlayerEnvironment::Normal;
+            return;
+        }
+
+        const TileAttribute attr =
+            _terrainProbe->AttributeAt(_probes.environment.centerPoint);
+
+        if (Has(attr, TileAttribute::Water))
+        {
+            _environment = PlayerEnvironment::Underwater;
+            return;
+        }
+
+        _environment = PlayerEnvironment::Normal;
+    }
+
+    void PlayerEntity::selectTuning_() noexcept
+    {
+        switch (_environment)
+        {
+        case PlayerEnvironment::Underwater:
+            _currentTuning = &_underwaterTuning;
+            break;
+
+        case PlayerEnvironment::Normal:
+        default:
+            _currentTuning = &_normalTuning;
+            break;
+        }
+    }
+
+    bool PlayerEntity::shouldSkipUnderwaterPhysics_() noexcept
+    {
+        if (_environment != PlayerEnvironment::Underwater)
+        {
+            _underwater_physics_gate.reset();
+            return false;
+        }
+
+        constexpr int kSkipInterval = 5;
+
+        return _underwater_physics_gate.step(kSkipInterval);
+    }
 
     void PlayerEntity::SetViewBounds(const systems::scrolling::atomic::ViewBounds& b) noexcept
     {

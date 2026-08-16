@@ -14,6 +14,11 @@
 
 namespace mm2hack::apps::systems::physics
 {
+    struct EnvironmentProbe
+    {
+        foundation::math::Vec2 centerPoint{ 0.0, 0.0 };
+    };
+
     struct BehindGroundProbe
     {
         foundation::math::Vec2 topPoint{ 0.0, 0.0 };
@@ -59,6 +64,7 @@ namespace mm2hack::apps::systems::physics
         RearLineProbe     rearLine{};
         TopLineProbe      topLine{};
         BottomLineProbe   bottomLine{};
+        EnvironmentProbe  environment{};
 
         foundation::math::Vec2 half{};
 
@@ -71,10 +77,11 @@ namespace mm2hack::apps::systems::physics
         void reset() noexcept
         {
             behindGround = {};
-            frontLine   = {};
-            rearLine    = {};
-            topLine     = {};
-            bottomLine  = {};
+            frontLine    = {};
+            rearLine     = {};
+            topLine      = {};
+            bottomLine   = {};
+            environment  = {};
         }
 
         // Refresh all probe positions based on player context and probe offsets
@@ -128,6 +135,10 @@ namespace mm2hack::apps::systems::physics
                 behindGround.topPoint    = { currentPosX, currentPosY + p.verticalTopOffsetY };
                 behindGround.middlePoint = { currentPosX, currentPosY + p.verticalMidOffsetY };
                 behindGround.bottomPoint = { currentPosX, currentPosY + p.verticalBtmOffsetY };
+            }
+            // Environment probe at the center of the player.
+            {
+                environment.centerPoint = cx.pos;
             }
         }
 

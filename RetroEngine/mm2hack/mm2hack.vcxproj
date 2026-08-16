@@ -317,6 +317,7 @@
     <ClInclude Include="src\apps\ui\productions\StageIntroUI.h" />
     <ClInclude Include="src\apps\world\entity\avatar\abilities\RockBusterOffsetTable.h" />
     <ClInclude Include="src\apps\world\entity\avatar\states\AttackActionState.h" />
+    <ClInclude Include="src\apps\world\entity\common\FrameGate.h" />
     <ClInclude Include="src\apps\world\entity\common\SpawnProjectileCommand.h" />
     <ClInclude Include="src\apps\world\entity\enemy\lists\EnemyLists.h" />
     <ClInclude Include="src\apps\world\entity\EntityManager.h" />

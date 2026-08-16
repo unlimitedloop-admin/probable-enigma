@@ -52,6 +52,24 @@ namespace mm2hack::apps::world::entity::avatar
         PlayerProbes probeOffsets;                  // Player probes offsets
     };
 
+    // Player physical environment
+    enum class PlayerEnvironment : std::uint8_t
+    {
+        Normal,
+        Underwater
+    };
+
+    // Creates underwater tuning based on normal player parameters.
+    [[nodiscard]] inline PlayerTuning MakeUnderwaterTuning(const PlayerTuning& normal) noexcept
+    {
+        PlayerTuning tuning = normal;
+
+        tuning.gravity     =  0x00.1Ep0;
+        tuning.jumpImpulse = -0x05.80p0;
+
+        return tuning;
+    }
+
     // Structure to represent ground movement intent, Pre-declare this data type for use with ApplyGroundMove
     struct GroundMoveIntent
     {

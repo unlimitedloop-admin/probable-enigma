@@ -12,6 +12,7 @@
 #include "apps/world/entity/EntityBase.h"
 
 #include <array>
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
@@ -28,6 +29,7 @@
 #include "apps/systems/view/RenderContext.h"
 #include "apps/systems/view/ViewState.h"
 #include "apps/world/entity/common/AnimeStepper.h"
+#include "apps/world/entity/common/FrameGate.h"
 #include "apps/world/entity/common/SpawnProjectileCommand.h"
 #include "apps/world/entity/IEntity.h"
 #include "AvatarStatus.h"
@@ -47,6 +49,7 @@ namespace mm2hack::apps::world::entity::avatar
     class PlayerEntity final : public EntityBase, public systems::physics::ICollider
     {
         using AnimeStepper              = common::AnimeStepper;
+        using FrameGate                 = common::FrameGate;
         using SpawnProjectileCommand    = common::SpawnProjectileCommand;
         using RectF                     = foundation::math::RectF;
         using Vec2                      = foundation::math::Vec2;
@@ -115,7 +118,7 @@ namespace mm2hack::apps::world::entity::avatar
 
         // ===== dependency injection & configuration =====
         void SetInput(StateProvider* in) { _input = in; }
-        void SetTuning(const PlayerTuning& t) { _normalTuning = t; }
+        void SetTuning(const PlayerTuning& t);
         void SetPageOriginPx(const Vec2& p) noexcept { _pageOriginPx = p; }
         void SetTerrainProbe(ITerrainProbe* p) noexcept { _terrainProbe = p; }
         void SetLadderService(ILadderService* s) { _ladderService = s; }
@@ -141,9 +144,13 @@ namespace mm2hack::apps::world::entity::avatar
     private:
         void composeFinalTexture_() noexcept;                       // Set current avatar tile number
         void refreshProbes_(PlayerContext& cx) noexcept;            // Refresh collision all probes
+        void updateEnvironment_() noexcept;                         // Update current physical environment
+        void selectTuning_() noexcept;                              // Select tuning for current environment
+        [[nodiscard]] bool shouldSkipUnderwaterPhysics_() noexcept; // Check if underwater physics should be skipped (for performance)
+
         void requestScroll_(FixedScrollRequest req) noexcept;       // Request fixed page scrolling
 
-        std::unique_ptr<IPlayerState>& FindState(AvatarStatus s)
+        std::unique_ptr<IPlayerState>& findState_(AvatarStatus s)
         {
             switch (s)
             {
@@ -186,12 +193,14 @@ namespace mm2hack::apps::world::entity::avatar
         PlayerTuning _normalTuning{};                               // Player tuning parameters
         PlayerTuning _underwaterTuning{};                           // Underwater tuning parameters
         const PlayerTuning* _currentTuning{ nullptr };              // Pointer to current tuning (switches between normal and underwater)
+        PlayerEnvironment _environment{ PlayerEnvironment::Normal };// Current physical environment
         IntroDropState _introStates{};                              // Appearing the player on stage parameters
         states::AttackTuning _attack_tuning{};                      // Attack action tuning parameters
         AnimeStepper _animeStepper{};                               // Animation stepper
         Probes _probes{ _half };                                    // Collision probes
         const ITerrainProbe* _terrainProbe{ nullptr };              // Terrain probe
         ILadderService* _ladderService{ nullptr };                  // Laddering action service
+        FrameGate _underwater_physics_gate{};                       // Underwater physics gate
 
         WorldBounds _vBounds{};                                     // View boundaries
 

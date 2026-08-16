@@ -28,5 +28,13 @@ namespace mm2hack::apps::resources::stages
         { 32,  95, TileAttribute::Solid },
         { 96, 101, TileAttribute::Ladder },
         {112, 115, TileAttribute::OneWayPlatform },
+
+        // Underwater attributes
+        {128, 131, TileAttribute::Empty | TileAttribute::Water },
+        {132, 135, TileAttribute::Ladder | TileAttribute::Water },
+        {136, 143, TileAttribute::Solid | TileAttribute::Water },
+        {144, 147, TileAttribute::Empty | TileAttribute::Water },
+        {148, 151, TileAttribute::OneWayPlatform | TileAttribute::Water },
+        {152, 159, TileAttribute::Solid | TileAttribute::Water },
     };
 }
