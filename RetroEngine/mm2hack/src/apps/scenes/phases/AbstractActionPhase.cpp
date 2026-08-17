@@ -64,6 +64,14 @@ namespace mm2hack::apps::scenes::phases
             return PhaseResult::None();
         }
 
+        /* NOTE: 
+         * Update tile animations for the background tiles.
+         * Rotating the animation within DrawPage() causes the animation's tile counter to advance too rapidly,
+         * so ensure it is executed only once in the higher-level update logic.
+         */
+        auto& resource = runtime::GameContext::GetInstance().GetResourceManager();
+        resource.GetBGTileManager().UpdateTileAnimations();
+
         if (_state == ActionPhaseState::Intro)
         {
             updateIntro_();

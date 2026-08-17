@@ -10,11 +10,13 @@
 
 #include <cstdint>
 #include <optional>
+#include <span>
 #include <string>
 #include <string_view>
 #include <utility>
 #include <vector>
 #include "apps/systems/physics/TileAttribute.h"
+#include "BGTileAnimator.h"
 #include "BGTileCatalog.h"
 #include "config/SystemConfig.h"
 
@@ -90,6 +92,13 @@ namespace mm2hack::apps::rendering::bg
         [[nodiscard]] inline int MapHeight() const noexcept { return _map_h; }
         [[nodiscard]] inline int TileSize() const noexcept { return 16; }       // fixed 16x16 pixels
 
+        // Set BG tile animation definitions
+        void SetTileAnimations(std::span<const BGTileAnimation> animations) noexcept;
+        // Advance BG tile animations by one frame
+        void UpdateTileAnimations() noexcept;
+        // Reset BG tile animations
+        void ResetTileAnimations() noexcept;
+
     private:
         const std::wstring kClassName{ L"BGTileManager" };
 
@@ -101,5 +110,7 @@ namespace mm2hack::apps::rendering::bg
         int _map_h{ config::SystemConfig::kTileCountY };
         std::vector<Byte> _tile_map;            // size: _map_w * _map_h
         std::vector<TileAttribute> _tile_attr;  // by tile-id
+ 
+        BGTileAnimator _tile_animator{};        // manages tile animations
     };
 }

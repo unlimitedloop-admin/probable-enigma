@@ -3,7 +3,9 @@
 #include "BGTileManager.h"
 
 #include <iterator>
+#include <span>
 #include <string_view>
+#include "BGTileAnimator.h"
 
 namespace mm2hack::apps::systems::physics
 {
@@ -164,8 +166,11 @@ namespace mm2hack::apps::rendering::bg
             for (int x = 0; x < _map_w; ++x)
             {
                 const int idx = y * _map_w + x;
-                const int tile_id = static_cast<int>(_tile_map[idx]);
-                atlas.DrawTile(_global_variant, tile_id, x * tile_px_w + offset_x, y * tile_px_h + offset_y);
+
+                const std::uint8_t source_tile = _tile_map[idx];
+                const std::uint8_t drawing_tile = _tile_animator.ResolveTile(source_tile);
+
+                atlas.DrawTile(_global_variant, static_cast<int>(drawing_tile), x * tile_px_w + offset_x, y * tile_px_h + offset_y);
             }
         }
     }
@@ -188,4 +193,19 @@ namespace mm2hack::apps::rendering::bg
         _global_variant = std::max(0, std::min(v, mv));
     }
 
+    void BGTileManager::SetTileAnimations(
+        std::span<const BGTileAnimation> animations) noexcept
+    {
+        _tile_animator.SetAnimations(animations);
+    }
+
+    void BGTileManager::UpdateTileAnimations() noexcept
+    {
+        _tile_animator.Update();
+    }
+
+    void BGTileManager::ResetTileAnimations() noexcept
+    {
+        _tile_animator.Reset();
+    }
 }

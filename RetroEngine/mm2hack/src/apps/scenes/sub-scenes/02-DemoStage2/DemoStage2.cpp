@@ -7,6 +7,7 @@
 #include "apps/foundation/NES/NESPalette.h"
 #include "apps/rendering/bg/BGTileManager.h"
 #include "apps/rendering/sprite/SpriteManager.h"
+#include "apps/resources/stages/StageTileAnimations.h"
 #include "apps/resources/stages/StageTileAttributes.h"
 #include "apps/runtime/GameContext.h"
 #include "apps/scenes/IBaseScene.h"
@@ -166,7 +167,7 @@ namespace mm2hack::apps::scenes
         phases::StageDefinition def{};
         def.map_binary_path = std::wstring(kStageMapBinary);
         def.start_page_index = _roomState.pageIndex;
-        def.start_local_pos = { 128.0, 183.0 };
+        def.start_local_pos = { 128.0, 183.0 }; // TODO: This should be loaded from a external def-file instead of hardcoded.
 
         // Create build config.
         phases::ActionStageBuildConfig build{};
@@ -262,6 +263,7 @@ namespace mm2hack::apps::scenes
         using namespace systems::physics;
         using namespace resources::stages;
         ApplyTileAttributeRanges(bgTileManager, STAGE2_TILEATTRIBUTES);
+        bgTileManager.SetTileAnimations(STAGE2_TILEANIMATIONS);
     }
 
     bool DemoStage2::loadAssets_()

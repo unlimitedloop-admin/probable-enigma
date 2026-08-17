@@ -336,6 +336,8 @@
     <ClInclude Include="src\apps\ui\productions\StageIntroUI.h" />
     <ClInclude Include="src\apps\resources\bg\BGPageHeader.h" />
     <ClInclude Include="src\apps\world\entity\common\FrameGate.h" />
+    <ClInclude Include="src\apps\rendering\bg\BGTileAnimator.h" />
+    <ClInclude Include="src\apps\resources\stages\StageTileAnimations.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="mm2hack.rc" />
