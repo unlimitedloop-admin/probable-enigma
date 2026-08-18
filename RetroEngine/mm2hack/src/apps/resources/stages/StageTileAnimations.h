@@ -12,9 +12,34 @@
 #include <span>
 
 #include "apps/rendering/bg/BGTileAnimator.h"
+#include "apps/rendering/bg/BGTilePalette.h"
 
 namespace mm2hack::apps::resources::stages
 {
+    inline constexpr std::array<rendering::bg::BGPaletteColorMapping, 3>
+        kGlowPaletteA
+    {
+        rendering::bg::BGPaletteColorMapping{ 28, 0x1C },
+        rendering::bg::BGPaletteColorMapping{ 44, 0x2C },
+        rendering::bg::BGPaletteColorMapping{ 60, 0x3C }
+    };
+
+    inline constexpr std::array<rendering::bg::BGPaletteColorMapping, 3>
+        kGlowPaletteB
+    {
+        rendering::bg::BGPaletteColorMapping{ 28, 0x3C },
+        rendering::bg::BGPaletteColorMapping{ 44, 0x1C },
+        rendering::bg::BGPaletteColorMapping{ 60, 0x2C }
+    };
+
+    inline constexpr std::array<rendering::bg::BGPaletteColorMapping, 3>
+        kGlowPaletteC
+    {
+        rendering::bg::BGPaletteColorMapping{ 28, 0x2C },
+        rendering::bg::BGPaletteColorMapping{ 44, 0x3C },
+        rendering::bg::BGPaletteColorMapping{ 60, 0x1C }
+    };
+
     // Water surface left tile:
     // 130 -> 144 -> 146 -> ...
     inline constexpr std::array<rendering::bg::BGTileAnimationFrame, 3>

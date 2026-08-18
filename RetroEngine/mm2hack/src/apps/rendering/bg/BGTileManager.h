@@ -18,6 +18,7 @@
 #include "apps/systems/physics/TileAttribute.h"
 #include "BGTileAnimator.h"
 #include "BGTileCatalog.h"
+#include "BGTilePalette.h"
 #include "config/SystemConfig.h"
 
 namespace mm2hack::apps::rendering::bg
@@ -63,6 +64,13 @@ namespace mm2hack::apps::rendering::bg
         // Get tile attribute for the specified tile-id
         TileAttribute GetTileAttribute(int x, int y) const;
         TileAttribute GetTileAttribute(uint8_t id) const;
+
+        // Creates a local palette variant for the specified tile.
+        [[nodiscard]] int CreateTilePaletteVariantById(Id tileset_id, int tile_index, std::span<const BGPaletteColorMapping> mappings);
+        // Creates a local palette variant for the specified tile by tileset name.
+        [[nodiscard]] int CreateTilePaletteVariantByName(const std::wstring& tileset_name, int tile_index, std::span<const BGPaletteColorMapping> mappings);
+        // Set BG tile palette animation definitions
+        void SetTilePaletteAnimations(std::span<const BGPaletteAnimation> animations) noexcept;
 
         // Draw map with the specified tileset name
         void DrawMapByName(const std::wstring& tileset_name, int tile_px_w, int tile_px_h, int offset_x = 0, int offset_y = 0) const;

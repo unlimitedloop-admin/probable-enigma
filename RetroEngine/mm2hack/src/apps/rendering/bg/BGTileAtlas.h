@@ -8,8 +8,12 @@
 //==============================================================================
 #pragma once
 
+#include <span>
 #include <string>
+#include <unordered_map>
 #include <vector>
+
+#include "BGTilePalette.h"
 
 namespace mm2hack::apps::rendering::bg
 {
@@ -49,6 +53,10 @@ namespace mm2hack::apps::rendering::bg
 
         // draw tile index in the atlas (0..tiles_x*tiles_y-1)
         void DrawTile(int variant, int tile_index, int x, int y) const noexcept;
+        // Creates a palette variant graph for a specific tile.
+        [[nodiscard]] int CreateTilePaletteVariant(int tile_index, std::span<const BGPaletteColorMapping> mappings);
+        // Draws a specific tile using its local palette variant.
+        void DrawTilePaletteVariant(int tile_index, int palette_variant, int x, int y) const noexcept;
 
     private:
         void dispose_() noexcept;
@@ -60,5 +68,7 @@ namespace mm2hack::apps::rendering::bg
         DivSettings _div{};
         int _soft_image{ -1 };
         std::vector<std::vector<int>> _graphs_by_variant;   // [variant][tile_index]
+
+        std::unordered_map<int, std::vector<int>> _tile_palette_variants{}; // [tile_index] -> [palette_variant_graphs]
     };
 }

@@ -11,11 +11,13 @@
 #include "apps/scenes/IBaseScene.h"
 #include "apps/scenes/phases/IPhaseHost.h"
 
+#include <array>
 #include <istream>
 #include <memory>
 #include <ostream>
 #include <string>
 #include <string_view>
+#include "apps/rendering/bg/BGTileAnimator.h"
 #include "apps/rendering/bg/BGTileManager.h"
 #include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/resources/assets/StageSpriteBank.h"
@@ -39,6 +41,7 @@ namespace mm2hack::apps::scenes
     // Demo stage scene (ID: 02)
     class DemoStage2 final : public IBaseScene, public phases::IPhaseHost, public IStageAssetProvider
     {
+        using BGTileManager     = rendering::bg::BGTileManager;
         using BGTileManagerId   = rendering::bg::BGTileManager::Id;
         using SpriteManagerId   = rendering::sprite::SpriteManager::Id;
         using Parameters        = resources::parameters::Parameters;
@@ -90,8 +93,9 @@ namespace mm2hack::apps::scenes
         void onExit_() override;                                        // Scene exit hook
 
         bool initializeResources_(const Parameters& params);            // Initialize resources needed for the scene
-        void loadStage_(rendering::bg::BGTileManager& bgTileManager);   // Load the stage map and tile attributes
+        bool loadStage_(BGTileManager& bgTileManager);                  // Load the stage map and tile attributes
         bool loadAssets_();                                             // Load stage sprite assets (player, enemies, effects...)
+        bool initializeAnimationBG_(BGTileManager& bgTileManager);      // Initialize background tile animations
 
         void applyPendingPhaseIfReady_();                               // Apply pending phase if fader is ready
         void dispatchTransition_(
@@ -131,6 +135,10 @@ namespace mm2hack::apps::scenes
         std::unique_ptr<phases::IStageScript> _stageScript{};           // Stage script
 
         BGTileManagerId _bgTileId{ static_cast<BGTileManagerId>(-1) };  // Background tile set Id
+
+        std::array<rendering::bg::BGPaletteAnimationFrame, 3> _glow_animation_frames{};
+        std::array<rendering::bg::BGPaletteAnimation, 1> _palette_animations{};
+
         resources::assets::StageSpriteBank _spriteBank{};               // Stage sprite ID set
     };
 }

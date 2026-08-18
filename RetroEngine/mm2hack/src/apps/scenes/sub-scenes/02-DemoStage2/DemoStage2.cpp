@@ -4,7 +4,9 @@
 
 #include <istream>
 #include <ostream>
+#include <span>
 #include "apps/foundation/NES/NESPalette.h"
+#include "apps/rendering/bg/BGTileAnimator.h"
 #include "apps/rendering/bg/BGTileManager.h"
 #include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/resources/stages/StageTileAnimations.h"
@@ -246,24 +248,32 @@ namespace mm2hack::apps::scenes
         {
             _roomState.pageIndex = 0; // Default to first page if not found.
         }
-        loadStage_(bgTileManager);
+        if (!loadStage_(bgTileManager)) return false;
 
         const int bvmax = bgTileManager.VariantCountById(_bgTileId);
         bgTileManager.SetGlobalVariant(bvmax);
         resource.FadeInBG(_fadeDurationFrames);
 
         // Load the graph from the resource manager.
-        loadAssets_();
+        if (!loadAssets_()) return false;
 
         return true;
     }
 
-    void DemoStage2::loadStage_(rendering::bg::BGTileManager& bgTileManager)
+    bool DemoStage2::loadStage_(BGTileManager& bgTileManager)
     {
         using namespace systems::physics;
         using namespace resources::stages;
+        
         ApplyTileAttributeRanges(bgTileManager, STAGE2_TILEATTRIBUTES);
         bgTileManager.SetTileAnimations(STAGE2_TILEANIMATIONS);
+
+        if (!initializeAnimationBG_(bgTileManager))
+        {
+            return false;
+        }
+
+        return true;
     }
 
     bool DemoStage2::loadAssets_()
@@ -280,6 +290,48 @@ namespace mm2hack::apps::scenes
         const int sprvmax = spriteLoader.VariantCountById(_spriteBank.player);
         spriteLoader.SetGlobalVariant(sprvmax);
         resource.FadeInSprite(_fadeDurationFrames);
+        return true;
+    }
+
+    bool DemoStage2::initializeAnimationBG_(BGTileManager& bgTileManager)
+    {
+        using namespace resources::stages;
+        using namespace rendering::bg;
+
+        constexpr std::uint8_t kGlowTile = 160;
+
+        const int variant_a =
+            bgTileManager.CreateTilePaletteVariantByName(kMapName, kGlowTile, kGlowPaletteA);
+
+        const int variant_b =
+            bgTileManager.CreateTilePaletteVariantByName(kMapName, kGlowTile, kGlowPaletteB);
+
+        const int variant_c =
+            bgTileManager.CreateTilePaletteVariantByName(kMapName, kGlowTile, kGlowPaletteC);
+
+        if (variant_a < 0 || variant_b < 0 || variant_c < 0)
+        {
+            return false;
+        }
+
+        _glow_animation_frames =
+        {
+            BGPaletteAnimationFrame{variant_a, 8 },
+            BGPaletteAnimationFrame{variant_b, 8 },
+            BGPaletteAnimationFrame{variant_c, 8 }
+        };
+
+        _palette_animations =
+        {
+            BGPaletteAnimation{
+                kGlowTile,
+                std::span<const BGPaletteAnimationFrame>{ _glow_animation_frames }
+            }
+        };
+
+        bgTileManager.SetTilePaletteAnimations(
+            _palette_animations);
+
         return true;
     }
 

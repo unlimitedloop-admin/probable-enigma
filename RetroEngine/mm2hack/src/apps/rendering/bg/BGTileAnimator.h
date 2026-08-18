@@ -27,6 +27,20 @@ namespace mm2hack::apps::rendering::bg
         std::span<const BGTileAnimationFrame> frames{};
     };
 
+    // Single frame of a BG palette animation
+    struct BGPaletteAnimationFrame
+    {
+        int paletteVariant{ 0 };
+        std::uint16_t durationFrames{ 1 };
+    };
+
+    // Palette animation associated with one logical source tile
+    struct BGPaletteAnimation
+    {
+        std::uint8_t sourceTile{ 0 };
+        std::span<const BGPaletteAnimationFrame> frames{};
+    };
+
     // Resolves logical BG tiles to animated drawing tiles
     class BGTileAnimator
     {
@@ -88,6 +102,55 @@ namespace mm2hack::apps::rendering::bg
             return source_tile;
         }
 
+        // Sets palette animation definitions
+        void SetPaletteAnimations(std::span<const BGPaletteAnimation> animations) noexcept
+        {
+            _palette_animations = animations;
+        }
+
+        // Resolves the local palette variant for a logical source tile.
+        // Returns -1 when the tile has no palette animation.
+        [[nodiscard]] int ResolvePaletteVariant(std::uint8_t source_tile) const noexcept
+        {
+            for (const auto& animation : _palette_animations)
+            {
+                if (animation.sourceTile != source_tile ||
+                    animation.frames.empty())
+                {
+                    continue;
+                }
+
+                std::uint32_t total_frames = 0;
+
+                for (const auto& frame : animation.frames)
+                {
+                    total_frames += frame.durationFrames;
+                }
+
+                if (total_frames == 0)
+                {
+                    return -1;
+                }
+
+                const std::uint32_t local_frame =
+                    _frame_counter % total_frames;
+
+                std::uint32_t accumulated = 0;
+
+                for (const auto& frame : animation.frames)
+                {
+                    accumulated += frame.durationFrames;
+
+                    if (local_frame < accumulated)
+                    {
+                        return frame.paletteVariant;
+                    }
+                }
+            }
+
+            return -1;
+        }
+
         // Resets animation timing
         void Reset() noexcept
         {
@@ -96,6 +159,7 @@ namespace mm2hack::apps::rendering::bg
 
     private:
         std::span<const BGTileAnimation> _animations{};
+        std::span<const BGPaletteAnimation> _palette_animations{};
         std::uint32_t _frame_counter{ 0 };
     };
 }

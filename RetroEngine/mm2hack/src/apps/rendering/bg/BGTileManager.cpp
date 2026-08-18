@@ -152,6 +152,34 @@ namespace mm2hack::apps::rendering::bg
         return id < _tile_attr.size() ? _tile_attr[id] : TileAttribute();
     }
 
+    int BGTileManager::CreateTilePaletteVariantById(Id tileset_id, int tile_index, std::span<const BGPaletteColorMapping> mappings)
+    {
+        if (!_catalog.IsValid(tileset_id))
+        {
+            return -1;
+        }
+
+        auto& atlas = _catalog.GetAtlas(tileset_id);
+        return atlas.CreateTilePaletteVariant(tile_index, mappings);
+    }
+
+    int BGTileManager::CreateTilePaletteVariantByName(const std::wstring& tileset_name, int tile_index, std::span<const BGPaletteColorMapping> mappings)
+    {
+        const auto id = _catalog.TryGetId(tileset_name);
+
+        if (!id.has_value())
+        {
+            return -1;
+        }
+
+        return CreateTilePaletteVariantById(*id, tile_index, mappings);
+    }
+
+    void BGTileManager::SetTilePaletteAnimations(std::span<const BGPaletteAnimation> animations) noexcept
+    {
+        _tile_animator.SetPaletteAnimations(animations);
+    }
+
     void BGTileManager::DrawMapByName(const std::wstring& tileset_name, int tile_px_w, int tile_px_h, int offset_x, int offset_y) const
     {
         DrawMapById(_catalog.GetId(tileset_name), tile_px_w, tile_px_h, offset_x, offset_y);
@@ -169,8 +197,18 @@ namespace mm2hack::apps::rendering::bg
 
                 const std::uint8_t source_tile = _tile_map[idx];
                 const std::uint8_t drawing_tile = _tile_animator.ResolveTile(source_tile);
+                const int palette_variant = _tile_animator.ResolvePaletteVariant(source_tile);
+                const int draw_x = x * tile_px_w + offset_x;
+                const int draw_y = y * tile_px_h + offset_y;
 
-                atlas.DrawTile(_global_variant, static_cast<int>(drawing_tile), x * tile_px_w + offset_x, y * tile_px_h + offset_y);
+                if (palette_variant >= 0)
+                {
+                    atlas.DrawTilePaletteVariant(static_cast<int>(drawing_tile), palette_variant, draw_x, draw_y);
+                }
+                else
+                {
+                    atlas.DrawTile(_global_variant, static_cast<int>(drawing_tile), draw_x, draw_y);
+                }
             }
         }
     }

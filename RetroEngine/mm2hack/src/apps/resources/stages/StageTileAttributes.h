@@ -35,6 +35,6 @@ namespace mm2hack::apps::resources::stages
         {136, 143, TileAttribute::Solid | TileAttribute::Water },
         {144, 147, TileAttribute::Empty | TileAttribute::Water },
         {148, 151, TileAttribute::OneWayPlatform | TileAttribute::Water },
-        {152, 159, TileAttribute::Solid | TileAttribute::Water },
+        {152, 159, TileAttribute::Empty | TileAttribute::Water },
     };
 }
