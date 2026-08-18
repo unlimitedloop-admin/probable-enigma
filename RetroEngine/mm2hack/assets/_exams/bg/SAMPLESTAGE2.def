@@ -47,6 +47,28 @@
       "y": 2,
       "z": 0,
       "enabled": true
+    },
+    {
+      "roomId": 6,
+      "x": 3,
+      "y": 2,
+      "z": 0,
+      "enabled": true
+    },
+    {
+      "roomId": 7,
+      "x": 3,
+      "y": 2,
+      "z": 0,
+      "enabled": true
+    },
+    {
+      "roomId": 8,
+      "x": 3,
+      "y": 2,
+      "z": 0,
+      "enabled": true,
+      "remarks": "\u4E0A\u306E\u53F0\u306B\u4F55\u304B\u306E\u30A2\u30A4\u30C6\u30E0\u3092\u914D\u7F6E"
     }
   ]
 }

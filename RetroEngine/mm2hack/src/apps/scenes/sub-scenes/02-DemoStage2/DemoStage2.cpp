@@ -298,36 +298,55 @@ namespace mm2hack::apps::scenes
         using namespace resources::stages;
         using namespace rendering::bg;
 
-        constexpr std::uint8_t kGlowTile = 160;
+        constexpr std::uint8_t kGlowTileFirst = 160;
+        constexpr std::uint8_t kGlowTileLast = 167;
+        constexpr std::size_t kGlowTileCount = static_cast<std::size_t>(kGlowTileLast - kGlowTileFirst + 1);
 
-        const int variant_a =
-            bgTileManager.CreateTilePaletteVariantByName(kMapName, kGlowTile, kGlowPaletteA);
-
-        const int variant_b =
-            bgTileManager.CreateTilePaletteVariantByName(kMapName, kGlowTile, kGlowPaletteB);
-
-        const int variant_c =
-            bgTileManager.CreateTilePaletteVariantByName(kMapName, kGlowTile, kGlowPaletteC);
-
-        if (variant_a < 0 || variant_b < 0 || variant_c < 0)
+        for (std::size_t i = 0; i < kGlowTileCount; ++i)
         {
-            return false;
-        }
+            const auto tile_id =
+                static_cast<std::uint8_t>(kGlowTileFirst + static_cast<std::uint8_t>(i));
 
-        _glow_animation_frames =
-        {
-            BGPaletteAnimationFrame{variant_a, 8 },
-            BGPaletteAnimationFrame{variant_b, 8 },
-            BGPaletteAnimationFrame{variant_c, 8 }
-        };
+            const int variant_a =
+                bgTileManager.CreateTilePaletteVariantByName(
+                    kMapName,
+                    tile_id,
+                    kGlowPaletteA);
 
-        _palette_animations =
-        {
-            BGPaletteAnimation{
-                kGlowTile,
-                std::span<const BGPaletteAnimationFrame>{ _glow_animation_frames }
+            const int variant_b =
+                bgTileManager.CreateTilePaletteVariantByName(
+                    kMapName,
+                    tile_id,
+                    kGlowPaletteB);
+
+            const int variant_c =
+                bgTileManager.CreateTilePaletteVariantByName(
+                    kMapName,
+                    tile_id,
+                    kGlowPaletteC);
+
+            if (variant_a < 0 ||
+                variant_b < 0 ||
+                variant_c < 0)
+            {
+                return false;
             }
-        };
+
+            _glow_animation_frames[i] =
+            {
+                BGPaletteAnimationFrame{ variant_a, 8 },
+                BGPaletteAnimationFrame{ variant_b, 8 },
+                BGPaletteAnimationFrame{ variant_c, 8 }
+            };
+
+            _palette_animations[i] =
+            {
+                tile_id,
+                std::span<const BGPaletteAnimationFrame>{
+                    _glow_animation_frames[i]
+                }
+            };
+        }
 
         bgTileManager.SetTilePaletteAnimations(
             _palette_animations);

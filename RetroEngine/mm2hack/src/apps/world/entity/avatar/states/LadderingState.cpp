@@ -60,45 +60,46 @@ namespace mm2hack::apps::world::entity::avatar::states
         const bool up = in->IsPressed(JPBTN::UP);
         const bool down = in->IsPressed(JPBTN::DOWN);
 
+        // FIXME: This is a temporary solution to handle fixed scrolling when climbing up or down.
+        // Request fixed scrolling from the avatar's current position relative to the page.
+        // This intentionally does not require a boundary crossing during the current frame.
         const auto fixedScrollLk = [&]()
             {
                 using conf = config::SystemConfig;
-                const double actualDy = cx.vel.y;
-                if (cx.pendingFixedScroll.available && actualDy != 0.0)
+
+                if (!cx.pendingFixedScroll.available || cx.lockClimbMove)
                 {
-                    const int page_w = conf::kTileCountX * conf::kTileSize;
-                    const int page_h = conf::kTileCountY * conf::kTileSize;
+                    return;
+                }
 
-                    // World Y of the probes before and after movement.
-                    const double probePrevWorldY = cx.prelimProbes.behindGround.middlePoint.y;
-                    const double probeCurrWorldY = cx.probes.behindGround.middlePoint.y + actualDy;
+                const double pageHeight = static_cast<double>(conf::kTileCountY * conf::kTileSize);
 
-                    const auto origin = cx.pageOriginPx;
-                    const double prevLocalY = probePrevWorldY - origin.y;
-                    const double currLocalY = probeCurrWorldY - origin.y;
+                // Upward fixed-scroll trigger:
+                // Keep the upper-side probe as the reference point because it reproduces
+                // the intended trigger position for climbing/grabbing above the page.
+                const double upperWorldY = cx.probes.behindGround.middlePoint.y;
+                const double upperLocalY = upperWorldY - cx.pageOriginPx.y;
 
-                    if (actualDy < 0.0)
-                    {
-                        // Up: cross local 0
-                        if (prevLocalY >= 0.0 && currLocalY < 0.0)
-                        {
-                            FixedScrollRequest req{};
-                            req.dir = PageScroll::Dir::Up;
-                            req.carryTotalPx = 0x06.00p0;
-                            cx.pendingFixedScroll = req;
-                        }
-                    }
-                    else if (actualDy > 0.0)
-                    {
-                        // Down: cross local 240
-                        if (prevLocalY < static_cast<double>(page_h) && currLocalY >= static_cast<double>(page_h))
-                        {
-                            FixedScrollRequest req{};
-                            req.dir = PageScroll::Dir::Down;
-                            req.carryTotalPx = 0x01.00p0;
-                            cx.pendingFixedScroll = req;
-                        }
-                    }
+                if (upperLocalY < 0.0)
+                {
+                    FixedScrollRequest request{};
+                    request.dir = PageScroll::Dir::Up;
+                    request.carryTotalPx = 0x08.00p0;
+                    cx.pendingFixedScroll = request;
+                    return;
+                }
+
+                // Downward fixed-scroll trigger:
+                // Use the avatar position because the behind-ground probe is offset upward
+                // and would delay the lower-boundary request.
+                const double playerLocalY = cx.pos.y - cx.pageOriginPx.y;
+
+                if (playerLocalY >= pageHeight)
+                {
+                    FixedScrollRequest request{};
+                    request.dir = PageScroll::Dir::Down;
+                    request.carryTotalPx = 0x08.00p0;
+                    cx.pendingFixedScroll = request;
                 }
             };
 
@@ -130,7 +131,7 @@ namespace mm2hack::apps::world::entity::avatar::states
             }
             else
             {
-                fixedScrollLk();    // Handle fixed scrolling when climbing up
+                // Movement is allowed; fixed-scroll request is evaluated below.
             }
         }
         else if (down && !up)
@@ -149,7 +150,7 @@ namespace mm2hack::apps::world::entity::avatar::states
             }
             else
             {
-                fixedScrollLk();    // Handle fixed scrolling when climbing down
+                // Movement is allowed; fixed-scroll request is evaluated below.
             }
         }
         // !up && !down -> vel.y = 0.0, and 
@@ -163,6 +164,10 @@ namespace mm2hack::apps::world::entity::avatar::states
                 return AvatarStatus::Hovering;
             }
         }
+
+        // Fixed scrolling is position-driven, so evaluate it even when vertical input
+        // is neutral (for example, after grabbing a ladder beyond a page boundary).
+        fixedScrollLk();
 
         // Rising to ground at ladder top (original-like rule)
         if (!cx.lockClimbMove && up && shouldRisingToGround_(cx))

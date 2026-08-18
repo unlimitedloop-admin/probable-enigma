@@ -136,8 +136,8 @@ namespace mm2hack::apps::scenes
 
         BGTileManagerId _bgTileId{ static_cast<BGTileManagerId>(-1) };  // Background tile set Id
 
-        std::array<rendering::bg::BGPaletteAnimationFrame, 3> _glow_animation_frames{};
-        std::array<rendering::bg::BGPaletteAnimation, 1> _palette_animations{};
+        std::array<std::array<rendering::bg::BGPaletteAnimationFrame, 3>, 8> _glow_animation_frames{};
+        std::array<rendering::bg::BGPaletteAnimation, 8> _palette_animations{};
 
         resources::assets::StageSpriteBank _spriteBank{};               // Stage sprite ID set
     };
