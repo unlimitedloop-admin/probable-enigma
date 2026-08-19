@@ -58,8 +58,10 @@ namespace mm2hack::apps::world::entity::avatar::states
         void doRisingToGround_(PlayerContext& cx) const;
         // Build grab candidate positions
         void buildGrabCandidates_(Vec2 out[9], const PlayerContext& cx, const PlayerTuning& t) const noexcept;
-
+        // Compute input direction and check if the top tile is empty
         std::pair<int, bool> computeInputAndTopEmpty_(const PlayerContext& cx, StateProvider* in) const noexcept;
+        // Check and issue a fixed-page scroll request
+        void checkFixedScrollRequest_(PlayerContext& cx, double intendedDy) const noexcept;
 
     private:
         const std::wstring kClassName{ L"LadderingState" };

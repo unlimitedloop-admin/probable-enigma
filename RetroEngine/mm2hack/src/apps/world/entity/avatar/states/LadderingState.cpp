@@ -60,51 +60,17 @@ namespace mm2hack::apps::world::entity::avatar::states
         const bool up = in->IsPressed(JPBTN::UP);
         const bool down = in->IsPressed(JPBTN::DOWN);
 
-        // FIXME: This is a temporary solution to handle fixed scrolling when climbing up or down.
-        // Request fixed scrolling from the avatar's current position relative to the page.
-        // This intentionally does not require a boundary crossing during the current frame.
-        const auto fixedScrollLk = [&]()
-            {
-                using conf = config::SystemConfig;
-
-                if (!cx.pendingFixedScroll.available || cx.lockClimbMove)
-                {
-                    return;
-                }
-
-                const double pageHeight = static_cast<double>(conf::kTileCountY * conf::kTileSize);
-
-                // Upward fixed-scroll trigger:
-                // Keep the upper-side probe as the reference point because it reproduces
-                // the intended trigger position for climbing/grabbing above the page.
-                const double upperWorldY = cx.probes.behindGround.middlePoint.y;
-                const double upperLocalY = upperWorldY - cx.pageOriginPx.y;
-
-                if (upperLocalY < 0.0)
-                {
-                    FixedScrollRequest request{};
-                    request.dir = PageScroll::Dir::Up;
-                    request.carryTotalPx = 0x08.00p0;
-                    cx.pendingFixedScroll = request;
-                    return;
-                }
-
-                // Downward fixed-scroll trigger:
-                // Use the avatar position because the behind-ground probe is offset upward
-                // and would delay the lower-boundary request.
-                const double playerLocalY = cx.pos.y - cx.pageOriginPx.y;
-
-                if (playerLocalY >= pageHeight)
-                {
-                    FixedScrollRequest request{};
-                    request.dir = PageScroll::Dir::Down;
-                    request.carryTotalPx = 0x08.00p0;
-                    cx.pendingFixedScroll = request;
-                }
-            };
+        const double intendedDy =
+            (up && !down) ? -t.climbSpeed :
+            (down && !up) ? +t.climbSpeed :
+                            0.0;
 
         // Always snap X to ladder center (warp is allowed)
         snapToLadderCenter_(cx, t);
+
+        // Check the page transition before losing the ladder.
+        // This also catches a ladder grabbed beyond the page boundary.
+        checkFixedScrollRequest_(cx, intendedDy);
 
         // If ladder lost: fall
         if (!isOnLadder_(cx, t))
@@ -122,7 +88,7 @@ namespace mm2hack::apps::world::entity::avatar::states
         }
         else if (up && !down)
         {
-            cx.vel.y = -t.climbSpeed;
+            cx.vel.y = intendedDy;
             auto vHit = cx.terrain->SweepVertical(cx.probes, cx.vel);
             if (vHit.hit && vHit.kind == systems::physics::VHitKind::Ceiling)
             {
@@ -136,7 +102,7 @@ namespace mm2hack::apps::world::entity::avatar::states
         }
         else if (down && !up)
         {
-            cx.vel.y = +t.climbSpeed;
+            cx.vel.y = intendedDy;
             auto vHit = cx.terrain->SweepVertical(cx.probes, cx.vel);
             if (vHit.hit && vHit.kind == systems::physics::VHitKind::Floor)
             {
@@ -164,10 +130,6 @@ namespace mm2hack::apps::world::entity::avatar::states
                 return AvatarStatus::Hovering;
             }
         }
-
-        // Fixed scrolling is position-driven, so evaluate it even when vertical input
-        // is neutral (for example, after grabbing a ladder beyond a page boundary).
-        fixedScrollLk();
 
         // Rising to ground at ladder top (original-like rule)
         if (!cx.lockClimbMove && up && shouldRisingToGround_(cx))
@@ -294,5 +256,67 @@ namespace mm2hack::apps::world::entity::avatar::states
         const int input = (up && !down) ? -1 : ((down && !up) ? +1 : 0);
 
         return { input, isTopAttrEmpty };
+    }
+
+    void LadderingState::checkFixedScrollRequest_(PlayerContext& cx, const double intendedDy) const noexcept
+    {
+        using conf = config::SystemConfig;
+        using systems::scrolling::atomic::FixedScrollRequest;
+        using systems::scrolling::atomic::PageScroll;
+
+        // Fixed-page scroll is available only while the player belongs
+        // to the currently displayed page.
+        if (!cx.pendingFixedScroll.available)
+        {
+            return;
+        }
+
+        // Do not issue another request while fixed scrolling is active.
+        if (cx.lockClimbMove)
+        {
+            return;
+        }
+
+        const double pageHeight = static_cast<double>(conf::kTileCountY * conf::kTileSize);
+
+        //--------------------------------------------------------------------------
+        // Upward fixed scroll
+        //--------------------------------------------------------------------------
+
+        // Use the upper-side probe as the trigger reference.
+        // intendedDy is added so that the position after this frame's movement
+        // is evaluated rather than only the current position.
+        const double nextUpperWorldY = cx.probes.behindGround.middlePoint.y + intendedDy;
+
+        const double nextUpperLocalY = nextUpperWorldY - cx.pageOriginPx.y;
+
+        if (intendedDy < 0.0 && nextUpperLocalY < 0.0)
+        {
+            FixedScrollRequest request{};
+            request.dir = PageScroll::Dir::Up;
+            request.carryTotalPx = 0x05.00p0;
+
+            cx.pendingFixedScroll = request;
+            return;
+        }
+
+        //--------------------------------------------------------------------------
+        // Downward fixed scroll
+        //--------------------------------------------------------------------------
+
+        // The behind-ground probe is offset upward, so use the player's position
+        // for the lower page boundary.
+        const double nextPlayerWorldY = cx.pos.y + intendedDy;
+
+        const double nextPlayerLocalY = nextPlayerWorldY - cx.pageOriginPx.y;
+
+        if (intendedDy > 0.0 && nextPlayerLocalY >= pageHeight)
+        {
+            FixedScrollRequest request{};
+            request.dir = PageScroll::Dir::Down;
+            request.carryTotalPx = 0x01.00p0;
+
+            cx.pendingFixedScroll = request;
+        }
     }
 }
