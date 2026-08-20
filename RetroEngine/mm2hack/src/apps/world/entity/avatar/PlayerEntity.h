@@ -201,6 +201,7 @@ namespace mm2hack::apps::world::entity::avatar
         const ITerrainProbe* _terrainProbe{ nullptr };              // Terrain probe
         ILadderService* _ladderService{ nullptr };                  // Laddering action service
         FrameGate _underwater_physics_gate{};                       // Underwater physics gate
+        bool _jumpBuffered{ false };                                // Jump edge latched across an underwater skip-physics tick (see PlayerContext::jumpEdge)
 
         WorldBounds _vBounds{};                                     // View boundaries
 

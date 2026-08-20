@@ -124,7 +124,7 @@ namespace mm2hack::apps::world::entity::avatar::states
         {
             cx.vel.y = 0.0;
             // Jump -> Hovering (use existing DoJump)
-            if (in->JustPressed(JPBTN::A))
+            if (cx.jumpEdge)
             {
                 UpdateVerticalVelocity(cx, t, false);   // Start falling
                 return AvatarStatus::Hovering;

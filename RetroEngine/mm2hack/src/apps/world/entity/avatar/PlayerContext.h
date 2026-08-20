@@ -75,6 +75,13 @@ namespace mm2hack::apps::world::entity::avatar
         std::size_t scrollPageIndex{ 0 };                   // Current page index for scrolling
 
         FixedScrollRequest pendingFixedScroll{};            // Pending fixed scroll request
+
+        // Jump button edge for this state Update() call. Equivalent to StateProvider::JustPressed(JPBTN::A)
+        // in every normal case; while underwater physics-skip is active, PlayerEntity latches a press that
+        // landed on a skipped tick and reports it here on the next tick that actually runs, so a jump input
+        // is never silently dropped by the skip gate. States should read this instead of calling
+        // in->JustPressed(JPBTN::A) directly.
+        bool jumpEdge{ false };
     };
 
     // Simplified context for animation abilities

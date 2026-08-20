@@ -103,7 +103,7 @@ namespace mm2hack::apps::world::entity::avatar::states
             auto& audio = resource.GetAudioManager();
             audio.PlaySe(L"landing_thump");
 
-            if (in->JustPressed(JPBTN::A))
+            if (cx.jumpEdge)
             {
                 DoJump(cx, t);
                 cx.basePose = static_cast<int>(STile::Airpause);

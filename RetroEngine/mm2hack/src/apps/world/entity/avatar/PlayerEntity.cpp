@@ -13,6 +13,7 @@
 #include "apps/world/entity/EntityBase.h"
 #include "apps/world/entity/IEntity.h"
 #include "AvatarStatus.h"
+#include "input/Jpbtn.h"
 #include "IPlayerState.h"
 #include "PlayerContext.h"
 #include "PlayerParams.h"
@@ -70,6 +71,17 @@ namespace mm2hack::apps::world::entity::avatar
         const PlayerTuning& tuning = *_currentTuning;
         const bool skipPhysics = shouldSkipUnderwaterPhysics_();
 
+        // Detect the jump edge every tick, before the skip gate below can swallow it.
+        // If this tick's state Update() is about to be skipped (underwater slow-motion
+        // gate), latch the press so it is not lost; kSkipInterval guarantees the gate
+        // can never skip two ticks in a row, so the latch is always picked up (or
+        // discarded) on the very next tick, never carried further than that.
+        const bool jumpPressedNow = _input->JustPressed(JPBTN::A);
+        if (jumpPressedNow && skipPhysics)
+        {
+            _jumpBuffered = true;
+        }
+
         // Get up and down lock on laddering (if any)
         _attackAction->PreUpdate(cx, _input, _entityContext.canSpawnProjectile);
 
@@ -78,6 +90,9 @@ namespace mm2hack::apps::world::entity::avatar
         AvatarStatus next = _status;
         if (!skipPhysics)
         {
+            cx.jumpEdge = jumpPressedNow || _jumpBuffered;
+            _jumpBuffered = false;
+
             // Execute the behavior of the current state and determine the next state.
             next = st->Update(cx, _input, tuning, dt);
         }
@@ -105,7 +120,6 @@ namespace mm2hack::apps::world::entity::avatar
         // Apply updated context values
         if (!skipPhysics)
         {
-            // Test operation: Update position and velocity based on the current context.
             pos = cx.pos + cx.vel;
         }
         baseTexture = cx.basePose;

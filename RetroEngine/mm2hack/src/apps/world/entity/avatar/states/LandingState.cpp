@@ -42,7 +42,7 @@ namespace mm2hack::apps::world::entity::avatar::states
             return AvatarStatus::Hovering;
         }
 
-        if (in->JustPressed(JPBTN::A) && DoJump(cx, t))
+        if (cx.jumpEdge && DoJump(cx, t))
         {
             cx.basePose = static_cast<int>(STile::Airpause);
             updateFacing();
