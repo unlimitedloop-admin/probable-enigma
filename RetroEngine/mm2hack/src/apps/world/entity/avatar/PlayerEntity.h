@@ -12,7 +12,6 @@
 #include "apps/world/entity/EntityBase.h"
 
 #include <array>
-#include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
@@ -114,23 +113,23 @@ namespace mm2hack::apps::world::entity::avatar
 
         // Set/Get view boundaries
         void SetViewBounds(const systems::scrolling::atomic::ViewBounds& b) noexcept;
-        const WorldBounds& ViewBounds() const noexcept { return _vBounds; }
+        const WorldBounds& ViewBounds() const noexcept { return _v_bounds; }
 
         // ===== dependency injection & configuration =====
         void SetInput(StateProvider* in) { _input = in; }
         void SetTuning(const PlayerTuning& t);
-        void SetPageOriginPx(const Vec2& p) noexcept { _pageOriginPx = p; }
-        void SetTerrainProbe(ITerrainProbe* p) noexcept { _terrainProbe = p; }
-        void SetLadderService(ILadderService* s) { _ladderService = s; }
+        void SetPageOriginPx(const Vec2& p) noexcept { _page_origin_px = p; }
+        void SetTerrainProbe(ITerrainProbe* p) noexcept { _terrain_probe = p; }
+        void SetLadderService(ILadderService* s) { _ladder_service = s; }
         void SetScrollContext(const IScrollRuleProvider* rules, std::size_t pageIndex);
-        void SetScrollRuleProvider(IScrollRuleProvider* p) noexcept { _scrollRules = p; }
+        void SetScrollRuleProvider(IScrollRuleProvider* p) noexcept { _scroll_rules = p; }
         void SetEntityContext(const ExPlayerContextForEntity& cx) noexcept { _entityContext = cx; }
 
         // Get scrolling request (if any) and consume it
         [[nodiscard]] std::optional<FixedScrollRequest> ConsumeScrollRequest() noexcept;
 
         // Parameter that acts as a dedicated flag for fixed page scrolling.
-        void SetFixedPageScrollAvailable(bool v) noexcept { _fixedScrollAvailable = v; }
+        void SetFixedPageScrollAvailable(bool v) noexcept { _fixed_scroll_available = v; }
         // Spawn projectile command handling
         std::optional<SpawnProjectileCommand> TakeSpawnProjectile();
 
@@ -190,26 +189,26 @@ namespace mm2hack::apps::world::entity::avatar
         states::RockBusterDrawInfo _rock_buster{};                  // Rock Buster drawing info
 
         StateProvider* _input{};                                    // Player input snapshot (This is separate from core::assembly::InputSnapshot)
-        PlayerTuning _normalTuning{};                               // Player tuning parameters
-        PlayerTuning _underwaterTuning{};                           // Underwater tuning parameters
-        const PlayerTuning* _currentTuning{ nullptr };              // Pointer to current tuning (switches between normal and underwater)
+        PlayerTuning _normal_tuning{};                              // Player tuning parameters
+        PlayerTuning _underwater_tuning{};                          // Underwater tuning parameters
+        const PlayerTuning* _current_tuning{ nullptr };             // Pointer to current tuning (switches between normal and underwater)
         PlayerEnvironment _environment{ PlayerEnvironment::Normal };// Current physical environment
-        IntroDropState _introStates{};                              // Appearing the player on stage parameters
+        IntroDropState _intro_states{};                             // Appearing the player on stage parameters
         states::AttackTuning _attack_tuning{};                      // Attack action tuning parameters
-        AnimeStepper _animeStepper{};                               // Animation stepper
+        AnimeStepper _anime_stepper{};                              // Animation stepper
         Probes _probes{ _half };                                    // Collision probes
-        const ITerrainProbe* _terrainProbe{ nullptr };              // Terrain probe
-        ILadderService* _ladderService{ nullptr };                  // Laddering action service
+        const ITerrainProbe* _terrain_probe{ nullptr };             // Terrain probe
+        ILadderService* _ladder_service{ nullptr };                 // Laddering action service
         FrameGate _underwater_physics_gate{};                       // Underwater physics gate
-        bool _jumpBuffered{ false };                                // Jump edge latched across an underwater skip-physics tick (see PlayerContext::jumpEdge)
+        bool _jump_buffered{ false };                               // Jump edge latched across an underwater skip-physics tick (see PlayerContext::jumpEdge)
 
-        WorldBounds _vBounds{};                                     // View boundaries
+        WorldBounds _v_bounds{};                                    // View boundaries
 
-        Vec2 _pageOriginPx{};                                       // Current page origin in world px
-        const IScrollRuleProvider* _scrollRules{ nullptr };         // Scroll rule provider
-        std::size_t _scrollPageIndex{ 0 };                          // Current page index for scrolling
-        std::optional<FixedScrollRequest> _pendingScrollReq{};      // Pending fixed scroll request
-        bool _fixedScrollAvailable{ false };                        // Is fixed-page scrolling available?
+        Vec2 _page_origin_px{};                                     // Current page origin in world px
+        const IScrollRuleProvider* _scroll_rules{ nullptr };        // Scroll rule provider
+        std::size_t _scroll_page_index{ 0 };                        // Current page index for scrolling
+        std::optional<FixedScrollRequest> _pending_scroll_req{};    // Pending fixed scroll request
+        bool _fixed_scroll_available{ false };                      // Is fixed-page scrolling available?
 
         ExPlayerContextForEntity _entityContext{};                  // Extended context for entity-level data
         std::optional<SpawnProjectileCommand> _spawnProjectile{};   // Pending projectile spawn command

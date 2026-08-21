@@ -56,10 +56,10 @@ namespace mm2hack::apps::world::entity::avatar
             _id, _attackAction->Id(),
             pos, vel,
             onGround, /* justLanded */ false, /* isHitCeiling */ false, /* prevOnGround */ onGround, facingLR,
-            baseTexture, /* textureAdd */ 0, _animeStepper, /* probes */ _probes, /* prelimProbes */ _probes,
+            baseTexture, /* textureAdd */ 0, _anime_stepper, /* probes */ _probes, /* prelimProbes */ _probes,
             this->Bounds(),
-            _pageOriginPx, _terrainProbe, _ladderService, /* lockClimbMove */ false, _vBounds, _scrollRules, _scrollPageIndex,
-            /* pendingFixedScroll */ { _fixedScrollAvailable, ScrollDir::None, 0.0 }
+            _page_origin_px, _terrain_probe, _ladder_service, /* lockClimbMove */ false, _v_bounds, _scroll_rules, _scroll_page_index,
+            /* pendingFixedScroll */ { _fixed_scroll_available, ScrollDir::None, 0.0 }
         };
 
         refreshProbes_(cx);
@@ -68,7 +68,7 @@ namespace mm2hack::apps::world::entity::avatar
         updateEnvironment_();
         selectTuning_();
 
-        const PlayerTuning& tuning = *_currentTuning;
+        const PlayerTuning& tuning = *_current_tuning;
         const bool skipPhysics = shouldSkipUnderwaterPhysics_();
 
         // Detect the jump edge every tick, before the skip gate below can swallow it.
@@ -79,7 +79,7 @@ namespace mm2hack::apps::world::entity::avatar
         const bool jumpPressedNow = _input->JustPressed(JPBTN::A);
         if (jumpPressedNow && skipPhysics)
         {
-            _jumpBuffered = true;
+            _jump_buffered = true;
         }
 
         // Get up and down lock on laddering (if any)
@@ -90,8 +90,8 @@ namespace mm2hack::apps::world::entity::avatar
         AvatarStatus next = _status;
         if (!skipPhysics)
         {
-            cx.jumpEdge = jumpPressedNow || _jumpBuffered;
-            _jumpBuffered = false;
+            cx.jumpEdge = jumpPressedNow || _jump_buffered;
+            _jump_buffered = false;
 
             // Execute the behavior of the current state and determine the next state.
             next = st->Update(cx, _input, tuning, dt);
@@ -166,10 +166,10 @@ namespace mm2hack::apps::world::entity::avatar
         
         // Draw player sprite
         auto screenPos = toScreenPos(pos);
-        if (_introStates.active)
+        if (_intro_states.active)
         {
             // During intro drop, override the texture to the intro drop texture
-            screenPos += _introStates.offsetPos;
+            screenPos += _intro_states.offsetPos;
         }
 
         res.GetSpriteManager().UseById(_id, texture, static_cast<int>(screenPos.x), static_cast<int>(screenPos.y));
@@ -220,12 +220,12 @@ namespace mm2hack::apps::world::entity::avatar
         if (!IsAlive()) return;
 
         int texture_add = 0;
-        AnimeContext ax{ _animeStepper, facingLR, baseTexture, texture_add };
+        AnimeContext ax{ _anime_stepper, facingLR, baseTexture, texture_add };
         _attackAction->TickAnimationOnly(ax, _attack_tuning, dt, _rock_buster);
         findState_(_status)->TickAnimationOnly(
             ax,
             _input,
-            *_currentTuning,
+            *_current_tuning,
             dt);
 
         attackTexture = texture_add;
@@ -234,23 +234,23 @@ namespace mm2hack::apps::world::entity::avatar
 
     void PlayerEntity::BeginIntroDrop()
     {
-        _introStates.offsetPos = Vec2{ -1.0, -6.0 };  // Slight horizontal offset while dropping sprite set.
-        _introStates.destPos.y = pos.y;
+        _intro_states.offsetPos = Vec2{ -1.0, -6.0 };  // Slight horizontal offset while dropping sprite set.
+        _intro_states.destPos.y = pos.y;
         // Start above the screen and drop down to the current position.
 
-        pos.y = _vBounds.topY - _half.y - 16.0; // Start 16px above the top view bound (adjust as needed)
+        pos.y = _v_bounds.topY - _half.y - 16.0; // Start 16px above the top view bound (adjust as needed)
         baseTexture = static_cast<int>(STile::IntroDropA);  // Intro drop texture index
-        _introStates.active = true;
+        _intro_states.active = true;
 
         composeFinalTexture_();
     }
 
     void PlayerEntity::UpdateIntroAnimation(double dt)
     {
-        if (!_introStates.active)
+        if (!_intro_states.active)
             return;
 
-        switch (_introStates.phase)
+        switch (_intro_states.phase)
         {
         case IntroPhase::Falling:
             UpdateIntroFalling(dt);
@@ -269,11 +269,11 @@ namespace mm2hack::apps::world::entity::avatar
 
     void PlayerEntity::UpdateIntroFalling(double dt)
     {
-        _introStates.timer += dt;
+        _intro_states.timer += dt;
 
-        const double duration = _introStates.dropDuration;
+        const double duration = _intro_states.dropDuration;
 
-        double t = _introStates.timer / duration;
+        double t = _intro_states.timer / duration;
         if (t > 1.0)
         {
             t = 1.0;
@@ -282,16 +282,16 @@ namespace mm2hack::apps::world::entity::avatar
         // Ease-in (quadratic)
         const double eased = t * t;
 
-        const double startY = _introStates.offsetPos.y;
-        const double destY = _introStates.destPos.y;
+        const double startY = _intro_states.offsetPos.y;
+        const double destY = _intro_states.destPos.y;
 
         pos.y = startY + (destY - startY) * eased;
 
         if (t >= 1.0)
         {
             pos.y = destY;
-            _introStates.phase = IntroPhase::Landing;
-            _introStates.timer = 0.0;
+            _intro_states.phase = IntroPhase::Landing;
+            _intro_states.timer = 0.0;
 
             auto& resource = runtime::GameContext::GetInstance().GetResourceManager();
             auto& audio = resource.GetAudioManager();
@@ -301,7 +301,7 @@ namespace mm2hack::apps::world::entity::avatar
 
     void PlayerEntity::UpdateIntroLanding(double dt)
     {
-        _introStates.timer += dt;
+        _intro_states.timer += dt;
 
         double accumulated = 0.0;
 
@@ -309,7 +309,7 @@ namespace mm2hack::apps::world::entity::avatar
         {
             accumulated += frame.duration;
 
-            if (_introStates.timer < accumulated)
+            if (_intro_states.timer < accumulated)
             {
                 baseTexture = static_cast<int>(frame.tile);
                 return;
@@ -318,34 +318,34 @@ namespace mm2hack::apps::world::entity::avatar
 
         // Animation finished
         baseTexture = static_cast<int>(STile::StandingA);
-        _introStates.phase = IntroPhase::Done;
-        _introStates.active = false;
+        _intro_states.phase = IntroPhase::Done;
+        _intro_states.active = false;
     }
 
     bool PlayerEntity::IsIntroFinished() const noexcept
     {
-        return !_introStates.active;
+        return !_intro_states.active;
     }
 
     void PlayerEntity::SetCollidable(bool v) noexcept { _collidable = v; }
 
     void PlayerEntity::SetTuning(const PlayerTuning& t)
     {
-        _normalTuning = t;
-        _underwaterTuning = MakeUnderwaterTuning(t);
-        _currentTuning = &_normalTuning;
+        _normal_tuning = t;
+        _underwater_tuning = MakeUnderwaterTuning(t);
+        _current_tuning = &_normal_tuning;
     }
 
     void PlayerEntity::updateEnvironment_() noexcept
     {
-        if (_terrainProbe == nullptr)
+        if (_terrain_probe == nullptr)
         {
             _environment = PlayerEnvironment::Normal;
             return;
         }
 
         const TileAttribute attr =
-            _terrainProbe->AttributeAt(_probes.environment.centerPoint);
+            _terrain_probe->AttributeAt(_probes.environment.centerPoint);
 
         if (Has(attr, TileAttribute::Water))
         {
@@ -361,12 +361,12 @@ namespace mm2hack::apps::world::entity::avatar
         switch (_environment)
         {
         case PlayerEnvironment::Underwater:
-            _currentTuning = &_underwaterTuning;
+            _current_tuning = &_underwater_tuning;
             break;
 
         case PlayerEnvironment::Normal:
         default:
-            _currentTuning = &_normalTuning;
+            _current_tuning = &_normal_tuning;
             break;
         }
     }
@@ -386,23 +386,23 @@ namespace mm2hack::apps::world::entity::avatar
 
     void PlayerEntity::SetViewBounds(const systems::scrolling::atomic::ViewBounds& b) noexcept
     {
-        _vBounds.leftX = b.leftX;
-        _vBounds.rightX = b.rightX;
-        _vBounds.topY = b.topY;
-        _vBounds.bottomY = b.bottomY;
+        _v_bounds.leftX = b.leftX;
+        _v_bounds.rightX = b.rightX;
+        _v_bounds.topY = b.topY;
+        _v_bounds.bottomY = b.bottomY;
     }
 
     void PlayerEntity::SetScrollContext(const IScrollRuleProvider* rules, std::size_t pageIndex)
     {
-        _scrollRules = rules;
-        _scrollPageIndex = pageIndex;
+        _scroll_rules = rules;
+        _scroll_page_index = pageIndex;
     }
 
     [[nodiscard]] std::optional<FixedScrollRequest> PlayerEntity::ConsumeScrollRequest() noexcept
     {
-        if (!_pendingScrollReq.has_value()) return std::nullopt;
-        auto out = _pendingScrollReq;
-        _pendingScrollReq.reset();
+        if (!_pending_scroll_req.has_value()) return std::nullopt;
+        auto out = _pending_scroll_req;
+        _pending_scroll_req.reset();
         return out;
     }
 
@@ -430,12 +430,12 @@ namespace mm2hack::apps::world::entity::avatar
 
     void PlayerEntity::refreshProbes_(PlayerContext& cx) noexcept
     {
-        _probes.refreshAll(cx, _normalTuning.probeOffsets);
+        _probes.refreshAll(cx, _normal_tuning.probeOffsets);
     }
 
     void PlayerEntity::requestScroll_(FixedScrollRequest req) noexcept
     {
-        if (_pendingScrollReq.has_value()) return; // keep first!
-        _pendingScrollReq = std::move(req);
+        if (_pending_scroll_req.has_value()) return; // keep first!
+        _pending_scroll_req = std::move(req);
     }
 }
