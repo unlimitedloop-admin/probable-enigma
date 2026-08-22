@@ -232,6 +232,8 @@
     <ClCompile Include="src\apps\vfx\stareffects\Star.cpp" />
     <ClCompile Include="src\apps\systems\physics\LadderService.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\PlayerEntity.cpp" />
+    <ClCompile Include="src\apps\world\entity\avatar\PlayerEnvironmentController.cpp" />
+    <ClCompile Include="src\apps\world\entity\avatar\PlayerStateMachine.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\states\AttackActionState.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\states\BrakeRunState.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\states\GroundBaseState.cpp" />
@@ -437,6 +439,8 @@
     <ClInclude Include="src\apps\vfx\stareffects\Star.h" />
     <ClInclude Include="src\apps\vfx\stareffects\StarState.h" />
     <ClInclude Include="src\apps\world\entity\avatar\PlayerEntity.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\PlayerEnvironmentController.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\PlayerStateMachine.h" />
     <ClInclude Include="src\config\AssetPaths.h" />
     <ClInclude Include="src\config\ConfigUIManager.h" />
     <ClInclude Include="src\config\EnvironmentConfig.h" />

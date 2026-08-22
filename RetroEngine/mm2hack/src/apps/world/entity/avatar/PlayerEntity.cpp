@@ -11,23 +11,17 @@
 #include "apps/systems/scrolling/atomic/ScrollTypes.h"
 #include "apps/systems/view/RenderContext.h"
 #include "apps/systems/view/ViewState.h"
+#include "apps/world/entity/common/SpawnSplashEffectCommand.h"
 #include "apps/world/entity/EntityBase.h"
 #include "apps/world/entity/IEntity.h"
 #include "AvatarStatus.h"
 #include "config/SystemConfig.h"
 #include "input/Jpbtn.h"
-#include "IPlayerState.h"
 #include "PlayerContext.h"
+#include "PlayerEnvironmentController.h"
 #include "PlayerFrameOutput.h"
 #include "PlayerParams.h"
 #include "states/AttackActionState.h"
-#include "states/BrakeRunState.h"
-#include "states/HoveringState.h"
-#include "states/LadderingState.h"
-#include "states/LandingState.h"
-#include "states/LaunchRunState.h"
-#include "states/RunningState.h"
-#include "states/StandingState.h"
 
 namespace mm2hack::apps::world::entity::avatar
 {
@@ -39,14 +33,6 @@ namespace mm2hack::apps::world::entity::avatar
         : _id(id), _effects_id(effectsId), _half{ 16.0, 16.0 }
     {
         _attackAction = std::make_unique<states::AttackActionState>(weaponId);
-        _states[0] = std::make_unique<states::StandingState>();
-        _states[1] = std::make_unique<states::RunningState>();
-        _states[2] = std::make_unique<states::HoveringState>();
-        _states[3] = std::make_unique<states::LaunchRunState>();
-        _states[4] = std::make_unique<states::BrakeRunState>();
-        _states[5] = std::make_unique<states::LadderingState>();
-        _states[6] = std::make_unique<states::LandingState>();
-
         SetTuning(PlayerTuning{});
     }
 
@@ -57,13 +43,12 @@ namespace mm2hack::apps::world::entity::avatar
 
         PlayerContext cx = makeContext_();
         refreshProbes_(cx);
-        processEnvironment_();
+        const PlayerEnvironmentUpdate environment = processEnvironment_();
 
-        const PlayerTuning& tuning = *_current_tuning;
-        const bool skip_physics = shouldSkipUnderwaterPhysics_();
+        const PlayerTuning& tuning = _environment_controller.CurrentTuning();
 
-        updateActions_(cx, tuning, skip_physics, dt);
-        applyContext_(cx, skip_physics);
+        updateActions_(cx, tuning, environment.skipPhysics, dt);
+        applyContext_(cx, environment.skipPhysics);
         resolvePostMovement_(cx);
     }
 
@@ -81,13 +66,12 @@ namespace mm2hack::apps::world::entity::avatar
         };
     }
 
-    void PlayerEntity::processEnvironment_()
+    PlayerEnvironmentUpdate PlayerEntity::processEnvironment_()
     {
-        const PlayerEnvironment previous_environment = _environment;
-        updateEnvironment_();
+        const PlayerEnvironmentUpdate environment =
+            _environment_controller.Update(_terrain_probe, _probes.environment.centerPoint);
 
-        if (previous_environment == PlayerEnvironment::Normal &&
-            _environment == PlayerEnvironment::Underwater)
+        if (environment.EnteredWater())
         {
             _frame_output.PushEvent(PlayerEventType::EnteredWater);
 
@@ -109,7 +93,7 @@ namespace mm2hack::apps::world::entity::avatar
             }
         }
 
-        selectTuning_();
+        return environment;
     }
 
     void PlayerEntity::updateActions_(PlayerContext& cx, const PlayerTuning& tuning, bool skipPhysics, double dt)
@@ -122,13 +106,11 @@ namespace mm2hack::apps::world::entity::avatar
 
         _attackAction->PreUpdate(cx, _input, _entityContext.canSpawnProjectile);
 
-        auto& state = findState_(_status);
-        AvatarStatus next = _status;
         if (!skipPhysics)
         {
             cx.jumpEdge = jump_pressed_now || _jump_buffered;
             _jump_buffered = false;
-            next = state->Update(cx, _input, tuning, dt);
+            _state_machine.Update(cx, _input, tuning, dt);
         }
 
         auto action = _attackAction->PostUpdate(cx, _input, _attack_tuning, dt);
@@ -140,12 +122,7 @@ namespace mm2hack::apps::world::entity::avatar
             _frame_output.projectile = std::move(action.spawnProjectile);
         }
 
-        if (next != _status)
-        {
-            state->OnExit(cx, _input, tuning);
-            _status = next;
-            findState_(_status)->OnEnter(cx, _input, tuning);
-        }
+        _state_machine.CommitTransition(cx, _input, tuning);
 
         if (cx.pendingFixedScroll.dir != ScrollDir::None)
         {
@@ -261,10 +238,10 @@ namespace mm2hack::apps::world::entity::avatar
         int texture_add = 0;
         AnimeContext ax{ _anime_stepper, facingLR, baseTexture, texture_add };
         _attackAction->TickAnimationOnly(ax, _attack_tuning, dt, _rock_buster);
-        findState_(_status)->TickAnimationOnly(
+        _state_machine.TickAnimation(
             ax,
             _input,
-            *_current_tuning,
+            _environment_controller.CurrentTuning(),
             dt);
 
         attackTexture = texture_add;
@@ -368,57 +345,7 @@ namespace mm2hack::apps::world::entity::avatar
 
     void PlayerEntity::SetTuning(const PlayerTuning& t)
     {
-        _normal_tuning = t;
-        _underwater_tuning = MakeUnderwaterTuning(t);
-        _current_tuning = &_normal_tuning;
-    }
-
-    void PlayerEntity::updateEnvironment_() noexcept
-    {
-        if (_terrain_probe == nullptr)
-        {
-            _environment = PlayerEnvironment::Normal;
-            return;
-        }
-
-        const TileAttribute attr =
-            _terrain_probe->AttributeAt(_probes.environment.centerPoint);
-
-        if (Has(attr, TileAttribute::Water))
-        {
-            _environment = PlayerEnvironment::Underwater;
-            return;
-        }
-
-        _environment = PlayerEnvironment::Normal;
-    }
-
-    void PlayerEntity::selectTuning_() noexcept
-    {
-        switch (_environment)
-        {
-        case PlayerEnvironment::Underwater:
-            _current_tuning = &_underwater_tuning;
-            break;
-
-        case PlayerEnvironment::Normal:
-        default:
-            _current_tuning = &_normal_tuning;
-            break;
-        }
-    }
-
-    bool PlayerEntity::shouldSkipUnderwaterPhysics_() noexcept
-    {
-        if (_environment != PlayerEnvironment::Underwater)
-        {
-            _underwater_physics_gate.reset();
-            return false;
-        }
-
-        constexpr int kSkipInterval = 5;
-
-        return _underwater_physics_gate.step(kSkipInterval);
+        _environment_controller.SetTuning(t);
     }
 
     void PlayerEntity::SetViewBounds(const systems::scrolling::atomic::ViewBounds& b) noexcept
@@ -467,7 +394,7 @@ namespace mm2hack::apps::world::entity::avatar
 
     void PlayerEntity::refreshProbes_(PlayerContext& cx) noexcept
     {
-        _probes.refreshAll(cx, _normal_tuning.probeOffsets);
+        _probes.refreshAll(cx, _environment_controller.ProbeOffsets());
     }
 
     void PlayerEntity::requestScroll_(FixedScrollRequest req) noexcept

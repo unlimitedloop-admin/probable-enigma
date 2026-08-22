@@ -29,9 +29,6 @@ namespace mm2hack::core::assembly
 
 namespace mm2hack::apps::world::entity::avatar::states
 {
-    using core::assembly::StateProvider;
-    using foundation::math::Vec2;
-
     // Player state: Laddering (on ladder)
     class LadderingState final : public IPlayerState
     {
@@ -39,13 +36,13 @@ namespace mm2hack::apps::world::entity::avatar::states
         // Get state ID
         AvatarStatus Id() const noexcept override;
         // Called when entering the state
-        void OnEnter(PlayerContext& cx, StateProvider* in, const PlayerTuning& t) override;
+        void OnEnter(PlayerContext& cx, core::assembly::StateProvider* in, const PlayerTuning& t) override;
         // Called when exiting the state
-        void OnExit(PlayerContext& cx, StateProvider* in, const PlayerTuning& t) override;
+        void OnExit(PlayerContext& cx, core::assembly::StateProvider* in, const PlayerTuning& t) override;
         // Update state and return next state ID
-        AvatarStatus Update(PlayerContext& cx, StateProvider* in, const PlayerTuning& t, double /*dt*/) override;
+        AvatarStatus Update(PlayerContext& cx, core::assembly::StateProvider* in, const PlayerTuning& t, double /*dt*/) override;
         // Animation only tick
-        void TickAnimationOnly(AnimeContext& ax, StateProvider* in, const PlayerTuning& t, double dt) override;
+        void TickAnimationOnly(AnimeContext& ax, core::assembly::StateProvider* in, const PlayerTuning& t, double dt) override;
 
     private:
         // Check if the player is still on the ladder
@@ -57,9 +54,9 @@ namespace mm2hack::apps::world::entity::avatar::states
         // Perform rising to ground action
         void doRisingToGround_(PlayerContext& cx) const;
         // Build grab candidate positions
-        void buildGrabCandidates_(Vec2 out[9], const PlayerContext& cx, const PlayerTuning& t) const noexcept;
+        void buildGrabCandidates_(foundation::math::Vec2 out[9], const PlayerContext& cx, const PlayerTuning& t) const noexcept;
         // Compute input direction and check if the top tile is empty
-        std::pair<int, bool> computeInputAndTopEmpty_(const PlayerContext& cx, StateProvider* in) const noexcept;
+        std::pair<int, bool> computeInputAndTopEmpty_(const PlayerContext& cx, core::assembly::StateProvider* in) const noexcept;
         // Check and issue a fixed-page scroll request
         void checkFixedScrollRequest_(PlayerContext& cx, double intendedDy) const noexcept;
 

@@ -12,6 +12,8 @@
 
 namespace mm2hack::apps::world::entity::avatar::states
 {
+    using StateProvider = core::assembly::StateProvider;
+
     void AttackActionState::PreUpdate(PlayerContext& cx, StateProvider* in, bool can_spawn) noexcept
     {
         if (can_spawn && in->JustPressed(JPBTN::B))

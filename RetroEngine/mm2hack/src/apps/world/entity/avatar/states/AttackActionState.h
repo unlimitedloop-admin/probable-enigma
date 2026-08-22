@@ -67,16 +67,13 @@ namespace mm2hack::apps::world::entity::avatar::states
     // Handles attack action state (attacking or not)
     class AttackActionState final
     {
-        using StateProvider   = core::assembly::StateProvider;
-        using SpriteManagerId = rendering::sprite::SpriteManager::Id;
-
     public:
-        AttackActionState(SpriteManagerId id) : _id(id) {}
+        AttackActionState(rendering::sprite::SpriteManager::Id id) : _id(id) {}
 
-        SpriteManagerId Id() const noexcept { return _id; }
+        rendering::sprite::SpriteManager::Id Id() const noexcept { return _id; }
 
-        void PreUpdate(PlayerContext& cx, StateProvider* in, bool can_spawn) noexcept;
-        ActionUpdateResult PostUpdate(PlayerContext& cx, StateProvider* in, const AttackTuning& tuning, double dt);
+        void PreUpdate(PlayerContext& cx, core::assembly::StateProvider* in, bool can_spawn) noexcept;
+        ActionUpdateResult PostUpdate(PlayerContext& cx, core::assembly::StateProvider* in, const AttackTuning& tuning, double dt);
 
         // Is currently attacking
         [[nodiscard]] bool IsAttacking() const noexcept;
@@ -84,17 +81,17 @@ namespace mm2hack::apps::world::entity::avatar::states
         [[nodiscard]] void TickAnimationOnly(AnimeContext& ax, const AttackTuning& tuning, double dt, RockBusterDrawInfo& out_rb) const noexcept;
 
     private:
-        void restartAttackPose_() noexcept; // Start attack action
-        void finishAttackPose_() noexcept;  // Finish attack action
+        void restartAttackPose_() noexcept;         // Start attack action
+        void finishAttackPose_() noexcept;          // Finish attack action
 
     private:
         const std::wstring kClassName{ L"AttackActionState" };
 
-        SpriteManagerId _id{};              // Weapon sprite id
-        bool _is_attacking{ false };        // Whether currently attacking
-        double _pose_time_sec{ 10.0 };      // Time spent in shot pose
-        RockBusterTuning rb_tuning{};       // Rock Buster tuning
+        rendering::sprite::SpriteManager::Id _id{}; // Weapon sprite id
+        bool _is_attacking{ false };                // Whether currently attacking
+        double _pose_time_sec{ 10.0 };              // Time spent in shot pose
+        RockBusterTuning rb_tuning{};               // Rock Buster tuning
 
-        bool _fire_requested{ false };      // Whether fire button was requested
+        bool _fire_requested{ false };              // Whether fire button was requested
     };
 }

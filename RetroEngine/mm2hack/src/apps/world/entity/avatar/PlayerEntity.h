@@ -28,13 +28,13 @@
 #include "apps/systems/view/RenderContext.h"
 #include "apps/systems/view/ViewState.h"
 #include "apps/world/entity/common/AnimeStepper.h"
-#include "apps/world/entity/common/FrameGate.h"
 #include "apps/world/entity/IEntity.h"
 #include "AvatarStatus.h"
-#include "IPlayerState.h"
 #include "PlayerContext.h"
+#include "PlayerEnvironmentController.h"
 #include "PlayerFrameOutput.h"
 #include "PlayerParams.h"
+#include "PlayerStateMachine.h"
 #include "states/AttackActionState.h"
 
 namespace mm2hack::core::assembly
@@ -48,7 +48,6 @@ namespace mm2hack::apps::world::entity::avatar
     class PlayerEntity final : public EntityBase, public systems::physics::ICollider
     {
         using AnimeStepper              = common::AnimeStepper;
-        using FrameGate                 = common::FrameGate;
         using RectF                     = foundation::math::RectF;
         using Vec2                      = foundation::math::Vec2;
         using CollisionLayer            = systems::physics::CollisionLayer;
@@ -144,33 +143,15 @@ namespace mm2hack::apps::world::entity::avatar
 
     private:
         PlayerContext makeContext_();                               // Build the context used during this update
-        void processEnvironment_();                                 // Update environment, tuning, and transition effects
+        [[nodiscard]] PlayerEnvironmentUpdate processEnvironment_(); // Update environment and transition effects
         void updateActions_(PlayerContext& cx, const PlayerTuning& tuning, bool skipPhysics, double dt); // Update locomotion and attack actions
         void applyContext_(const PlayerContext& cx, bool skipPhysics); // Apply context results to the entity
         void resolvePostMovement_(PlayerContext& cx);               // Resolve overlaps and velocity after movement
 
         void composeFinalTexture_() noexcept;                       // Set current avatar tile number
         void refreshProbes_(PlayerContext& cx) noexcept;            // Refresh collision all probes
-        void updateEnvironment_() noexcept;                         // Update current physical environment
-        void selectTuning_() noexcept;                              // Select tuning for current environment
-        [[nodiscard]] bool shouldSkipUnderwaterPhysics_() noexcept; // Check if underwater physics should be skipped (for performance)
 
         void requestScroll_(FixedScrollRequest req) noexcept;       // Request fixed page scrolling
-
-        std::unique_ptr<IPlayerState>& findState_(AvatarStatus s)
-        {
-            switch (s)
-            {
-            case AvatarStatus::Running:   return _states[1];
-            case AvatarStatus::Hovering:  return _states[2];
-            case AvatarStatus::LaunchRun: return _states[3];
-            case AvatarStatus::BrakeRun:  return _states[4];
-            case AvatarStatus::Laddering: return _states[5];
-            case AvatarStatus::Landing:   return _states[6];
-            case AvatarStatus::Standing:
-            default:                      return _states[0];
-            }
-        }
 
     private:
         const std::wstring kClassName{ L"PlayerEntity" };
@@ -192,23 +173,18 @@ namespace mm2hack::apps::world::entity::avatar
         SpriteManagerId _effects_id{};                              // Effect sprite Id
         Vec2 _half{};                                               // Half-size of the bounding box
         bool _collidable{ true };                                   // Whether collision is enabled
-        AvatarStatus _status{ AvatarStatus::Standing };             // Current avatar status
-        std::array<std::unique_ptr<IPlayerState>, 7> _states{};     // Basic behavior states array
+        PlayerStateMachine _state_machine{};                        // Locomotion state ownership and transitions
         std::unique_ptr<states::AttackActionState> _attackAction{}; // Attack action state handler
         states::RockBusterDrawInfo _rock_buster{};                  // Rock Buster drawing info
 
         StateProvider* _input{};                                    // Player input snapshot (This is separate from core::assembly::InputSnapshot)
-        PlayerTuning _normal_tuning{};                              // Player tuning parameters
-        PlayerTuning _underwater_tuning{};                          // Underwater tuning parameters
-        const PlayerTuning* _current_tuning{ nullptr };             // Pointer to current tuning (switches between normal and underwater)
-        PlayerEnvironment _environment{ PlayerEnvironment::Normal };// Current physical environment
+        PlayerEnvironmentController _environment_controller{};      // Environment detection and physics tuning
         IntroDropState _intro_states{};                             // Appearing the player on stage parameters
         states::AttackTuning _attack_tuning{};                      // Attack action tuning parameters
         AnimeStepper _anime_stepper{};                              // Animation stepper
         Probes _probes{ _half };                                    // Collision probes
         const ITerrainProbe* _terrain_probe{ nullptr };             // Terrain probe
         ILadderService* _ladder_service{ nullptr };                 // Laddering action service
-        FrameGate _underwater_physics_gate{};                       // Underwater physics gate
         bool _jump_buffered{ false };                               // Jump edge latched across an underwater skip-physics tick (see PlayerContext::jumpEdge)
 
         WorldBounds _v_bounds{};                                    // View boundaries

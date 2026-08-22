@@ -27,8 +27,6 @@ namespace mm2hack::core::assembly
 
 namespace mm2hack::apps::world::entity::avatar::states
 {
-    using core::assembly::StateProvider;
-
     // Player state: Running (on ground, moving)
     class RunningState final : public GroundBaseState
     {
@@ -36,9 +34,9 @@ namespace mm2hack::apps::world::entity::avatar::states
         // Get state ID
         AvatarStatus Id() const noexcept override;
         // Update state and return next state ID
-        AvatarStatus Update(PlayerContext& cx, StateProvider* in, const PlayerTuning& t, double /*dt*/) override;
+        AvatarStatus Update(PlayerContext& cx, core::assembly::StateProvider* in, const PlayerTuning& t, double /*dt*/) override;
         // Animation only tick
-        void TickAnimationOnly(AnimeContext& ax, StateProvider* in, const PlayerTuning& t, double /*dt*/) override;
+        void TickAnimationOnly(AnimeContext& ax, core::assembly::StateProvider* in, const PlayerTuning& t, double /*dt*/) override;
 
     private:
         const std::wstring kClassName{ L"RunningState" };

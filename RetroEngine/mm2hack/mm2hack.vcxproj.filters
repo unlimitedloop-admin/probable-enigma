@@ -96,6 +96,8 @@
     <ClCompile Include="src\apps\systems\physics\CollisionLayer.cpp" />
     <ClCompile Include="src\apps\systems\physics\CollisionSystem.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\PlayerEntity.cpp" />
+    <ClCompile Include="src\apps\world\entity\avatar\PlayerEnvironmentController.cpp" />
+    <ClCompile Include="src\apps\world\entity\avatar\PlayerStateMachine.cpp" />
     <ClCompile Include="src\apps\world\entity\effects\ProjectileEntity.cpp" />
     <ClCompile Include="src\apps\world\entity\effects\SplashEffectEntity.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\states\StandingState.cpp" />
@@ -286,6 +288,8 @@
     <ClInclude Include="src\apps\systems\physics\ITileMapProvider.h" />
     <ClInclude Include="src\apps\systems\physics\CollisionSystem.h" />
     <ClInclude Include="src\apps\world\entity\avatar\PlayerEntity.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\PlayerEnvironmentController.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\PlayerStateMachine.h" />
     <ClInclude Include="src\apps\world\entity\effects\ProjectileEntity.h" />
     <ClInclude Include="src\apps\world\entity\effects\SplashEffectEntity.h" />
     <ClInclude Include="src\apps\world\entity\avatar\AvatarStatus.h" />
