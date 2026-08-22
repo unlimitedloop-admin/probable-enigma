@@ -6,6 +6,7 @@
 #include <span>
 #include <string_view>
 #include "BGTileAnimator.h"
+#include "BGTilePalette.h"
 
 namespace mm2hack::apps::systems::physics
 {

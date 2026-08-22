@@ -10,6 +10,7 @@
 #include "apps/world/entity/avatar/PlayerContext.h"
 #include "apps/world/entity/avatar/PlayerEntity.h"
 #include "apps/world/entity/effects/ProjectileEntity.h"
+#include "apps/world/entity/effects/SplashEffectEntity.h"
 #include "apps/world/entity/EntityManager.h"
 #include "config/ConfigUIManager.h"
 #include "core/overlay/DebugHud.h"
@@ -241,6 +242,10 @@ namespace mm2hack::apps::scenes::phases
                 if (auto cmd = player->TakeSpawnProjectile(); cmd)
                 {
                     _ctx->entity_mgr->Spawn<effects::ProjectileEntity>(*cmd);
+                }
+                if (auto command = player->TakeSpawnSplashEffect(); command)
+                {
+                    _ctx->entity_mgr->Spawn<effects::SplashEffectEntity>(*command);
                 }
 
                 delta = player->pos - prev_pos;

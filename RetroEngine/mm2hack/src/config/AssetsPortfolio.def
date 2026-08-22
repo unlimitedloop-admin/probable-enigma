@@ -4,6 +4,7 @@ X(Numbers,           BgsDir,        LR"(hieroglyph\NUMBER_N0_ALL_PATTERN.png)", 
 X(JapaneseKANA,      BgsDir,        LR"(hieroglyph\JPNKANA_N0_ALL_PATTERN.png)",            LR"(hieroglyph\JPNKANA_N0_ALL_PATTERN.json)")
 X(Player,            SpritesDir,    LR"(avatar\normal\PLAYER_N0_ALL_PATTERN.png)",          LR"(avatar\normal\PLAYER_N0_ALL_PATTERN.json)")
 X(PlayerEquip,       SpritesDir,    LR"(avatar\equip\PLAYER_WEAPON_N0_ALL_PATTERN.png)",    LR"(avatar\equip\PLAYER_WEAPON_N0_ALL_PATTERN.json)")
+X(SplashEffect,      SpritesDir,    LR"(avatar\miscellaneous\EFFECT01_N0_ALL_PATTERN.png)", LR"(avatar\miscellaneous\EFFECT01_N0_ALL_PATTERN.json)")
 X(FlashStar,         BgsDir,        LR"(animation\FLASHSTAR_N0_ALL_PATTERN.png)",           LR"(animation\FLASHSTAR_N0_ALL_PATTERN.json)")
 X(FlatCursor,        SpritesDir,    LR"(miscellaneous\CURSOR_N0_ALL_PATTERN.png)",          LR"(miscellaneous\CURSOR_N0_ALL_PATTERN.json)")
 X(SampleStage,       ExamsDir,      LR"(bg\DEMOSTAGE2_N0_ALL_PATTERN.png)",                 LR"(bg\DEMOSTAGE2_N0_ALL_PATTERN.json)")

@@ -2,6 +2,7 @@
 
 #include "PlayerEntity.h"
 
+#include <cmath>
 #include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/runtime/GameContext.h"
 #include "apps/systems/physics/CollisionLayer.h"
@@ -13,6 +14,7 @@
 #include "apps/world/entity/EntityBase.h"
 #include "apps/world/entity/IEntity.h"
 #include "AvatarStatus.h"
+#include "config/SystemConfig.h"
 #include "input/Jpbtn.h"
 #include "IPlayerState.h"
 #include "PlayerContext.h"
@@ -32,8 +34,8 @@ namespace mm2hack::apps::world::entity::avatar
     using systems::scrolling::atomic::ScrollController;
     using systems::scrolling::atomic::ViewBounds;
 
-    PlayerEntity::PlayerEntity(SpriteManagerId id, SpriteManagerId weaponId)
-        : _id(id), _half{ 16.0, 16.0 }
+    PlayerEntity::PlayerEntity(SpriteManagerId id, SpriteManagerId weaponId, SpriteManagerId effectsId)
+        : _id(id), _effects_id(effectsId), _half{ 16.0, 16.0 }
     {
         _attackAction = std::make_unique<states::AttackActionState>(weaponId);
         _states[0] = std::make_unique<states::StandingState>();
@@ -65,7 +67,34 @@ namespace mm2hack::apps::world::entity::avatar
         refreshProbes_(cx);
 
         // Update physical environment and select appropriate tuning.
+        const PlayerEnvironment previous_environment = _environment;
         updateEnvironment_();
+
+        if (previous_environment == PlayerEnvironment::Normal &&
+            _environment == PlayerEnvironment::Underwater)
+        {
+            auto& resource = runtime::GameContext::GetInstance().GetResourceManager();
+            auto& audio = resource.GetAudioManager();
+            audio.PlaySe(L"splash");
+
+            constexpr int kRightSplashTexture = 0;
+            constexpr int kLeftSplashTexture = 4;
+            const double tile_size = static_cast<double>(config::SystemConfig::kTileSize);
+            const double surface_y =
+                std::floor(_probes.environment.centerPoint.y / tile_size) * tile_size;
+
+            if (_effects_id != static_cast<SpriteManagerId>(-1))
+            {
+                _spawn_splash_effect = SpawnSplashEffectCommand{
+                    .spawnPos = { pos.x, surface_y },
+                    .spriteId = _effects_id,
+                    .baseTexture = facingLR == AvatarDirection::Right
+                        ? kRightSplashTexture
+                        : kLeftSplashTexture
+                };
+            }
+        }
+
         selectTuning_();
 
         const PlayerTuning& tuning = *_current_tuning;
@@ -409,6 +438,11 @@ namespace mm2hack::apps::world::entity::avatar
     std::optional<PlayerEntity::SpawnProjectileCommand> PlayerEntity::TakeSpawnProjectile()
     {
         return std::exchange(_spawnProjectile, std::nullopt);
+    }
+
+    std::optional<PlayerEntity::SpawnSplashEffectCommand> PlayerEntity::TakeSpawnSplashEffect()
+    {
+        return std::exchange(_spawn_splash_effect, std::nullopt);
     }
 
     void PlayerEntity::composeFinalTexture_() noexcept

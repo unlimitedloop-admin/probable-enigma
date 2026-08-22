@@ -3,28 +3,28 @@
         "demo_stage_2_bgm": {
             "channels": [
                 {
-                    "file": "assets/sounds/BGMs/02_DemoStage2/BGM_01/Rockman5__BGM_WaveManStage_Square1.wav",
+                    "file": "assets/sounds/BGMs/02_DemoStage2/BGM_02/Rockman3__BGM_DrWilyStage1_Square1.wav",
                     "volume": 255
                 },
                 {
-                    "file": "assets/sounds/BGMs/02_DemoStage2/BGM_01/Rockman5__BGM_WaveManStage_Square2.wav",
+                    "file": "assets/sounds/BGMs/02_DemoStage2/BGM_02/Rockman3__BGM_DrWilyStage1_Square2.wav",
                     "volume": 255
                 },
                 {
-                    "file": "assets/sounds/BGMs/02_DemoStage2/BGM_01/Rockman5__BGM_WaveManStage_Triangle.wav",
+                    "file": "assets/sounds/BGMs/02_DemoStage2/BGM_02/Rockman3__BGM_DrWilyStage1_Triangle.wav",
                     "volume": 255
                 },
                 {
-                    "file": "assets/sounds/BGMs/02_DemoStage2/BGM_01/Rockman5__BGM_WaveManStage_Noise.wav",
+                    "file": "assets/sounds/BGMs/02_DemoStage2/BGM_02/Rockman3__BGM_DrWilyStage1_Noise.wav",
                     "volume": 255
                 },
                 {
-                    "file": "assets/sounds/BGMs/02_DemoStage2/BGM_01/Rockman5__BGM_WaveManStage_DPCM_Unused_ch.wav",
+                    "file": "assets/sounds/BGMs/02_DemoStage2/BGM_02/Rockman3__BGM_DrWilyStage1_DPCM_Unused_ch.wav",
                     "volume": 255
                 }
             ],
-            "loop_start": 21.71,
-            "loop_end": 72.12
+            "loop_start": 11.77,
+            "loop_end": 58.49
         }
     },
     "se": {
@@ -48,6 +48,23 @@
                 }
             ]
         },
+        "splash": {
+            "channels": [
+                {
+                    "file": "assets/sounds/SoundEffects/SPLASH_EFFECT_N0_SE_Square2.wav",
+                    "volume": 255,
+                    "target_bgm_channels": 1,
+                    "priority": 1
+                },
+                {
+                    "file": "assets/sounds/SoundEffects/SPLASH_EFFECT_N0_SE_Noise.wav",
+                    "volume": 255,
+                    "target_bgm_channels": 3,
+                    "priority": 1
+                }
+            ]
+        },
+
         "onstage_thump": {
             "channels": [
                 {

@@ -242,6 +242,7 @@
     <ClCompile Include="src\apps\world\entity\avatar\states\RunningState.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\states\StandingState.cpp" />
     <ClCompile Include="src\apps\world\entity\effects\ProjectileEntity.cpp" />
+    <ClCompile Include="src\apps\world\entity\effects\SplashEffectEntity.cpp" />
     <ClCompile Include="src\apps\world\entity\EntityManager.cpp" />
     <ClCompile Include="src\apps\world\stage\RoomGraphAdapter.cpp" />
     <ClCompile Include="src\config\ConfigUIManager.cpp" />
@@ -322,6 +323,7 @@
     <ClInclude Include="src\apps\world\entity\avatar\states\AttackActionState.h" />
     <ClInclude Include="src\apps\world\entity\common\FrameGate.h" />
     <ClInclude Include="src\apps\world\entity\common\SpawnProjectileCommand.h" />
+    <ClInclude Include="src\apps\world\entity\common\SpawnSplashEffectCommand.h" />
     <ClInclude Include="src\apps\world\entity\enemy\lists\EnemyLists.h" />
     <ClInclude Include="src\apps\world\entity\EntityManager.h" />
     <ClInclude Include="src\core\assembly\FilteredJoystickInputProvider.h" />
@@ -366,6 +368,7 @@
     <ClInclude Include="src\apps\world\entity\avatar\states\StandingState.h" />
     <ClInclude Include="src\apps\world\entity\common\AnimeStepper.h" />
     <ClInclude Include="src\apps\world\entity\effects\ProjectileEntity.h" />
+    <ClInclude Include="src\apps\world\entity\effects\SplashEffectEntity.h" />
     <ClInclude Include="src\apps\world\entity\EntityBase.h" />
     <ClInclude Include="src\apps\world\entity\IEntity.h" />
     <ClInclude Include="src\apps\world\entity\IRenderable.h" />

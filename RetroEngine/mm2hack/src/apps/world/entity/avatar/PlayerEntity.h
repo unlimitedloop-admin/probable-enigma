@@ -30,6 +30,7 @@
 #include "apps/world/entity/common/AnimeStepper.h"
 #include "apps/world/entity/common/FrameGate.h"
 #include "apps/world/entity/common/SpawnProjectileCommand.h"
+#include "apps/world/entity/common/SpawnSplashEffectCommand.h"
 #include "apps/world/entity/IEntity.h"
 #include "AvatarStatus.h"
 #include "IPlayerState.h"
@@ -50,6 +51,7 @@ namespace mm2hack::apps::world::entity::avatar
         using AnimeStepper              = common::AnimeStepper;
         using FrameGate                 = common::FrameGate;
         using SpawnProjectileCommand    = common::SpawnProjectileCommand;
+        using SpawnSplashEffectCommand  = common::SpawnSplashEffectCommand;
         using RectF                     = foundation::math::RectF;
         using Vec2                      = foundation::math::Vec2;
         using CollisionLayer            = systems::physics::CollisionLayer;
@@ -68,7 +70,10 @@ namespace mm2hack::apps::world::entity::avatar
     public:
         using ScrollDir                 = systems::scrolling::atomic::PageScroll::Dir;
 
-        PlayerEntity(SpriteManagerId id, SpriteManagerId weaponId);
+        PlayerEntity(
+            SpriteManagerId id,
+            SpriteManagerId weaponId,
+            SpriteManagerId effectsId = static_cast<SpriteManagerId>(-1));
 
         // Main action updates (IUpdatable)
         void Update(const systems::view::ViewState* view, double dt) override;
@@ -132,6 +137,8 @@ namespace mm2hack::apps::world::entity::avatar
         void SetFixedPageScrollAvailable(bool v) noexcept { _fixed_scroll_available = v; }
         // Spawn projectile command handling
         std::optional<SpawnProjectileCommand> TakeSpawnProjectile();
+        // Spawn splash effect command handling
+        std::optional<SpawnSplashEffectCommand> TakeSpawnSplashEffect();
 
         // ===== public parameters =====
         bool onGround{ false };                                     // Is on the ground?
@@ -181,6 +188,7 @@ namespace mm2hack::apps::world::entity::avatar
         };                                                          // Landing animation frames in the intro drop sequence
 
         SpriteManagerId _id{};                                      // Sprite Id
+        SpriteManagerId _effects_id{};                              // Effect sprite Id
         Vec2 _half{};                                               // Half-size of the bounding box
         bool _collidable{ true };                                   // Whether collision is enabled
         AvatarStatus _status{ AvatarStatus::Standing };             // Current avatar status
@@ -212,5 +220,6 @@ namespace mm2hack::apps::world::entity::avatar
 
         ExPlayerContextForEntity _entityContext{};                  // Extended context for entity-level data
         std::optional<SpawnProjectileCommand> _spawnProjectile{};   // Pending projectile spawn command
+        std::optional<SpawnSplashEffectCommand> _spawn_splash_effect{}; // Pending splash effect spawn command
     };
 }

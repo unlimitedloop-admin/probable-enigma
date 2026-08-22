@@ -287,6 +287,9 @@ namespace mm2hack::apps::scenes
         _spriteBank.player_attack = spriteLoader.Load(L"PlayerAttack", MM2H_GRAPHICS(PlayerEquip), MM2H_GRAPHPROPS(PlayerEquip));
         if (_spriteBank.player_attack == SpriteManagerId(-1)) return false;
 
+        _spriteBank.effects = spriteLoader.Load(L"SplashEffect", MM2H_GRAPHICS(SplashEffect), MM2H_GRAPHPROPS(SplashEffect));
+        if (_spriteBank.effects == SpriteManagerId(-1)) return false;
+
         const int sprvmax = spriteLoader.VariantCountById(_spriteBank.player);
         spriteLoader.SetGlobalVariant(sprvmax);
         resource.FadeInSprite(_fadeDurationFrames);
