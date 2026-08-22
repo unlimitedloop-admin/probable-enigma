@@ -15,6 +15,7 @@
 #include "apps/systems/scrolling/atomic/ScrollTypes.h"
 #include "apps/world/entity/common/AnimeStepper.h"
 #include "AvatarStatus.h"
+#include "PlayerFrameOutput.h"
 
 namespace mm2hack::apps::systems::physics
 {
@@ -82,6 +83,8 @@ namespace mm2hack::apps::world::entity::avatar
         // is never silently dropped by the skip gate. States should read this instead of calling
         // in->JustPressed(JPBTN::A) directly.
         bool jumpEdge{ false };
+
+        PlayerFrameOutput& output;                           // Events and commands emitted by state processing
     };
 
     // Simplified context for animation abilities

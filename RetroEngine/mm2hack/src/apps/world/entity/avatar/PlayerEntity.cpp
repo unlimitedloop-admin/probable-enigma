@@ -18,6 +18,7 @@
 #include "input/Jpbtn.h"
 #include "IPlayerState.h"
 #include "PlayerContext.h"
+#include "PlayerFrameOutput.h"
 #include "PlayerParams.h"
 #include "states/AttackActionState.h"
 #include "states/BrakeRunState.h"
@@ -51,31 +52,44 @@ namespace mm2hack::apps::world::entity::avatar
 
     void PlayerEntity::Update(const systems::view::ViewState* view, double dt)
     {
-        using namespace systems::scrolling::atomic;
+        (void)view;
         if (!IsAlive()) return;
 
-        PlayerContext cx{
+        PlayerContext cx = makeContext_();
+        refreshProbes_(cx);
+        processEnvironment_();
+
+        const PlayerTuning& tuning = *_current_tuning;
+        const bool skip_physics = shouldSkipUnderwaterPhysics_();
+
+        updateActions_(cx, tuning, skip_physics, dt);
+        applyContext_(cx, skip_physics);
+        resolvePostMovement_(cx);
+    }
+
+    PlayerContext PlayerEntity::makeContext_()
+    {
+        return PlayerContext{
             _id, _attackAction->Id(),
             pos, vel,
             onGround, /* justLanded */ false, /* isHitCeiling */ false, /* prevOnGround */ onGround, facingLR,
             baseTexture, /* textureAdd */ 0, _anime_stepper, /* probes */ _probes, /* prelimProbes */ _probes,
-            this->Bounds(),
+            Bounds(),
             _page_origin_px, _terrain_probe, _ladder_service, /* lockClimbMove */ false, _v_bounds, _scroll_rules, _scroll_page_index,
-            /* pendingFixedScroll */ { _fixed_scroll_available, ScrollDir::None, 0.0 }
+            /* pendingFixedScroll */ { _fixed_scroll_available, ScrollDir::None, 0.0 },
+            /* jumpEdge */ false, _frame_output
         };
+    }
 
-        refreshProbes_(cx);
-
-        // Update physical environment and select appropriate tuning.
+    void PlayerEntity::processEnvironment_()
+    {
         const PlayerEnvironment previous_environment = _environment;
         updateEnvironment_();
 
         if (previous_environment == PlayerEnvironment::Normal &&
             _environment == PlayerEnvironment::Underwater)
         {
-            auto& resource = runtime::GameContext::GetInstance().GetResourceManager();
-            auto& audio = resource.GetAudioManager();
-            audio.PlaySe(L"splash");
+            _frame_output.PushEvent(PlayerEventType::EnteredWater);
 
             constexpr int kRightSplashTexture = 0;
             constexpr int kLeftSplashTexture = 4;
@@ -85,7 +99,7 @@ namespace mm2hack::apps::world::entity::avatar
 
             if (_effects_id != static_cast<SpriteManagerId>(-1))
             {
-                _spawn_splash_effect = SpawnSplashEffectCommand{
+                _frame_output.splashEffect = common::SpawnSplashEffectCommand{
                     .spawnPos = { pos.x, surface_y },
                     .spriteId = _effects_id,
                     .baseTexture = facingLR == AvatarDirection::Right
@@ -96,47 +110,39 @@ namespace mm2hack::apps::world::entity::avatar
         }
 
         selectTuning_();
+    }
 
-        const PlayerTuning& tuning = *_current_tuning;
-        const bool skipPhysics = shouldSkipUnderwaterPhysics_();
-
-        // Detect the jump edge every tick, before the skip gate below can swallow it.
-        // If this tick's state Update() is about to be skipped (underwater slow-motion
-        // gate), latch the press so it is not lost; kSkipInterval guarantees the gate
-        // can never skip two ticks in a row, so the latch is always picked up (or
-        // discarded) on the very next tick, never carried further than that.
-        const bool jumpPressedNow = _input->JustPressed(JPBTN::A);
-        if (jumpPressedNow && skipPhysics)
+    void PlayerEntity::updateActions_(PlayerContext& cx, const PlayerTuning& tuning, bool skipPhysics, double dt)
+    {
+        const bool jump_pressed_now = _input->JustPressed(JPBTN::A);
+        if (jump_pressed_now && skipPhysics)
         {
             _jump_buffered = true;
         }
 
-        // Get up and down lock on laddering (if any)
         _attackAction->PreUpdate(cx, _input, _entityContext.canSpawnProjectile);
 
-        // 1) locomotion: state update and transition (basic behavior)
-        auto& st = findState_(_status);
+        auto& state = findState_(_status);
         AvatarStatus next = _status;
         if (!skipPhysics)
         {
-            cx.jumpEdge = jumpPressedNow || _jump_buffered;
+            cx.jumpEdge = jump_pressed_now || _jump_buffered;
             _jump_buffered = false;
-
-            // Execute the behavior of the current state and determine the next state.
-            next = st->Update(cx, _input, tuning, dt);
+            next = state->Update(cx, _input, tuning, dt);
         }
 
-        // 2) attack action: update (independent of basic behavior)
-        const auto act = _attackAction->PostUpdate(cx, _input, _attack_tuning, dt);
-
-        cx.textureAdd += act.textureAdd;
-        cx.lockClimbMove = cx.lockClimbMove || act.lockClimbMove;
-        _rock_buster = act.rockBuster;
-        _spawnProjectile = act.spawnProjectile;
+        auto action = _attackAction->PostUpdate(cx, _input, _attack_tuning, dt);
+        cx.textureAdd += action.textureAdd;
+        cx.lockClimbMove = cx.lockClimbMove || action.lockClimbMove;
+        _rock_buster = action.rockBuster;
+        if (action.spawnProjectile.has_value())
+        {
+            _frame_output.projectile = std::move(action.spawnProjectile);
+        }
 
         if (next != _status)
         {
-            st->OnExit(cx, _input, tuning);
+            state->OnExit(cx, _input, tuning);
             _status = next;
             findState_(_status)->OnEnter(cx, _input, tuning);
         }
@@ -145,24 +151,28 @@ namespace mm2hack::apps::world::entity::avatar
         {
             requestScroll_(cx.pendingFixedScroll);
         }
+    }
 
-        // Apply updated context values
+    void PlayerEntity::applyContext_(const PlayerContext& cx, bool skipPhysics)
+    {
         if (!skipPhysics)
         {
             pos = cx.pos + cx.vel;
         }
+
         baseTexture = cx.basePose;
         attackTexture = cx.textureAdd;
         facingLR = cx.facingLR;
         composeFinalTexture_();
+    }
 
-        // Shift the avatar's position (coordinates) to match the terrain. This is mainly done against the terrain underfoot.
-        // after updating pos with vel.
+    void PlayerEntity::resolvePostMovement_(PlayerContext& cx)
+    {
         refreshProbes_(cx);
 
         if (cx.justLanded)
         {
-            const auto fix = cx.terrain->ResolveOverlapX(cx.probes, config::SystemConfig::kEpsilon);    // Repenetration fix on X-axis.
+            const auto fix = cx.terrain->ResolveOverlapX(cx.probes, config::SystemConfig::kEpsilon);
             if (fix.hit && fix.pushX != 0.0)
             {
                 pos.x += fix.pushX;
@@ -322,9 +332,7 @@ namespace mm2hack::apps::world::entity::avatar
             _intro_states.phase = IntroPhase::Landing;
             _intro_states.timer = 0.0;
 
-            auto& resource = runtime::GameContext::GetInstance().GetResourceManager();
-            auto& audio = resource.GetAudioManager();
-            audio.PlaySe(L"onstage_thump");
+            _frame_output.PushEvent(PlayerEventType::IntroLanded);
         }
     }
 
@@ -435,14 +443,9 @@ namespace mm2hack::apps::world::entity::avatar
         return out;
     }
 
-    std::optional<PlayerEntity::SpawnProjectileCommand> PlayerEntity::TakeSpawnProjectile()
+    PlayerFrameOutput PlayerEntity::TakeFrameOutput() noexcept
     {
-        return std::exchange(_spawnProjectile, std::nullopt);
-    }
-
-    std::optional<PlayerEntity::SpawnSplashEffectCommand> PlayerEntity::TakeSpawnSplashEffect()
-    {
-        return std::exchange(_spawn_splash_effect, std::nullopt);
+        return std::exchange(_frame_output, PlayerFrameOutput{});
     }
 
     void PlayerEntity::composeFinalTexture_() noexcept

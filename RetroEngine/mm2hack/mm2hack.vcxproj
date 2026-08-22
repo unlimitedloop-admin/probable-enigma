@@ -357,6 +357,7 @@
     <ClInclude Include="src\apps\world\entity\avatar\AvatarStatus.h" />
     <ClInclude Include="src\apps\world\entity\avatar\IPlayerState.h" />
     <ClInclude Include="src\apps\world\entity\avatar\PlayerContext.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\PlayerFrameOutput.h" />
     <ClInclude Include="src\apps\world\entity\avatar\PlayerParams.h" />
     <ClInclude Include="src\apps\world\entity\avatar\states\BrakeRunState.h" />
     <ClInclude Include="src\apps\world\entity\avatar\states\GroundBaseState.h" />

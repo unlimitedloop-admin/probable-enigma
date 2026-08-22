@@ -299,6 +299,7 @@
     <ClInclude Include="src\apps\systems\physics\Probes.h" />
     <ClInclude Include="src\apps\world\entity\avatar\abilities\MovementAbilities.h" />
     <ClInclude Include="src\apps\world\entity\avatar\PlayerContext.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\PlayerFrameOutput.h" />
     <ClInclude Include="src\apps\world\entity\avatar\states\LaunchRunState.h" />
     <ClInclude Include="src\apps\world\entity\avatar\states\BrakeRunState.h" />
     <ClInclude Include="src\apps\world\entity\avatar\states\LadderingState.h" />

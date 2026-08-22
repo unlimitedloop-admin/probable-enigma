@@ -29,12 +29,11 @@
 #include "apps/systems/view/ViewState.h"
 #include "apps/world/entity/common/AnimeStepper.h"
 #include "apps/world/entity/common/FrameGate.h"
-#include "apps/world/entity/common/SpawnProjectileCommand.h"
-#include "apps/world/entity/common/SpawnSplashEffectCommand.h"
 #include "apps/world/entity/IEntity.h"
 #include "AvatarStatus.h"
 #include "IPlayerState.h"
 #include "PlayerContext.h"
+#include "PlayerFrameOutput.h"
 #include "PlayerParams.h"
 #include "states/AttackActionState.h"
 
@@ -50,8 +49,6 @@ namespace mm2hack::apps::world::entity::avatar
     {
         using AnimeStepper              = common::AnimeStepper;
         using FrameGate                 = common::FrameGate;
-        using SpawnProjectileCommand    = common::SpawnProjectileCommand;
-        using SpawnSplashEffectCommand  = common::SpawnSplashEffectCommand;
         using RectF                     = foundation::math::RectF;
         using Vec2                      = foundation::math::Vec2;
         using CollisionLayer            = systems::physics::CollisionLayer;
@@ -135,10 +132,8 @@ namespace mm2hack::apps::world::entity::avatar
 
         // Parameter that acts as a dedicated flag for fixed page scrolling.
         void SetFixedPageScrollAvailable(bool v) noexcept { _fixed_scroll_available = v; }
-        // Spawn projectile command handling
-        std::optional<SpawnProjectileCommand> TakeSpawnProjectile();
-        // Spawn splash effect command handling
-        std::optional<SpawnSplashEffectCommand> TakeSpawnSplashEffect();
+        // Take all events and commands emitted since the previous call
+        [[nodiscard]] PlayerFrameOutput TakeFrameOutput() noexcept;
 
         // ===== public parameters =====
         bool onGround{ false };                                     // Is on the ground?
@@ -148,6 +143,12 @@ namespace mm2hack::apps::world::entity::avatar
         int attackTexture{ 0 };                                     // Current attack texture (for rock buster drawing)
 
     private:
+        PlayerContext makeContext_();                               // Build the context used during this update
+        void processEnvironment_();                                 // Update environment, tuning, and transition effects
+        void updateActions_(PlayerContext& cx, const PlayerTuning& tuning, bool skipPhysics, double dt); // Update locomotion and attack actions
+        void applyContext_(const PlayerContext& cx, bool skipPhysics); // Apply context results to the entity
+        void resolvePostMovement_(PlayerContext& cx);               // Resolve overlaps and velocity after movement
+
         void composeFinalTexture_() noexcept;                       // Set current avatar tile number
         void refreshProbes_(PlayerContext& cx) noexcept;            // Refresh collision all probes
         void updateEnvironment_() noexcept;                         // Update current physical environment
@@ -219,7 +220,6 @@ namespace mm2hack::apps::world::entity::avatar
         bool _fixed_scroll_available{ false };                      // Is fixed-page scrolling available?
 
         ExPlayerContextForEntity _entityContext{};                  // Extended context for entity-level data
-        std::optional<SpawnProjectileCommand> _spawnProjectile{};   // Pending projectile spawn command
-        std::optional<SpawnSplashEffectCommand> _spawn_splash_effect{}; // Pending splash effect spawn command
+        PlayerFrameOutput _frame_output{};                          // Pending events and entity spawn commands
     };
 }

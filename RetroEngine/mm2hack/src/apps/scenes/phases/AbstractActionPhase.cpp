@@ -9,6 +9,7 @@
 #include "apps/systems/view/RenderContext.h"
 #include "apps/world/entity/avatar/PlayerContext.h"
 #include "apps/world/entity/avatar/PlayerEntity.h"
+#include "apps/world/entity/avatar/PlayerFrameOutput.h"
 #include "apps/world/entity/effects/ProjectileEntity.h"
 #include "apps/world/entity/effects/SplashEffectEntity.h"
 #include "apps/world/entity/EntityManager.h"
@@ -192,6 +193,52 @@ namespace mm2hack::apps::scenes::phases
                 break;
             }
         }
+
+        if (player != nullptr)
+        {
+            consumePlayerOutput_(*player);
+        }
+    }
+
+    void AbstractActionPhase::consumePlayerOutput_(world::entity::avatar::PlayerEntity& player)
+    {
+        auto output = player.TakeFrameOutput();
+        auto& resource = runtime::GameContext::GetInstance().GetResourceManager();
+        auto& audio = resource.GetAudioManager();
+
+        using EventType = world::entity::avatar::PlayerEventType;
+
+        for (const auto& event : output.events)
+        {
+            switch (event.type)
+            {
+            case EventType::EnteredWater:
+                audio.PlaySe(L"splash");
+                break;
+
+            case EventType::FiredRockBuster:
+                audio.PlaySe(L"rock_buster_bang");
+                break;
+
+            case EventType::Landed:
+                audio.PlaySe(L"landing_thump");
+                break;
+
+            case EventType::IntroLanded:
+                audio.PlaySe(L"onstage_thump");
+                break;
+            }
+        }
+
+        if (output.projectile.has_value())
+        {
+            _ctx->entity_mgr->Spawn<world::entity::effects::ProjectileEntity>(*output.projectile);
+        }
+
+        if (output.splashEffect.has_value())
+        {
+            _ctx->entity_mgr->Spawn<world::entity::effects::SplashEffectEntity>(*output.splashEffect);
+        }
     }
 
     void AbstractActionPhase::updateActive_()
@@ -239,14 +286,7 @@ namespace mm2hack::apps::scenes::phases
                 player->SetEntityContext(entity_ctx);
 
                 _ctx->entity_mgr->UpdateAll(&_ctx->scroll->GetView(), dt);
-                if (auto cmd = player->TakeSpawnProjectile(); cmd)
-                {
-                    _ctx->entity_mgr->Spawn<effects::ProjectileEntity>(*cmd);
-                }
-                if (auto command = player->TakeSpawnSplashEffect(); command)
-                {
-                    _ctx->entity_mgr->Spawn<effects::SplashEffectEntity>(*command);
-                }
+                consumePlayerOutput_(*player);
 
                 delta = player->pos - prev_pos;
             }

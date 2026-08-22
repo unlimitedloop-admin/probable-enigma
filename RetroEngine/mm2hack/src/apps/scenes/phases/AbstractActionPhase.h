@@ -23,6 +23,11 @@ namespace mm2hack::apps::resources::parameters
     class Parameters;
 }
 
+namespace mm2hack::apps::world::entity::avatar
+{
+    class PlayerEntity;
+}
+
 namespace mm2hack::apps::scenes::phases
 {
     class IStageScript;
@@ -62,6 +67,7 @@ namespace mm2hack::apps::scenes::phases
     private:
         void updateIntro_();                                // Handles the intro state update
         void updateActive_();                               // Handles the active state update
+        void consumePlayerOutput_(world::entity::avatar::PlayerEntity& player); // Handles player events and spawn commands
 
     private:
         const std::wstring kClassName{ L"AbstractActionPhase" };
