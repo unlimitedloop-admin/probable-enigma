@@ -2,6 +2,7 @@
 
 #include "MapPageCache.h"
 
+#include <algorithm>
 #include "AddressScraper.h"
 #include "apps/systems/scrolling/atomic/ScrollTypes.h"
 
@@ -41,15 +42,35 @@ namespace mm2hack::apps::resources::bg
     std::uint8_t MapPageCache::GetTile(std::size_t pageIndex, int tx, int ty) const
     {
         if (tx < 0 || ty < 0 || tx >= PageTiles::kW || ty >= PageTiles::kH) return 0;
-        auto it = _cache.find(pageIndex);
-        if (it == _cache.end())
+
+        const auto* page = findOrLoadPage_(pageIndex);
+        if (!page)
         {
-            const auto tiles = readTiles_(pageIndex);
-            it = _cache.emplace(pageIndex, tiles).first;
+            return 0;
         }
-        const auto& cells = it->second.cells;
+
         const int idx = ty * PageTiles::kW + tx;
-        return cells[idx];
+        return page->cells[idx];
+    }
+
+    bool MapPageCache::CopyPageTiles(
+        std::size_t page_index,
+        std::span<std::uint8_t> destination
+    ) const
+    {
+        if (destination.size() != PageTiles::kSize)
+        {
+            return false;
+        }
+
+        const auto* page = findOrLoadPage_(page_index);
+        if (!page)
+        {
+            return false;
+        }
+
+        std::copy(page->cells.begin(), page->cells.end(), destination.begin());
+        return true;
     }
 
     std::optional<ScrollKind> MapPageCache::ScrollTypeRight(std::size_t pageIndex) const
@@ -154,6 +175,22 @@ namespace mm2hack::apps::resources::bg
             out.cells[i] = p[i];
         }
         return out;
+    }
+
+    const PageTiles* MapPageCache::findOrLoadPage_(std::size_t page_index) const
+    {
+        if (!_scraper || page_index >= _scraper->pageCount() || !_scraper->payloadPtr(page_index))
+        {
+            return nullptr;
+        }
+
+        auto it = _cache.find(page_index);
+        if (it == _cache.end())
+        {
+            it = _cache.emplace(page_index, readTiles_(page_index)).first;
+        }
+
+        return &it->second;
     }
 
     std::optional<std::size_t> MapPageCache::resolveRoomToPageIndex_(int16_t room_id) const

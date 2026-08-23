@@ -2,6 +2,7 @@
 
 #include "BGTileManager.h"
 
+#include <algorithm>
 #include <iterator>
 #include <span>
 #include <string_view>
@@ -59,9 +60,19 @@ namespace mm2hack::apps::rendering::bg
         _tile_map.assign(_map_w * _map_h, 0);
     }
 
+    bool BGTileManager::SetMapTiles(std::span<const std::uint8_t> tiles)
+    {
+        if (tiles.size() != _tile_map.size())
+        {
+            return false;
+        }
+
+        std::copy(tiles.begin(), tiles.end(), _tile_map.begin());
+        return true;
+    }
+
     void BGTileManager::LoadMapBinary(std::wstring_view map_file, int offset)
     {
-        // OPTIMIZE: Since this method is called every frame, please check the performance impact of any sections that perform disk I/O.
         std::ifstream file(std::wstring(map_file), std::ios::binary);
         if (!file)
         {

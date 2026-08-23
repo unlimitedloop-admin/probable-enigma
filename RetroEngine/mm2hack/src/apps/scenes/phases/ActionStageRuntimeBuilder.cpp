@@ -76,7 +76,7 @@ namespace mm2hack::apps::scenes::phases
         ctx.renderer = std::make_unique<MapRenderer2D>(
             resource,
             config.map_name,
-            def.map_binary_path,
+            ctx.page_source,
             config.tile_px
         );
 

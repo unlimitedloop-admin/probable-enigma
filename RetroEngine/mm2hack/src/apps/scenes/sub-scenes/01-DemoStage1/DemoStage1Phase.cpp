@@ -44,7 +44,7 @@ namespace mm2hack::apps::scenes
             _pageGrid->Build(*_graph, /*start*/ 0);
 
             _rules = std::make_unique<ScraperScrollRuleProvider>(pageSource);
-            _renderer = std::make_unique<MapRenderer2D>(resource, owner.GetMapName(), owner.GetMapBinaryPath(), kTilePx);
+            _renderer = std::make_unique<MapRenderer2D>(resource, owner.GetMapName(), pageSource, kTilePx);
 
             ScrollController::Params p;
             _scroll = std::make_unique<ScrollController>(*_rules, *_renderer, p);

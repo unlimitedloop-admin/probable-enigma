@@ -12,6 +12,7 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include <span>
 #include <string>
 #include <unordered_map>
 #include "apps/systems/scrolling/atomic/ScrollTypes.h"
@@ -44,6 +45,10 @@ namespace mm2hack::apps::resources::bg
 
         // IMapPageSource implementation
         std::uint8_t GetTile(std::size_t pageIndex, int tx, int ty) const override;
+        [[nodiscard]] bool CopyPageTiles(
+            std::size_t page_index,
+            std::span<std::uint8_t> destination
+        ) const override;
 
         // Get scroll type for each direction (returns std::nullopt if not scrollable)
         [[nodiscard]] std::optional<systems::scrolling::atomic::ScrollKind> ScrollTypeRight(std::size_t pageIndex) const override;
@@ -66,6 +71,7 @@ namespace mm2hack::apps::resources::bg
         [[nodiscard]] int MapHeight() const override;
 
     private:
+        [[nodiscard]] const PageTiles* findOrLoadPage_(std::size_t page_index) const;
         PageTiles readTiles_(std::size_t pageIndex) const;      // Read tile data from AddressScraper
         // Convert int16_t index to optional<size_t>
         static std::optional<std::size_t> toOptIndex_(int16_t idx)

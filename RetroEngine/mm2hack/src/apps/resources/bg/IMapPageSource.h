@@ -8,8 +8,10 @@
 //==============================================================================
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <optional>
+#include <span>
 #include "apps/systems/scrolling/atomic/ScrollTypes.h"
 
 namespace mm2hack::apps::resources::bg
@@ -24,6 +26,12 @@ namespace mm2hack::apps::resources::bg
 
         // Get tile within the page (policy such as returning 0 if tx,ty are out of range)
         virtual std::uint8_t GetTile(std::size_t pageIndex, int tx, int ty) const = 0;
+
+        // Copy all tile data for a page into the destination buffer
+        [[nodiscard]] virtual bool CopyPageTiles(
+            std::size_t page_index,
+            std::span<std::uint8_t> destination
+        ) const = 0;
 
         // Get scroll type for each direction (returns std::nullopt if not scrollable)
         [[nodiscard]] virtual std::optional<ScrollKind> ScrollTypeRight(std::size_t pageIndex) const = 0;

@@ -8,6 +8,7 @@
 //==============================================================================
 #pragma once
 
+#include <memory>
 #include <string>
 #include <utility>
 #include "config/SystemConfig.h"
@@ -16,6 +17,11 @@
 namespace mm2hack::apps::resources
 {
     class ResourceManager;
+
+    namespace bg
+    {
+        class IMapPageSource;
+    }
 }
 
 namespace mm2hack::apps::systems::scrolling::atomic
@@ -24,11 +30,20 @@ namespace mm2hack::apps::systems::scrolling::atomic
     class MapRenderer2D
     {
         using ResourceManager = apps::resources::ResourceManager;
+        using IMapPageSource = apps::resources::bg::IMapPageSource;
         using conf = config::SystemConfig;
 
     public:
-        MapRenderer2D(ResourceManager& res_mgr, std::wstring map_name, std::wstring map_bin_path, int tile_px)
-            : _res_mgr(res_mgr), _map_name(std::move(map_name)), _map_bin_path(std::move(map_bin_path)), _tile_px(tile_px)
+        MapRenderer2D(
+            ResourceManager& res_mgr,
+            std::wstring map_name,
+            std::shared_ptr<const IMapPageSource> page_source,
+            int tile_px
+        )
+            : _res_mgr(res_mgr),
+              _map_name(std::move(map_name)),
+              _page_source(std::move(page_source)),
+              _tile_px(tile_px)
         {
         }
 
@@ -42,7 +57,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
 
         ResourceManager& _res_mgr;      // Reference to the resource manager
         std::wstring _map_name;         // Name of the map to render
-        std::wstring _map_bin_path;     // Path to the map binary file
+        std::shared_ptr<const IMapPageSource> _page_source; // Shared in-memory map page source
         int _tile_px{ 16 };             // Tile size in pixels
     };
 }

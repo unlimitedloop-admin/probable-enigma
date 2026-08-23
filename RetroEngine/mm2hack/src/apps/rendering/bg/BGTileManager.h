@@ -53,6 +53,8 @@ namespace mm2hack::apps::rendering::bg
         void SetMapSize(int width, int height);
         // Load map data from a binary file, with an optional offset
         void LoadMapBinary(std::wstring_view map_file, int offset = 0x10);
+        // Replace the current map data from an in-memory tile buffer
+        [[nodiscard]] bool SetMapTiles(std::span<const std::uint8_t> tiles);
         // Set tile at (x,y) in the map
         void SetTile(int x, int y, std::uint8_t id);
         // Get tile at (x,y) in the map
