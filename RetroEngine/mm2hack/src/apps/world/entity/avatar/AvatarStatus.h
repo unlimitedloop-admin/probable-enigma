@@ -26,6 +26,7 @@ namespace mm2hack::apps::world::entity::avatar
         Hovering,
         Landing,
         Laddering,
+        Sliding,
         // ... Add more statuses as needed ;)
     };
 

@@ -104,7 +104,12 @@ namespace mm2hack::apps::world::entity::avatar
             _jump_buffered = true;
         }
 
-        _attackAction->PreUpdate(cx, _input, _entityContext.canSpawnProjectile);
+        const bool is_sliding = _state_machine.Status() == AvatarStatus::Sliding;
+        if (is_sliding)
+        {
+            _attackAction->Cancel();
+        }
+        _attackAction->PreUpdate(cx, _input, _entityContext.canSpawnProjectile && !is_sliding);
 
         if (!skipPhysics)
         {
@@ -182,6 +187,10 @@ namespace mm2hack::apps::world::entity::avatar
         
         // Draw player sprite
         auto screenPos = toScreenPos(pos);
+        if (_state_machine.Status() == AvatarStatus::Sliding)
+        {
+            screenPos.x += 2.0 * static_cast<double>(facingLR);
+        }
         if (_intro_states.active)
         {
             // During intro drop, override the texture to the intro drop texture

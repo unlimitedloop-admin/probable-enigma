@@ -14,6 +14,7 @@
 #include "states/LaunchRunState.h"
 #include "states/RunningState.h"
 #include "states/StandingState.h"
+#include "states/SlidingState.h"
 
 namespace mm2hack::apps::world::entity::avatar
 {
@@ -26,6 +27,7 @@ namespace mm2hack::apps::world::entity::avatar
         _states[4] = std::make_unique<states::BrakeRunState>();
         _states[5] = std::make_unique<states::LadderingState>();
         _states[6] = std::make_unique<states::LandingState>();
+        _states[7] = std::make_unique<states::SlidingState>();
     }
 
     void PlayerStateMachine::Update(
@@ -71,6 +73,7 @@ namespace mm2hack::apps::world::entity::avatar
         case AvatarStatus::BrakeRun:  return *_states[4];
         case AvatarStatus::Laddering: return *_states[5];
         case AvatarStatus::Landing:   return *_states[6];
+        case AvatarStatus::Sliding:   return *_states[7];
         case AvatarStatus::Standing:
         default:                      return *_states[0];
         }

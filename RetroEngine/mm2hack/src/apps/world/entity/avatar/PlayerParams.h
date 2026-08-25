@@ -48,6 +48,8 @@ namespace mm2hack::apps::world::entity::avatar
         double steadyRun            { 0x01.60p0 };  // Normal run speed
         double haltSpeed            { 0x00.80p0 };  // Brake run speed (Fixed)
         double climbSpeed           { 0x00.C0p0 };  // Climbing speed on ladder
+        double slidingSpeed         { 0x02.80p0 };  // Sliding horizontal speed
+        std::uint8_t slidingFrames  { 20 };         // Default sliding duration
 
         PlayerProbes probeOffsets;                  // Player probes offsets
     };

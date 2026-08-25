@@ -17,6 +17,11 @@
 
 namespace mm2hack::apps::world::entity::avatar::states
 {
+    bool GroundBaseState::TryEnterSliding(const PlayerContext& cx, StateProvider* in) const
+    {
+        return cx.onGround && cx.jumpEdge && in->IsPressed(JPBTN::DOWN);
+    }
+
     void GroundBaseState::GroundPipeline(PlayerContext& cx, StateProvider* in, const PlayerTuning& t, GroundMoveIntent intent)
     {
         using namespace abilities;

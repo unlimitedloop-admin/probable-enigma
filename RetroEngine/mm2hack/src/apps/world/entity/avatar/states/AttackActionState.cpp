@@ -80,6 +80,12 @@ namespace mm2hack::apps::world::entity::avatar::states
         return _is_attacking;
     }
 
+    void AttackActionState::Cancel() noexcept
+    {
+        _fire_requested = false;
+        finishAttackPose_();
+    }
+
     void AttackActionState::TickAnimationOnly(AnimeContext& ax, const AttackTuning& tuning, double dt, RockBusterDrawInfo& out_rb) const noexcept
     {
         using namespace abilities;

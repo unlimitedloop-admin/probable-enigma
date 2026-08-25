@@ -49,6 +49,6 @@ namespace mm2hack::apps::world::entity::avatar
     private:
         AvatarStatus _status{ AvatarStatus::Standing };
         AvatarStatus _next_status{ AvatarStatus::Standing };
-        std::array<std::unique_ptr<IPlayerState>, 7> _states{};
+        std::array<std::unique_ptr<IPlayerState>, 8> _states{};
     };
 }

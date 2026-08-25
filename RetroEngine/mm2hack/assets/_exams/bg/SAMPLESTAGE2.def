@@ -46,7 +46,8 @@
       "x": 3,
       "y": 2,
       "z": 0,
-      "enabled": true
+      "enabled": true,
+      "remarks": "\u6D41\u6C34\u30A2\u30CB\u30E1\u30FC\u30B7\u30E7\u30F3"
     },
     {
       "roomId": 6,

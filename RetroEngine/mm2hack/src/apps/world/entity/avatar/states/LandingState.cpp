@@ -18,6 +18,11 @@ namespace mm2hack::apps::world::entity::avatar::states
     {
         using namespace abilities;
 
+        if (TryEnterSliding(cx, in))
+        {
+            return AvatarStatus::Sliding;
+        }
+
         // Branch to laddering state if ladder is detected.
         if (TryEnterLadderFromGround(cx, in))
         {
