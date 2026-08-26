@@ -290,6 +290,12 @@ namespace mm2hack::apps::scenes
         _spriteBank.effects = spriteLoader.Load(L"SplashEffect", MM2H_GRAPHICS(SplashEffect), MM2H_GRAPHPROPS(SplashEffect));
         if (_spriteBank.effects == SpriteManagerId(-1)) return false;
 
+        _spriteBank.sliding_dust_effect = spriteLoader.Load(
+            L"SlidingDustEffect",
+            MM2H_GRAPHICS(SlidingDustEffect),
+            MM2H_GRAPHPROPS(SlidingDustEffect));
+        if (_spriteBank.sliding_dust_effect == SpriteManagerId(-1)) return false;
+
         const int sprvmax = spriteLoader.VariantCountById(_spriteBank.player);
         spriteLoader.SetGlobalVariant(sprvmax);
         resource.FadeInSprite(_fadeDurationFrames);

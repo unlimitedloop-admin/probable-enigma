@@ -116,7 +116,12 @@ namespace mm2hack::apps::scenes::phases
         const auto player_sprite = ctx.asset_provider->PlayerSprite();
         const auto player_attack_sprite = ctx.asset_provider->PlayerAttackSprite();
         const auto effects_sprite = ctx.asset_provider->EffectsSprite();
-        auto* player = &ctx.entity_mgr->Spawn<PlayerEntity>(player_sprite, player_attack_sprite, effects_sprite);
+        const auto sliding_dust_sprite = ctx.asset_provider->SlidingDustEffectSprite();
+        auto* player = &ctx.entity_mgr->Spawn<PlayerEntity>(
+            player_sprite,
+            player_attack_sprite,
+            effects_sprite,
+            sliding_dust_sprite);
 
         player->SetTerrainProbe(ctx.terrain_probe.get());
         player->SetLadderService(ctx.ladder_service.get());

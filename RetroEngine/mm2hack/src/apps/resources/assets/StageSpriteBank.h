@@ -23,6 +23,7 @@ namespace mm2hack::apps::resources::assets
         SpriteManagerId player{};
         SpriteManagerId player_attack{};
         SpriteManagerId effects{};
+        SpriteManagerId sliding_dust_effect{};
 
         std::unordered_map<world::entity::enemy::EnemyKind, SpriteManagerId> enemies{};
     };

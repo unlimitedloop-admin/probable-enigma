@@ -69,7 +69,8 @@ namespace mm2hack::apps::world::entity::avatar
         PlayerEntity(
             SpriteManagerId id,
             SpriteManagerId weaponId,
-            SpriteManagerId effectsId = static_cast<SpriteManagerId>(-1));
+            SpriteManagerId effectsId = static_cast<SpriteManagerId>(-1),
+            SpriteManagerId slidingDustEffectId = static_cast<SpriteManagerId>(-1));
 
         // Main action updates (IUpdatable)
         void Update(const systems::view::ViewState* view, double dt) override;
@@ -171,6 +172,7 @@ namespace mm2hack::apps::world::entity::avatar
 
         SpriteManagerId _id{};                                      // Sprite Id
         SpriteManagerId _effects_id{};                              // Effect sprite Id
+        SpriteManagerId _sliding_dust_effect_id{};                  // Sliding dust sprite Id
         Vec2 _half{};                                               // Half-size of the bounding box
         bool _collidable{ true };                                   // Whether collision is enabled
         PlayerStateMachine _state_machine{};                        // Locomotion state ownership and transitions

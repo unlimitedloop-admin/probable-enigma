@@ -12,6 +12,7 @@
 #include "apps/world/entity/avatar/PlayerFrameOutput.h"
 #include "apps/world/entity/effects/ProjectileEntity.h"
 #include "apps/world/entity/effects/SplashEffectEntity.h"
+#include "apps/world/entity/effects/SlidingDustEffectEntity.h"
 #include "apps/world/entity/EntityManager.h"
 #include "config/ConfigUIManager.h"
 #include "core/overlay/DebugHud.h"
@@ -238,6 +239,12 @@ namespace mm2hack::apps::scenes::phases
         if (output.splashEffect.has_value())
         {
             _ctx->entity_mgr->Spawn<world::entity::effects::SplashEffectEntity>(*output.splashEffect);
+        }
+
+        if (output.slidingDustEffect.has_value())
+        {
+            _ctx->entity_mgr->Spawn<world::entity::effects::SlidingDustEffectEntity>(
+                *output.slidingDustEffect);
         }
     }
 

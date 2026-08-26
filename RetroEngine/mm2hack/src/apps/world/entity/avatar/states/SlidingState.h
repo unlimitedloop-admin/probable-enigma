@@ -10,6 +10,13 @@
 
 #include "apps/world/entity/avatar/IPlayerState.h"
 
+#include <cstdint>
+#include "apps/systems/physics/Probes.h"
+#include "apps/world/entity/avatar/AvatarStatus.h"
+#include "apps/world/entity/avatar/PlayerContext.h"
+#include "apps/world/entity/avatar/PlayerParams.h"
+#include "core/assembly/StateProvider.h"
+
 namespace mm2hack::apps::world::entity::avatar::states
 {
     class SlidingState final : public IPlayerState

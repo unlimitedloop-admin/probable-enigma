@@ -50,6 +50,7 @@ namespace mm2hack::apps::world::entity::avatar
         // Needed status for avatar state updates
         rendering::sprite::SpriteManager::Id id;            // sprite id for rendering
         rendering::sprite::SpriteManager::Id weaponId;      // weapon sprite id for rendering
+        rendering::sprite::SpriteManager::Id slidingDustEffectId; // sliding dust sprite id
 
         Vec2& pos;                                          // x/y position
         Vec2& vel;                                          // x/y velocity

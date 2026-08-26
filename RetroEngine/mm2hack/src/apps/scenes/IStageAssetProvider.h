@@ -23,6 +23,7 @@ namespace mm2hack::apps::scenes
         virtual SpriteManagerId PlayerSprite() const noexcept = 0;
         virtual SpriteManagerId PlayerAttackSprite() const noexcept = 0;
         virtual SpriteManagerId EffectsSprite() const noexcept = 0;
+        virtual SpriteManagerId SlidingDustEffectSprite() const noexcept = 0;
 
         virtual bool TryEnemySprite(world::entity::enemy::EnemyKind kind, SpriteManagerId& out) const noexcept = 0;
     };

@@ -246,6 +246,7 @@
     <ClCompile Include="src\apps\world\entity\avatar\states\StandingState.cpp" />
     <ClCompile Include="src\apps\world\entity\effects\ProjectileEntity.cpp" />
     <ClCompile Include="src\apps\world\entity\effects\SplashEffectEntity.cpp" />
+    <ClCompile Include="src\apps\world\entity\effects\SlidingDustEffectEntity.cpp" />
     <ClCompile Include="src\apps\world\entity\EntityManager.cpp" />
     <ClCompile Include="src\apps\world\stage\RoomGraphAdapter.cpp" />
     <ClCompile Include="src\config\ConfigUIManager.cpp" />
@@ -327,6 +328,8 @@
     <ClInclude Include="src\apps\world\entity\common\FrameGate.h" />
     <ClInclude Include="src\apps\world\entity\common\SpawnProjectileCommand.h" />
     <ClInclude Include="src\apps\world\entity\common\SpawnSplashEffectCommand.h" />
+    <ClInclude Include="src\apps\world\entity\common\SpawnSlidingDustEffectCommand.h" />
+    <ClInclude Include="src\apps\world\entity\effects\SlidingDustEffectEntity.h" />
     <ClInclude Include="src\apps\world\entity\enemy\lists\EnemyLists.h" />
     <ClInclude Include="src\apps\world\entity\EntityManager.h" />
     <ClInclude Include="src\core\assembly\FilteredJoystickInputProvider.h" />

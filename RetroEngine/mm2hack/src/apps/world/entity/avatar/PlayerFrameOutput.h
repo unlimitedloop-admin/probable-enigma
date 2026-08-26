@@ -12,6 +12,7 @@
 #include <optional>
 #include <vector>
 #include "apps/world/entity/common/SpawnProjectileCommand.h"
+#include "apps/world/entity/common/SpawnSlidingDustEffectCommand.h"
 #include "apps/world/entity/common/SpawnSplashEffectCommand.h"
 
 namespace mm2hack::apps::world::entity::avatar
@@ -37,6 +38,7 @@ namespace mm2hack::apps::world::entity::avatar
         std::vector<PlayerEvent> events{};
         std::optional<common::SpawnProjectileCommand> projectile{};
         std::optional<common::SpawnSplashEffectCommand> splashEffect{};
+        std::optional<common::SpawnSlidingDustEffectCommand> slidingDustEffect{};
 
         void PushEvent(PlayerEventType type)
         {
