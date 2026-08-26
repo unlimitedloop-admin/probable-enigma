@@ -10,6 +10,7 @@
 #include "apps/world/entity/avatar/abilities/MovementAbilities.h"
 #include "apps/world/entity/avatar/AvatarStatus.h"
 #include "apps/world/entity/avatar/PlayerContext.h"
+#include "apps/world/entity/avatar/PlayerFrameOutput.h"
 #include "apps/world/entity/avatar/PlayerParams.h"
 #include "core/assembly/StateProvider.h"
 #include "input/Jpbtn.h"
@@ -41,33 +42,7 @@ namespace mm2hack::apps::world::entity::avatar::states
         ApplyAirControl(cx, intent);
         ApplyAirMove(cx, intent);
 
-        // ---- Fixed page scroll request by boundary crossing (NOT by hit) ----
-        // We base this on the movement that will actually happen this frame.
-        if (intent.active)
-        {
-            constexpr double kTriggerGapPx = 14.0;
-            const double actualDx = intent.speed * intent.dirSign;
-            if (cx.pendingFixedScroll.available && actualDx > 0.0)
-            {
-                const double frontX = cx.probes.frontLine.middlePoint.x;
-                const double rightEdge = cx.vBounds.rightX;
-
-                if (rightEdge - frontX <= kTriggerGapPx)
-                {
-                    cx.pendingFixedScroll = { false, PageScroll::Dir::Right, 48.0 };
-                }
-            }
-            else if (cx.pendingFixedScroll.available && actualDx < 0.0)
-            {
-                const double frontX = cx.probes.frontLine.middlePoint.x;
-                const double leftEdge = cx.vBounds.leftX;
-
-                if (frontX - leftEdge <= kTriggerGapPx)
-                {
-                    cx.pendingFixedScroll = { false, PageScroll::Dir::Left, 48.0 };
-                }
-            }
-        }
+        TryRequestHorizontalFixedScroll(cx, cx.vel.x);
 
         // Jump or falling [Yaxis] movement. (Common airborne behavior)
         UpdateVerticalVelocity(cx, t, in->IsPressed(JPBTN::A));

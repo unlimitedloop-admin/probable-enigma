@@ -28,11 +28,25 @@ namespace mm2hack::apps::world::entity::avatar::states
     {
         using namespace abilities;
 
-        if (in->IsPressed(JPBTN::LEFT) ^ in->IsPressed(JPBTN::RIGHT))
+        const bool has_direction_input =
+            in->IsPressed(JPBTN::LEFT) ^ in->IsPressed(JPBTN::RIGHT);
+        const int input_direction = has_direction_input
+            ? (in->IsPressed(JPBTN::LEFT) ? -1 : +1)
+            : 0;
+        const bool reversing = has_direction_input &&
+            input_direction != static_cast<int>(cx.facingLR);
+
+        if (reversing && hasStandingClearance_(cx, t, 0.0))
         {
-            cx.facingLR = in->IsPressed(JPBTN::LEFT)
-                ? AvatarDirection::Left
-                : AvatarDirection::Right;
+            cx.vel = {};
+            cx.animeStepper.reset();
+            cx.basePose = static_cast<int>(STile::StandingA);
+            return AvatarStatus::Standing;
+        }
+
+        if (has_direction_input)
+        {
+            cx.facingLR = static_cast<AvatarDirection>(input_direction);
         }
 
         cx.probes = makeSlidingProbes_(cx, t);
@@ -40,6 +54,7 @@ namespace mm2hack::apps::world::entity::avatar::states
         const double requested_dx = t.slidingSpeed * static_cast<double>(direction);
         const auto h_hit = cx.terrain->SweepHorizontal(cx.probes, requested_dx);
         cx.vel.x = h_hit.hit ? h_hit.maxDistanceX : requested_dx;
+        TryRequestHorizontalFixedScroll(cx, cx.vel.x);
 
         AdjustVerticalSpeedForGravity(cx, t);
         const auto v_hit = cx.terrain->SweepVertical(cx.probes, cx.vel);
@@ -63,7 +78,7 @@ namespace mm2hack::apps::world::entity::avatar::states
             return AvatarStatus::Hovering;
         }
 
-        const bool standing_clear = hasStandingClearance_(cx, t);
+        const bool standing_clear = hasStandingClearance_(cx, t, cx.vel.x);
         if (cx.jumpEdge && standing_clear)
         {
             cx.probes.refreshAll(cx, t.probeOffsets);
@@ -72,6 +87,13 @@ namespace mm2hack::apps::world::entity::avatar::states
                 cx.basePose = static_cast<int>(STile::Airpause);
                 return AvatarStatus::Hovering;
             }
+        }
+
+        if (h_hit.hit && standing_clear)
+        {
+            cx.animeStepper.reset();
+            cx.basePose = static_cast<int>(STile::StandingA);
+            return AvatarStatus::Standing;
         }
 
         if (_elapsed_frames < t.slidingFrames)
@@ -115,13 +137,13 @@ namespace mm2hack::apps::world::entity::avatar::states
         return probes;
     }
 
-    bool SlidingState::hasStandingClearance_(const PlayerContext& cx, const PlayerTuning& t) const
+    bool SlidingState::hasStandingClearance_(const PlayerContext& cx, const PlayerTuning& t, double dx) const
     {
         Probes standing_probes{ cx.probes.half };
         standing_probes.refreshAll(cx, t.probeOffsets);
         return !cx.terrain->SweepVertical(
             standing_probes,
-            Vec2{ cx.vel.x, -config::SystemConfig::kEpsilon }).hit;
+            Vec2{ dx, -config::SystemConfig::kEpsilon }).hit;
     }
 
     void SlidingState::setPose_(PlayerContext& cx) const noexcept

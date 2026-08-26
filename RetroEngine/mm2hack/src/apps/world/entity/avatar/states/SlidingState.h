@@ -22,7 +22,7 @@ namespace mm2hack::apps::world::entity::avatar::states
 
     private:
         [[nodiscard]] Probes makeSlidingProbes_(const PlayerContext& cx, const PlayerTuning& t) const;
-        [[nodiscard]] bool hasStandingClearance_(const PlayerContext& cx, const PlayerTuning& t) const;
+        [[nodiscard]] bool hasStandingClearance_(const PlayerContext& cx, const PlayerTuning& t, double dx) const;
         void setPose_(PlayerContext& cx) const noexcept;
         void setPose_(AnimeContext& ax) const noexcept;
 

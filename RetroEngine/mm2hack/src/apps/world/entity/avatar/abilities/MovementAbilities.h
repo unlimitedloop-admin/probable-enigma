@@ -11,6 +11,7 @@
 #include <cstdlib>
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/systems/physics/ITerrainProbe.h"
+#include "apps/systems/scrolling/atomic/ScrollTypes.h"
 #include "apps/world/entity/avatar/AvatarStatus.h"
 #include "apps/world/entity/avatar/PlayerContext.h"
 #include "apps/world/entity/avatar/PlayerParams.h"
@@ -21,6 +22,40 @@
 namespace mm2hack::apps::world::entity::avatar::abilities
 {
     using foundation::math::Vec2;
+
+    // Request a horizontal fixed-page scroll from the movement that will
+    // actually be applied this frame.
+    inline void TryRequestHorizontalFixedScroll(PlayerContext& cx, double actualDx)
+    {
+        using namespace systems::scrolling::atomic;
+
+        if (!cx.pendingFixedScroll.available || actualDx == 0.0 || cx.scrollRules == nullptr)
+        {
+            return;
+        }
+
+        constexpr double kTriggerGapPx = 14.0;
+        constexpr double kCarryTotalPx = 48.0;
+
+        if (actualDx > 0.0)
+        {
+            const double frontX = cx.probes.frontLine.middlePoint.x;
+            if ((cx.vBounds.rightX - frontX) <= kTriggerGapPx &&
+                IsFixedScroll(cx.scrollRules->RightType(cx.scrollPageIndex)))
+            {
+                cx.pendingFixedScroll = { false, PageScroll::Dir::Right, kCarryTotalPx };
+            }
+        }
+        else
+        {
+            const double frontX = cx.probes.frontLine.middlePoint.x;
+            if ((frontX - cx.vBounds.leftX) <= kTriggerGapPx &&
+                IsFixedScroll(cx.scrollRules->LeftType(cx.scrollPageIndex)))
+            {
+                cx.pendingFixedScroll = { false, PageScroll::Dir::Left, kCarryTotalPx };
+            }
+        }
+    }
 
     // Create GroundMoveIntent based on input and PlayerTuning
     inline GroundMoveIntent MakeInputMoveIntent(StateProvider* in, const PlayerTuning& t, AvatarStatus st)
