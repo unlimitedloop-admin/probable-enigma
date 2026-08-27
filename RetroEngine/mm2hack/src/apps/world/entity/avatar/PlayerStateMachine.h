@@ -8,8 +8,8 @@
 //==============================================================================
 #pragma once
 
-#include <array>
 #include <memory>
+#include <unordered_map>
 #include "AvatarStatus.h"
 #include "IPlayerState.h"
 #include "PlayerContext.h"
@@ -44,11 +44,12 @@ namespace mm2hack::apps::world::entity::avatar
         [[nodiscard]] AvatarStatus Status() const noexcept { return _status; }
 
     private:
+        void registerState_(std::unique_ptr<IPlayerState> state);
         IPlayerState& findState_(AvatarStatus status) noexcept;
 
     private:
         AvatarStatus _status{ AvatarStatus::Standing };
         AvatarStatus _next_status{ AvatarStatus::Standing };
-        std::array<std::unique_ptr<IPlayerState>, 8> _states{};
+        std::unordered_map<AvatarStatus, std::unique_ptr<IPlayerState>> _states{};
     };
 }

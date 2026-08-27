@@ -2,6 +2,9 @@
 
 #include "PlayerStateMachine.h"
 
+#include <cassert>
+#include <exception>
+#include <utility>
 #include "AvatarStatus.h"
 #include "core/assembly/StateProvider.h"
 #include "IPlayerState.h"
@@ -13,28 +16,24 @@
 #include "states/LandingState.h"
 #include "states/LaunchRunState.h"
 #include "states/RunningState.h"
-#include "states/StandingState.h"
 #include "states/SlidingState.h"
+#include "states/StandingState.h"
 
 namespace mm2hack::apps::world::entity::avatar
 {
     PlayerStateMachine::PlayerStateMachine()
     {
-        _states[0] = std::make_unique<states::StandingState>();
-        _states[1] = std::make_unique<states::RunningState>();
-        _states[2] = std::make_unique<states::HoveringState>();
-        _states[3] = std::make_unique<states::LaunchRunState>();
-        _states[4] = std::make_unique<states::BrakeRunState>();
-        _states[5] = std::make_unique<states::LadderingState>();
-        _states[6] = std::make_unique<states::LandingState>();
-        _states[7] = std::make_unique<states::SlidingState>();
+        registerState_(std::make_unique<states::StandingState>());
+        registerState_(std::make_unique<states::RunningState>());
+        registerState_(std::make_unique<states::HoveringState>());
+        registerState_(std::make_unique<states::LaunchRunState>());
+        registerState_(std::make_unique<states::BrakeRunState>());
+        registerState_(std::make_unique<states::LadderingState>());
+        registerState_(std::make_unique<states::LandingState>());
+        registerState_(std::make_unique<states::SlidingState>());
     }
 
-    void PlayerStateMachine::Update(
-        PlayerContext& cx,
-        core::assembly::StateProvider* input,
-        const PlayerTuning& tuning,
-        double dt)
+    void PlayerStateMachine::Update(PlayerContext& cx, core::assembly::StateProvider* input, const PlayerTuning& tuning, double dt)
     {
         _next_status = findState_(_status).Update(cx, input, tuning, dt);
     }
@@ -54,28 +53,37 @@ namespace mm2hack::apps::world::entity::avatar
         findState_(_status).OnEnter(cx, input, tuning);
     }
 
-    void PlayerStateMachine::TickAnimation(
-        AnimeContext& ax,
-        core::assembly::StateProvider* input,
-        const PlayerTuning& tuning,
-        double dt)
+    void PlayerStateMachine::TickAnimation(AnimeContext& ax, core::assembly::StateProvider* input, const PlayerTuning& tuning, double dt)
     {
         findState_(_status).TickAnimationOnly(ax, input, tuning, dt);
     }
 
+    void PlayerStateMachine::registerState_(std::unique_ptr<IPlayerState> state)
+    {
+        assert(state != nullptr && "Cannot register a null player state.");
+        if (state == nullptr)
+        {
+            std::terminate();
+        }
+
+        const AvatarStatus id = state->Id();
+        const auto [it, inserted] = _states.try_emplace(id, std::move(state));
+        (void)it;
+        assert(inserted && "A player state with the same ID is already registered.");
+        if (!inserted)
+        {
+            std::terminate();
+        }
+    }
+
     IPlayerState& PlayerStateMachine::findState_(AvatarStatus status) noexcept
     {
-        switch (status)
+        const auto it = _states.find(status);
+        assert(it != _states.end() && "The requested player state is not registered.");
+        if (it == _states.end() || it->second == nullptr)
         {
-        case AvatarStatus::Running:   return *_states[1];
-        case AvatarStatus::Hovering:  return *_states[2];
-        case AvatarStatus::LaunchRun: return *_states[3];
-        case AvatarStatus::BrakeRun:  return *_states[4];
-        case AvatarStatus::Laddering: return *_states[5];
-        case AvatarStatus::Landing:   return *_states[6];
-        case AvatarStatus::Sliding:   return *_states[7];
-        case AvatarStatus::Standing:
-        default:                      return *_states[0];
+            std::terminate();
         }
+        return *it->second;
     }
 }
