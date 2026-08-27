@@ -3,6 +3,7 @@
 #include "AbstractActionPhase.h"
 
 #include "apps/resources/parameters/Parameters.h"
+#include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/runtime/GameContext.h"
 #include "apps/scenes/PhaseFadeController.h"
 #include "apps/systems/scrolling/atomic/ScrollController.h"
@@ -10,6 +11,7 @@
 #include "apps/world/entity/avatar/PlayerContext.h"
 #include "apps/world/entity/avatar/PlayerEntity.h"
 #include "apps/world/entity/avatar/PlayerFrameOutput.h"
+#include "apps/world/entity/common/SpawnSlidingDustEffectCommand.h"
 #include "apps/world/entity/effects/ProjectileEntity.h"
 #include "apps/world/entity/effects/SplashEffectEntity.h"
 #include "apps/world/entity/effects/SlidingDustEffectEntity.h"
@@ -228,6 +230,30 @@ namespace mm2hack::apps::scenes::phases
             case EventType::IntroLanded:
                 audio.PlaySe(L"onstage_thump");
                 break;
+
+            case EventType::SlidingStarted:
+            {
+                const auto sprite_id = _ctx->asset_provider->SlidingDustEffectSprite();
+                if (sprite_id == static_cast<rendering::sprite::SpriteManager::Id>(-1))
+                {
+                    break;
+                }
+
+                constexpr double kSlidingSpriteOffsetX = 2.0;
+                const double direction = static_cast<double>(event.facing);
+                const auto command = world::entity::common::SpawnSlidingDustEffectCommand{
+                    .spawnPos = event.position + foundation::math::Vec2{
+                        kSlidingSpriteOffsetX * direction,
+                        0.0
+                    },
+                    .spriteId = sprite_id,
+                    .baseTexture = event.facing == world::entity::avatar::AvatarDirection::Right
+                        ? 0
+                        : 4
+                };
+                _ctx->entity_mgr->Spawn<world::entity::effects::SlidingDustEffectEntity>(command);
+                break;
+            }
             }
         }
 
@@ -241,11 +267,6 @@ namespace mm2hack::apps::scenes::phases
             _ctx->entity_mgr->Spawn<world::entity::effects::SplashEffectEntity>(*output.splashEffect);
         }
 
-        if (output.slidingDustEffect.has_value())
-        {
-            _ctx->entity_mgr->Spawn<world::entity::effects::SlidingDustEffectEntity>(
-                *output.slidingDustEffect);
-        }
     }
 
     void AbstractActionPhase::updateActive_()

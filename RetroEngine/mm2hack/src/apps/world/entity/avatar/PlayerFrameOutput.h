@@ -11,9 +11,10 @@
 #include <cstdint>
 #include <optional>
 #include <vector>
+#include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/world/entity/common/SpawnProjectileCommand.h"
-#include "apps/world/entity/common/SpawnSlidingDustEffectCommand.h"
 #include "apps/world/entity/common/SpawnSplashEffectCommand.h"
+#include "AvatarStatus.h"
 
 namespace mm2hack::apps::world::entity::avatar
 {
@@ -23,13 +24,16 @@ namespace mm2hack::apps::world::entity::avatar
         EnteredWater,
         FiredRockBuster,
         Landed,
-        IntroLanded
+        IntroLanded,
+        SlidingStarted
     };
 
     // A player event emitted during gameplay processing
     struct PlayerEvent final
     {
         PlayerEventType type{};
+        foundation::math::Vec2 position{};
+        AvatarDirection facing{ AvatarDirection::Right };
     };
 
     // All externally consumed output accumulated since the previous take
@@ -38,11 +42,15 @@ namespace mm2hack::apps::world::entity::avatar
         std::vector<PlayerEvent> events{};
         std::optional<common::SpawnProjectileCommand> projectile{};
         std::optional<common::SpawnSplashEffectCommand> splashEffect{};
-        std::optional<common::SpawnSlidingDustEffectCommand> slidingDustEffect{};
 
         void PushEvent(PlayerEventType type)
         {
             events.push_back(PlayerEvent{ type });
+        }
+
+        void PushEvent(PlayerEvent event)
+        {
+            events.push_back(event);
         }
     };
 }

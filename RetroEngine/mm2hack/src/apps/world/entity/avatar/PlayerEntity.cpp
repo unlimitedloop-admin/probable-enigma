@@ -32,11 +32,9 @@ namespace mm2hack::apps::world::entity::avatar
     PlayerEntity::PlayerEntity(
         SpriteManagerId id,
         SpriteManagerId weaponId,
-        SpriteManagerId effectsId,
-        SpriteManagerId slidingDustEffectId)
+        SpriteManagerId effectsId)
         : _id(id),
           _effects_id(effectsId),
-          _sliding_dust_effect_id(slidingDustEffectId),
           _half{ 16.0, 16.0 }
     {
         _attackAction = std::make_unique<states::AttackActionState>(weaponId);
@@ -62,7 +60,7 @@ namespace mm2hack::apps::world::entity::avatar
     PlayerContext PlayerEntity::makeContext_()
     {
         return PlayerContext{
-            _id, _attackAction->Id(), _sliding_dust_effect_id,
+            _id, _attackAction->Id(),
             pos, vel,
             onGround, /* justLanded */ false, /* isHitCeiling */ false, /* prevOnGround */ onGround, facingLR,
             baseTexture, /* textureAdd */ 0, _anime_stepper, /* probes */ _probes, /* prelimProbes */ _probes,

@@ -3,14 +3,13 @@
 #include "SlidingState.h"
 
 #include "apps/foundation/math/CoordinateTypes.h"
-#include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/systems/physics/ITerrainProbe.h"
 #include "apps/systems/physics/Probes.h"
 #include "apps/world/entity/avatar/abilities/MovementAbilities.h"
 #include "apps/world/entity/avatar/AvatarStatus.h"
 #include "apps/world/entity/avatar/PlayerContext.h"
+#include "apps/world/entity/avatar/PlayerFrameOutput.h"
 #include "apps/world/entity/avatar/PlayerParams.h"
-#include "apps/world/entity/common/SpawnSlidingDustEffectCommand.h"
 #include "config/SystemConfig.h"
 #include "core/assembly/StateProvider.h"
 #include "input/Jpbtn.h"
@@ -28,16 +27,11 @@ namespace mm2hack::apps::world::entity::avatar::states
         cx.animeStepper.reset();
         setPose_(cx);
 
-        if (cx.slidingDustEffectId != static_cast<SpriteManager::Id>(-1))
-        {
-            constexpr double kSlidingSpriteOffsetX = 2.0;
-            const double direction = static_cast<double>(cx.facingLR);
-            cx.output.slidingDustEffect = common::SpawnSlidingDustEffectCommand{
-                .spawnPos = cx.pos + Vec2{ kSlidingSpriteOffsetX * direction, 0.0 },
-                .spriteId = cx.slidingDustEffectId,
-                .baseTexture = cx.facingLR == AvatarDirection::Right ? 0 : 4
-            };
-        }
+        cx.output.PushEvent(PlayerEvent{
+            .type = PlayerEventType::SlidingStarted,
+            .position = cx.pos,
+            .facing = cx.facingLR
+        });
     }
 
     AvatarStatus SlidingState::Update(PlayerContext& cx, StateProvider* in, const PlayerTuning& t, double)
