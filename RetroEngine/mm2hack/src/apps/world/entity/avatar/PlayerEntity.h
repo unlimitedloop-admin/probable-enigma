@@ -103,10 +103,6 @@ namespace mm2hack::apps::world::entity::avatar
         void BeginIntroDrop();
         // Update intro drop animation
         void UpdateIntroAnimation(double dt);
-        // Update intro falling animation
-        void UpdateIntroFalling(double dt);
-        // Update intro landing animation
-        void UpdateIntroLanding(double dt);
         // Check if intro animation is finished
         bool IsIntroFinished() const noexcept;
 
@@ -124,7 +120,6 @@ namespace mm2hack::apps::world::entity::avatar
         void SetTerrainProbe(ITerrainProbe* p) noexcept { _terrain_probe = p; }
         void SetLadderService(ILadderService* s) { _ladder_service = s; }
         void SetScrollContext(const IScrollRuleProvider* rules, std::size_t pageIndex);
-        void SetScrollRuleProvider(IScrollRuleProvider* p) noexcept { _scroll_rules = p; }
         void SetEntityContext(const ExPlayerContextForEntity& cx) noexcept { _entityContext = cx; }
 
         // Get scrolling request (if any) and consume it
@@ -148,6 +143,8 @@ namespace mm2hack::apps::world::entity::avatar
         void updateActions_(PlayerContext& cx, const PlayerTuning& tuning, bool skipPhysics, double dt); // Update locomotion and attack actions
         void applyContext_(const PlayerContext& cx, bool skipPhysics); // Apply context results to the entity
         void resolvePostMovement_(PlayerContext& cx);               // Resolve overlaps and velocity after movement
+        void updateIntroFalling_(double dt);                        // Update intro falling animation
+        void updateIntroLanding_(double dt);                        // Update intro landing animation
 
         void composeFinalTexture_() noexcept;                       // Set current avatar tile number
         void refreshProbes_(PlayerContext& cx) noexcept;            // Refresh collision all probes

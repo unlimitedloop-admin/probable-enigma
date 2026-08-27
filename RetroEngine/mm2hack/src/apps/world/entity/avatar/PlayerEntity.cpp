@@ -253,7 +253,7 @@ namespace mm2hack::apps::world::entity::avatar
 
         int texture_add = 0;
         AnimeContext ax{ _anime_stepper, facingLR, baseTexture, texture_add };
-        _attackAction->TickAnimationOnly(ax, _attack_tuning, dt, _rock_buster);
+        _attackAction->TickAnimationOnly(ax, _attack_tuning, _rock_buster);
         _state_machine.TickAnimation(
             ax,
             _input,
@@ -285,11 +285,11 @@ namespace mm2hack::apps::world::entity::avatar
         switch (_intro_states.phase)
         {
         case IntroPhase::Falling:
-            UpdateIntroFalling(dt);
+            updateIntroFalling_(dt);
             break;
 
         case IntroPhase::Landing:
-            UpdateIntroLanding(dt);
+            updateIntroLanding_(dt);
             break;
 
         case IntroPhase::Done:
@@ -299,7 +299,7 @@ namespace mm2hack::apps::world::entity::avatar
         composeFinalTexture_();
     }
 
-    void PlayerEntity::UpdateIntroFalling(double dt)
+    void PlayerEntity::updateIntroFalling_(double dt)
     {
         _intro_states.timer += dt;
 
@@ -329,7 +329,7 @@ namespace mm2hack::apps::world::entity::avatar
         }
     }
 
-    void PlayerEntity::UpdateIntroLanding(double dt)
+    void PlayerEntity::updateIntroLanding_(double dt)
     {
         _intro_states.timer += dt;
 

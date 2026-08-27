@@ -123,10 +123,10 @@ namespace mm2hack::apps::world::entity::avatar::states
         else
         {
             cx.vel.y = 0.0;
-            // Jump -> Hovering (use existing DoJump)
+            // Jump -> Hovering (use existing do_jump)
             if (cx.jumpEdge)
             {
-                UpdateVerticalVelocity(cx, t, false);   // Start falling
+                update_vertical_velocity(cx, t, false);   // Start falling
                 return AvatarStatus::Hovering;
             }
         }
@@ -139,7 +139,7 @@ namespace mm2hack::apps::world::entity::avatar::states
         }
 
         auto [input, isTopAttrEmpty] = computeInputAndTopEmpty_(cx, in);
-        LadderingAnim(cx, input, isTopAttrEmpty);
+        laddering_anim(cx, input, isTopAttrEmpty);
         return AvatarStatus::Laddering;
     }
 
@@ -147,7 +147,7 @@ namespace mm2hack::apps::world::entity::avatar::states
     {
         using namespace abilities;
 
-        LadderingAnim(ax);  // Not move on its own.
+        laddering_anim(ax);  // Not move on its own.
     }
 
     bool LadderingState::isOnLadder_(const PlayerContext& cx, const PlayerTuning& t) const noexcept
@@ -222,7 +222,7 @@ namespace mm2hack::apps::world::entity::avatar::states
         cx.onGround = true;
         cx.justLanded = true;
 
-        cx.facingLR = OppositeFacingDirection(cx.facingLR);
+        cx.facingLR = opposite_facing_direction(cx.facingLR);
         cx.basePose = static_cast<int>(STile::StandingA);
     }
 
@@ -294,7 +294,7 @@ namespace mm2hack::apps::world::entity::avatar::states
         {
             FixedScrollRequest request{};
             request.dir = PageScroll::Dir::Up;
-            request.carryTotalPx = 0x05.00p0;
+            request.carryTotalPx = 0x09.00p0;
 
             cx.pendingFixedScroll = request;
             return;
@@ -314,7 +314,7 @@ namespace mm2hack::apps::world::entity::avatar::states
         {
             FixedScrollRequest request{};
             request.dir = PageScroll::Dir::Down;
-            request.carryTotalPx = 0x01.00p0;
+            request.carryTotalPx = 0x07.00p0;
 
             cx.pendingFixedScroll = request;
         }

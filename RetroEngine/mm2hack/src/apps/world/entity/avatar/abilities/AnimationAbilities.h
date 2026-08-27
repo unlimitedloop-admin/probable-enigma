@@ -15,13 +15,13 @@
 
 namespace mm2hack::apps::world::entity::avatar::abilities
 {
-    inline AvatarDirection OppositeFacingDirection(const AvatarDirection dir) noexcept
+    inline AvatarDirection opposite_facing_direction(const AvatarDirection dir) noexcept
     {
         return (dir == AvatarDirection::Left) ? AvatarDirection::Right : AvatarDirection::Left;
     }
 
     // Returns true when the launch run animation has completed and switched to running
-    inline bool StepLaunchRunAnim(PlayerContext& cx, const PlayerTuning& t)
+    inline bool step_launch_run_anim(PlayerContext& cx, const PlayerTuning& t)
     {
         // When RunningIntro animation between cycles 0.
         if (cx.animeStepper.tick < t.reactionFrameRun)
@@ -37,7 +37,7 @@ namespace mm2hack::apps::world::entity::avatar::abilities
     }
 
     // Steps the running animation
-    inline void StepRunningAnim(PlayerContext& cx, const PlayerTuning& t)
+    inline void step_running_anim(PlayerContext& cx, const PlayerTuning& t)
     {
         // Step the running animation (A, C, B, C ... and loop).
         static const std::array<STile, 4> runningTextures = {
@@ -48,7 +48,7 @@ namespace mm2hack::apps::world::entity::avatar::abilities
     }
 
     // Steps the running animation (animation-only context)
-    inline void StepRunningAnim(AnimeContext& ax, const PlayerTuning& t)
+    inline void step_running_anim(AnimeContext& ax, const PlayerTuning& t)
     {
         // Step the running animation (A, C, B, C ... and loop).
         static const std::array<STile, 4> runningTextures = {
@@ -59,7 +59,7 @@ namespace mm2hack::apps::world::entity::avatar::abilities
     }
 
     // Returns true if the brake is fully engaged
-    inline bool StepBrakeRunAnim(PlayerContext& cx, const PlayerTuning& t)
+    inline bool step_brake_run_anim(PlayerContext& cx, const PlayerTuning& t)
     {
         // Step the brake run animation.
         const bool committed = cx.animeStepper.step(4, 2); // 4 ticks per frame, 2 frames.
@@ -74,7 +74,7 @@ namespace mm2hack::apps::world::entity::avatar::abilities
     }
 
     // Returns true if the brake is fully engaged
-    inline bool LandingAnim(PlayerContext& cx, const PlayerTuning& t)
+    inline bool landing_anim(PlayerContext& cx, const PlayerTuning& t)
     {
         // Step the landing animation.
         const bool committed = cx.animeStepper.step(2, 2); // 2 ticks per frame, 2 frames.
@@ -89,7 +89,7 @@ namespace mm2hack::apps::world::entity::avatar::abilities
     }
 
     // Laddering animation
-    inline void LadderingAnim(PlayerContext& cx, const int input, const bool isTopAttrEmpty)
+    inline void laddering_anim(PlayerContext& cx, const int input, const bool isTopAttrEmpty)
     {
         // Simple climbing animation between LadderingA and LadderingB.
         if (!input)
@@ -114,7 +114,7 @@ namespace mm2hack::apps::world::entity::avatar::abilities
         }
     }
 
-    inline void LadderingAnim(AnimeContext& ax)
+    inline void laddering_anim(AnimeContext& ax)
     {
         ax.animeStepper.step(9, 2); // 9 ticks per frame, 2 frames.
 
@@ -130,7 +130,7 @@ namespace mm2hack::apps::world::entity::avatar::abilities
         }
     }
 
-    inline void WaitingAnim(PlayerContext& cx)
+    inline void waiting_anim(PlayerContext& cx)
     {
         // Simple waiting animation between StandingA and StandingB.
         cx.animeStepper.step(9, 11, 1); // 9 ticks per frame, 11 frames.
@@ -144,8 +144,4 @@ namespace mm2hack::apps::world::entity::avatar::abilities
         }
     }
 
-    inline void ConstantAnim(AnimeContext& ax)
-    {
-
-    }
 }

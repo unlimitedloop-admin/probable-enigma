@@ -70,9 +70,9 @@ namespace mm2hack::apps::world::entity::avatar::states
         const double requested_dx = t.slidingSpeed * static_cast<double>(direction);
         const auto h_hit = cx.terrain->SweepHorizontal(cx.probes, requested_dx);
         cx.vel.x = h_hit.hit ? h_hit.maxDistanceX : requested_dx;
-        TryRequestHorizontalFixedScroll(cx, cx.vel.x);
+        try_request_horizontal_fixed_scroll(cx, cx.vel.x);
 
-        AdjustVerticalSpeedForGravity(cx, t);
+        adjust_vertical_speed_for_gravity(cx, t);
         const auto v_hit = cx.terrain->SweepVertical(cx.probes, cx.vel);
         if (v_hit.hit)
         {
@@ -98,7 +98,7 @@ namespace mm2hack::apps::world::entity::avatar::states
         if (cx.jumpEdge && standing_clear)
         {
             cx.probes.refreshAll(cx, t.probeOffsets);
-            if (DoJump(cx, t))
+            if (do_jump(cx, t))
             {
                 cx.basePose = static_cast<int>(STile::Airpause);
                 return AvatarStatus::Hovering;

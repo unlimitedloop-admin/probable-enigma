@@ -26,11 +26,10 @@ namespace mm2hack::apps::world::entity::avatar::states
         // Branch to laddering state if ladder is detected.
         if (TryEnterLadderFromGround(cx, in))
         {
-            //cx.animeStepper.reset();    // DELETE: This is done by the LadderingState::OnEnter().
             return AvatarStatus::Laddering;
         }
-        // ApplyGroundMove; AdjustVerticalSpeedForGravity; SweepVertical;
-        GroundPipeline(cx, in, t, MakeInputMoveIntent(in, t, Id()));
+        // apply_ground_move; adjust_vertical_speed_for_gravity; SweepVertical;
+        GroundPipeline(cx, in, t, make_input_move_intent(in, t, Id()));
 
         // Call after cx.basePose is set; adds facing offset (0 right, 40 left for AvatarAnimation enums).
         auto updateFacing = [&](void) noexcept
@@ -47,7 +46,7 @@ namespace mm2hack::apps::world::entity::avatar::states
             return AvatarStatus::Hovering;
         }
 
-        if (cx.jumpEdge && DoJump(cx, t))
+        if (cx.jumpEdge && do_jump(cx, t))
         {
             cx.basePose = static_cast<int>(STile::Airpause);
             updateFacing();
@@ -63,7 +62,7 @@ namespace mm2hack::apps::world::entity::avatar::states
             return AvatarStatus::LaunchRun;
         }
 
-        WaitingAnim(cx);
+        waiting_anim(cx);
         updateFacing();
         return AvatarStatus::Standing;
     }

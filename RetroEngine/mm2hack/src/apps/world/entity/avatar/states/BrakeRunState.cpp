@@ -26,11 +26,10 @@ namespace mm2hack::apps::world::entity::avatar::states
         // Branch to laddering state if ladder is detected.
         if (TryEnterLadderFromGround(cx, in))
         {
-            //cx.animeStepper.reset();    // DELETE: This is done by the LadderingState::OnEnter().
             return AvatarStatus::Laddering;
         }
-        // ApplyGroundMove; AdjustVerticalSpeedForGravity; SweepVertical;
-        GroundPipeline(cx, in, t, MakeBrakeRunIntent(cx, t));
+        // apply_ground_move; adjust_vertical_speed_for_gravity; SweepVertical;
+        GroundPipeline(cx, in, t, make_brake_run_intent(cx, t));
 
         // Call after cx.basePose is set; adds facing offset (0 right, 40 left for AvatarAnimation enums).
         auto updateFacing = [&](void) noexcept
@@ -47,7 +46,7 @@ namespace mm2hack::apps::world::entity::avatar::states
             return AvatarStatus::Hovering;
         }
 
-        if (cx.jumpEdge && DoJump(cx, t))
+        if (cx.jumpEdge && do_jump(cx, t))
         {
             cx.basePose = static_cast<int>(STile::Airpause);
             updateFacing();
@@ -63,8 +62,8 @@ namespace mm2hack::apps::world::entity::avatar::states
             return AvatarStatus::LaunchRun;
         }
 
-        const bool endBrake = StepBrakeRunAnim(cx, t);
-        updateFacing();  // Must be after setting cx.basePose at StepBrakeRunAnim().
+        const bool endBrake = step_brake_run_anim(cx, t);
+        updateFacing();  // Must be after setting cx.basePose at step_brake_run_anim().
         return endBrake ? AvatarStatus::Standing : AvatarStatus::BrakeRun;
     }
 }

@@ -43,7 +43,7 @@ namespace mm2hack::apps::world::entity::avatar::abilities
     };
 
     // Find offset by base pose from given rules
-    static constexpr Vec2 FindOffset(int base_pose, const OffsetRule* rules, std::size_t count) noexcept
+    static constexpr Vec2 find_offset(int base_pose, const OffsetRule* rules, std::size_t count) noexcept
     {
         for (std::size_t i = 0; i < count; ++i)
         {
@@ -57,12 +57,12 @@ namespace mm2hack::apps::world::entity::avatar::abilities
     }
 
     // Find Rock Buster offset by base pose and facing direction
-    static constexpr Vec2 FindRockBusterOffsetByBasePose(int base_pose, AvatarDirection facing) noexcept
+    static constexpr Vec2 find_rock_buster_offset_by_base_pose(int base_pose, AvatarDirection facing) noexcept
     {
         if (facing == AvatarDirection::Left)
         {
-            return FindOffset(base_pose, kRockBusterOffsetLeft, std::size(kRockBusterOffsetLeft));
+            return find_offset(base_pose, kRockBusterOffsetLeft, std::size(kRockBusterOffsetLeft));
         }
-        return FindOffset(base_pose, kRockBusterOffsetRight, std::size(kRockBusterOffsetRight));
+        return find_offset(base_pose, kRockBusterOffsetRight, std::size(kRockBusterOffsetRight));
     }
 }

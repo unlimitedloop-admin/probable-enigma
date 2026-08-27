@@ -46,9 +46,6 @@ namespace mm2hack::apps::world::entity::avatar::states
         // X-axis ground movement. Check horizontal collisions.
         const double dx = intent.speed * static_cast<double>(intent.dirSign);
 
-        // Save the front-probe X BEFORE movement for boundary-cross detection (world space). (Unused?)
-        //const double prevFrontX = cx.probes.frontLine.middlePoint.x;
-
         auto hHit = cx.terrain->SweepHorizontal(cx.probes, dx);
         if (hHit.hit)
         {
@@ -56,12 +53,12 @@ namespace mm2hack::apps::world::entity::avatar::states
         }
 
         // Apply velocity based on updated intent.
-        ApplyGroundMove(cx, intent);
+        apply_ground_move(cx, intent);
 
-        TryRequestHorizontalFixedScroll(cx, cx.vel.x);
+        try_request_horizontal_fixed_scroll(cx, cx.vel.x);
 
         // Y-axis vertical speed preparation.
-        AdjustVerticalSpeedForGravity(cx, t);
+        adjust_vertical_speed_for_gravity(cx, t);
         
         // Update onGround status. check vertical collisions.
         auto vHit = cx.terrain->SweepVertical(cx.probes, cx.vel);

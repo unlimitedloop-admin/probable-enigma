@@ -25,7 +25,7 @@ namespace mm2hack::apps::world::entity::avatar::abilities
 
     // Request a horizontal fixed-page scroll from the movement that will
     // actually be applied this frame.
-    inline void TryRequestHorizontalFixedScroll(PlayerContext& cx, double actualDx)
+    inline void try_request_horizontal_fixed_scroll(PlayerContext& cx, double actualDx)
     {
         using namespace systems::scrolling::atomic;
 
@@ -58,7 +58,7 @@ namespace mm2hack::apps::world::entity::avatar::abilities
     }
 
     // Create GroundMoveIntent based on input and PlayerTuning
-    inline GroundMoveIntent MakeInputMoveIntent(StateProvider* in, const PlayerTuning& t, AvatarStatus st)
+    inline GroundMoveIntent make_input_move_intent(StateProvider* in, const PlayerTuning& t, AvatarStatus st)
     {
         const bool left = in->IsPressed(JPBTN::LEFT);
         const bool right = in->IsPressed(JPBTN::RIGHT);
@@ -83,14 +83,14 @@ namespace mm2hack::apps::world::entity::avatar::abilities
     }
 
     // Create GroundMoveIntent based on PlayerContext and PlayerTuning (Intended for use only with BrakeRun)
-    inline GroundMoveIntent MakeBrakeRunIntent(const PlayerContext& cx, const PlayerTuning& t)
+    inline GroundMoveIntent make_brake_run_intent(const PlayerContext& cx, const PlayerTuning& t)
     {
         const int sign = (cx.facingLR == AvatarDirection::Left) ? -1 : +1;
         return GroundMoveIntent{ sign, t.haltSpeed, t.haltSpeed > 0.0 };
     }
 
     // Create AirMoveIntent based on input and PlayerTuning (Intended for use with air behavior)
-    inline AirMoveIntent MakeAirMoveIntent(StateProvider* in, const PlayerTuning& t)
+    inline AirMoveIntent make_air_move_intent(StateProvider* in, const PlayerTuning& t)
     {
         const bool left = in->IsPressed(JPBTN::LEFT);
         const bool right = in->IsPressed(JPBTN::RIGHT);
@@ -103,35 +103,30 @@ namespace mm2hack::apps::world::entity::avatar::abilities
         return AirMoveIntent{ 0, 0.0, false };
     }
 
-    // *ApplyGroundMove; X-axis movement for ground
-    inline void ApplyGroundMove(PlayerContext& cx, const GroundMoveIntent& intent)
+    // *apply_ground_move; X-axis movement for ground
+    inline void apply_ground_move(PlayerContext& cx, const GroundMoveIntent& intent)
     {
         cx.vel.x = (intent.active) ? intent.speed * static_cast<double>(intent.dirSign) : 0.0;
     }
 
-    // *ApplyAirMove; X-axis movement for air
-    inline void ApplyAirMove(PlayerContext& cx, const AirMoveIntent& intent)
+    // *apply_air_move; X-axis movement for air
+    inline void apply_air_move(PlayerContext& cx, const AirMoveIntent& intent)
     {
         cx.vel.x = (intent.active) ? intent.speed * static_cast<double>(intent.dirSign) : 0.0;
     }
 
-    inline void LandingMove(PlayerContext& cx, const PlayerTuning& t)
-    {
-        cx.vel.x = t.steadyRun * static_cast<double>(cx.facingLR);
-    }
-
-    inline void SubjectToGravityOnGround(PlayerContext& cx, const PlayerTuning& t)
+    inline void subject_to_gravity_on_ground(PlayerContext& cx, const PlayerTuning& t)
     {
         cx.vel.y = t.gravity;
     }
 
-    inline void SetJumpVelocity(Vec2& vel, double impulse)
+    inline void set_jump_velocity(Vec2& vel, double impulse)
     {
         vel.y = impulse;
     }
 
     // *StartJump; sets vertical speed for jump
-    inline bool DoJump(PlayerContext& cx, const PlayerTuning& t)
+    inline bool do_jump(PlayerContext& cx, const PlayerTuning& t)
     {
         double kEps = config::SystemConfig::kEpsilon;   // 1/256
 
@@ -142,12 +137,12 @@ namespace mm2hack::apps::world::entity::avatar::abilities
             return false;
         }
         // Add jump impulse.
-        SetJumpVelocity(cx.vel, t.jumpImpulse);
+        set_jump_velocity(cx.vel, t.jumpImpulse);
         return true;
     }
 
     // *UpdateAirHorizontalVelocity; X-axis movement for air (do not decelerate in air)
-    inline void ApplyAirControl(PlayerContext& cx, AirMoveIntent& intent)
+    inline void apply_air_control(PlayerContext& cx, AirMoveIntent& intent)
     {
         if (!intent.active)
         {
@@ -162,19 +157,19 @@ namespace mm2hack::apps::world::entity::avatar::abilities
         }
     }
 
-    inline void ApplyGravity(Vec2& vel, double g, double terminal)
+    inline void apply_gravity(Vec2& vel, double g, double terminal)
     {
         vel.y += g;
         if (vel.y > terminal) vel.y = terminal; // The max speed when falling (upper limit).
     }
 
     // *ApplyVerticalPhysics; Updates vertical velocity for jump and fall; applies gravity or jump cut as needed
-    inline void UpdateVerticalVelocity(PlayerContext& cx, const PlayerTuning& t, bool isJump)
+    inline void update_vertical_velocity(PlayerContext& cx, const PlayerTuning& t, bool isJump)
     {
         // Timing of falling while floating.
         if (isJump || cx.vel.y >= t.fallingThreshold)
         {
-            ApplyGravity(cx.vel, t.gravity, t.terminalVelocity);
+            apply_gravity(cx.vel, t.gravity, t.terminalVelocity);
         }
         else    // Stopped jumping midway, start falling faster.
         {
@@ -185,9 +180,9 @@ namespace mm2hack::apps::world::entity::avatar::abilities
         }
     }
 
-    // *ApplyGravityIfGrounded; otherwise preserve vertical speed
-    inline void AdjustVerticalSpeedForGravity(PlayerContext& cx, const PlayerTuning& t)
+    // *apply_gravityIfGrounded; otherwise preserve vertical speed
+    inline void adjust_vertical_speed_for_gravity(PlayerContext& cx, const PlayerTuning& t)
     {
-        SubjectToGravityOnGround(cx, t);
+        subject_to_gravity_on_ground(cx, t);
     }
 }

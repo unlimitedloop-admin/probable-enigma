@@ -63,7 +63,7 @@ namespace mm2hack::apps::world::entity::avatar::states
             result.textureAdd = tuning.attackTextureAdd;
             result.rockBuster.visible = true;
             result.rockBuster.armTexture = (cx.facingLR == AvatarDirection::Left) ? rb_tuning.arm_texture_left : rb_tuning.arm_texture_right;
-            result.rockBuster.offset = FindRockBusterOffsetByBasePose(cx.basePose, cx.facingLR);
+            result.rockBuster.offset = find_rock_buster_offset_by_base_pose(cx.basePose, cx.facingLR);
 
             _pose_time_sec += dt;
             if (_pose_time_sec >= tuning.attackDurationSec)
@@ -86,7 +86,7 @@ namespace mm2hack::apps::world::entity::avatar::states
         finishAttackPose_();
     }
 
-    void AttackActionState::TickAnimationOnly(AnimeContext& ax, const AttackTuning& tuning, double dt, RockBusterDrawInfo& out_rb) const noexcept
+    void AttackActionState::TickAnimationOnly(AnimeContext& ax, const AttackTuning& tuning, RockBusterDrawInfo& out_rb) const noexcept
     {
         using namespace abilities;
         out_rb.visible = false;
@@ -96,7 +96,7 @@ namespace mm2hack::apps::world::entity::avatar::states
         ax.textureAdd += tuning.attackTextureAdd;
         out_rb.visible = true;
         out_rb.armTexture = (ax.facingLR == AvatarDirection::Left) ? rb_tuning.arm_texture_left : rb_tuning.arm_texture_right;
-        out_rb.offset = FindRockBusterOffsetByBasePose(ax.basePose, ax.facingLR);
+        out_rb.offset = find_rock_buster_offset_by_base_pose(ax.basePose, ax.facingLR);
     }
 
     void AttackActionState::restartAttackPose_() noexcept

@@ -12,7 +12,7 @@ namespace mm2hack::apps::world::entity::avatar
     void PlayerEnvironmentController::SetTuning(const PlayerTuning& tuning)
     {
         _normal_tuning = tuning;
-        _underwater_tuning = MakeUnderwaterTuning(tuning);
+        _underwater_tuning = make_underwater_tuning(tuning);
     }
 
     PlayerEnvironmentUpdate PlayerEnvironmentController::Update(

@@ -29,23 +29,22 @@ namespace mm2hack::apps::world::entity::avatar::states
         // Branch to laddering state if ladder is detected.
         if (tryEnterLadder_(cx, in, t))
         {
-            //cx.animeStepper.reset();    // DELETE: This is done by the LadderingState::OnEnter().
             return AvatarStatus::Laddering;
         }
         // X-axis air movement.
-        auto intent = MakeAirMoveIntent(in, t);
+        auto intent = make_air_move_intent(in, t);
 
         if (in->IsPressed(JPBTN::LEFT))  cx.facingLR = AvatarDirection::Left;
         if (in->IsPressed(JPBTN::RIGHT)) cx.facingLR = AvatarDirection::Right;
         cx.probes.swapFrontLR(cx, t.probeOffsets); // Update front/rear probes based on facing direction.
 
-        ApplyAirControl(cx, intent);
-        ApplyAirMove(cx, intent);
+        apply_air_control(cx, intent);
+        apply_air_move(cx, intent);
 
-        TryRequestHorizontalFixedScroll(cx, cx.vel.x);
+        try_request_horizontal_fixed_scroll(cx, cx.vel.x);
 
         // Jump or falling [Yaxis] movement. (Common airborne behavior)
-        UpdateVerticalVelocity(cx, t, in->IsPressed(JPBTN::A));
+        update_vertical_velocity(cx, t, in->IsPressed(JPBTN::A));
 
         // Call after cx.basePose is set; adds facing offset (0 right, 40 left for AvatarAnimation enums).
         auto updateFacing = [&](void) noexcept
@@ -77,7 +76,7 @@ namespace mm2hack::apps::world::entity::avatar::states
 
             if (cx.jumpEdge)
             {
-                DoJump(cx, t);
+                do_jump(cx, t);
                 cx.basePose = static_cast<int>(STile::Airpause);
                 updateFacing();
                 return AvatarStatus::Hovering;
@@ -90,7 +89,7 @@ namespace mm2hack::apps::world::entity::avatar::states
             }
             else
             {
-                LandingAnim(cx, t);
+                landing_anim(cx, t);
                 updateFacing();
                 return AvatarStatus::Landing;
             }
@@ -123,21 +122,6 @@ namespace mm2hack::apps::world::entity::avatar::states
         }
 
         return false;
-    }
-
-    // Resolve vertical collision when a hit is reported by SweepVertical.
-    void HoveringState::resolveVerticalCollision_(PlayerContext& cx, const PlayerTuning& t, double origVelY, const apps::systems::physics::SweepVHit& hit) noexcept
-    {
-        cx.vel.y = hit.maxDistanceY;
-
-        // If hit the ceiling and "moving up (jumping)", replace with specified speed.
-        if (hit.kind == systems::physics::VHitKind::Ceiling && origVelY < 0.0)
-        {
-            cx.vel.y = 0.0;
-        }
-
-        // onGround is only for floor detection.
-        cx.onGround = (hit.kind == systems::physics::VHitKind::Floor);
     }
 
     void HoveringState::fixedScrollingY_(PlayerContext& cx) const noexcept

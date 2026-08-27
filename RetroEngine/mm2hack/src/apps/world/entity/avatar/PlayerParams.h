@@ -62,7 +62,7 @@ namespace mm2hack::apps::world::entity::avatar
     };
 
     // Creates underwater tuning based on normal player parameters.
-    [[nodiscard]] inline PlayerTuning MakeUnderwaterTuning(const PlayerTuning& normal) noexcept
+    [[nodiscard]] inline PlayerTuning make_underwater_tuning(const PlayerTuning& normal) noexcept
     {
         PlayerTuning tuning = normal;
 
@@ -72,7 +72,7 @@ namespace mm2hack::apps::world::entity::avatar
         return tuning;
     }
 
-    // Structure to represent ground movement intent, Pre-declare this data type for use with ApplyGroundMove
+    // Structure to represent ground movement intent, Pre-declare this data type for use with apply_ground_move
     struct GroundMoveIntent
     {
         int dirSign{ 0 };                           // -1 left, +1 right, 0 none
@@ -80,7 +80,7 @@ namespace mm2hack::apps::world::entity::avatar
         bool active{ false };                       // should apply this frame?
     };
 
-    // Structure to represent air movement intent, Pre-declare this data type for use with ApplyAirControl
+    // Structure to represent air movement intent, Pre-declare this data type for use with apply_air_control
     struct AirMoveIntent
     {
         int dirSign{ 0 };                           // -1 left, +1 right, 0 none

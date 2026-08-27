@@ -79,7 +79,7 @@ namespace mm2hack::apps::world::entity::avatar::states
         [[nodiscard]] bool IsAttacking() const noexcept;
         void Cancel() noexcept;
         // Tick animation only (no state update)
-        [[nodiscard]] void TickAnimationOnly(AnimeContext& ax, const AttackTuning& tuning, double dt, RockBusterDrawInfo& out_rb) const noexcept;
+        void TickAnimationOnly(AnimeContext& ax, const AttackTuning& tuning, RockBusterDrawInfo& out_rb) const noexcept;
 
     private:
         void restartAttackPose_() noexcept;         // Start attack action
