@@ -10,10 +10,11 @@
 
 #include "apps/world/entity/avatar/IPlayerState.h"
 
+#include <optional>
 #include <string>
+#include "apps/world/entity/avatar/AvatarStatus.h"
 #include "apps/world/entity/avatar/PlayerContext.h"
 #include "apps/world/entity/avatar/PlayerParams.h"
-#include "config/SystemConfig.h"
 #include "core/assembly/StateProvider.h"
 
 namespace mm2hack::apps::world::entity::avatar::states
@@ -22,17 +23,21 @@ namespace mm2hack::apps::world::entity::avatar::states
     class GroundBaseState : public IPlayerState
     {
     protected:
-        // Executes common ground processing; controlled to skip if not overridden (HoveringState etc...)
-        void GroundPipeline(PlayerContext& cx, StateProvider* in, const PlayerTuning& t, GroundMoveIntent intent);
+        // Run transitions and physics shared by all ground states.
+        [[nodiscard]] std::optional<AvatarStatus> UpdateGroundState(
+            PlayerContext& cx,
+            StateProvider* in,
+            const PlayerTuning& t,
+            GroundMoveIntent intent);
 
-        bool TryEnterLadderFromGround(PlayerContext& cx, StateProvider* in) const;
-        bool TryEnterSliding(PlayerContext& cx, StateProvider* in) const;
+        // Apply directional input while only animation is advancing.
+        void UpdateFacing(AnimeContext& ax, StateProvider* in) const noexcept;
 
     private:
-        const std::wstring kClassName{ L"GroundBaseState" };
+        void groundPipeline_(PlayerContext& cx, StateProvider* in, const PlayerTuning& t, GroundMoveIntent intent);
+        [[nodiscard]] bool tryEnterLadderFromGround_(PlayerContext& cx, StateProvider* in) const;
+        [[nodiscard]] bool tryEnterSliding_(PlayerContext& cx, StateProvider* in) const;
 
-        static constexpr int _ts = 16; // Tile size in pixels
-        const int kTileCountX = config::SystemConfig::kTileCountX;
-        const int kTileCountY = config::SystemConfig::kTileCountY;
+        const std::wstring kClassName{ L"GroundBaseState" };
     };
 }

@@ -6,8 +6,6 @@
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/systems/physics/ILadderService.h"
 #include "apps/systems/physics/ITerrainProbe.h"
-#include "apps/systems/physics/PageGridIndex.h"
-#include "apps/systems/scrolling/atomic/ScrollTypes.h"
 #include "apps/world/entity/avatar/abilities/MovementAbilities.h"
 #include "apps/world/entity/avatar/AvatarStatus.h"
 #include "apps/world/entity/avatar/PlayerContext.h"
@@ -17,7 +15,55 @@
 
 namespace mm2hack::apps::world::entity::avatar::states
 {
-    bool GroundBaseState::TryEnterSliding(PlayerContext& cx, StateProvider* in) const
+    std::optional<AvatarStatus> GroundBaseState::UpdateGroundState(
+        PlayerContext& cx,
+        StateProvider* in,
+        const PlayerTuning& t,
+        GroundMoveIntent intent)
+    {
+        using namespace abilities;
+
+        if (tryEnterSliding_(cx, in))
+        {
+            return AvatarStatus::Sliding;
+        }
+
+        if (tryEnterLadderFromGround_(cx, in))
+        {
+            return AvatarStatus::Laddering;
+        }
+
+        groundPipeline_(cx, in, t, intent);
+
+        if (!cx.onGround)
+        {
+            cx.animeStepper.reset();
+            cx.basePose = static_cast<int>(STile::Airpause);
+            return AvatarStatus::Hovering;
+        }
+
+        if (cx.jumpEdge && do_jump(cx, t))
+        {
+            cx.basePose = static_cast<int>(STile::Airpause);
+            return AvatarStatus::Hovering;
+        }
+
+        return std::nullopt;
+    }
+
+    void GroundBaseState::UpdateFacing(AnimeContext& ax, StateProvider* in) const noexcept
+    {
+        if (in->IsPressed(JPBTN::LEFT))
+        {
+            ax.facingLR = AvatarDirection::Left;
+        }
+        if (in->IsPressed(JPBTN::RIGHT))
+        {
+            ax.facingLR = AvatarDirection::Right;
+        }
+    }
+
+    bool GroundBaseState::tryEnterSliding_(PlayerContext& cx, StateProvider* in) const
     {
         const bool triggered = cx.onGround && cx.jumpEdge && in->IsPressed(JPBTN::DOWN);
         if (triggered)
@@ -29,12 +75,9 @@ namespace mm2hack::apps::world::entity::avatar::states
         return triggered;
     }
 
-    void GroundBaseState::GroundPipeline(PlayerContext& cx, StateProvider* in, const PlayerTuning& t, GroundMoveIntent intent)
+    void GroundBaseState::groundPipeline_(PlayerContext& cx, StateProvider* in, const PlayerTuning& t, GroundMoveIntent intent)
     {
         using namespace abilities;
-        using namespace systems::scrolling::atomic;
-        using PageDir = PageScroll::Dir;
-        using PageGridIndex = systems::physics::PageGridIndex;
 
         // Update facing.
         if (in->IsPressed(JPBTN::LEFT)) { cx.facingLR = AvatarDirection::Left; }
@@ -74,7 +117,7 @@ namespace mm2hack::apps::world::entity::avatar::states
         cx.justLanded = (!cx.prevOnGround && cx.onGround);
     }
 
-    bool GroundBaseState::TryEnterLadderFromGround(PlayerContext& cx, StateProvider* in) const
+    bool GroundBaseState::tryEnterLadderFromGround_(PlayerContext& cx, StateProvider* in) const
     {
         if (cx.ladder == nullptr)
         {

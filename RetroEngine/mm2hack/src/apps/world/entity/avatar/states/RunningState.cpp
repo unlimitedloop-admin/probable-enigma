@@ -18,39 +18,10 @@ namespace mm2hack::apps::world::entity::avatar::states
     {
         using namespace abilities;
 
-        if (TryEnterSliding(cx, in))
+        if (const auto next = UpdateGroundState(
+            cx, in, t, make_input_move_intent(in, t, Id())))
         {
-            return AvatarStatus::Sliding;
-        }
-
-        // Branch to laddering state if ladder is detected.
-        if (TryEnterLadderFromGround(cx, in))
-        {
-            return AvatarStatus::Laddering;
-        }
-        // apply_ground_move; adjust_vertical_speed_for_gravity; SweepVertical;
-        GroundPipeline(cx, in, t, make_input_move_intent(in, t, Id()));
-
-        // Call after cx.basePose is set; adds facing offset (0 right, 40 left for AvatarAnimation enums).
-        auto updateFacing = [&](void) noexcept
-            {
-                if (in->IsPressed(JPBTN::LEFT))  cx.facingLR = AvatarDirection::Left;
-                if (in->IsPressed(JPBTN::RIGHT)) cx.facingLR = AvatarDirection::Right;
-            };
-
-        if (!cx.onGround)
-        {
-            cx.animeStepper.reset();
-            cx.basePose = static_cast<int>(STile::Airpause);
-            updateFacing();
-            return AvatarStatus::Hovering;
-        }
-
-        if (cx.jumpEdge && do_jump(cx, t))
-        {
-            cx.basePose = static_cast<int>(STile::Airpause);
-            updateFacing();
-            return AvatarStatus::Hovering;
+            return *next;
         }
 
         // Speed down to brake run when no input.
@@ -58,12 +29,10 @@ namespace mm2hack::apps::world::entity::avatar::states
         {
             cx.animeStepper.reset();
             cx.basePose = static_cast<int>(STile::RunningIntro);
-            updateFacing();
             return AvatarStatus::BrakeRun;
         }
 
         step_running_anim(cx, t);
-        updateFacing();  // Must be after setting cx.basePose at step_running_anim().
         return AvatarStatus::Running;
     }
 
@@ -71,14 +40,7 @@ namespace mm2hack::apps::world::entity::avatar::states
     {
         using namespace abilities;
 
-        // Call after cx.basePose is set; adds facing offset (0 right, 40 left for AvatarAnimation enums).
-        auto updateFacing = [&](void) noexcept
-            {
-                if (in->IsPressed(JPBTN::LEFT))  ax.facingLR = AvatarDirection::Left;
-                if (in->IsPressed(JPBTN::RIGHT)) ax.facingLR = AvatarDirection::Right;
-            };
-
         step_running_anim(ax, t);
-        updateFacing();  // Must be after setting cx.basePose at step_running_anim().
+        UpdateFacing(ax, in);
     }
 }
