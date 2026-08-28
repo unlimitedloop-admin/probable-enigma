@@ -60,11 +60,9 @@ namespace mm2hack::apps::world::entity::avatar
     PlayerContext PlayerEntity::makeContext_()
     {
         return PlayerContext{
-            _id, _attackAction->Id(),
             pos, vel,
             onGround, /* justLanded */ false, /* isHitCeiling */ false, /* prevOnGround */ onGround, facingLR,
             baseTexture, /* textureAdd */ 0, _anime_stepper, /* probes */ _probes, /* prelimProbes */ _probes,
-            Bounds(),
             _page_origin_px, _terrain_probe, _ladder_service, /* lockClimbMove */ false, _v_bounds, _scroll_rules, _scroll_page_index,
             /* pendingFixedScroll */ { _fixed_scroll_available, ScrollDir::None, 0.0 },
             /* jumpEdge */ false, _frame_output

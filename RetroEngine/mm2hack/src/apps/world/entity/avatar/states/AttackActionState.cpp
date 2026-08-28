@@ -40,7 +40,7 @@ namespace mm2hack::apps::world::entity::avatar::states
         {
             result.spawnProjectile.emplace();
             result.spawnProjectile->drawLayer = systems::view::Layer::Effects;
-            result.spawnProjectile->spriteId = cx.weaponId;
+            result.spawnProjectile->spriteId = _id;
 
             const bool is_left = (cx.facingLR == AvatarDirection::Left);
             result.spawnProjectile->baseTexture = tuning.rockBusterTexture + (is_left ? tuning.facingOffsetLeft : tuning.facingOffsetRight);

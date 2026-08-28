@@ -70,8 +70,6 @@ namespace mm2hack::apps::world::entity::avatar::states
     public:
         AttackActionState(rendering::sprite::SpriteManager::Id id) : _id(id) {}
 
-        rendering::sprite::SpriteManager::Id Id() const noexcept { return _id; }
-
         void PreUpdate(PlayerContext& cx, core::assembly::StateProvider* in, bool can_spawn) noexcept;
         ActionUpdateResult PostUpdate(PlayerContext& cx, core::assembly::StateProvider* in, const AttackTuning& tuning, double dt);
 

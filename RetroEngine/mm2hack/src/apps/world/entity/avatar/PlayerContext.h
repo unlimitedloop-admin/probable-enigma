@@ -9,7 +9,6 @@
 #pragma once
 
 #include "apps/foundation/math/CoordinateTypes.h"
-#include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/systems/physics/ILadderService.h"
 #include "apps/systems/scrolling/atomic/IScrollRuleProvider.h"
 #include "apps/systems/scrolling/atomic/ScrollTypes.h"
@@ -26,9 +25,7 @@ namespace mm2hack::apps::systems::physics
 namespace mm2hack::apps::world::entity::avatar
 {
     using common::AnimeStepper;
-    using foundation::math::RectF;
     using foundation::math::Vec2;
-    using rendering::sprite::SpriteManager;
     using systems::physics::ILadderService;
     using systems::physics::ITerrainProbe;
     using systems::physics::Probes;
@@ -47,10 +44,6 @@ namespace mm2hack::apps::world::entity::avatar
     // Context passed to player state handlers
     struct PlayerContext
     {
-        // Needed status for avatar state updates
-        rendering::sprite::SpriteManager::Id id;            // sprite id for rendering
-        rendering::sprite::SpriteManager::Id weaponId;      // weapon sprite id for rendering
-
         Vec2& pos;                                          // x/y position
         Vec2& vel;                                          // x/y velocity
         bool& onGround;                                     // Is the avatar on the ground?
@@ -64,7 +57,6 @@ namespace mm2hack::apps::world::entity::avatar
         AnimeStepper& animeStepper;                         // Animation counter (local)
         Probes& probes;                                     // All probes
         Probes& prelimProbes;                               // Preliminary probes before movement
-        RectF bounds;                                       // Get bounding box for convenience
         Vec2 pageOriginPx;                                  // Current page origin in world px
 
         const ITerrainProbe* terrain;                       // Look up interface for terrain probing
