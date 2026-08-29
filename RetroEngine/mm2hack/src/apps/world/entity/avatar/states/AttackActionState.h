@@ -46,7 +46,7 @@ namespace mm2hack::apps::world::entity::avatar::states
     struct AttackTuning final
     {
         int facingOffsetRight{ 0 };
-        int facingOffsetLeft{ 1 };
+        int facingOffsetLeft{ 32 };
 
         int attackTextureAdd{ 10 };
 
