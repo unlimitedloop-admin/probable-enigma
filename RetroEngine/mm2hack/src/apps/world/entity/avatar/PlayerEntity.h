@@ -183,6 +183,7 @@ namespace mm2hack::apps::world::entity::avatar
         const ITerrainProbe* _terrain_probe{ nullptr };             // Terrain probe
         ILadderService* _ladder_service{ nullptr };                 // Laddering action service
         bool _jump_buffered{ false };                               // Jump edge latched across an underwater skip-physics tick (see PlayerContext::jumpEdge)
+        bool _dash_buffered{ false };                               // Dash edge latched across an underwater skip-physics tick (see PlayerContext::dashEdge)
 
         WorldBounds _v_bounds{};                                    // View boundaries
 

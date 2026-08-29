@@ -27,6 +27,7 @@ namespace mm2hack::apps::world::entity::avatar
         Landing,
         Laddering,
         Sliding,
+        Dashing,
         // ... Add more statuses as needed ;)
     };
 
@@ -55,6 +56,8 @@ namespace mm2hack::apps::world::entity::avatar
         LadderingB,
         LadderTopA,
         LadderTopB,
+        DashStart,
+        Dashing,
         ToTheLeft = 40,
         IntroDropEmpty = 160,
         IntroDropA,

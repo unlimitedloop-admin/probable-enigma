@@ -11,12 +11,12 @@
 #include "PlayerContext.h"
 #include "PlayerParams.h"
 #include "states/BrakeRunState.h"
+#include "states/DashingState.h"
 #include "states/HoveringState.h"
 #include "states/LadderingState.h"
 #include "states/LandingState.h"
 #include "states/LaunchRunState.h"
 #include "states/RunningState.h"
-#include "states/SlidingState.h"
 #include "states/StandingState.h"
 
 namespace mm2hack::apps::world::entity::avatar
@@ -30,7 +30,7 @@ namespace mm2hack::apps::world::entity::avatar
         registerState_(std::make_unique<states::BrakeRunState>());
         registerState_(std::make_unique<states::LadderingState>());
         registerState_(std::make_unique<states::LandingState>());
-        registerState_(std::make_unique<states::SlidingState>());
+        registerState_(std::make_unique<states::DashingState>());
     }
 
     void PlayerStateMachine::Update(PlayerContext& cx, core::assembly::StateProvider* input, const PlayerTuning& tuning, double dt)

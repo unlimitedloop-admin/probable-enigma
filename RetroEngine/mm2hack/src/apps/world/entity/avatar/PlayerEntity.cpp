@@ -65,7 +65,7 @@ namespace mm2hack::apps::world::entity::avatar
             baseTexture, /* textureAdd */ 0, _anime_stepper, /* probes */ _probes, /* prelimProbes */ _probes,
             _page_origin_px, _terrain_probe, _ladder_service, /* lockClimbMove */ false, _v_bounds, _scroll_rules, _scroll_page_index,
             /* pendingFixedScroll */ { _fixed_scroll_available, ScrollDir::None, 0.0 },
-            /* jumpEdge */ false, _frame_output
+            /* jumpEdge */ false, /* dashEdge */ false, _frame_output
         };
     }
 
@@ -102,22 +102,24 @@ namespace mm2hack::apps::world::entity::avatar
     void PlayerEntity::updateActions_(PlayerContext& cx, const PlayerTuning& tuning, bool skipPhysics, double dt)
     {
         const bool jump_pressed_now = _input->JustPressed(JPBTN::A);
+        const bool dash_pressed_now = _input->JustPressed(JPBTN::Y);
         if (jump_pressed_now && skipPhysics)
         {
             _jump_buffered = true;
         }
-
-        const bool is_sliding = _state_machine.Status() == AvatarStatus::Sliding;
-        if (is_sliding)
+        if (dash_pressed_now && skipPhysics)
         {
-            _attackAction->Cancel();
+            _dash_buffered = true;
         }
-        _attackAction->PreUpdate(cx, _input, _entityContext.canSpawnProjectile && !is_sliding);
+
+        _attackAction->PreUpdate(cx, _input, _entityContext.canSpawnProjectile);
 
         if (!skipPhysics)
         {
             cx.jumpEdge = jump_pressed_now || _jump_buffered;
+            cx.dashEdge = dash_pressed_now || _dash_buffered;
             _jump_buffered = false;
+            _dash_buffered = false;
             _state_machine.Update(cx, _input, tuning, dt);
         }
 
@@ -193,6 +195,10 @@ namespace mm2hack::apps::world::entity::avatar
         if (_state_machine.Status() == AvatarStatus::Sliding)
         {
             screenPos.x += 2.0 * static_cast<double>(facingLR);
+        }
+        else if (_state_machine.Status() == AvatarStatus::Dashing)
+        {
+            screenPos.x -= 2.0 * static_cast<double>(facingLR);
         }
         if (_intro_states.active)
         {

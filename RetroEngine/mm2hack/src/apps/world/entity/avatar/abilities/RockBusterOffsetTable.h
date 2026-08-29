@@ -31,6 +31,8 @@ namespace mm2hack::apps::world::entity::avatar::abilities
         { 6, 6,  { 24.0,  9.0 } },
         { 7, 7,  { 25.0,  9.0 } },
         { 20, 23, { 24.0, 10.0 } },
+        { 24, 24, { 24.0, 12.0 } },
+        { 25, 25, { 27.0, 15.0 } },
     };
 
     static constexpr OffsetRule kRockBusterOffsetLeft[] =
@@ -40,6 +42,8 @@ namespace mm2hack::apps::world::entity::avatar::abilities
         { 6, 6,  {  0.0,  9.0 } },
         { 7, 7,  { -1.0,  9.0 } },
         { 20, 23, {  0.0, 10.0 } },
+        { 24, 24, {  0.0, 12.0 } },
+        { 25, 25, { -3.0, 15.0 } },
     };
 
     // Find offset by base pose from given rules

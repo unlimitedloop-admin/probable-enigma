@@ -23,9 +23,9 @@ namespace mm2hack::apps::world::entity::avatar::states
     {
         using namespace abilities;
 
-        if (tryEnterSliding_(cx, in))
+        if (tryEnterDashing_(cx))
         {
-            return AvatarStatus::Sliding;
+            return AvatarStatus::Dashing;
         }
 
         if (tryEnterLadderFromGround_(cx, in))
@@ -63,9 +63,9 @@ namespace mm2hack::apps::world::entity::avatar::states
         }
     }
 
-    bool GroundBaseState::tryEnterSliding_(PlayerContext& cx, StateProvider* in) const
+    bool GroundBaseState::tryEnterDashing_(PlayerContext& cx) const
     {
-        const bool triggered = cx.onGround && cx.jumpEdge && in->IsPressed(JPBTN::DOWN);
+        const bool triggered = cx.onGround && cx.dashEdge;
         if (triggered)
         {
             // A locomotion transition is committed after this frame's state

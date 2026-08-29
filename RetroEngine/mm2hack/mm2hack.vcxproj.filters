@@ -103,6 +103,7 @@
     <ClCompile Include="src\apps\world\entity\effects\SlidingDustEffectEntity.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\states\StandingState.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\states\RunningState.cpp" />
+    <ClCompile Include="src\apps\world\entity\avatar\states\DashingState.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\states\SlidingState.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\states\HoveringState.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\states\LaunchRunState.cpp" />
@@ -300,6 +301,7 @@
     <ClInclude Include="src\apps\world\entity\avatar\IPlayerState.h" />
     <ClInclude Include="src\apps\world\entity\avatar\states\StandingState.h" />
     <ClInclude Include="src\apps\world\entity\avatar\states\RunningState.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\states\DashingState.h" />
     <ClInclude Include="src\apps\world\entity\avatar\states\SlidingState.h" />
     <ClInclude Include="src\apps\world\entity\avatar\states\HoveringState.h" />
     <ClInclude Include="src\apps\world\entity\common\AnimeStepper.h" />

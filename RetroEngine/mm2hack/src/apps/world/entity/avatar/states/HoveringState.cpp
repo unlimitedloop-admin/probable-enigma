@@ -2,6 +2,7 @@
 
 #include "HoveringState.h"
 
+#include <cmath>
 #include "apps/systems/physics/ILadderService.h"
 #include "apps/systems/physics/ITerrainProbe.h"
 #include "apps/systems/physics/PageGridIndex.h"
@@ -19,6 +20,11 @@ namespace mm2hack::apps::world::entity::avatar::states
 {
     AvatarStatus HoveringState::Id() const noexcept { return AvatarStatus::Hovering; }
 
+    void HoveringState::OnEnter(PlayerContext& cx, StateProvider*, const PlayerTuning& t)
+    {
+        _dash_jump_active = std::abs(cx.vel.x) == t.dashJumpSpeed;
+    }
+
     AvatarStatus HoveringState::Update(PlayerContext& cx, StateProvider* in, const PlayerTuning& t, double /*dt*/)
     {
         using namespace abilities;
@@ -31,8 +37,22 @@ namespace mm2hack::apps::world::entity::avatar::states
         {
             return AvatarStatus::Laddering;
         }
-        // X-axis air movement.
+        // X-axis air movement. Dash-jump momentum continues until the player
+        // steers against it; ordinary airborne entry always uses normal control.
         auto intent = make_air_move_intent(in, t);
+
+        if (_dash_jump_active)
+        {
+            const int momentum_direction = cx.vel.x < 0.0 ? -1 : +1;
+            if (intent.active && intent.dirSign != momentum_direction)
+            {
+                _dash_jump_active = false;
+            }
+            else
+            {
+                intent = AirMoveIntent{ momentum_direction, t.dashJumpSpeed, true };
+            }
+        }
 
         if (in->IsPressed(JPBTN::LEFT))  cx.facingLR = AvatarDirection::Left;
         if (in->IsPressed(JPBTN::RIGHT)) cx.facingLR = AvatarDirection::Right;
@@ -40,6 +60,10 @@ namespace mm2hack::apps::world::entity::avatar::states
 
         apply_air_control(cx, intent);
         apply_air_move(cx, intent);
+        if (_dash_jump_active && std::abs(cx.vel.x) != t.dashJumpSpeed)
+        {
+            _dash_jump_active = false;
+        }
 
         try_request_horizontal_fixed_scroll(cx, cx.vel.x);
 
@@ -72,6 +96,11 @@ namespace mm2hack::apps::world::entity::avatar::states
 
         if (cx.justLanded)
         {
+            // Landing consumes dash-jump momentum. An immediate buffered jump
+            // starts with the same horizontal control as an ordinary jump.
+            _dash_jump_active = false;
+            apply_air_move(cx, make_air_move_intent(in, t));
+
             cx.output.PushEvent(PlayerEventType::Landed);
 
             if (cx.jumpEdge)

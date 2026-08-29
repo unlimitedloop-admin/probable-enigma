@@ -50,6 +50,11 @@ namespace mm2hack::apps::world::entity::avatar
         double climbSpeed           { 0x00.C0p0 };  // Climbing speed on ladder
         double slidingSpeed         { 0x02.80p0 };  // Sliding horizontal speed
         std::uint8_t slidingFrames  { 20 };         // Default sliding duration
+        double dashStartSpeed       { 0x01.80p0 };  // Dash startup horizontal speed
+        double dashSpeed            { 0x03.00p0 };  // Dash horizontal speed
+        double dashJumpSpeed        { 0x02.E0p0 };  // Dash-jump horizontal speed
+        std::uint8_t dashStartFrames{ 4 };          // Dash startup duration
+        std::uint8_t dashFrames     { 24 };         // Total dash duration
 
         PlayerProbes probeOffsets;                  // Player probes offsets
     };

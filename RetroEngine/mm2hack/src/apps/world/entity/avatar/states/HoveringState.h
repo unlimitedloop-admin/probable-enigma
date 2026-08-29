@@ -33,6 +33,7 @@ namespace mm2hack::apps::world::entity::avatar::states
     public:
         // Get state ID
         AvatarStatus Id() const noexcept override;
+        void OnEnter(PlayerContext& cx, core::assembly::StateProvider* in, const PlayerTuning& t) override;
         // Update state and return next state ID
         AvatarStatus Update(PlayerContext& cx, core::assembly::StateProvider* in, const PlayerTuning& t, double /*dt*/) override;
 
@@ -44,6 +45,7 @@ namespace mm2hack::apps::world::entity::avatar::states
         void fixedScrollingY_(PlayerContext& cx) const noexcept;
 
     private:
+        bool _dash_jump_active{ false };
         const std::wstring kClassName{ L"HoveringState" };
     };
 }

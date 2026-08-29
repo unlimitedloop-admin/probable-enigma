@@ -36,7 +36,7 @@ namespace mm2hack::apps::world::entity::avatar::states
     private:
         void groundPipeline_(PlayerContext& cx, StateProvider* in, const PlayerTuning& t, GroundMoveIntent intent);
         [[nodiscard]] bool tryEnterLadderFromGround_(PlayerContext& cx, StateProvider* in) const;
-        [[nodiscard]] bool tryEnterSliding_(PlayerContext& cx, StateProvider* in) const;
+        [[nodiscard]] bool tryEnterDashing_(PlayerContext& cx) const;
 
         const std::wstring kClassName{ L"GroundBaseState" };
     };

@@ -76,6 +76,11 @@ namespace mm2hack::apps::world::entity::avatar
         // in->JustPressed(JPBTN::A) directly.
         bool jumpEdge{ false };
 
+        // Dash button edge for this state Update() call. As with jumpEdge,
+        // presses that occur on an underwater physics-skip tick are latched by
+        // PlayerEntity and delivered on the next locomotion update.
+        bool dashEdge{ false };
+
         PlayerFrameOutput& output;                           // Events and commands emitted by state processing
     };
 
