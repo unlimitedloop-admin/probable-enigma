@@ -25,7 +25,8 @@ namespace mm2hack::apps::world::entity::avatar
         FiredRockBuster,
         Landed,
         IntroLanded,
-        SlidingStarted
+        SlidingStarted,
+        DashStarted
     };
 
     // A player event emitted during gameplay processing

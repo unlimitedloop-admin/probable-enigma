@@ -232,6 +232,7 @@ namespace mm2hack::apps::scenes::phases
                 break;
 
             case EventType::SlidingStarted:
+            case EventType::DashStarted:
             {
                 const auto sprite_id = _ctx->asset_provider->SlidingDustEffectSprite();
                 if (sprite_id == static_cast<rendering::sprite::SpriteManager::Id>(-1))
@@ -239,11 +240,13 @@ namespace mm2hack::apps::scenes::phases
                     break;
                 }
 
-                constexpr double kSlidingSpriteOffsetX = 2.0;
                 const double direction = static_cast<double>(event.facing);
+                const double sprite_offset_x = event.type == EventType::DashStarted
+                    ? -2.0
+                    : 2.0;
                 const auto command = world::entity::common::SpawnSlidingDustEffectCommand{
                     .spawnPos = event.position + foundation::math::Vec2{
-                        kSlidingSpriteOffsetX * direction,
+                        sprite_offset_x * direction,
                         0.0
                     },
                     .spriteId = sprite_id,

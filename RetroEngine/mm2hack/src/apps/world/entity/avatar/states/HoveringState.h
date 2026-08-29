@@ -45,7 +45,8 @@ namespace mm2hack::apps::world::entity::avatar::states
         void fixedScrollingY_(PlayerContext& cx) const noexcept;
 
     private:
-        bool _dash_jump_active{ false };
         const std::wstring kClassName{ L"HoveringState" };
+
+        bool _dash_jump_active{ false };
     };
 }

@@ -8,6 +8,7 @@
 #include "apps/world/entity/avatar/abilities/MovementAbilities.h"
 #include "apps/world/entity/avatar/AvatarStatus.h"
 #include "apps/world/entity/avatar/PlayerContext.h"
+#include "apps/world/entity/avatar/PlayerFrameOutput.h"
 #include "apps/world/entity/avatar/PlayerParams.h"
 #include "config/SystemConfig.h"
 #include "core/assembly/StateProvider.h"
@@ -26,6 +27,12 @@ namespace mm2hack::apps::world::entity::avatar::states
         _direction = cx.facingLR;
         cx.animeStepper.reset();
         setPose_(cx, t);
+
+        cx.output.PushEvent(PlayerEvent{
+            .type = PlayerEventType::DashStarted,
+            .position = cx.pos,
+            .facing = cx.facingLR
+        });
     }
 
     AvatarStatus DashingState::Update(PlayerContext& cx, StateProvider* in, const PlayerTuning& t, double)
