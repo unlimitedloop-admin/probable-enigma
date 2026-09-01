@@ -296,6 +296,12 @@ namespace mm2hack::apps::scenes
             MM2H_GRAPHPROPS(SlidingDustEffect));
         if (_spriteBank.sliding_dust_effect == SpriteManagerId(-1)) return false;
 
+        _spriteBank.charge_effect = spriteLoader.Load(
+            L"ChargeEffect",
+            MM2H_GRAPHICS(ChargeEffect),
+            MM2H_GRAPHPROPS(ChargeEffect));
+        if (_spriteBank.charge_effect == SpriteManagerId(-1)) return false;
+
         const int sprvmax = spriteLoader.VariantCountById(_spriteBank.player);
         spriteLoader.SetGlobalVariant(sprvmax);
         resource.FadeInSprite(_fadeDurationFrames);

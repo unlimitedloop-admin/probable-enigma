@@ -101,6 +101,7 @@
     <ClCompile Include="src\apps\world\entity\effects\ProjectileEntity.cpp" />
     <ClCompile Include="src\apps\world\entity\effects\SplashEffectEntity.cpp" />
     <ClCompile Include="src\apps\world\entity\effects\SlidingDustEffectEntity.cpp" />
+    <ClCompile Include="src\apps\world\entity\effects\ChargeEffectEntity.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\states\StandingState.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\states\RunningState.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\states\DashingState.cpp" />
@@ -342,7 +343,9 @@
     <ClInclude Include="src\apps\world\entity\common\SpawnProjectileCommand.h" />
     <ClInclude Include="src\apps\world\entity\common\SpawnSplashEffectCommand.h" />
     <ClInclude Include="src\apps\world\entity\common\SpawnSlidingDustEffectCommand.h" />
+    <ClInclude Include="src\apps\world\entity\common\SpawnChargeEffectCommand.h" />
     <ClInclude Include="src\apps\world\entity\effects\SlidingDustEffectEntity.h" />
+    <ClInclude Include="src\apps\world\entity\effects\ChargeEffectEntity.h" />
     <ClInclude Include="src\apps\world\entity\avatar\states\AttackActionState.h" />
     <ClInclude Include="src\apps\world\entity\avatar\abilities\RockBusterOffsetTable.h" />
     <ClInclude Include="src\apps\world\entity\enemy\lists\EnemyLists.h" />

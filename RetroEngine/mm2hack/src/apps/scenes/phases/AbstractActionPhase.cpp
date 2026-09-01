@@ -2,19 +2,23 @@
 
 #include "AbstractActionPhase.h"
 
-#include "apps/resources/parameters/Parameters.h"
+#include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/rendering/sprite/SpriteManager.h"
+#include "apps/resources/parameters/Parameters.h"
 #include "apps/runtime/GameContext.h"
 #include "apps/scenes/PhaseFadeController.h"
 #include "apps/systems/scrolling/atomic/ScrollController.h"
 #include "apps/systems/view/RenderContext.h"
+#include "apps/world/entity/avatar/AvatarStatus.h"
 #include "apps/world/entity/avatar/PlayerContext.h"
 #include "apps/world/entity/avatar/PlayerEntity.h"
 #include "apps/world/entity/avatar/PlayerFrameOutput.h"
+#include "apps/world/entity/common/SpawnChargeEffectCommand.h"
 #include "apps/world/entity/common/SpawnSlidingDustEffectCommand.h"
+#include "apps/world/entity/effects/ChargeEffectEntity.h"
 #include "apps/world/entity/effects/ProjectileEntity.h"
-#include "apps/world/entity/effects/SplashEffectEntity.h"
 #include "apps/world/entity/effects/SlidingDustEffectEntity.h"
+#include "apps/world/entity/effects/SplashEffectEntity.h"
 #include "apps/world/entity/EntityManager.h"
 #include "config/ConfigUIManager.h"
 #include "core/overlay/DebugHud.h"
@@ -318,6 +322,7 @@ namespace mm2hack::apps::scenes::phases
 
                 _ctx->entity_mgr->UpdateAll(&_ctx->scroll->GetView(), dt);
                 consumePlayerOutput_(*player);
+                updateChargeEffect_(*player);
 
                 delta = player->pos - prev_pos;
             }
@@ -360,5 +365,38 @@ namespace mm2hack::apps::scenes::phases
             auto* audio = &runtime::GameContext::GetInstance().GetResourceManager().GetAudioManager();
             audio->OutputBGMMasterVolume();
         }
+    }
+
+    void AbstractActionPhase::updateChargeEffect_(const world::entity::avatar::PlayerEntity& player)
+    {
+        if (!_ctx->input->IsPressed(JPBTN::B))
+        {
+            _charge_effect_ticks = 0;
+            return;
+        }
+
+        constexpr int kSpawnIntervalTicks = 5;
+        const bool spawn_now = _ctx->input->JustPressed(JPBTN::B) ||
+            ++_charge_effect_ticks >= kSpawnIntervalTicks;
+        if (!spawn_now) return;
+
+        _charge_effect_ticks = 0;
+        const auto sprite_id = _ctx->asset_provider->ChargeEffectSprite();
+        if (sprite_id == static_cast<rendering::sprite::SpriteManager::Id>(-1)) return;
+
+        _charge_effect_random = _charge_effect_random * 1664525u + 1013904223u;
+        constexpr int kOffsetRange = 25;
+        constexpr int kOffsetCenter = 12;
+        const int offset_x = static_cast<int>(_charge_effect_random % kOffsetRange) - kOffsetCenter;
+
+        _charge_effect_random = _charge_effect_random * 1664525u + 1013904223u;
+        const int base_texture = ((_charge_effect_random >> 16) & 1u) == 0u ? 0 : 8;
+
+        _ctx->entity_mgr->Spawn<world::entity::effects::ChargeEffectEntity>(
+            world::entity::common::SpawnChargeEffectCommand{
+                .spawnPos = player.pos + Vec2{ static_cast<double>(offset_x), 12.0 },
+                .spriteId = sprite_id,
+                .baseTexture = base_texture
+            });
     }
 }

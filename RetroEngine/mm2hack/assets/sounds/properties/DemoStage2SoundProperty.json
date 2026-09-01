@@ -46,6 +46,18 @@
                     "target_bgm_channels": 1,
                     "priority": 2
                 }
+            ],
+            "loop_start": 3.68,
+            "loop_end": 4.35
+        },
+        "rock_buster_charge": {
+            "channels": [
+                {
+                    "file": "assets/sounds/SoundEffects/EXBUSTERCHARGE_EFFECT_N0_SE_Square2.wav",
+                    "volume": 255,
+                    "target_bgm_channels": 1,
+                    "priority": 2
+                }
             ]
         },
         "splash": {
@@ -64,7 +76,6 @@
                 }
             ]
         },
-
         "onstage_thump": {
             "channels": [
                 {

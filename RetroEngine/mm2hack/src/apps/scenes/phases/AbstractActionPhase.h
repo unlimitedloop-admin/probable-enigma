@@ -11,6 +11,7 @@
 #include "IPhase.h"
 
 #include <memory>
+#include <cstdint>
 #include <string>
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/ui/productions/StageIntroUI.h"
@@ -68,6 +69,7 @@ namespace mm2hack::apps::scenes::phases
         void updateIntro_();                                // Handles the intro state update
         void updateActive_();                               // Handles the active state update
         void consumePlayerOutput_(world::entity::avatar::PlayerEntity& player); // Handles player events and spawn commands
+        void updateChargeEffect_(const world::entity::avatar::PlayerEntity& player);
 
     private:
         const std::wstring kClassName{ L"AbstractActionPhase" };
@@ -92,6 +94,8 @@ namespace mm2hack::apps::scenes::phases
         IPhaseHost* _host{};                                // Host for phase transitions
         bool _entered{ false };                             // Indicates if the phase has been entered
         bool _operate{ false };                             // Indicates if the operate phase is enabled (Disable at fade-in and fade-out)
+        int _charge_effect_ticks{ 0 };                      // Particle emission interval while B is held
+        std::uint32_t _charge_effect_random{ 0x5EED1234u }; // Deterministic lightweight particle random source
 
         Vec2 _player_prev_pos{};                            // Previous player position, scrolling-player sync use
         ActionPhaseState _state{ ActionPhaseState::Intro }; // Current state of the action phase
