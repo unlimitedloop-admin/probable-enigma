@@ -32,10 +32,14 @@ namespace mm2hack::apps::systems::audio
             const std::vector<std::wstring>& filepath,
             const std::vector<int>& volume,
             const std::vector<int>& targetChannels = {},
-            const std::vector<SePriority> priority = {}
+            const std::vector<SePriority> priority = {},
+            double loopStart = 0.0,
+            double loopEnd = 0.0
         );
         // Play SE (search for an available channel, if none found, stop the oldest one and use it)
         void PlaySe(const std::wstring& name, int volume = -1);
+        // Stop all channels currently playing the named SE.
+        void StopSe(const std::wstring& name);
         // Stop all SE
         void StopAll();
         // Pause all SE
@@ -64,6 +68,8 @@ namespace mm2hack::apps::systems::audio
             std::vector<int> volumes;               // SE volumes
             std::vector<int> targetBgmChannels;     // Target BGM channels for muting
             std::vector<SePriority> priority;       // SE priorities
+            double loopStart = 0.0;                 // Loop start in seconds
+            double loopEnd = 0.0;                   // Loop end in seconds; disabled when <= loopStart
         };
 
         // Active SE channel information
@@ -74,6 +80,7 @@ namespace mm2hack::apps::systems::audio
         };
 
         bool canPlaySe_(const SeData& newSe) const; // Check if a new SE can be played based on priority
+        void restoreBgmForSe_(const std::wstring& name);
 
     private:
         const std::wstring kClassName{ L"SeManager" };

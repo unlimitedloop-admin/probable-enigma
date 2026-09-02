@@ -58,6 +58,11 @@ namespace mm2hack::apps::systems::audio
         _seManager.PlaySe(name);
     }
 
+    void AudioManager::StopSe(const std::wstring& name)
+    {
+        _seManager.StopSe(name);
+    }
+
     void AudioManager::SetSeVolume(int volume)
     {
         _mixer.SetSeVolume(toDxVolume_(volume));

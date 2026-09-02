@@ -49,6 +49,8 @@ namespace mm2hack::apps::systems::audio
     struct SeConfig
     {
         std::vector<SeChannelConfig> channels;  // SE channels configuration
+        double loopStart = 0.0;
+        double loopEnd = 0.0;
     };
 
     // Audio configuration loader that reads BGM and SE configurations from a JSON file

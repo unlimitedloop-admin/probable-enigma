@@ -369,10 +369,22 @@ namespace mm2hack::apps::scenes::phases
 
     void AbstractActionPhase::updateChargeEffect_(const world::entity::avatar::PlayerEntity& player)
     {
+        auto& audio = runtime::GameContext::GetInstance().GetResourceManager().GetAudioManager();
         if (!_ctx->input->IsPressed(JPBTN::B))
         {
+            if (_charge_sound_playing)
+            {
+                audio.StopSe(L"rock_buster_charge");
+                _charge_sound_playing = false;
+            }
             _charge_effect_ticks = 0;
             return;
+        }
+
+        if (!_charge_sound_playing)
+        {
+            audio.PlaySe(L"rock_buster_charge");
+            _charge_sound_playing = true;
         }
 
         constexpr int kSpawnIntervalTicks = 5;

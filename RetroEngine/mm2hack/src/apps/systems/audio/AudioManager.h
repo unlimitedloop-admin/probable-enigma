@@ -48,6 +48,8 @@ namespace mm2hack::apps::systems::audio
         // ==== Controlling SE ====
         // Play the sound effect by name
         void PlaySe(const std::wstring& name);
+        // Stop the sound effect by name
+        void StopSe(const std::wstring& name);
         // Set the SE volume (0-100)
         void SetSeVolume(int volume);
 

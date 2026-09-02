@@ -88,6 +88,8 @@ namespace mm2hack::apps::systems::audio
                         SePriority::Low;
                     seConfig.channels.push_back(chConfig);
                 }
+                seConfig.loopStart = seJson.value("loop_start", 0.0);
+                seConfig.loopEnd = seJson.value("loop_end", 0.0);
                 _seConfigs[utf8_to_wstring(name)] = seConfig;
             }
         }

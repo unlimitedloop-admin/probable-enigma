@@ -18,12 +18,33 @@ namespace mm2hack::apps::systems::audio
         const std::vector<std::wstring>& filepath,
         const std::vector<int>& volume,
         const std::vector<int>& targetChannels,
-        const std::vector<SePriority> priority
+        const std::vector<SePriority> priority,
+        double loopStart,
+        double loopEnd
         )
     {
         if (name.empty() || filepath.empty()) return false;
-        _seData[name] = { filepath, volume, targetChannels, priority };
+        _seData[name] = { filepath, volume, targetChannels, priority, loopStart, loopEnd };
         return true;
+    }
+
+    void SeManager::StopSe(const std::wstring& name)
+    {
+        std::vector<int> channels_to_stop;
+        for (const auto& [channel_index, se_name] : _channelToSeName)
+        {
+            if (se_name == name)
+            {
+                channels_to_stop.push_back(channel_index);
+            }
+        }
+
+        for (const int channel_index : channels_to_stop)
+        {
+            _seChannels.Stop(channel_index);
+            _channelToSeName.erase(channel_index);
+        }
+        restoreBgmForSe_(name);
     }
 
     void SeManager::PlaySe(const std::wstring& name, int overrideVolume)
@@ -101,6 +122,30 @@ namespace mm2hack::apps::systems::audio
     void SeManager::Update()
     {
         _seChannels.Update();
+
+        for (const auto& [channel_index, name] : _channelToSeName)
+        {
+            const auto data_it = _seData.find(name);
+            if (data_it == _seData.end()) continue;
+
+            const auto& se = data_it->second;
+            if (se.loopEnd <= se.loopStart || se.loopEnd <= 0.0 ||
+                !_seChannels.IsPlaying(channel_index))
+            {
+                continue;
+            }
+
+            const int handle = _seChannels.GetHandle(channel_index);
+            if (handle == -1) continue;
+
+            const auto position_ms = DxLib::GetSoundCurrentTime(handle);
+            const auto loop_end_ms = static_cast<LONGLONG>(se.loopEnd * 1000.0);
+            if (position_ms >= loop_end_ms)
+            {
+                const auto loop_start_ms = static_cast<LONGLONG>(se.loopStart * 1000.0);
+                DxLib::SetSoundCurrentTime(loop_start_ms, handle);
+            }
+        }
 
         std::vector<int> toRelease;
         for (auto& [bgmCh, activeSe] : _activeSeChannels)
@@ -193,5 +238,26 @@ namespace mm2hack::apps::systems::audio
             }
         }
         return true;
+    }
+
+    void SeManager::restoreBgmForSe_(const std::wstring& name)
+    {
+        std::vector<int> channels_to_release;
+        for (const auto& [bgm_channel, active_se] : _activeSeChannels)
+        {
+            if (active_se.seName != name) continue;
+
+            if (_bgmVolumeBackup[bgm_channel] >= 0)
+            {
+                _bgmChannels.SetVolume(bgm_channel, _bgmVolumeBackup[bgm_channel]);
+                _bgmVolumeBackup[bgm_channel] = -1;
+            }
+            channels_to_release.push_back(bgm_channel);
+        }
+
+        for (const int bgm_channel : channels_to_release)
+        {
+            _activeSeChannels.erase(bgm_channel);
+        }
     }
 }

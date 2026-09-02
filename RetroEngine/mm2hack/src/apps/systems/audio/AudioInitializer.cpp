@@ -54,7 +54,14 @@ namespace mm2hack::apps::systems::audio
                 priorities.push_back(ch.priority);
 
             }
-            seManager.LoadSe(name, filepaths, volumes, targetBgmChannels, priorities);
+            seManager.LoadSe(
+                name,
+                filepaths,
+                volumes,
+                targetBgmChannels,
+                priorities,
+                config.loopStart,
+                config.loopEnd);
 
             // Initial volume settings.
             for (size_t i = 0; i < config.channels.size(); ++i)
