@@ -215,6 +215,9 @@ namespace mm2hack::apps::scenes::phases
 
         using EventType = world::entity::avatar::PlayerEventType;
 
+        // Release the looping charge SE before a shot SE reuses the same SE channel.
+        updateChargePresentation_(player, output.charge);
+
         for (const auto& event : output.events)
         {
             switch (event.type)
@@ -225,6 +228,10 @@ namespace mm2hack::apps::scenes::phases
 
             case EventType::FiredRockBuster:
                 audio.PlaySe(L"rock_buster_bang");
+                break;
+
+            case EventType::FiredMaxChargeShot:
+                audio.PlaySe(L"charge_shot_bang");
                 break;
 
             case EventType::Landed:
@@ -322,7 +329,6 @@ namespace mm2hack::apps::scenes::phases
 
                 _ctx->entity_mgr->UpdateAll(&_ctx->scroll->GetView(), dt);
                 consumePlayerOutput_(*player);
-                updateChargeEffect_(*player);
 
                 delta = player->pos - prev_pos;
             }
@@ -367,10 +373,15 @@ namespace mm2hack::apps::scenes::phases
         }
     }
 
-    void AbstractActionPhase::updateChargeEffect_(const world::entity::avatar::PlayerEntity& player)
+    void AbstractActionPhase::updateChargePresentation_(
+        const world::entity::avatar::PlayerEntity& player,
+        const world::entity::avatar::ChargeStatus& charge)
     {
+        using world::entity::avatar::ChargePhase;
         auto& audio = runtime::GameContext::GetInstance().GetResourceManager().GetAudioManager();
-        if (!_ctx->input->IsPressed(JPBTN::B))
+        const bool charge_effect_active =
+            charge.phase == ChargePhase::Level1 || charge.phase == ChargePhase::Level2;
+        if (!charge_effect_active)
         {
             if (_charge_sound_playing)
             {
@@ -378,6 +389,7 @@ namespace mm2hack::apps::scenes::phases
                 _charge_sound_playing = false;
             }
             _charge_effect_ticks = 0;
+            _charge_phase = charge.phase;
             return;
         }
 
@@ -387,9 +399,10 @@ namespace mm2hack::apps::scenes::phases
             _charge_sound_playing = true;
         }
 
-        constexpr int kSpawnIntervalTicks = 5;
-        const bool spawn_now = _ctx->input->JustPressed(JPBTN::B) ||
-            ++_charge_effect_ticks >= kSpawnIntervalTicks;
+        const int spawn_interval_ticks = charge.phase == ChargePhase::Level2 ? 4 : 8;
+        const bool spawn_now = charge.phase != _charge_phase ||
+            ++_charge_effect_ticks >= spawn_interval_ticks;
+        _charge_phase = charge.phase;
         if (!spawn_now) return;
 
         _charge_effect_ticks = 0;

@@ -60,6 +60,16 @@
             "loop_start": 3.68,
             "loop_end": 4.35
         },
+        "charge_shot_bang": {
+            "channels": [
+                {
+                    "file": "assets/sounds/SoundEffects/CHARGESHOTBANG_EFFECT_N0_SE_Noise.wav",
+                    "volume": 255,
+                    "target_bgm_channels": 3,
+                    "priority": 2
+                }
+            ]
+        },
         "splash": {
             "channels": [
                 {

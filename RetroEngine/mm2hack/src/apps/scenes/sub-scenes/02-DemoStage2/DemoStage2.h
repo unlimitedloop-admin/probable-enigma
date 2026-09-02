@@ -68,6 +68,8 @@ namespace mm2hack::apps::scenes
 
         // === IStageAssetProvider implementations ===
         SpriteManagerId PlayerSprite() const noexcept override { return _spriteBank.player; }
+        SpriteManagerId PlayerChargeLevel1Sprite() const noexcept override { return _spriteBank.player_charge_level1; }
+        SpriteManagerId PlayerChargeLevel2Sprite() const noexcept override { return _spriteBank.player_charge_level2; }
         SpriteManagerId PlayerAttackSprite() const noexcept override { return _spriteBank.player_attack; }
         SpriteManagerId EffectsSprite() const noexcept override { return _spriteBank.effects; }
         SpriteManagerId SlidingDustEffectSprite() const noexcept override { return _spriteBank.sliding_dust_effect; }

@@ -284,6 +284,18 @@ namespace mm2hack::apps::scenes
         _spriteBank.player = spriteLoader.Load(L"Player", MM2H_GRAPHICS(Player), MM2H_GRAPHPROPS(Player));
         if (_spriteBank.player == SpriteManagerId(-1)) return false;
 
+        _spriteBank.player_charge_level1 = spriteLoader.Load(
+            L"PlayerChargeLevel1", MM2H_GRAPHICS(Player), MM2H_GRAPHPROPS(Player));
+        if (_spriteBank.player_charge_level1 == SpriteManagerId(-1)) return false;
+        if (!spriteLoader.ReplacePixelColorById(_spriteBank.player_charge_level1, 13, 34)) return false;
+
+        _spriteBank.player_charge_level2 = spriteLoader.Load(
+            L"PlayerChargeLevel2", MM2H_GRAPHICS(Player), MM2H_GRAPHPROPS(Player));
+        if (_spriteBank.player_charge_level2 == SpriteManagerId(-1)) return false;
+        if (!spriteLoader.ReplacePixelColorById(_spriteBank.player_charge_level2, 13, 42)) return false;
+        if (!spriteLoader.ReplacePixelColorById(_spriteBank.player_charge_level2, 17, 26)) return false;
+        if (!spriteLoader.ReplacePixelColorById(_spriteBank.player_charge_level2, 44, 58)) return false;
+
         _spriteBank.player_attack = spriteLoader.Load(L"PlayerAttack", MM2H_GRAPHICS(PlayerEquip), MM2H_GRAPHPROPS(PlayerEquip));
         if (_spriteBank.player_attack == SpriteManagerId(-1)) return false;
 

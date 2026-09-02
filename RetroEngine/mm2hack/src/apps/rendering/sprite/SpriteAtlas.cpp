@@ -101,6 +101,39 @@ namespace mm2hack::apps::rendering::sprite
         return rebuildVariantFromSoftImage_(variant);
     }
 
+    bool SpriteAtlas::ReplacePixelColorRGB(
+        int variant,
+        unsigned char sourceR, unsigned char sourceG, unsigned char sourceB,
+        unsigned char targetR, unsigned char targetG, unsigned char targetB) noexcept
+    {
+        if (_soft_image == -1) return false;
+
+        int width = 0;
+        int height = 0;
+        if (::DxLib::GetSoftImageSize(_soft_image, &width, &height) != 0) return false;
+
+        for (int y = 0; y < height; ++y)
+        {
+            for (int x = 0; x < width; ++x)
+            {
+                int r = 0;
+                int g = 0;
+                int b = 0;
+                int a = 0;
+                if (::DxLib::GetPixelSoftImage(_soft_image, x, y, &r, &g, &b, &a) != 0) return false;
+                if (r != sourceR || g != sourceG || b != sourceB) continue;
+
+                if (::DxLib::DrawPixelSoftImage(
+                    _soft_image, x, y, targetR, targetG, targetB, a) != 0)
+                {
+                    return false;
+                }
+            }
+        }
+
+        return rebuildVariantFromSoftImage_(variant);
+    }
+
     bool SpriteAtlas::ApplyHSBToVariant(int variant, int hueAdd, int satAdd, int briAdd) noexcept
     {
         if (variant < 0 || variant >= static_cast<int>(_graphs_by_variant.size()))

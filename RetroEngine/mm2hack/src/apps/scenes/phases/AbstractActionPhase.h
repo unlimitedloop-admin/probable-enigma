@@ -14,6 +14,7 @@
 #include <cstdint>
 #include <string>
 #include "apps/foundation/math/CoordinateTypes.h"
+#include "apps/world/entity/avatar/PlayerFrameOutput.h"
 #include "apps/ui/productions/StageIntroUI.h"
 #include "IPhaseHost.h"
 #include "PhaseResult.h"
@@ -69,7 +70,9 @@ namespace mm2hack::apps::scenes::phases
         void updateIntro_();                                // Handles the intro state update
         void updateActive_();                               // Handles the active state update
         void consumePlayerOutput_(world::entity::avatar::PlayerEntity& player); // Handles player events and spawn commands
-        void updateChargeEffect_(const world::entity::avatar::PlayerEntity& player);
+        void updateChargePresentation_(
+            const world::entity::avatar::PlayerEntity& player,
+            const world::entity::avatar::ChargeStatus& charge);
 
     private:
         const std::wstring kClassName{ L"AbstractActionPhase" };
@@ -97,6 +100,7 @@ namespace mm2hack::apps::scenes::phases
         int _charge_effect_ticks{ 0 };                      // Particle emission interval while B is held
         std::uint32_t _charge_effect_random{ 0x5EED1234u }; // Deterministic lightweight particle random source
         bool _charge_sound_playing{ false };                // Temporary B-hold charge sound playback state
+        world::entity::avatar::ChargePhase _charge_phase{ world::entity::avatar::ChargePhase::Idle };
 
         Vec2 _player_prev_pos{};                            // Previous player position, scrolling-player sync use
         ActionPhaseState _state{ ActionPhaseState::Intro }; // Current state of the action phase

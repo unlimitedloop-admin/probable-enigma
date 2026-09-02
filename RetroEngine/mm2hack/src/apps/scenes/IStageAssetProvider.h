@@ -21,6 +21,8 @@ namespace mm2hack::apps::scenes
         virtual ~IStageAssetProvider() = default;
 
         virtual SpriteManagerId PlayerSprite() const noexcept = 0;
+        virtual SpriteManagerId PlayerChargeLevel1Sprite() const noexcept = 0;
+        virtual SpriteManagerId PlayerChargeLevel2Sprite() const noexcept = 0;
         virtual SpriteManagerId PlayerAttackSprite() const noexcept = 0;
         virtual SpriteManagerId EffectsSprite() const noexcept = 0;
         virtual SpriteManagerId SlidingDustEffectSprite() const noexcept = 0;

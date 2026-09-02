@@ -69,7 +69,9 @@ namespace mm2hack::apps::world::entity::avatar
         PlayerEntity(
             SpriteManagerId id,
             SpriteManagerId weaponId,
-            SpriteManagerId effectsId = static_cast<SpriteManagerId>(-1));
+            SpriteManagerId effectsId = static_cast<SpriteManagerId>(-1),
+            SpriteManagerId chargeLevel1Id = static_cast<SpriteManagerId>(-1),
+            SpriteManagerId chargeLevel2Id = static_cast<SpriteManagerId>(-1));
 
         // Main action updates (IUpdatable)
         void Update(const systems::view::ViewState* view, double dt) override;
@@ -149,6 +151,7 @@ namespace mm2hack::apps::world::entity::avatar
         void refreshProbes_(PlayerContext& cx) noexcept;            // Refresh collision all probes
 
         void requestScroll_(FixedScrollRequest req) noexcept;       // Request fixed page scrolling
+        [[nodiscard]] SpriteManagerId renderSpriteId_() const noexcept;
 
     private:
         const std::wstring kClassName{ L"PlayerEntity" };
@@ -168,6 +171,8 @@ namespace mm2hack::apps::world::entity::avatar
 
         SpriteManagerId _id{};                                      // Sprite Id
         SpriteManagerId _effects_id{};                              // Effect sprite Id
+        SpriteManagerId _charge_level1_id{ static_cast<SpriteManagerId>(-1) };
+        SpriteManagerId _charge_level2_id{ static_cast<SpriteManagerId>(-1) };
         Vec2 _half{};                                               // Half-size of the bounding box
         bool _collidable{ true };                                   // Whether collision is enabled
         PlayerStateMachine _state_machine{};                        // Locomotion state ownership and transitions
@@ -195,5 +200,6 @@ namespace mm2hack::apps::world::entity::avatar
 
         ExPlayerContextForEntity _entityContext{};                  // Extended context for entity-level data
         PlayerFrameOutput _frame_output{};                          // Pending events and entity spawn commands
+        ChargeStatus _charge_status{};                              // Current charge presentation state
     };
 }

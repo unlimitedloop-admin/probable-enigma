@@ -3,6 +3,7 @@
 #include "SpriteManager.h"
 
 #include <string_view>
+#include "apps/foundation/NES/NESPalette.h"
 
 namespace mm2hack::apps::rendering::sprite
 {
@@ -53,6 +54,23 @@ namespace mm2hack::apps::rendering::sprite
     {
         if (!_catalog.IsValid(id)) return false;
         return _catalog.GetAtlas(id).ReplacePaletteColorIndex(variant, targetPaletteIndex, sourcePaletteIndex);
+    }
+
+    bool SpriteManager::ReplacePixelColorById(Id id, int sourcePaletteIndex, int targetPaletteIndex, int variant)
+    {
+        using foundation::NES::NESPalette;
+
+        if (!_catalog.IsValid(id)) return false;
+        const auto& source = NESPalette::GetColor(sourcePaletteIndex);
+        const auto& target = NESPalette::GetColor(targetPaletteIndex);
+        return _catalog.GetAtlas(id).ReplacePixelColorRGB(
+            variant,
+            static_cast<unsigned char>(source.red),
+            static_cast<unsigned char>(source.green),
+            static_cast<unsigned char>(source.blue),
+            static_cast<unsigned char>(target.red),
+            static_cast<unsigned char>(target.green),
+            static_cast<unsigned char>(target.blue));
     }
 
     bool SpriteManager::ApplyRandomColorFilterByName(const std::wstring& name, int variant)

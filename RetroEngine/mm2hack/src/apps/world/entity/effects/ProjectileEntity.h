@@ -40,10 +40,12 @@ namespace mm2hack::apps::world::entity::effects
 
         rendering::sprite::SpriteManager::Id _id{};     // Object sprite id
         int _base_texture{ 0 };                         // Base texture index
+        common::ProjectileVisual _visual{ common::ProjectileVisual::Normal };
         std::int32_t _anim_frames{ 1 };                 // Animation frames
         double _anim_fps{ 0.0 };                        // Animation frames per second
 
         double _life_sec{ 1.0 };                        // Lifetime in seconds
         double _age_sec{ 0.0 };                         // Age in seconds
+        std::uint32_t _elapsed_ticks{ 0 };
     };
 }

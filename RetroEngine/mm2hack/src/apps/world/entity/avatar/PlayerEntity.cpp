@@ -32,9 +32,13 @@ namespace mm2hack::apps::world::entity::avatar
     PlayerEntity::PlayerEntity(
         SpriteManagerId id,
         SpriteManagerId weaponId,
-        SpriteManagerId effectsId)
+        SpriteManagerId effectsId,
+        SpriteManagerId chargeLevel1Id,
+        SpriteManagerId chargeLevel2Id)
         : _id(id),
           _effects_id(effectsId),
+          _charge_level1_id(chargeLevel1Id),
+          _charge_level2_id(chargeLevel2Id),
           _half{ 16.0, 16.0 }
     {
         _attackAction = std::make_unique<states::AttackActionState>(weaponId);
@@ -124,6 +128,7 @@ namespace mm2hack::apps::world::entity::avatar
         }
 
         auto action = _attackAction->PostUpdate(cx, _input, _attack_tuning, dt);
+        _charge_status = cx.output.charge;
         cx.textureAdd += action.textureAdd;
         cx.lockClimbMove = cx.lockClimbMove || action.lockClimbMove;
         _rock_buster = action.rockBuster;
@@ -206,14 +211,30 @@ namespace mm2hack::apps::world::entity::avatar
             screenPos += _intro_states.offsetPos;
         }
 
-        res.GetSpriteManager().UseById(_id, texture, static_cast<int>(screenPos.x), static_cast<int>(screenPos.y));
+        const auto render_sprite_id = renderSpriteId_();
+        auto& sprites = res.GetSpriteManager();
+        if (render_sprite_id == _id)
+        {
+            sprites.UseById(_id, texture, static_cast<int>(screenPos.x), static_cast<int>(screenPos.y));
+        }
+        else
+        {
+            sprites.UseByIdVariant(render_sprite_id, 0, texture, static_cast<int>(screenPos.x), static_cast<int>(screenPos.y));
+        }
 
         // Draw rock buster arm if visible
         if (_rock_buster.visible)
         {
             const Vec2 armWorldPos = pos + _rock_buster.offset;
             const auto armScreenPos = toScreenPos(armWorldPos);
-            res.GetSpriteManager().UseById(_id, _rock_buster.armTexture, static_cast<int>(armScreenPos.x), static_cast<int>(armScreenPos.y));
+            if (render_sprite_id == _id)
+            {
+                sprites.UseById(_id, _rock_buster.armTexture, static_cast<int>(armScreenPos.x), static_cast<int>(armScreenPos.y));
+            }
+            else
+            {
+                sprites.UseByIdVariant(render_sprite_id, 0, _rock_buster.armTexture, static_cast<int>(armScreenPos.x), static_cast<int>(armScreenPos.y));
+            }
         }
     }
 
@@ -419,5 +440,28 @@ namespace mm2hack::apps::world::entity::avatar
     {
         if (_pending_scroll_req.has_value()) return; // keep first!
         _pending_scroll_req = std::move(req);
+    }
+
+    PlayerEntity::SpriteManagerId PlayerEntity::renderSpriteId_() const noexcept
+    {
+        constexpr std::uint32_t kLevel1PaletteFrames = 4;
+        constexpr std::uint32_t kLevel2PaletteFrames = 2;
+        const auto invalid_id = static_cast<SpriteManagerId>(-1);
+
+        if (_charge_status.phase == ChargePhase::Level1 && _charge_level1_id != invalid_id)
+        {
+            const auto step = _charge_status.phaseFrames / kLevel1PaletteFrames;
+            return step % 2 == 1 ? _charge_level1_id : _id;
+        }
+
+        if (_charge_status.phase == ChargePhase::Level2)
+        {
+            const auto step = _charge_status.phaseFrames / kLevel2PaletteFrames;
+            const auto cycle = step % 4;
+            if (cycle == 1 && _charge_level1_id != invalid_id) return _charge_level1_id;
+            if (cycle == 3 && _charge_level2_id != invalid_id) return _charge_level2_id;
+        }
+
+        return _id;
     }
 }

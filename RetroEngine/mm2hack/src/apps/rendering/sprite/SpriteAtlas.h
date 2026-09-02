@@ -56,6 +56,11 @@ namespace mm2hack::apps::rendering::sprite
         bool ReplacePaletteColorIndex(int variant, int targetPaletteIndex, int sourcePaletteIndex) noexcept;
         // Replace a color in the palette for all variants (RGB match)
         bool ReplacePaletteColorRGB(int variant, unsigned char r, unsigned char g, unsigned char b, int sourcePaletteIndex) noexcept;
+        // Replace pixels matching one RGB color while preserving their alpha values.
+        bool ReplacePixelColorRGB(
+            int variant,
+            unsigned char sourceR, unsigned char sourceG, unsigned char sourceB,
+            unsigned char targetR, unsigned char targetG, unsigned char targetB) noexcept;
         // Apply a random hue shift to the specified variant
         bool ApplyRandomHueToVariant(int variant) noexcept;
         // Apply HSB adjustments to the specified variant

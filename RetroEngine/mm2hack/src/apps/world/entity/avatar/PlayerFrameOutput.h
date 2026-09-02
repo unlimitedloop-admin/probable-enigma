@@ -18,11 +18,27 @@
 
 namespace mm2hack::apps::world::entity::avatar
 {
+    enum class ChargePhase : std::uint8_t
+    {
+        Idle,
+        Warmup,
+        Level1,
+        Level2
+    };
+
+    struct ChargeStatus final
+    {
+        ChargePhase phase{ ChargePhase::Idle };
+        std::uint32_t frames{ 0 };
+        std::uint32_t phaseFrames{ 0 };
+    };
+
     // Semantic player events interpreted by the surrounding gameplay phase
     enum class PlayerEventType : std::uint8_t
     {
         EnteredWater,
         FiredRockBuster,
+        FiredMaxChargeShot,
         Landed,
         IntroLanded,
         SlidingStarted,
@@ -43,6 +59,7 @@ namespace mm2hack::apps::world::entity::avatar
         std::vector<PlayerEvent> events{};
         std::optional<common::SpawnProjectileCommand> projectile{};
         std::optional<common::SpawnSplashEffectCommand> splashEffect{};
+        ChargeStatus charge{};
 
         void PushEvent(PlayerEventType type)
         {

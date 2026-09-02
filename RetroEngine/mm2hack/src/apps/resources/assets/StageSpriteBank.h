@@ -21,6 +21,8 @@ namespace mm2hack::apps::resources::assets
     struct StageSpriteBank final
     {
         SpriteManagerId player{};
+        SpriteManagerId player_charge_level1{};
+        SpriteManagerId player_charge_level2{};
         SpriteManagerId player_attack{};
         SpriteManagerId effects{};
         SpriteManagerId sliding_dust_effect{};

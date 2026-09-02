@@ -8,6 +8,7 @@
 //==============================================================================
 #pragma once
 
+#include <cstdint>
 #include <optional>
 #include <string>
 #include "apps/foundation/math/CoordinateTypes.h"
@@ -52,6 +53,8 @@ namespace mm2hack::apps::world::entity::avatar::states
 
         // Projectile
         double projectileSpeedPxPerSec{ 240.0 };
+        double chargeLevel1SpeedPxPerSec{ 300.0 };
+        double chargeLevel2SpeedPxPerSec{ 360.0 };
         foundation::math::Vec2 projectileSpawnOffsetPxRight{ 32.0, 5.0 };
         foundation::math::Vec2 projectileSpawnOffsetPxLeft{ -16.0, 5.0 };
 
@@ -62,6 +65,8 @@ namespace mm2hack::apps::world::entity::avatar::states
 
         // Attack timing
         double attackDurationSec{ 0.18 };
+        std::uint32_t level1ChargeFrames{ 20 };
+        std::uint32_t level2ChargeFrames{ 200 };
     };
 
     // Handles attack action state (attacking or not)
@@ -80,8 +85,10 @@ namespace mm2hack::apps::world::entity::avatar::states
         void TickAnimationOnly(AnimeContext& ax, const AttackTuning& tuning, RockBusterDrawInfo& out_rb) const noexcept;
 
     private:
-        void restartAttackPose_() noexcept;         // Start attack action
+        void restartAttackPose_(bool request_normal_shot = false) noexcept; // Start attack action
         void finishAttackPose_() noexcept;          // Finish attack action
+        [[nodiscard]] ChargePhase chargePhase_(const AttackTuning& tuning) const noexcept;
+        void requestChargedShot_(const AttackTuning& tuning) noexcept;
 
     private:
         const std::wstring kClassName{ L"AttackActionState" };
@@ -92,5 +99,9 @@ namespace mm2hack::apps::world::entity::avatar::states
         RockBusterTuning rb_tuning{};               // Rock Buster tuning
 
         bool _fire_requested{ false };              // Whether fire button was requested
+        bool _charging{ false };
+        bool _can_spawn{ false };
+        std::uint32_t _charge_frames{ 0 };
+        common::ProjectileVisual _requested_visual{ common::ProjectileVisual::Normal };
     };
 }

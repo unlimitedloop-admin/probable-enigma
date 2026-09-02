@@ -16,6 +16,13 @@
 
 namespace mm2hack::apps::world::entity::common
 {
+    enum class ProjectileVisual : std::uint8_t
+    {
+        Normal,
+        ChargeLevel1,
+        ChargeLevel2
+    };
+
     // Command structure for spawning a projectile entity in the game world
     struct SpawnProjectileCommand final
     {
@@ -25,6 +32,7 @@ namespace mm2hack::apps::world::entity::common
 
         rendering::sprite::SpriteManager::Id spriteId{};                    // Which sprite-set to use for drawing (same as PlayerEntity::_id etc.)
         int baseTexture{ 0 };                                               // Base texture index for the projectile
+        ProjectileVisual visual{ ProjectileVisual::Normal };                // Single-tile or composite drawing pattern
         std::int32_t animFrames{ 1 };                                       // Number of animation frames for the projectile
         double animFps{ 0.0 };                                              // Animation speed (frames per second)
 
