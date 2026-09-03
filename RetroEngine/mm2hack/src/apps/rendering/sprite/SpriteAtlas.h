@@ -11,6 +11,7 @@
 #include <string>
 #include <span>
 #include <vector>
+#include "apps/rendering/common/DividedGraphLoader.h"
 
 // Forward declare to avoid header include of DxLib in all translation units
 struct tagSOFTIMAGE; // DxLib's SoftImage opaque type (we only hold handle int)
@@ -21,19 +22,7 @@ namespace mm2hack::apps::rendering::sprite
     class SpriteAtlas final
     {
     public:
-        struct DivSettings
-        {
-            int tile_w{ 0 };
-            int tile_h{ 0 };
-            int tiles_x{ 0 };
-            int tiles_y{ 0 };
-        };
-
-        // Optional palette/variant settings. If variant_count == 1, palette is not used.
-        struct PaletteConfig
-        {
-            int variant_count{ 1 };
-        };
+        using DivSettings = common::DivSettings;
 
         struct PaletteColorMapping
         {

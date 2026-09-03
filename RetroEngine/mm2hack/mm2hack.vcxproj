@@ -204,6 +204,7 @@
     <ClCompile Include="src\apps\rendering\bg\BGTileAtlas.cpp" />
     <ClCompile Include="src\apps\rendering\bg\BGTileCatalog.cpp" />
     <ClCompile Include="src\apps\rendering\bg\BGTileManager.cpp" />
+    <ClCompile Include="src\apps\rendering\common\DividedGraphLoader.cpp" />
     <ClCompile Include="src\apps\resources\bg\MapPageCache.cpp" />
     <ClCompile Include="src\apps\rendering\effects\FadeIOTexture.cpp" />
     <ClCompile Include="src\apps\rendering\fonts\FontTileManager.cpp" />
@@ -413,6 +414,7 @@
     <ClInclude Include="src\apps\rendering\bg\BGTileAtlas.h" />
     <ClInclude Include="src\apps\rendering\bg\BGTileCatalog.h" />
     <ClInclude Include="src\apps\rendering\bg\BGTileManager.h" />
+    <ClInclude Include="src\apps\rendering\common\DividedGraphLoader.h" />
     <ClInclude Include="src\apps\world\stage\RoomGraphAdapter.h" />
     <ClInclude Include="src\apps\rendering\effects\FadeIOTexture.h" />
     <ClInclude Include="src\apps\rendering\fonts\FontTileManager.h" />

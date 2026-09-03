@@ -13,6 +13,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "apps/rendering/common/DividedGraphLoader.h"
 #include "BGTilePalette.h"
 
 namespace mm2hack::apps::rendering::bg
@@ -21,18 +22,7 @@ namespace mm2hack::apps::rendering::bg
     class BGTileAtlas final
     {
     public:
-        struct DivSettings
-        {
-            int tile_w{ 0 };
-            int tile_h{ 0 };
-            int tiles_x{ 0 };
-            int tiles_y{ 0 };
-        };
-
-        struct PaletteConfig
-        {
-            int variant_count{ 1 }; // e.g., 4 for NES-like fade steps
-        };
+        using DivSettings = common::DivSettings;
 
         BGTileAtlas(std::wstring name,
             DivSettings div,

@@ -70,6 +70,7 @@
     <ClCompile Include="src\apps\rendering\sprite\SpriteCatalog.cpp" />
     <ClCompile Include="src\apps\rendering\bg\BGTileAtlas.cpp" />
     <ClCompile Include="src\apps\rendering\bg\BGTileCatalog.cpp" />
+    <ClCompile Include="src\apps\rendering\common\DividedGraphLoader.cpp" />
     <ClCompile Include="src\apps\vfx\stareffects\BgStarField.cpp" />
     <ClCompile Include="src\apps\vfx\stareffects\FixedStar.cpp" />
     <ClCompile Include="src\apps\vfx\stareffects\ShootingStar.cpp" />
@@ -248,6 +249,7 @@
     <ClInclude Include="src\config\GameAssets.h" />
     <ClInclude Include="src\apps\rendering\bg\BGTileAtlas.h" />
     <ClInclude Include="src\apps\rendering\bg\BGTileCatalog.h" />
+    <ClInclude Include="src\apps\rendering\common\DividedGraphLoader.h" />
     <ClInclude Include="src\apps\vfx\stareffects\BgStarField.h" />
     <ClInclude Include="src\apps\vfx\stareffects\FixedStar.h" />
     <ClInclude Include="src\apps\vfx\stareffects\ShootingStar.h" />
