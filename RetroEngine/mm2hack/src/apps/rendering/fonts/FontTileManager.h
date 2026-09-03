@@ -24,15 +24,11 @@ namespace mm2hack::apps::rendering::fonts
         FontTileManager() = default;
         ~FontTileManager();
 
-        // JSON path only (PNG is described in JSON or inferred from JSON with the same name)
-        void Load(const std::wstring& name, std::wstring_view jsonPath);
         // Specify PNG/JSON separately (PNG takes precedence)
         void Load(const std::wstring& name, std::wstring_view pngPath, std::wstring_view jsonPath);
         void Remove(const std::wstring& name);
 
         void DrawTextImage(const std::wstring& text, int x, int y, int spacing = 8) const;
-        void ChangeColoredImage(const std::wstring& setName, char ch, uint8_t r, uint8_t g, uint8_t b);
-
         void SetUp();
         void ShutDown();
 
@@ -43,7 +39,6 @@ namespace mm2hack::apps::rendering::fonts
         [[nodiscard]] int GlobalVariant() const noexcept { return _globalVariant; } // Current global variant index
         [[nodiscard]] int MaxVariant() const noexcept;                              // Maximum variant index
         void SetGlobalVariantClamped(int v) noexcept;                               // Clamp and set to 0..Max
-        [[nodiscard]] int VariantCountByName(const std::wstring& setName) const;    // Number of variants for a set
 
     private:
         struct FontSet
@@ -64,7 +59,6 @@ namespace mm2hack::apps::rendering::fonts
             std::wstring pngPath;  // JSON description or inferred from JSON with the same name
             int tile_w{ 8 }, tile_h{ 8 }, tiles_x{ 16 }, tiles_y{ 2 };
             int variant_count{ 1 };
-            int nes_fade_step{ 16 };
             std::map<char, int> charToIndex; // Optional (default generated if not present)
         };
 
@@ -75,7 +69,7 @@ namespace mm2hack::apps::rendering::fonts
         void createFontGraphs_(const std::wstring& name, int softImage,
             int tile_w, int tile_h, int tiles_x, int tiles_y,
             const std::map<char, int>& charIndexMap,
-            int variant_count, int fade_step);
+            int variant_count);
 
     private:
         const std::wstring kClassName{ L"FontTileManager" };

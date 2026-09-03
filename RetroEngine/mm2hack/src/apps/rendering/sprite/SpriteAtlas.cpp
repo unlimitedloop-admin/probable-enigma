@@ -44,15 +44,6 @@ namespace mm2hack::apps::rendering::sprite
         return *this;
     }
 
-    int SpriteAtlas::FramesPerVariant() const noexcept
-    {
-        if (_graphs_by_variant.empty())
-        {
-            return 0;
-        }
-        return static_cast<int>(_graphs_by_variant.front().size());
-    }
-
     void SpriteAtlas::Draw(int variant, int frame, int x, int y) const noexcept
     {
         if (variant < 0 || variant >= static_cast<int>(_graphs_by_variant.size()))
@@ -101,12 +92,28 @@ namespace mm2hack::apps::rendering::sprite
         return rebuildVariantFromSoftImage_(variant);
     }
 
-    bool SpriteAtlas::ReplacePixelColorRGB(
+    bool SpriteAtlas::ReplacePixelColors(
         int variant,
-        unsigned char sourceR, unsigned char sourceG, unsigned char sourceB,
-        unsigned char targetR, unsigned char targetG, unsigned char targetB) noexcept
+        std::span<const PaletteColorMapping> mappings) noexcept
     {
         if (_soft_image == -1) return false;
+        if (mappings.empty()) return true;
+
+        struct RGBMapping final
+        {
+            foundation::NES::NESPalette::RGB source{};
+            foundation::NES::NESPalette::RGB target{};
+        };
+
+        std::vector<RGBMapping> rgb_mappings;
+        rgb_mappings.reserve(mappings.size());
+        for (const auto& mapping : mappings)
+        {
+            rgb_mappings.push_back(RGBMapping{
+                foundation::NES::NESPalette::GetColor(mapping.source_palette_index),
+                foundation::NES::NESPalette::GetColor(mapping.target_palette_index)
+            });
+        }
 
         int width = 0;
         int height = 0;
@@ -121,12 +128,17 @@ namespace mm2hack::apps::rendering::sprite
                 int b = 0;
                 int a = 0;
                 if (::DxLib::GetPixelSoftImage(_soft_image, x, y, &r, &g, &b, &a) != 0) return false;
-                if (r != sourceR || g != sourceG || b != sourceB) continue;
 
-                if (::DxLib::DrawPixelSoftImage(
-                    _soft_image, x, y, targetR, targetG, targetB, a) != 0)
+                for (const auto& mapping : rgb_mappings)
                 {
-                    return false;
+                    if (r != mapping.source.red || g != mapping.source.green || b != mapping.source.blue) continue;
+
+                    if (::DxLib::DrawPixelSoftImage(
+                        _soft_image, x, y, mapping.target.red, mapping.target.green, mapping.target.blue, a) != 0)
+                    {
+                        return false;
+                    }
+                    break;
                 }
             }
         }

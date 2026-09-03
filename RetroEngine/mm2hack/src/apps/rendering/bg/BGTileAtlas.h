@@ -32,7 +32,6 @@ namespace mm2hack::apps::rendering::bg
         struct PaletteConfig
         {
             int variant_count{ 1 }; // e.g., 4 for NES-like fade steps
-            int nes_fade_step{ 16 };
         };
 
         BGTileAtlas(std::wstring name,
@@ -47,7 +46,6 @@ namespace mm2hack::apps::rendering::bg
 
         // Properties
         [[nodiscard]] const std::wstring& Name() const noexcept { return _name; }
-        [[nodiscard]] DivSettings GetDiv() const noexcept { return _div; }
         [[nodiscard]] int VariantCount() const noexcept { return static_cast<int>(_graphs_by_variant.size()); }
         [[nodiscard]] int TilesPerVariant() const noexcept;
 

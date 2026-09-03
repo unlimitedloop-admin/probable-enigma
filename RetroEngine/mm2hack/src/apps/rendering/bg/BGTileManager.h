@@ -46,17 +46,12 @@ namespace mm2hack::apps::rendering::bg
 
         // Draw a tile from the specified tileset by its Id
         void DrawTileById(Id id, int tile_index, int x, int y) const noexcept;
-        // Draw a tile from the specified tileset by its Id and variant
-        void DrawTileVariantById(Id id, int variant, int tile_index, int x, int y) const noexcept;
-
         // Map data (simple, raw tile id grid). Width/Height are in tiles
         void SetMapSize(int width, int height);
         // Load map data from a binary file, with an optional offset
         void LoadMapBinary(std::wstring_view map_file, int offset = 0x10);
         // Replace the current map data from an in-memory tile buffer
         [[nodiscard]] bool SetMapTiles(std::span<const std::uint8_t> tiles);
-        // Set tile at (x,y) in the map
-        void SetTile(int x, int y, std::uint8_t id);
         // Get tile at (x,y) in the map
         std::uint8_t GetTile(int x, int y) const;
         // Extract map binary data from a file, with an optional offset
@@ -79,19 +74,11 @@ namespace mm2hack::apps::rendering::bg
         // Draw map with the specified tileset Id
         void DrawMapById(Id tileset_id, int tile_px_w, int tile_px_h, int offset_x = 0, int offset_y = 0) const;
 
-        // Events passthrough
-        inline void SetEvents(BGTileCatalog::Events e) { _catalog.SetEvents(std::move(e)); }
-
-        // Name->Id helpers
-        [[nodiscard]] inline std::optional<Id> TryGetId(const std::wstring& name) const { return _catalog.TryGetId(name); }
-        [[nodiscard]] inline bool Has(const std::wstring& name) const { return _catalog.Has(name); }
-
         // Variant (global palette step) control
         inline void SetGlobalVariant(int v) noexcept { _global_variant = v; }
         [[nodiscard]] inline int GlobalVariant() const noexcept { return _global_variant; }
         // Variant info
         [[nodiscard]] inline int MaxVariant() const noexcept { return _catalog.MaxVariantAcross(); }
-        [[nodiscard]] int VariantCountByName(const std::wstring& tileset_name) const;
         [[nodiscard]] int VariantCountById(Id id) const;
 
         // Set global variant, clamped to valid range
@@ -106,9 +93,6 @@ namespace mm2hack::apps::rendering::bg
         void SetTileAnimations(std::span<const BGTileAnimation> animations) noexcept;
         // Advance BG tile animations by one frame
         void UpdateTileAnimations() noexcept;
-        // Reset BG tile animations
-        void ResetTileAnimations() noexcept;
-
     private:
         const std::wstring kClassName{ L"BGTileManager" };
 

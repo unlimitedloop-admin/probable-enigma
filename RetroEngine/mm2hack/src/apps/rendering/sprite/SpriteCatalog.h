@@ -9,7 +9,6 @@
 #pragma once
 
 #include <cstdint>
-#include <functional>
 #include <memory>
 #include <optional>
 #include <string>
@@ -26,22 +25,13 @@ namespace mm2hack::apps::rendering::sprite
     public:
         using Id = std::uint32_t;
 
-        struct Events
-        {
-            std::function<void(Id, const std::wstring&)> on_created{};   // after load
-            std::function<void(Id, const std::wstring&)> on_destroyed{}; // before remove
-        };
-
         SpriteCatalog() = default;
-        ~SpriteCatalog();
+        ~SpriteCatalog() = default;
 
         SpriteCatalog(const SpriteCatalog&) = delete;
         SpriteCatalog& operator=(const SpriteCatalog&) = delete;
         SpriteCatalog(SpriteCatalog&&) noexcept = default;
         SpriteCatalog& operator=(SpriteCatalog&&) noexcept = default;
-
-        // Set event callbacks used for monitoring
-        void SetEvents(Events events) noexcept { _events = std::move(events); }
 
         // Load from PNG + JSON metadata (div settings, optional palette variants)
         Id Load(const std::wstring& name, const std::wstring& png_path, const std::wstring& json_path);
@@ -60,13 +50,10 @@ namespace mm2hack::apps::rendering::sprite
         void Remove(Id id);
         void Clear();
 
-        // Count
-        [[nodiscard]] std::size_t Size() const noexcept { return _atlases.size(); }
         // Maximum variant count across all loaded atlases
         [[nodiscard]] int MaxVariantAcross() const noexcept;
 
     private:
-        Id NextId_() const noexcept;        // next available Id (dense array index)
         std::unique_ptr<SpriteAtlas> BuildAtlas_(const std::wstring& name,
                                                  const std::wstring& png_path,
                                                  const std::wstring& json_path);    // Load to memory and build sprite graphics
@@ -76,6 +63,5 @@ namespace mm2hack::apps::rendering::sprite
 
         std::unordered_map<std::wstring, Id> _name_to_id{};     // name -> Id
         std::vector<std::unique_ptr<SpriteAtlas>> _atlases{};   // dense array; index==Id
-        Events _events{};                                       // event callbacks (optional)
     };
 }

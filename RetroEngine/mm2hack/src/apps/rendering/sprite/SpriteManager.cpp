@@ -3,7 +3,6 @@
 #include "SpriteManager.h"
 
 #include <string_view>
-#include "apps/foundation/NES/NESPalette.h"
 
 namespace mm2hack::apps::rendering::sprite
 {
@@ -50,27 +49,13 @@ namespace mm2hack::apps::rendering::sprite
         return false;
     }
 
-    bool SpriteManager::ReplacePaletteColorById(Id id, int targetPaletteIndex, int sourcePaletteIndex, int variant)
+    bool SpriteManager::ReplacePixelColorsById(
+        Id id,
+        std::span<const SpriteAtlas::PaletteColorMapping> mappings,
+        int variant)
     {
         if (!_catalog.IsValid(id)) return false;
-        return _catalog.GetAtlas(id).ReplacePaletteColorIndex(variant, targetPaletteIndex, sourcePaletteIndex);
-    }
-
-    bool SpriteManager::ReplacePixelColorById(Id id, int sourcePaletteIndex, int targetPaletteIndex, int variant)
-    {
-        using foundation::NES::NESPalette;
-
-        if (!_catalog.IsValid(id)) return false;
-        const auto& source = NESPalette::GetColor(sourcePaletteIndex);
-        const auto& target = NESPalette::GetColor(targetPaletteIndex);
-        return _catalog.GetAtlas(id).ReplacePixelColorRGB(
-            variant,
-            static_cast<unsigned char>(source.red),
-            static_cast<unsigned char>(source.green),
-            static_cast<unsigned char>(source.blue),
-            static_cast<unsigned char>(target.red),
-            static_cast<unsigned char>(target.green),
-            static_cast<unsigned char>(target.blue));
+        return _catalog.GetAtlas(id).ReplacePixelColors(variant, mappings);
     }
 
     bool SpriteManager::ApplyRandomColorFilterByName(const std::wstring& name, int variant)
@@ -78,24 +63,6 @@ namespace mm2hack::apps::rendering::sprite
         const Id id = cacheId_(name);
         if (id == kInvalidId || !_catalog.IsValid(id)) return false;
         return _catalog.GetAtlas(id).ApplyRandomHueToVariant(variant);
-    }
-
-    bool SpriteManager::ApplyRandomColorFilterById(Id id, int variant)
-    {
-        if (!_catalog.IsValid(id)) return false;
-        return _catalog.GetAtlas(id).ApplyRandomHueToVariant(variant);
-    }
-
-    bool SpriteManager::ApplyHSBFilterById(Id id, int variant, int hueAdd, int satAdd, int briAdd)
-    {
-        if (!_catalog.IsValid(id)) return false;
-        return _catalog.GetAtlas(id).ApplyHSBToVariant(variant, hueAdd, satAdd, briAdd);
-    }
-
-    int SpriteManager::VariantCountByName(const std::wstring& sprite_name) const
-    {
-        if (auto id = _catalog.TryGetId(sprite_name)) return _catalog.GetAtlas(*id).VariantCount();
-        return 0;
     }
 
     int SpriteManager::VariantCountById(Id id) const

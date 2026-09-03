@@ -63,17 +63,6 @@ namespace
 
 namespace mm2hack::apps::rendering::sprite
 {
-    SpriteCatalog::~SpriteCatalog()
-    {
-        for (Id id = 0; id < _atlases.size(); ++id)
-        {
-            if (_atlases[id] && _events.on_destroyed)
-                _events.on_destroyed(id, _atlases[id]->Name());
-        }
-        _atlases.clear();
-        _name_to_id.clear();
-    }
-
     SpriteCatalog::Id SpriteCatalog::Load(const std::wstring& name, const std::wstring& png_path, const std::wstring& json_path)
     {
         auto it = _name_to_id.find(name);
@@ -86,18 +75,10 @@ namespace mm2hack::apps::rendering::sprite
         const std::wstring json{ json_path };
         auto atlas = BuildAtlas_(name, png, json);
 
-        const Id id = NextId_();
-        if (id == _atlases.size())
-        {
-            _atlases.emplace_back(std::move(atlas));
-        }
-        else
-        {
-            _atlases[static_cast<std::size_t>(id)] = std::move(atlas);
-        }
+        const Id id = static_cast<Id>(_atlases.size());
+        _atlases.emplace_back(std::move(atlas));
         _name_to_id.emplace(name, id);
 
-        if (_events.on_created) _events.on_created(id, name);
         return id;
     }
 
@@ -141,10 +122,6 @@ namespace mm2hack::apps::rendering::sprite
         {
             return;
         }
-        if (_events.on_destroyed)
-        {
-            _events.on_destroyed(id, _atlases[id]->Name());
-        }
         // erase from name index
         for (auto it = _name_to_id.begin(); it != _name_to_id.end(); ++it)
         {
@@ -159,17 +136,7 @@ namespace mm2hack::apps::rendering::sprite
 
     void SpriteCatalog::Clear()
     {
-        for (Id id = 0; id < _atlases.size(); ++id)
-        {
-            if (_atlases[id])
-            {
-                if (_events.on_destroyed)
-                {
-                    _events.on_destroyed(id, _atlases[id]->Name());
-                }
-                _atlases[id].reset();
-            }
-        }
+        _atlases.clear();
         _name_to_id.clear();
     }
 
@@ -183,11 +150,6 @@ namespace mm2hack::apps::rendering::sprite
             result = (result < 0) ? mv : std::min(result, mv);
         }
         return std::max(0, result);
-    }
-
-    SpriteCatalog::Id SpriteCatalog::NextId_() const noexcept
-    {
-        return static_cast<Id>(_atlases.size());
     }
 
     std::unique_ptr<SpriteAtlas> SpriteCatalog::BuildAtlas_(const std::wstring& name,
@@ -216,7 +178,6 @@ namespace mm2hack::apps::rendering::sprite
                     div.tiles_x = loader.value("tilesX", div.tiles_x);
                     div.tiles_y = loader.value("tilesY", div.tiles_y);
                     pal.variant_count = loader.value("paletteVariants", pal.variant_count);
-                    pal.nes_fade_step = loader.value("nesFadeStep", pal.nes_fade_step);
                 }
             }
         }

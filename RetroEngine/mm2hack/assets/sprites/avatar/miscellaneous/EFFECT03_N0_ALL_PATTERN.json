@@ -4,7 +4,6 @@
         "tileHeight": 16,
         "tilesX": 8,
         "tilesY": 2,
-        "paletteVariants": 4,
-        "nesFadeStep": 16
+        "paletteVariants": 4
     }
 }

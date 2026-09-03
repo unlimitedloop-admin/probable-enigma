@@ -78,12 +78,7 @@ namespace mm2hack::apps::rendering::fonts
         const int soft = ::DxLib::LoadSoftImage(meta.pngPath.c_str());
         if (soft == -1) THROW_EXCEPTION(L"LoadSoftImage failed", kClassName);
 
-        createFontGraphs_(name, soft, meta.tile_w, meta.tile_h, meta.tiles_x, meta.tiles_y, meta.charToIndex, meta.variant_count, meta.nes_fade_step);
-    }
-
-    void FontTileManager::Load(const std::wstring& name, std::wstring_view jsonPath)
-    {
-        Load(name, std::wstring_view{}, jsonPath);
+        createFontGraphs_(name, soft, meta.tile_w, meta.tile_h, meta.tiles_x, meta.tiles_y, meta.charToIndex, meta.variant_count);
     }
 
     void FontTileManager::Remove(const std::wstring& name)
@@ -136,50 +131,6 @@ namespace mm2hack::apps::rendering::fonts
         }
     }
 
-    void FontTileManager::ChangeColoredImage(const std::wstring& setName, char ch, uint8_t r, uint8_t g, uint8_t b)
-    {
-        auto itSet = _fontSets.find(setName);
-        if (itSet == _fontSets.end()) return;
-        auto& set = itSet->second;
-
-        auto itIdx = set.charToIndex.find(ch); // Strict match
-        if (itIdx == set.charToIndex.end())
-        {
-            const char up = static_cast<char>(std::toupper(static_cast<unsigned char>(ch)));
-            if (auto it2 = set.charToIndex.find(up); it2 != set.charToIndex.end())
-            {
-                ch = up; itIdx = it2;
-            }
-            else
-            {
-                const char lo = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
-                if (auto it3 = set.charToIndex.find(lo); it3 != set.charToIndex.end())
-                {
-                    ch = lo; itIdx = it3;
-                }
-                else
-                {
-                    return;
-                }
-            }
-        }
-        const int idx = itIdx->second;
-
-        constexpr int paletteIndex = 1;
-        ::DxLib::SetPaletteSoftImage(set.softImage, paletteIndex, r, g, b, 255);
-
-        const int sx = (idx % set.tiles_x) * set.tile_w;
-        const int sy = (idx / set.tiles_x) * set.tile_h;
-        const int newGraph = ::DxLib::CreateGraphFromRectSoftImage(set.softImage, sx, sy, set.tile_w, set.tile_h);
-        if (newGraph != -1)
-        {
-            const int v = (_globalVariant < set.variantCount) ? _globalVariant : 0;
-            auto& gv = set.graphsByVariant[(size_t)v];
-            if (auto itG = gv.find(ch); itG != gv.end()) ::DxLib::DeleteGraph(itG->second);
-            gv[ch] = newGraph;
-        }
-    }
-
     void FontTileManager::SetUp()
     {
         Load(L"alphabet", MM2H_GRAPHICS(Alphabet), MM2H_GRAPHPROPS(Alphabet));
@@ -214,13 +165,6 @@ namespace mm2hack::apps::rendering::fonts
         _globalVariant = std::max(0, std::min(v, mv));
     }
 
-    int FontTileManager::VariantCountByName(const std::wstring& setName) const
-    {
-        auto it = _fontSets.find(setName);
-        if (it == _fontSets.end()) return 0;
-        return it->second.variantCount;
-    }
-
     // --- helpers ---
     FontTileManager::ParsedMeta FontTileManager::parseMeta_(const std::wstring& jsonPath, const std::wstring& setName)
     {
@@ -247,7 +191,6 @@ namespace mm2hack::apps::rendering::fonts
             geti("tilesX", out.tiles_x);
             geti("tilesY", out.tiles_y);
             geti("paletteVariants", out.variant_count);
-            geti("nesFadeStep", out.nes_fade_step);
 
             auto get_png = [&](const nlohmann::json& obj)->std::wstring
                 {
@@ -293,7 +236,6 @@ namespace mm2hack::apps::rendering::fonts
 
         if (out.pngPath.empty()) out.pngPath = derivePngFromJsonPath_(jsonPath);
         if (out.variant_count <= 0) out.variant_count = 1;
-        if (out.nes_fade_step < 0)  out.nes_fade_step = 0;
         return out;
     }
 
@@ -312,7 +254,7 @@ namespace mm2hack::apps::rendering::fonts
     void FontTileManager::createFontGraphs_(const std::wstring& name, int softImage,
         int tile_w, int tile_h, int tiles_x, int tiles_y,
         const std::map<char, int>& charIndexMap,
-        int variant_count, int fade_step)
+        int variant_count)
     {
         FontSet set;
         set.softImage = softImage;

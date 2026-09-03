@@ -9,6 +9,7 @@
 #pragma once
 
 #include <string>
+#include <span>
 #include <vector>
 
 // Forward declare to avoid header include of DxLib in all translation units
@@ -31,8 +32,13 @@ namespace mm2hack::apps::rendering::sprite
         // Optional palette/variant settings. If variant_count == 1, palette is not used.
         struct PaletteConfig
         {
-            int variant_count{ 1 };     // e.g., 4 for NES fade steps
-            int nes_fade_step{ 16 };    // +16/-16 offset rule
+            int variant_count{ 1 };
+        };
+
+        struct PaletteColorMapping
+        {
+            int source_palette_index{ 0 };
+            int target_palette_index{ 0 };
         };
 
         SpriteAtlas(std::wstring name, DivSettings div,
@@ -45,9 +51,7 @@ namespace mm2hack::apps::rendering::sprite
 
         // Properties
         [[nodiscard]] const std::wstring& Name() const noexcept { return _name; }
-        [[nodiscard]] DivSettings GetDiv() const noexcept { return _div; }
         [[nodiscard]] int VariantCount() const noexcept { return static_cast<int>(_graphs_by_variant.size()); }
-        [[nodiscard]] int FramesPerVariant() const noexcept;
 
         // Draw specified frame with specified color-variant
         void Draw(int variant, int frame, int x, int y) const noexcept;
@@ -57,10 +61,9 @@ namespace mm2hack::apps::rendering::sprite
         // Replace a color in the palette for all variants (RGB match)
         bool ReplacePaletteColorRGB(int variant, unsigned char r, unsigned char g, unsigned char b, int sourcePaletteIndex) noexcept;
         // Replace pixels matching one RGB color while preserving their alpha values.
-        bool ReplacePixelColorRGB(
+        bool ReplacePixelColors(
             int variant,
-            unsigned char sourceR, unsigned char sourceG, unsigned char sourceB,
-            unsigned char targetR, unsigned char targetG, unsigned char targetB) noexcept;
+            std::span<const PaletteColorMapping> mappings) noexcept;
         // Apply a random hue shift to the specified variant
         bool ApplyRandomHueToVariant(int variant) noexcept;
         // Apply HSB adjustments to the specified variant

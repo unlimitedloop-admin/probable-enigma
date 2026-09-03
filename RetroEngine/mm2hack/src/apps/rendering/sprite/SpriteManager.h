@@ -9,6 +9,7 @@
 #pragma once
 
 #include <limits>
+#include <span>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -38,21 +39,12 @@ namespace mm2hack::apps::rendering::sprite
 
         // Palette color replacement (for NES-style palette swaps)
         bool ReplacePaletteColorByName(const std::wstring& name, int targetPaletteIndex, int sourcePaletteIndex, int variant = 0);
-        bool ReplacePaletteColorById(Id id, int targetPaletteIndex, int sourcePaletteIndex, int variant = 0);
-        bool ReplacePixelColorById(Id id, int sourcePaletteIndex, int targetPaletteIndex, int variant = 0);
+        bool ReplacePixelColorsById(Id id, std::span<const SpriteAtlas::PaletteColorMapping> mappings, int variant = 0);
         bool ApplyRandomColorFilterByName(const std::wstring& name, int variant = 0);
-        bool ApplyRandomColorFilterById(Id id, int variant = 0);
-        bool ApplyHSBFilterById(Id id, int variant, int hueAdd, int satAdd, int briAdd);
-
-        // Event monitoring
-        void SetEvents(SpriteCatalog::Events events) { _catalog.SetEvents(std::move(events)); }
 
         // Utilities
-        [[nodiscard]] inline bool Has(const std::wstring& name) const { return _catalog.Has(name); }
-        [[nodiscard]] inline Id GetId(const std::wstring& name) const { return _catalog.GetId(name); }
         // Variant info
         [[nodiscard]] inline int MaxVariant() const noexcept { return _catalog.MaxVariantAcross(); }
-        [[nodiscard]] int VariantCountByName(const std::wstring& sprite_name) const;
         [[nodiscard]] int VariantCountById(Id id) const;
         void SetGlobalVariantClamped(int v) noexcept;
 

@@ -64,17 +64,6 @@ namespace
 
 namespace mm2hack::apps::rendering::bg
 {
-    BGTileCatalog::~BGTileCatalog()
-    {
-        for (Id id = 0; id < _atlases.size(); ++id)
-        {
-            if (_atlases[id] && _events.on_destroyed)
-                _events.on_destroyed(id, _atlases[id]->Name());
-        }
-        _atlases.clear();
-        _name_to_id.clear();
-    }
-
     bool BGTileCatalog::Has(const std::wstring& name) const
     {
         return _name_to_id.find(name) != _name_to_id.end();
@@ -126,14 +115,12 @@ namespace mm2hack::apps::rendering::bg
         
         _name_to_id.emplace(name, id);
 
-        if (_events.on_created) _events.on_created(id, name);
         return id;
     }
 
     void BGTileCatalog::Remove(Id id)
     {
         if (!IsValid(id)) return;
-        if (_events.on_destroyed) _events.on_destroyed(id, _atlases[id]->Name());
         for (auto it = _name_to_id.begin(); it != _name_to_id.end(); )
         {
             if (it->second == id) it = _name_to_id.erase(it); else ++it;
@@ -143,13 +130,6 @@ namespace mm2hack::apps::rendering::bg
 
     void BGTileCatalog::Clear()
     {
-        for (Id id = 0; id < _atlases.size(); ++id)
-        {
-            if (_atlases[id] && _events.on_destroyed)
-            {
-                _events.on_destroyed(id, _atlases[id]->Name());
-            }
-        }
         _atlases.clear();
         _name_to_id.clear();
     }
@@ -197,7 +177,6 @@ namespace mm2hack::apps::rendering::bg
                     div.tiles_x = loader.value("tilesX", div.tiles_x);
                     div.tiles_y = loader.value("tilesY", div.tiles_y);
                     pal.variant_count = loader.value("paletteVariants", pal.variant_count);
-                    pal.nes_fade_step = loader.value("nesFadeStep", pal.nes_fade_step);
                 }
             }
         }
