@@ -37,9 +37,6 @@ namespace mm2hack::apps::rendering::sprite
         Id Load(const std::wstring& name, const std::wstring& png_path, const std::wstring& json_path);
 
         // Getters
-        bool Has(const std::wstring& name) const;
-        Id GetId(const std::wstring& name) const;
-        std::optional<Id> TryGetId(const std::wstring& name) const noexcept;
         const SpriteAtlas& GetAtlas(Id id) const noexcept;
         SpriteAtlas& GetAtlas(Id id) noexcept;
 
@@ -54,8 +51,7 @@ namespace mm2hack::apps::rendering::sprite
         [[nodiscard]] int MaxVariantAcross() const noexcept;
 
     private:
-        std::unique_ptr<SpriteAtlas> BuildAtlas_(const std::wstring& name,
-                                                 const std::wstring& png_path,
+        std::unique_ptr<SpriteAtlas> BuildAtlas_(const std::wstring& png_path,
                                                  const std::wstring& json_path);    // Load to memory and build sprite graphics
 
     private:

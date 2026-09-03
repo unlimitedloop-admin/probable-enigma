@@ -2,7 +2,9 @@
 
 #include "SpriteManager.h"
 
+#include <span>
 #include <string_view>
+#include "SpriteAtlas.h"
 
 namespace mm2hack::apps::rendering::sprite
 {
@@ -28,25 +30,10 @@ namespace mm2hack::apps::rendering::sprite
         atlas.Draw(variant, frame, x, y);
     }
 
-    void SpriteManager::UseByName(const std::wstring& name, int frame, int x, int y)
+    bool SpriteManager::ReplacePaletteColorById(Id id, int targetPaletteIndex, int sourcePaletteIndex, int variant)
     {
-        const Id id = cacheId_(name);
-        if (id == kInvalidId) { return; }
-        UseById(id, frame, x, y);
-    }
-
-    bool SpriteManager::ReplacePaletteColorByName(const std::wstring& name, int targetPaletteIndex, int sourcePaletteIndex, int variant)
-    {
-        if (auto it = _name_cache.find(name); it != _name_cache.end())
-        {
-            return _catalog.GetAtlas(it->second).ReplacePaletteColorIndex(variant, targetPaletteIndex, sourcePaletteIndex);
-        }
-        if (auto opt = _catalog.TryGetId(name))
-        {
-            _name_cache.emplace(name, *opt);
-            return _catalog.GetAtlas(*opt).ReplacePaletteColorIndex(variant, targetPaletteIndex, sourcePaletteIndex);
-        }
-        return false;
+        if (!_catalog.IsValid(id)) return false;
+        return _catalog.GetAtlas(id).ReplacePaletteColorIndex(variant, targetPaletteIndex, sourcePaletteIndex);
     }
 
     bool SpriteManager::ReplacePixelColorsById(
@@ -58,10 +45,9 @@ namespace mm2hack::apps::rendering::sprite
         return _catalog.GetAtlas(id).ReplacePixelColors(variant, mappings);
     }
 
-    bool SpriteManager::ApplyRandomColorFilterByName(const std::wstring& name, int variant)
+    bool SpriteManager::ApplyRandomColorFilterById(Id id, int variant)
     {
-        const Id id = cacheId_(name);
-        if (id == kInvalidId || !_catalog.IsValid(id)) return false;
+        if (!_catalog.IsValid(id)) return false;
         return _catalog.GetAtlas(id).ApplyRandomHueToVariant(variant);
     }
 
@@ -79,45 +65,12 @@ namespace mm2hack::apps::rendering::sprite
 
     void SpriteManager::ReleaseById(Id id)
     {
-        // drop any cached name entries pointing to this id
-        for (auto it = _name_cache.begin(); it != _name_cache.end();)
-        {
-            if (it->second == id) it = _name_cache.erase(it); else ++it;
-        }
         _catalog.Remove(id);
-    }
-
-    void SpriteManager::ReleaseByName(const std::wstring& name)
-    {
-        if (auto it = _name_cache.find(name); it != _name_cache.end())
-        {
-            _name_cache.erase(it);
-        }
-        if (auto opt = _catalog.TryGetId(name))
-        {
-            _catalog.Remove(*opt);
-        }
     }
 
     void SpriteManager::ReleaseAll()
     {
         _catalog.Clear();
-        _name_cache.clear();
         _global_variant = 0;
-    }
-
-    SpriteManager::Id SpriteManager::cacheId_(const std::wstring& name)
-    {
-        if (const auto it = _name_cache.find(name); it != _name_cache.end())
-        {
-            return it->second;
-        }
-        if (auto opt = _catalog.TryGetId(name))
-        {
-            const Id id = *opt;
-            _name_cache.emplace(name, id);
-            return id;
-        }
-        return kInvalidId;
     }
 }

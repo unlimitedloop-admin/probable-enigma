@@ -73,32 +73,13 @@ namespace mm2hack::apps::rendering::sprite
 
         const std::wstring png{ png_path };
         const std::wstring json{ json_path };
-        auto atlas = BuildAtlas_(name, png, json);
+        auto atlas = BuildAtlas_(png, json);
 
         const Id id = static_cast<Id>(_atlases.size());
         _atlases.emplace_back(std::move(atlas));
         _name_to_id.emplace(name, id);
 
         return id;
-    }
-
-    bool SpriteCatalog::Has(const std::wstring& name) const
-    {
-        return _name_to_id.find(name) != _name_to_id.end();
-    }
-
-    SpriteCatalog::Id SpriteCatalog::GetId(const std::wstring& name) const
-    {
-        return _name_to_id.at(name);
-    }
-
-    std::optional<SpriteCatalog::Id> SpriteCatalog::TryGetId(const std::wstring& name) const noexcept
-    {
-        if (auto it = _name_to_id.find(name); it != _name_to_id.end())
-        {
-            return it->second;
-        }
-        return std::nullopt;
     }
 
     const SpriteAtlas& SpriteCatalog::GetAtlas(Id id) const noexcept
@@ -152,8 +133,7 @@ namespace mm2hack::apps::rendering::sprite
         return std::max(0, result);
     }
 
-    std::unique_ptr<SpriteAtlas> SpriteCatalog::BuildAtlas_(const std::wstring& name,
-                                                            const std::wstring& png_path,
+    std::unique_ptr<SpriteAtlas> SpriteCatalog::BuildAtlas_(const std::wstring& png_path,
                                                             const std::wstring& json_path)
     {
         // --- JSON meta (supports both top-level and "Loader" wrapper) ---
@@ -285,6 +265,6 @@ namespace mm2hack::apps::rendering::sprite
         // Turn back to base palette for safety.
         if (hasPal) SetPalette256_(soft, basePal);
 
-        return std::make_unique<SpriteAtlas>(name, div, soft, std::move(graphs_by_variant));
+        return std::make_unique<SpriteAtlas>(div, soft, std::move(graphs_by_variant));
     }
 }

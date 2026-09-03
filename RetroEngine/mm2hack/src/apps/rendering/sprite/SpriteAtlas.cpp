@@ -7,10 +7,9 @@
 
 namespace mm2hack::apps::rendering::sprite
 {
-    SpriteAtlas::SpriteAtlas(std::wstring name, DivSettings div,
+    SpriteAtlas::SpriteAtlas(DivSettings div,
                              int soft_image_handle, std::vector<std::vector<int>> graphs_by_variant) noexcept
-        : _name(std::move(name))
-        , _div(div)
+        : _div(div)
         , _soft_image(soft_image_handle)
         , _graphs_by_variant(std::move(graphs_by_variant))
     {
@@ -22,8 +21,7 @@ namespace mm2hack::apps::rendering::sprite
     }
 
     SpriteAtlas::SpriteAtlas(SpriteAtlas&& other) noexcept
-        : _name(std::move(other._name))
-        , _div(other._div)
+        : _div(other._div)
         , _soft_image(other._soft_image)
         , _graphs_by_variant(std::move(other._graphs_by_variant))
     {
@@ -35,7 +33,6 @@ namespace mm2hack::apps::rendering::sprite
         if (this != &other)
         {
             dispose_();
-            _name = std::move(other._name);
             _div = other._div;
             _soft_image = other._soft_image;
             _graphs_by_variant = std::move(other._graphs_by_variant);

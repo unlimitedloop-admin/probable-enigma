@@ -13,6 +13,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include "apps/rendering/sprite/SpriteManager.h"
 #include "FixedStar.h"
 #include "Star.h"
 
@@ -39,6 +40,9 @@ namespace mm2hack::apps::vfx::stareffects
     private:
         const std::wstring kClassName{ L"BgStarField" };
 
+        rendering::sprite::SpriteManager::Id _sprite_id{
+            static_cast<rendering::sprite::SpriteManager::Id>(-1)
+        };
         std::vector<std::unique_ptr<Star>> _stars;              // Moving stars (shooting stars)
         std::vector<std::unique_ptr<FixedStar>> _fixedStars;    // Fixed stars
     };

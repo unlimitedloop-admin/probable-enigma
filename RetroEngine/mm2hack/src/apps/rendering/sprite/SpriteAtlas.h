@@ -41,7 +41,7 @@ namespace mm2hack::apps::rendering::sprite
             int target_palette_index{ 0 };
         };
 
-        SpriteAtlas(std::wstring name, DivSettings div,
+        SpriteAtlas(DivSettings div,
                     int soft_image_handle, std::vector<std::vector<int>> graphs_by_variant) noexcept;
         ~SpriteAtlas();
         SpriteAtlas(const SpriteAtlas&) = delete;
@@ -50,7 +50,6 @@ namespace mm2hack::apps::rendering::sprite
         SpriteAtlas& operator=(SpriteAtlas&& other) noexcept;
 
         // Properties
-        [[nodiscard]] const std::wstring& Name() const noexcept { return _name; }
         [[nodiscard]] int VariantCount() const noexcept { return static_cast<int>(_graphs_by_variant.size()); }
 
         // Draw specified frame with specified color-variant
@@ -76,7 +75,6 @@ namespace mm2hack::apps::rendering::sprite
     private:
         const std::wstring kClassName{ L"SpriteAtlas" };
 
-        std::wstring _name{};       // unique name identifier
         DivSettings _div{};         // division settings
         int _soft_image{ -1 };      // keep if needed (palette rebuild), otherwise -1
         std::vector<std::vector<int>> _graphs_by_variant;   // [variant][frame] -> graph handle, variant for palette swaps

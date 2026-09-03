@@ -8,14 +8,11 @@
 //==============================================================================
 #pragma once
 
-#include <string_view>
+#include "apps/rendering/sprite/SpriteManager.h"
 #include "StarState.h"
 
 namespace mm2hack::apps::vfx::stareffects
 {
-    // Using in Star, FixedStar, BgStarField classes
-    inline constexpr std::wstring_view kStarSpriteName = L"STARS";
-
     // Abstract class representing a star effect
     class Star
     {
@@ -28,7 +25,8 @@ namespace mm2hack::apps::vfx::stareffects
         virtual ~Star() = default;
 
         virtual void Update();
-        virtual void Draw();
+        virtual void Draw(const rendering::sprite::SpriteManager& sprites,
+                          rendering::sprite::SpriteManager::Id sprite_id);
         virtual bool IsOffScreen() const;
         StarState ToState() const;
 

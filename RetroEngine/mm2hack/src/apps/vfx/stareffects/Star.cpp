@@ -2,7 +2,6 @@
 
 #include "Star.h"
 
-#include "apps/runtime/GameContext.h"
 #include "StarState.h"
 
 namespace mm2hack::apps::vfx::stareffects
@@ -19,11 +18,10 @@ namespace mm2hack::apps::vfx::stareffects
         _y += _vy;
     }
 
-    void Star::Draw()
+    void Star::Draw(const rendering::sprite::SpriteManager& sprites,
+                    rendering::sprite::SpriteManager::Id sprite_id)
     {
-        auto& context = runtime::GameContext::GetInstance();
-        auto& sprites = context.GetResourceManager().GetSpriteManager();
-        sprites.UseByName(std::wstring(kStarSpriteName), _typeIndex, static_cast<int>(_x), static_cast<int>(_y));
+        sprites.UseById(sprite_id, _typeIndex, static_cast<int>(_x), static_cast<int>(_y));
     }
 
     bool Star::IsOffScreen() const

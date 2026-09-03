@@ -14,21 +14,26 @@
 
 namespace mm2hack::apps::vfx::stareffects
 {
+    namespace
+    {
+        constexpr std::wstring_view kStarSpriteName = L"STARS";
+    }
+
     void BgStarField::InitStars()
     {
         srand(static_cast<unsigned int>(time(nullptr)));
         auto& sprites = runtime::GameContext::GetInstance().GetResourceManager().GetSpriteManager();
-        sprites.Load(std::wstring(kStarSpriteName), MM2H_GRAPHICS(FlashStar), MM2H_GRAPHPROPS(FlashStar));
+        _sprite_id = sprites.Load(std::wstring(kStarSpriteName), MM2H_GRAPHICS(FlashStar), MM2H_GRAPHPROPS(FlashStar));
 
         // Change the color for the stars.
         auto throwImageDataException = [&](const wchar_t* msg) {
             THROW_EXCEPTION(L"The image data is invalid: " + std::wstring(kStarSpriteName), kClassName);
         };
-        if (!sprites.ReplacePaletteColorByName(std::wstring(kStarSpriteName), 1, 0)) throwImageDataException(L"palette 0->1");
-        if (!sprites.ReplacePaletteColorByName(std::wstring(kStarSpriteName), 17, 16)) throwImageDataException(L"palette 16->17");
-        if (!sprites.ReplacePaletteColorByName(std::wstring(kStarSpriteName), 33, 32)) throwImageDataException(L"palette 32->33");
-        if (!sprites.ReplacePaletteColorByName(std::wstring(kStarSpriteName), 49, 48)) throwImageDataException(L"palette 48->49");
-        if (!sprites.ApplyRandomColorFilterByName(std::wstring(kStarSpriteName))) throwImageDataException(L"random color filter");
+        if (!sprites.ReplacePaletteColorById(_sprite_id, 1, 0)) throwImageDataException(L"palette 0->1");
+        if (!sprites.ReplacePaletteColorById(_sprite_id, 17, 16)) throwImageDataException(L"palette 16->17");
+        if (!sprites.ReplacePaletteColorById(_sprite_id, 33, 32)) throwImageDataException(L"palette 32->33");
+        if (!sprites.ReplacePaletteColorById(_sprite_id, 49, 48)) throwImageDataException(L"palette 48->49");
+        if (!sprites.ApplyRandomColorFilterById(_sprite_id)) throwImageDataException(L"random color filter");
 
         // Fixed stars setup.
         for (int i = 0; i < 50; ++i)
@@ -99,14 +104,15 @@ namespace mm2hack::apps::vfx::stareffects
 
     void BgStarField::DrawStars()
     {
+        const auto& sprites = runtime::GameContext::GetInstance().GetResourceManager().GetSpriteManager();
         for (auto& s : _stars)
         {
-            s->Draw();
+            s->Draw(sprites, _sprite_id);
         }
 
         for (auto& s : _fixedStars)
         {
-            s->Draw();
+            s->Draw(sprites, _sprite_id);
         }
     }
 
