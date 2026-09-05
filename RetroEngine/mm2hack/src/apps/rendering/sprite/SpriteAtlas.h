@@ -48,6 +48,9 @@ namespace mm2hack::apps::rendering::sprite
         bool ReplacePaletteColorIndex(int variant, int targetPaletteIndex, int sourcePaletteIndex) noexcept;
         // Replace a color in the palette for all variants (RGB match)
         bool ReplacePaletteColorRGB(int variant, unsigned char r, unsigned char g, unsigned char b, int sourcePaletteIndex) noexcept;
+        // Replace indexed palette entries and rebuild every fade variant.
+        bool ReplacePaletteColors(
+            std::span<const PaletteColorMapping> mappings) noexcept;
         // Replace pixels matching one RGB color while preserving their alpha values.
         bool ReplacePixelColors(
             int variant,

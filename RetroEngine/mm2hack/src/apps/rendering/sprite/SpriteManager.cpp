@@ -8,11 +8,13 @@
 
 namespace mm2hack::apps::rendering::sprite
 {
-    SpriteManager::Id SpriteManager::Load(const std::wstring& name, const std::wstring_view png_path, const std::wstring_view json_path)
+    SpriteManager::Id SpriteManager::Load(
+        const std::wstring& name, const std::wstring_view png_path,
+        const std::wstring_view json_path, bool* out_created)
     {
         const std::wstring png = std::wstring(png_path);
         const std::wstring json = std::wstring(json_path);
-        return _catalog.Load(name, png, json);
+        return _catalog.Load(name, png, json, out_created);
     }
 
     void SpriteManager::UseById(Id id, int frame, int x, int y) const noexcept
@@ -34,6 +36,13 @@ namespace mm2hack::apps::rendering::sprite
     {
         if (!_catalog.IsValid(id)) return false;
         return _catalog.GetAtlas(id).ReplacePaletteColorIndex(variant, targetPaletteIndex, sourcePaletteIndex);
+    }
+
+    bool SpriteManager::ReplacePaletteColorsById(
+        Id id, std::span<const SpriteAtlas::PaletteColorMapping> mappings)
+    {
+        if (!_catalog.IsValid(id)) return false;
+        return _catalog.GetAtlas(id).ReplacePaletteColors(mappings);
     }
 
     bool SpriteManager::ReplacePixelColorsById(

@@ -87,16 +87,25 @@ the number of calls can change the sequence.
 
 Policy for simulation and replay:
 
-- Do not read wall-clock time, `random_device`, or process-global random state.
+- Do not read wall-clock time, `random_device`, or process-global random state
+  while simulation or rendering is advancing.
+- Initial entropy may be consumed when a new game or cosmetic pattern is
+  created, provided the resulting pattern ID is immediately owned by game
+  state and recorded in saves and replay metadata.
 - Prefer fixed animation/emission tables or a function of stable inputs such as
-  scene tick, entity ID, and effect index for cosmetic variation.
+  pattern ID, scene tick, entity ID, and effect index for cosmetic variation.
 - If procedural generation genuinely needs a PRNG, give it an explicit seed and
   state owned by the simulation, serialize both, and record the initial seed in
   replay metadata.
 - Rendering must not consume simulation random state.
 
-For the current star and charge effects, fixed scripted patterns are preferred
-over serializing a PRNG.
+The current star field creates one pattern ID at initialization, then derives
+each spawn decision and star property directly from that ID, the elapsed tick,
+and a stream index. Its NES palette scheme is derived from the same ID. The ID,
+elapsed tick, and active stars are serialized, so continuing after load does not
+depend on mutable PRNG state or prior call count. Replay can supply the recorded
+ID through the explicit initialization overload. The charge effect remains a
+fixed scripted pattern.
 
 ### P1: Audio is a presentation system with two kinds of restoration
 
@@ -227,12 +236,12 @@ but incorrect state.
 | SS-004 | P0 | Done | Make `BgStarField` load transactional | Invalid counts/values/truncation preserve the old star field |
 | SS-005 | P0 | Done | Restore `BackdoorMenu` phase objects | Credit, top menu, and inside menu resume with matching phase state |
 | SS-006 | P1 | Done | Make slot replacement transactional | Failed writes preserve the previous slot |
-| SS-007 | P0 | Done | Replace `BgStarField` randomness with a scripted pattern | Save/load and replay produce the same star sequence |
+| SS-007 | P0 | Done | Give `BgStarField` a persisted deterministic pattern ID | Save/load and replay produce the same star sequence and NES palette scheme |
 | SS-008 | P1 | Ready | Define DemoStage2 snapshot schema | Coverage list and reconstruction order are documented |
 | SS-009 | P1 | Blocked by SS-008 | Restore player and entity state | Player/entities resume without stale references |
 | SS-010 | P1 | Ready | Add save-format and corruption tests | Round-trip, truncation, oversized count, bad magic/version pass |
 | SS-011 | P2 | Ready | Improve user-facing load errors | Missing/corrupt/unsupported/I/O cases are distinguishable |
-| SS-012 | P0 | Done | Audit and remove nondeterministic random sources | No simulation/render path uses wall-clock seed, `rand()`, or `random_device` |
+| SS-012 | P0 | Done | Isolate nondeterministic entropy from simulation | Only new-pattern creation may use entropy; simulation/render paths use persisted stable inputs |
 | SS-013 | P0 | Done | Replace charge-particle LCG with a stable pattern | Particle placement is reproducible without mutable random state |
 | SS-014 | P1 | Ready | Add logical BGM snapshot/restore | A paused multi-stem BGM resumes at the saved transport position |
 | SS-015 | P1 | Ready | Classify SE as transient or continuous | Transients stop and continuous emitters restore according to policy |
@@ -241,6 +250,7 @@ but incorrect state.
 | SS-018 | P0 | Ready | Make sequence loading two-phase | Invalid scene/component payload does not discard the current paused game |
 | SS-019 | P1 | Blocked by SS-008 | Add stable entity IDs and snapshot factory | Entity graphs rebuild without serialized pointers or resource handles |
 | SS-020 | P1 | Ready | Add game/content compatibility identity | Incompatible runtime content is rejected with a specific result |
+| SS-021 | P0 | Done | Persist star-field initial entropy | Pattern ID is saved, restored, and injectable by replay/new-game setup |
 
 ## Milestones
 

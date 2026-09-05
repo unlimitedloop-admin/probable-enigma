@@ -2,12 +2,13 @@
 
 #include "BgStarField.h"
 
-#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstdint>
 #include <istream>
 #include <ostream>
+#include <random>
+#include <string>
 #include "apps/runtime/GameContext.h"
 #include "config/GameAssets.h"
 #include "core/save/StateIO.h"
@@ -20,33 +21,73 @@ namespace mm2hack::apps::vfx::stareffects
     namespace
     {
         constexpr std::wstring_view kStarSpriteName = L"STARS";
-        constexpr std::uint32_t kStateVersion = 1;
+        constexpr std::uint32_t kStateVersion = 2;
         constexpr std::uint32_t kMaximumFixedStars = 256;
         constexpr std::uint32_t kMaximumMovingStars = 1024;
-        constexpr std::uint64_t kSpawnCycleTicks = 96;
+        constexpr std::array<int, 8> kPaletteColumns{ 1, 2, 3, 5, 6, 8, 9, 10 };
 
-        struct StarSpawnStep final
+        std::uint32_t Mix32(std::uint32_t value) noexcept
         {
-            std::uint8_t tick;
-            std::int32_t type;
-            bool from_top;
-            float coordinate;
-        };
+            value ^= value >> 16;
+            value *= 0x7FEB352Du;
+            value ^= value >> 15;
+            value *= 0x846CA68Bu;
+            value ^= value >> 16;
+            return value;
+        }
 
-        constexpr std::array kSpawnPattern{
-            StarSpawnStep{  4, 0, true,   226.0f },
-            StarSpawnStep{ 10, 2, false,   42.0f },
-            StarSpawnStep{ 19, 1, true,    71.0f },
-            StarSpawnStep{ 25, 2, true,   154.0f },
-            StarSpawnStep{ 38, 0, false,   18.0f },
-            StarSpawnStep{ 44, 1, false,  137.0f },
-            StarSpawnStep{ 55, 2, true,    23.0f },
-            StarSpawnStep{ 63, 1, true,   198.0f },
-            StarSpawnStep{ 70, 0, false,  211.0f },
-            StarSpawnStep{ 78, 2, false,   83.0f },
-            StarSpawnStep{ 87, 1, true,   117.0f },
-            StarSpawnStep{ 94, 2, false,  169.0f },
-        };
+        std::uint32_t Sample(
+            std::uint32_t pattern_id, std::uint64_t tick, std::uint32_t stream) noexcept
+        {
+            const auto low = static_cast<std::uint32_t>(tick);
+            const auto high = static_cast<std::uint32_t>(tick >> 32);
+            return Mix32(pattern_id ^ Mix32(low) ^ Mix32(high + 0x9E3779B9u) ^
+                Mix32(stream + 0x85EBCA6Bu));
+        }
+
+        std::uint32_t CreatePatternId()
+        {
+            // Entropy is consumed only when a new visual pattern is created.
+            // The resulting ID is persisted; simulation never queries this source.
+            std::random_device entropy;
+            const auto first = static_cast<std::uint32_t>(entropy());
+            const auto second = static_cast<std::uint32_t>(entropy());
+            const auto result = Mix32(first ^ Mix32(second));
+            return result != 0 ? result : 0x5EED1234u;
+        }
+
+        rendering::sprite::SpriteManager::Id LoadStarSprite(std::uint32_t pattern_id)
+        {
+            using SpriteManager = rendering::sprite::SpriteManager;
+            auto& sprites = runtime::GameContext::GetInstance().GetResourceManager().GetSpriteManager();
+            const auto scheme = Sample(pattern_id, 0, 0) % kPaletteColumns.size();
+            const std::wstring resource_name =
+                std::wstring(kStarSpriteName) + L"/SCHEME_" + std::to_wstring(scheme);
+
+            bool created = false;
+            const auto sprite_id = sprites.Load(
+                resource_name, MM2H_GRAPHICS(FlashStar), MM2H_GRAPHPROPS(FlashStar), &created);
+            if (sprite_id == static_cast<SpriteManager::Id>(-1) || !created)
+            {
+                return sprite_id;
+            }
+
+            const int palette_column = kPaletteColumns[scheme];
+            std::array<rendering::sprite::SpriteAtlas::PaletteColorMapping, 4> mappings{};
+            for (int row = 0; row < 4; ++row)
+            {
+                mappings[static_cast<std::size_t>(row)] = {
+                    .source_palette_index = row * 16,
+                    .target_palette_index = row * 16 + palette_column,
+                };
+            }
+            if (!sprites.ReplacePaletteColorsById(sprite_id, mappings))
+            {
+                sprites.ReleaseById(sprite_id);
+                return static_cast<SpriteManager::Id>(-1);
+            }
+            return sprite_id;
+        }
 
         bool IsFiniteAndReasonable(float value) noexcept
         {
@@ -69,30 +110,31 @@ namespace mm2hack::apps::vfx::stareffects
 
     void BgStarField::InitStars()
     {
+        InitStars(CreatePatternId());
+    }
+
+    void BgStarField::InitStars(std::uint32_t pattern_id)
+    {
         _stars.clear();
         _fixedStars.clear();
+        _pattern_id = pattern_id;
         _elapsed_ticks = 0;
 
-        auto& sprites = runtime::GameContext::GetInstance().GetResourceManager().GetSpriteManager();
-        _sprite_id = sprites.Load(std::wstring(kStarSpriteName), MM2H_GRAPHICS(FlashStar), MM2H_GRAPHPROPS(FlashStar));
-
-        // Change the color for the stars.
-        auto throwImageDataException = [&](const wchar_t* msg) {
+        _sprite_id = LoadStarSprite(_pattern_id);
+        if (_sprite_id == static_cast<rendering::sprite::SpriteManager::Id>(-1))
+        {
             THROW_EXCEPTION(L"The image data is invalid: " + std::wstring(kStarSpriteName), kClassName);
-        };
-        if (!sprites.ReplacePaletteColorById(_sprite_id, 1, 0)) throwImageDataException(L"palette 0->1");
-        if (!sprites.ReplacePaletteColorById(_sprite_id, 17, 16)) throwImageDataException(L"palette 16->17");
-        if (!sprites.ReplacePaletteColorById(_sprite_id, 33, 32)) throwImageDataException(L"palette 32->33");
-        if (!sprites.ReplacePaletteColorById(_sprite_id, 49, 48)) throwImageDataException(L"palette 48->49");
-        constexpr int kStarHueShift = 48;
-        if (!sprites.ApplyHueFilterById(_sprite_id, kStarHueShift)) throwImageDataException(L"hue filter");
+        }
 
         // Fixed stars setup.
         for (int i = 0; i < 50; ++i)
         {
-            const int tileIndex = 4 + (i % 3); // 4: Flash, 5: Bright, 6: Dim
-            const float x = static_cast<float>((i * 73 + 19) % 257);
-            const float y = static_cast<float>((i * 151 + 37) % 241);
+            const auto index = static_cast<std::uint64_t>(i);
+            const int tileIndex = 4 + static_cast<int>(Sample(_pattern_id, index, 1) % 3);
+            const float x = static_cast<float>(
+                Sample(_pattern_id, index, 2) % (config::SystemConfig::kScreenWidth + 1));
+            const float y = static_cast<float>(
+                Sample(_pattern_id, index, 3) % (config::SystemConfig::kScreenHeight + 1));
             _fixedStars.emplace_back(std::make_unique<FixedStar>(tileIndex, x, y));
         }
     }
@@ -100,14 +142,9 @@ namespace mm2hack::apps::vfx::stareffects
     void BgStarField::UpdateStars()
     {
         ++_elapsed_ticks;
-        const auto cycle_tick = static_cast<std::uint8_t>(_elapsed_ticks % kSpawnCycleTicks);
-        const auto spawn_it = std::find_if(
-            kSpawnPattern.begin(), kSpawnPattern.end(),
-            [cycle_tick](const StarSpawnStep& step) { return step.tick == cycle_tick; });
-
-        if (spawn_it != kSpawnPattern.end())
+        if ((Sample(_pattern_id, _elapsed_ticks, 10) & 7U) == 0U)
         {
-            const int type = spawn_it->type;
+            const int type = static_cast<int>(Sample(_pattern_id, _elapsed_ticks, 11) % 3);
             float vx, vy;
             switch (type)
             {
@@ -131,15 +168,19 @@ namespace mm2hack::apps::vfx::stareffects
 
             float startX{};
             float startY{};
-            if (spawn_it->from_top)
+            if ((Sample(_pattern_id, _elapsed_ticks, 12) & 1U) == 0U)
             {
-                startX = spawn_it->coordinate;
+                startX = static_cast<float>(
+                    Sample(_pattern_id, _elapsed_ticks, 13) %
+                    (config::SystemConfig::kScreenWidth + 1));
                 startY = 0.0f;
             }
             else
             {
                 startX = static_cast<float>(config::SystemConfig::kScreenWidth);
-                startY = spawn_it->coordinate;
+                startY = static_cast<float>(
+                    Sample(_pattern_id, _elapsed_ticks, 14) %
+                    (config::SystemConfig::kScreenHeight + 1));
             }
 
             _stars.emplace_back(std::make_unique<Star>(type, startX, startY, vx, vy));
@@ -177,7 +218,8 @@ namespace mm2hack::apps::vfx::stareffects
     bool BgStarField::Save(std::ostream& out) const
     {
         core::save::StateWriter writer(out);
-        if (!writer.WriteU32(kStateVersion) || !writer.WriteU64(_elapsed_ticks))
+        if (!writer.WriteU32(kStateVersion) || !writer.WriteU32(_pattern_id) ||
+            !writer.WriteU64(_elapsed_ticks))
         {
             return false;
         }
@@ -212,8 +254,10 @@ namespace mm2hack::apps::vfx::stareffects
     {
         core::save::StateReader reader(in);
         std::uint32_t state_version{};
+        std::uint32_t pattern_id{};
         std::uint64_t elapsed_ticks{};
         if (!reader.ReadU32(state_version) || state_version != kStateVersion ||
+            !reader.ReadU32(pattern_id) ||
             !reader.ReadU64(elapsed_ticks))
         {
             return false;
@@ -247,6 +291,14 @@ namespace mm2hack::apps::vfx::stareffects
             stars.emplace_back(std::make_unique<Star>(state));
         }
 
+        const auto sprite_id = LoadStarSprite(pattern_id);
+        if (sprite_id == static_cast<rendering::sprite::SpriteManager::Id>(-1))
+        {
+            return false;
+        }
+
+        _pattern_id = pattern_id;
+        _sprite_id = sprite_id;
         _elapsed_ticks = elapsed_ticks;
         _fixedStars.swap(fixed_stars);
         _stars.swap(stars);

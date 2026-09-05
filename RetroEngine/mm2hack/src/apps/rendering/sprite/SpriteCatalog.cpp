@@ -7,11 +7,14 @@
 
 namespace mm2hack::apps::rendering::sprite
 {
-    SpriteCatalog::Id SpriteCatalog::Load(const std::wstring& name, const std::wstring& png_path, const std::wstring& json_path)
+    SpriteCatalog::Id SpriteCatalog::Load(
+        const std::wstring& name, const std::wstring& png_path,
+        const std::wstring& json_path, bool* out_created)
     {
         auto it = _name_to_id.find(name);
         if (it != _name_to_id.end())
         {
+            if (out_created) *out_created = false;
             return it->second; // already loaded
         }
 
@@ -22,6 +25,7 @@ namespace mm2hack::apps::rendering::sprite
         const Id id = static_cast<Id>(_atlases.size());
         _atlases.emplace_back(std::move(atlas));
         _name_to_id.emplace(name, id);
+        if (out_created) *out_created = true;
 
         return id;
     }

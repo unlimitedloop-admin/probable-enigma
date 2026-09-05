@@ -32,7 +32,8 @@ namespace mm2hack::apps::rendering::sprite
         SpriteCatalog& operator=(SpriteCatalog&&) noexcept = default;
 
         // Load from PNG + JSON metadata (div settings, optional palette variants)
-        Id Load(const std::wstring& name, const std::wstring& png_path, const std::wstring& json_path);
+        Id Load(const std::wstring& name, const std::wstring& png_path,
+                const std::wstring& json_path, bool* out_created = nullptr);
 
         // Getters
         const SpriteAtlas& GetAtlas(Id id) const noexcept;

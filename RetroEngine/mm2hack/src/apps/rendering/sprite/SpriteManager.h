@@ -27,13 +27,16 @@ namespace mm2hack::apps::rendering::sprite
 
         // Load a sprite atlas from PNG + JSON metadata (div settings, optional palette variants)
         // The asset files are defined in config/AssetPortfolio.def
-        Id Load(const std::wstring& name, const std::wstring_view png_path, const std::wstring_view json_path);
+        Id Load(const std::wstring& name, const std::wstring_view png_path,
+                const std::wstring_view json_path, bool* out_created = nullptr);
         // Fast path: draw sprite by Id (O(1))
         void UseById(Id id, int frame, int x, int y) const noexcept;
         // Fast path: draw sprite by Id (Per-call variant override)
         void UseByIdVariant(Id id, int variant, int frame, int x, int y) const noexcept;
         // Palette color replacement (for NES-style palette swaps)
         bool ReplacePaletteColorById(Id id, int targetPaletteIndex, int sourcePaletteIndex, int variant = 0);
+        bool ReplacePaletteColorsById(
+            Id id, std::span<const SpriteAtlas::PaletteColorMapping> mappings);
         bool ReplacePixelColorsById(Id id, std::span<const SpriteAtlas::PaletteColorMapping> mappings, int variant = 0);
         bool ApplyHueFilterById(Id id, int hue_add, int variant = 0);
 
