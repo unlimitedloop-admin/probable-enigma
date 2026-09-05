@@ -18,6 +18,7 @@
 #include "apps/ui/controls/MenuCursorController.h"
 #include "apps/vfx/cursor/TwinkleCursorAnimator.h"
 #include "BackdoorMenuCatalog.h"
+#include "core/save/StateIO.h"
 
 namespace mm2hack::apps::scenes
 {

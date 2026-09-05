@@ -9,6 +9,7 @@
 #include "BackdoorMenu.h"
 #include "BackdoorMenuCatalog.h"
 #include "core/assembly/StateProvider.h"
+#include "core/save/StateIO.h"
 #include "input/Jpbtn.h"
 
 namespace mm2hack::apps::scenes

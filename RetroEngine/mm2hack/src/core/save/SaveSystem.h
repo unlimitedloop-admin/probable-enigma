@@ -8,7 +8,6 @@
 //==============================================================================
 #pragma once
 
-#include <cstddef>
 #include <string>
 
 namespace mm2hack::core::save
