@@ -41,6 +41,11 @@ namespace mm2hack::apps::world::entity::avatar::states
         }
         snapToLadderCenter_(cx, t); // Align avatar's X-position to ladder center on entry.
 
+        // FromTopDown applies its entry velocity in the transition frame, before
+        // LadderingState::Update() runs for the first time. Request fixed scrolling
+        // here so that the entry movement cannot cross into the next page first.
+        checkFixedScrollRequest_(cx, cx.vel.y);
+
         cx.basePose = static_cast<int>(STile::LadderingA);
         cx.animeStepper.reset();
         cx.ladder->setEntryKind(LadderEntryKind::None);
@@ -68,9 +73,12 @@ namespace mm2hack::apps::world::entity::avatar::states
         // Always snap X to ladder center (warp is allowed)
         snapToLadderCenter_(cx, t);
 
-        // Check the page transition before losing the ladder.
-        // This also catches a ladder grabbed beyond the page boundary.
-        checkFixedScrollRequest_(cx, intendedDy);
+        // Check the page transition before losing the ladder. Attack actions lock
+        // climbing movement, so only movement that can actually occur is considered.
+        if (!cx.lockClimbMove)
+        {
+            checkFixedScrollRequest_(cx, intendedDy);
+        }
 
         // If ladder lost: fall
         if (!isOnLadder_(cx, t))
@@ -267,12 +275,6 @@ namespace mm2hack::apps::world::entity::avatar::states
         // Fixed-page scroll is available only while the player belongs
         // to the currently displayed page.
         if (!cx.pendingFixedScroll.available)
-        {
-            return;
-        }
-
-        // Do not issue another request while fixed scrolling is active.
-        if (cx.lockClimbMove)
         {
             return;
         }
