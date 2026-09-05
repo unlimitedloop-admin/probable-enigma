@@ -52,7 +52,7 @@ namespace mm2hack::apps::scenes
             using Camera = systems::scrolling::atomic::Camera;
             _scroll->ObjectPos() = { Camera::kCenterX, Camera::kCenterY };
 
-            auto* bgMgr = &resource.GetBGTileManager();
+            auto& bgMgr = resource.GetBGTileManager();
             _mapProvider = std::make_unique<BGTileMapProvider>(bgMgr, pageSource);
             _terrainProbe = std::make_unique<TileQueryService>(*_mapProvider, *_graph, *_pageGrid, kTilePx);
             _ladderService = std::make_unique<LadderService>(*_terrainProbe);

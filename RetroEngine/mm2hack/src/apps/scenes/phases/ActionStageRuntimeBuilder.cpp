@@ -89,7 +89,7 @@ namespace mm2hack::apps::scenes::phases
         };
 
         // 4) Tile map provider / terrain probe / ladder
-        ctx.map_provider = std::make_unique<rendering::bg::BGTileMapProvider>(bg_mgr, ctx.page_source);
+        ctx.map_provider = std::make_unique<rendering::bg::BGTileMapProvider>(*bg_mgr, ctx.page_source);
 
         ctx.terrain_probe = std::make_unique<systems::physics::TileQueryService>(
             *ctx.map_provider,
