@@ -226,7 +226,7 @@ but incorrect state.
 | SS-003 | P0 | Done | Connect Sequence -> SceneManager -> Scene | Saved scene ID and payload reach the active scene on load |
 | SS-004 | P0 | Done | Make `BgStarField` load transactional | Invalid counts/values/truncation preserve the old star field |
 | SS-005 | P0 | Done | Restore `BackdoorMenu` phase objects | Credit, top menu, and inside menu resume with matching phase state |
-| SS-006 | P1 | Blocked by SS-001/2 | Make slot replacement transactional | Failed writes preserve the previous slot |
+| SS-006 | P1 | Done | Make slot replacement transactional | Failed writes preserve the previous slot |
 | SS-007 | P0 | Done | Replace `BgStarField` randomness with a scripted pattern | Save/load and replay produce the same star sequence |
 | SS-008 | P1 | Ready | Define DemoStage2 snapshot schema | Coverage list and reconstruction order are documented |
 | SS-009 | P1 | Blocked by SS-008 | Restore player and entity state | Player/entities resume without stale references |

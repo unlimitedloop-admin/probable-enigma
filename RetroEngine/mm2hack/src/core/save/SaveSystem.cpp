@@ -29,9 +29,12 @@ namespace mm2hack::core::save
             return false;
         }
 
+        const fs::path savepath(path);
+        fs::path temporary_path = savepath;
+        temporary_path += L".tmp";
+
         try
         {
-            const fs::path savepath(path);
             if (const auto parent = savepath.parent_path(); !parent.empty())
             {
                 fs::create_directories(parent);
@@ -42,7 +45,7 @@ namespace mm2hack::core::save
             return false;
         }
 
-        std::ofstream ofs(path, std::ios::binary);
+        std::ofstream ofs(temporary_path, std::ios::binary | std::ios::trunc);
         if (!ofs)
         {
             return false;
@@ -57,7 +60,25 @@ namespace mm2hack::core::save
             writer.WriteU32(static_cast<std::uint32_t>(data.scenePayload.size())) &&
             writer.WriteBytes(data.scenePayload);
         ofs.flush();
-        return wroteAll && ofs.good();
+        const bool flushed = ofs.good();
+        ofs.close();
+        if (!wroteAll || !flushed || ofs.fail())
+        {
+            std::error_code ignored;
+            fs::remove(temporary_path, ignored);
+            return false;
+        }
+
+        if (!::MoveFileExW(
+            temporary_path.c_str(),
+            savepath.c_str(),
+            MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH))
+        {
+            std::error_code ignored;
+            fs::remove(temporary_path, ignored);
+            return false;
+        }
+        return true;
     }
 
     bool SaveSystem::Load(const std::wstring& path, SaveData& outData)
