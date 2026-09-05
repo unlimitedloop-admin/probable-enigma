@@ -16,6 +16,7 @@
 #include "BackdoorMenuPhase.h"
 #include "config/GameAssets.h"
 #include "config/PathDefsJsonProps.h"
+#include "core/save/StateIO.h"
 #include "utils/output_debug.h"
 
 namespace mm2hack::apps::scenes

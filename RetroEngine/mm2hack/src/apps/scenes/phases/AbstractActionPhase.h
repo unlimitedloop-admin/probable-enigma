@@ -10,12 +10,11 @@
 
 #include "IPhase.h"
 
-#include <cstdint>
 #include <memory>
 #include <string>
 #include "apps/foundation/math/CoordinateTypes.h"
-#include "apps/world/entity/avatar/PlayerFrameOutput.h"
 #include "apps/ui/productions/StageIntroUI.h"
+#include "apps/world/entity/avatar/PlayerFrameOutput.h"
 #include "IPhaseHost.h"
 #include "PhaseResult.h"
 #include "StageRuntimeContext.h"
