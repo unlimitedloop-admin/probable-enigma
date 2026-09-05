@@ -3,6 +3,7 @@
 #include "SpriteAtlas.h"
 
 #include <random>
+#include <span>
 #include "apps/foundation/NES/NESPalette.h"
 
 namespace mm2hack::apps::rendering::sprite

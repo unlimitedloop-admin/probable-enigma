@@ -176,7 +176,6 @@
     <ClInclude Include="src\core\GameStateManager.h" />
     <ClInclude Include="src\apps\scenes\IBaseScene.h" />
     <ClInclude Include="src\apps\scenes\sub-scenes\LaunchingGame.h" />
-    <ClInclude Include="src\apps\scenes\SceneID.h" />
     <ClInclude Include="src\apps\scenes\SceneFactory.h" />
     <ClInclude Include="src\apps\resources\parameters\Parameters.h" />
     <ClInclude Include="src\apps\scenes\ISceneChangedListener.h" />

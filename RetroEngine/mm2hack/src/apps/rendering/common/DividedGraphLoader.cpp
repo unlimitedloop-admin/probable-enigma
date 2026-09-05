@@ -8,6 +8,7 @@
 #include <fstream>
 #include <limits>
 #include <nlohmann/json.hpp>
+#include <string_view>
 #include <utility>
 
 namespace

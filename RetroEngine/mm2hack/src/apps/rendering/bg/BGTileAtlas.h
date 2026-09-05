@@ -12,7 +12,6 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-
 #include "apps/rendering/common/DividedGraphLoader.h"
 #include "BGTilePalette.h"
 

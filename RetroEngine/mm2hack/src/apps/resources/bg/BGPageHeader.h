@@ -14,7 +14,6 @@
 #pragma once
 
 #include <cstdint>
-#include <cstddef>
 
 namespace mm2hack::apps::resources::bg
 {

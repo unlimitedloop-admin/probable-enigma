@@ -430,7 +430,6 @@
     <ClInclude Include="src\apps\scenes\PhaseFadeController.h" />
     <ClInclude Include="src\apps\scenes\SceneChangeMediator.h" />
     <ClInclude Include="src\apps\scenes\SceneFactory.h" />
-    <ClInclude Include="src\apps\scenes\SceneID.h" />
     <ClInclude Include="src\apps\scenes\SceneManager.h" />
     <ClInclude Include="src\apps\scenes\sub-scenes\01-DemoStage1\DemoStage1.h" />
     <ClInclude Include="src\apps\scenes\sub-scenes\01-DemoStage1\DemoStage1Phase.h" />

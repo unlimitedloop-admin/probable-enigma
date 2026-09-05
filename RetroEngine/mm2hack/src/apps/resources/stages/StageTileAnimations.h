@@ -10,7 +10,6 @@
 
 #include <array>
 #include <span>
-
 #include "apps/rendering/bg/BGTileAnimator.h"
 #include "apps/rendering/bg/BGTilePalette.h"
 
