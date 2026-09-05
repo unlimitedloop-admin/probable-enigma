@@ -52,8 +52,6 @@ namespace mm2hack::apps::rendering::sprite
         bool ReplacePixelColors(
             int variant,
             std::span<const PaletteColorMapping> mappings) noexcept;
-        // Apply a random hue shift to the specified variant
-        bool ApplyRandomHueToVariant(int variant) noexcept;
         // Apply HSB adjustments to the specified variant
         bool ApplyHSBToVariant(int variant, int hueAdd, int satAdd, int briAdd) noexcept;
 

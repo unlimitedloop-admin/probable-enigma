@@ -8,53 +8,50 @@
 //==============================================================================
 #pragma once
 
-#include <iostream>
-#include <istream>
+#include <cstdint>
+#include "core/save/StateIO.h"
 
 namespace mm2hack::apps::vfx::stareffects
 {
     // Star effect state structure
     struct StarState
     {
-        int type;
-        float x, y;
-        float vx, vy;
+        std::int32_t type{};
+        float x{};
+        float y{};
+        float vx{};
+        float vy{};
 
-        void Save(std::ostream& out) const
+        bool Save(core::save::StateWriter& writer) const
         {
-            out.write(reinterpret_cast<const char*>(&type), sizeof(type));
-            out.write(reinterpret_cast<const char*>(&x), sizeof(x));
-            out.write(reinterpret_cast<const char*>(&y), sizeof(y));
-            out.write(reinterpret_cast<const char*>(&vx), sizeof(vx));
-            out.write(reinterpret_cast<const char*>(&vy), sizeof(vy));
+            return writer.WriteI32(type) &&
+                writer.WriteF32(x) && writer.WriteF32(y) &&
+                writer.WriteF32(vx) && writer.WriteF32(vy);
         }
 
-        void Load(std::istream& in)
+        bool Load(core::save::StateReader& reader)
         {
-            in.read(reinterpret_cast<char*>(&type), sizeof(type));
-            in.read(reinterpret_cast<char*>(&x), sizeof(x));
-            in.read(reinterpret_cast<char*>(&y), sizeof(y));
-            in.read(reinterpret_cast<char*>(&vx), sizeof(vx));
-            in.read(reinterpret_cast<char*>(&vy), sizeof(vy));
+            return reader.ReadI32(type) &&
+                reader.ReadF32(x) && reader.ReadF32(y) &&
+                reader.ReadF32(vx) && reader.ReadF32(vy);
         }
     };
 
     struct FixedStarState
     {
-        int tileIndex;
-        float x, y;
+        std::int32_t tileIndex{};
+        float x{};
+        float y{};
 
-        void Save(std::ostream& out) const
+        bool Save(core::save::StateWriter& writer) const
         {
-            out.write(reinterpret_cast<const char*>(&tileIndex), sizeof(tileIndex));
-            out.write(reinterpret_cast<const char*>(&x), sizeof(x));
-            out.write(reinterpret_cast<const char*>(&y), sizeof(y));
+            return writer.WriteI32(tileIndex) &&
+                writer.WriteF32(x) && writer.WriteF32(y);
         }
-        void Load(std::istream& in)
+        bool Load(core::save::StateReader& reader)
         {
-            in.read(reinterpret_cast<char*>(&tileIndex), sizeof(tileIndex));
-            in.read(reinterpret_cast<char*>(&x), sizeof(x));
-            in.read(reinterpret_cast<char*>(&y), sizeof(y));
+            return reader.ReadI32(tileIndex) &&
+                reader.ReadF32(x) && reader.ReadF32(y);
         }
     };
 }

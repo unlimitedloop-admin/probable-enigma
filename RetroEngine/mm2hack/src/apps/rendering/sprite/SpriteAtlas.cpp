@@ -2,7 +2,6 @@
 
 #include "SpriteAtlas.h"
 
-#include <random>
 #include <span>
 #include "apps/foundation/NES/NESPalette.h"
 
@@ -161,13 +160,6 @@ namespace mm2hack::apps::rendering::sprite
             }
         }
         return true;
-    }
-
-    bool SpriteAtlas::ApplyRandomHueToVariant(int variant) noexcept
-    {
-        static thread_local std::mt19937 rng{ std::random_device{}() };
-        std::uniform_int_distribution<int> dist(-128, 127);
-        return ApplyHSBToVariant(variant, dist(rng), 0, 0);
     }
 
     bool SpriteAtlas::rebuildVariantFromSoftImage_(int variant) noexcept

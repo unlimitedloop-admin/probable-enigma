@@ -112,7 +112,7 @@ namespace mm2hack::apps::scenes
         out.write(reinterpret_cast<const char*>(&phase), sizeof(phase));
         // Save other necessary data
         // e.g., background stars, current selection, etc.
-        _starField.Save(out);   // Save background stars state
+        if (!_starField.Save(out)) out.setstate(std::ios::failbit);
     }
 
     void BackdoorMenu::Load(std::istream& in)
@@ -123,7 +123,7 @@ namespace mm2hack::apps::scenes
         _phaseId = static_cast<BackdoorMenuPhaseId>(phase);
         // Load other necessary data
         // e.g., background stars, current selection, etc.
-        _starField.Load(in);    // Load background stars state
+        if (!_starField.Load(in)) in.setstate(std::ios::failbit);
     }
 
     void BackdoorMenu::SetNextScene(SceneID scene, const Parameters& params)

@@ -8,6 +8,7 @@
 //==============================================================================
 #pragma once
 
+#include <cstdint>
 #include <iostream>
 #include <istream>
 #include <memory>
@@ -34,8 +35,8 @@ namespace mm2hack::apps::vfx::stareffects
         void DrawStars();
 
         // === Save/Load state ===
-        void Save(std::ostream& out) const;
-        void Load(std::istream& in);
+        bool Save(std::ostream& out) const;
+        bool Load(std::istream& in);
 
     private:
         const std::wstring kClassName{ L"BgStarField" };
@@ -45,5 +46,6 @@ namespace mm2hack::apps::vfx::stareffects
         };
         std::vector<std::unique_ptr<Star>> _stars;              // Moving stars (shooting stars)
         std::vector<std::unique_ptr<FixedStar>> _fixedStars;    // Fixed stars
+        std::uint64_t _elapsed_ticks{};                         // Deterministic spawn schedule tick
     };
 }

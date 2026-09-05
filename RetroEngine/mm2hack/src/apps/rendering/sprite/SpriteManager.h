@@ -35,7 +35,7 @@ namespace mm2hack::apps::rendering::sprite
         // Palette color replacement (for NES-style palette swaps)
         bool ReplacePaletteColorById(Id id, int targetPaletteIndex, int sourcePaletteIndex, int variant = 0);
         bool ReplacePixelColorsById(Id id, std::span<const SpriteAtlas::PaletteColorMapping> mappings, int variant = 0);
-        bool ApplyRandomColorFilterById(Id id, int variant = 0);
+        bool ApplyHueFilterById(Id id, int hue_add, int variant = 0);
 
         // Utilities
         // Variant info

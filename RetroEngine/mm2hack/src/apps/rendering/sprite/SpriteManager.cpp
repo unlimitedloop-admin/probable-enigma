@@ -45,10 +45,10 @@ namespace mm2hack::apps::rendering::sprite
         return _catalog.GetAtlas(id).ReplacePixelColors(variant, mappings);
     }
 
-    bool SpriteManager::ApplyRandomColorFilterById(Id id, int variant)
+    bool SpriteManager::ApplyHueFilterById(Id id, int hue_add, int variant)
     {
         if (!_catalog.IsValid(id)) return false;
-        return _catalog.GetAtlas(id).ApplyRandomHueToVariant(variant);
+        return _catalog.GetAtlas(id).ApplyHSBToVariant(variant, hue_add, 0, 0);
     }
 
     int SpriteManager::VariantCountById(Id id) const

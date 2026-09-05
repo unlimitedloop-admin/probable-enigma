@@ -34,6 +34,21 @@ namespace mm2hack::core::save
             return WriteBytes(bytes);
         }
 
+        bool WriteU64(std::uint64_t value)
+        {
+            const std::uint8_t bytes[] = {
+                static_cast<std::uint8_t>(value),
+                static_cast<std::uint8_t>(value >> 8),
+                static_cast<std::uint8_t>(value >> 16),
+                static_cast<std::uint8_t>(value >> 24),
+                static_cast<std::uint8_t>(value >> 32),
+                static_cast<std::uint8_t>(value >> 40),
+                static_cast<std::uint8_t>(value >> 48),
+                static_cast<std::uint8_t>(value >> 56)
+            };
+            return WriteBytes(bytes);
+        }
+
         bool WriteI32(std::int32_t value)
         {
             return WriteU32(std::bit_cast<std::uint32_t>(value));
@@ -81,6 +96,26 @@ namespace mm2hack::core::save
                 (static_cast<std::uint32_t>(bytes[1]) << 8) |
                 (static_cast<std::uint32_t>(bytes[2]) << 16) |
                 (static_cast<std::uint32_t>(bytes[3]) << 24);
+            return true;
+        }
+
+        bool ReadU64(std::uint64_t& value)
+        {
+            std::uint8_t bytes[8]{};
+            if (!ReadBytes(bytes))
+            {
+                return false;
+            }
+
+            value =
+                static_cast<std::uint64_t>(bytes[0]) |
+                (static_cast<std::uint64_t>(bytes[1]) << 8) |
+                (static_cast<std::uint64_t>(bytes[2]) << 16) |
+                (static_cast<std::uint64_t>(bytes[3]) << 24) |
+                (static_cast<std::uint64_t>(bytes[4]) << 32) |
+                (static_cast<std::uint64_t>(bytes[5]) << 40) |
+                (static_cast<std::uint64_t>(bytes[6]) << 48) |
+                (static_cast<std::uint64_t>(bytes[7]) << 56);
             return true;
         }
 
