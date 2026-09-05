@@ -142,6 +142,11 @@ namespace mm2hack::core::assembly
         ++_playFrameCounter;
     }
 
+    void StandardTimeController::SetPlayFrameCounter(std::uint64_t value) noexcept
+    {
+        _playFrameCounter = value;
+    }
+
     [[nodiscard]] std::uint64_t StandardTimeController::GetPlayFrameCounter() const noexcept
     {
         return _playFrameCounter;

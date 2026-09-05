@@ -165,14 +165,10 @@ namespace mm2hack::core::winapi
                 const auto path = SaveSystem::GetCurrentSlotFilename();
                 if (SaveSystem::Load(path, data))
                 {
-                    seq.LoadSequence(static_cast<SequenceType>(data.sequenceID));
-                    if (auto* sequence = seq.GetCurrentSequence(); sequence != nullptr)
+                    if (seq.LoadState(data))
                     {
-                        if (sequence->Load(data))
-                        {
-                            MessageBox(hWnd, (L"Loaded from " + path).c_str(), L"Load", MB_OK);
-                            break;
-                        }
+                        MessageBox(hWnd, (L"Loaded from " + path).c_str(), L"Load", MB_OK);
+                        break;
                     }
                 }
                 MessageBox(hWnd, L"Failed to load game.", L"Error", MB_OK | MB_ICONERROR);

@@ -74,6 +74,12 @@ The initial implementation may reject unsupported versions, but the error must
 distinguish missing, corrupt, unsupported, and I/O-failed files. Component
 payload versions should be independent of the outer file version where useful.
 
+An older well-formed save is "unsupported", not corrupt. Truncated data,
+impossible sizes/IDs/values, and unexpected trailing bytes are corrupt. The
+current format validates structure but has no checksum or authentication, so a
+tampered file that still contains structurally valid values cannot yet be
+distinguished from a legitimate save.
+
 ### P0: Nondeterministic and call-order-dependent randomness blocks replay
 
 `BgStarField` uses the process-global `rand()` and reseeds it with wall-clock
@@ -151,7 +157,7 @@ machine, room/scroll state, phase and fade state, animation counters, pending
 commands, RNGs, and relevant time counters. Audio playback and GPU/resource IDs
 should normally be reconstructed from logical state rather than serialized.
 
-### P0: Sequence replacement currently makes load failure destructive
+### P0: Sequence replacement must not make load failure destructive
 
 The window command calls `SequenceManager::LoadSequence` before applying the
 payload. That destroys the current sequence and initializes a replacement. If
@@ -166,10 +172,14 @@ Use a two-phase load:
    after successful restoration.
 
 Some resources are global and mutate during scene initialization, so fully
-transactional candidate construction may initially be impractical. Until those
-resources are isolated, keep an in-memory copy of the validated snapshot and
-provide a controlled recovery path rather than silently continuing from a
-half-loaded scene.
+transactional candidate construction is currently impractical. The implemented
+first stage captures the current supported state to an in-memory `SaveData`
+before applying the requested snapshot. Same-scene loads reuse the current
+scene's transactional component loaders. A cross-scene or cross-sequence load
+may rebuild runtime resources; if it fails, the manager immediately rebuilds
+the captured snapshot instead of leaving the rejected scene active. Candidate
+construction can replace this recovery path after global resources are
+isolated.
 
 ### P0: Save must occur at a defined frame boundary
 
@@ -247,10 +257,11 @@ but incorrect state.
 | SS-015 | P1 | Ready | Classify SE as transient or continuous | Transients stop and continuous emitters restore according to policy |
 | SS-016 | P1 | Blocked by SS-012/13 | Define replay input/event format and checksum boundary | Same initial state and input log reproduce the same simulation checksums |
 | SS-017 | P0 | Done | Add a frame-boundary snapshot barrier | Capture is rejected during update or unsupported transitions |
-| SS-018 | P0 | Ready | Make sequence loading two-phase | Invalid scene/component payload does not discard the current paused game |
+| SS-018 | P0 | Done | Make sequence loading recoverable and two-phase | Invalid scene/component payload restores the previous supported paused state |
 | SS-019 | P1 | Blocked by SS-008 | Add stable entity IDs and snapshot factory | Entity graphs rebuild without serialized pointers or resource handles |
 | SS-020 | P1 | Ready | Add game/content compatibility identity | Incompatible runtime content is rejected with a specific result |
 | SS-021 | P0 | Done | Persist star-field initial entropy | Pattern ID is saved, restored, and injectable by replay/new-game setup |
+| SS-022 | P1 | Ready | Add save payload integrity checking | Accidental byte corruption is rejected before runtime reconstruction |
 
 ## Milestones
 

@@ -69,6 +69,8 @@ namespace mm2hack::core::assembly
         virtual void ResetPlayFrameCounter() noexcept = 0;
         // Step frame counter for play mode
         virtual void IncrementPlayFrameCounter() noexcept = 0;
+        // Restore frame counter after a failed transactional operation
+        virtual void SetPlayFrameCounter(std::uint64_t value) noexcept = 0;
         // Get frame counter for play mode
         [[nodiscard]] virtual std::uint64_t GetPlayFrameCounter() const noexcept = 0;
     };

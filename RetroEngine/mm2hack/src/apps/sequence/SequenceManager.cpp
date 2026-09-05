@@ -2,12 +2,15 @@
 
 #include "SequenceManager.h"
 
+#include <cstdint>
 #include "apps/runtime/GameContext.h"
+#include "core/assembly/ITimeController.h"
 #include "core/GameState.h"
 #include "core/GameStateManager.h"
 #include "core/overlay/DebugHud.h"
 #include "core/overlay/InputConfigOverlay.h"
 #include "core/overlay/PauseManager.h"
+#include "core/save/SaveData.h"
 #include "DebugSequence.h"
 #include "StandardSequence.h"
 #include "test/TestSequence.h"
@@ -71,20 +74,71 @@ namespace mm2hack::apps::sequence
         }
     }
 
-    void SequenceManager::LoadSequence(const SequenceType type)
+    bool SequenceManager::LoadState(const core::save::SaveData& data)
     {
-        utils::debug_log(L"Load sequence from sav file.");
-
-        switch (type)
+        const auto requested_type = static_cast<SequenceType>(data.sequenceID);
+        if (requested_type != SequenceType::Standard && requested_type != SequenceType::Debug)
         {
-        case SequenceType::Standard:
-            StartStandardSequence();
-            break;
-        case SequenceType::Debug:
-            StartDebugSequence();
-            break;
-        default:
-            break;
+            return false;
+        }
+
+        core::save::SaveData previous{};
+        const bool had_previous = _currentSequence != nullptr;
+        auto* time = runtime::GameContext::GetInstance().TryTime();
+        const std::uint64_t previous_play_frames =
+            time != nullptr ? time->GetPlayFrameCounter() : 0;
+        if (had_previous)
+        {
+            try
+            {
+                if (!_currentSequence->Save(previous)) return false;
+            }
+            catch (...)
+            {
+                return false;
+            }
+        }
+
+        if (tryLoadSnapshot_(data)) return true;
+
+        if (had_previous && tryLoadSnapshot_(previous))
+        {
+            if (time != nullptr) time->SetPlayFrameCounter(previous_play_frames);
+            utils::debug_log(L"Load failed; restored the previous in-memory snapshot.");
+            return false;
+        }
+
+        Release();
+        utils::debug_log(L"Load failed and the previous snapshot could not be restored.");
+        return false;
+    }
+
+    bool SequenceManager::tryLoadSnapshot_(const core::save::SaveData& data) noexcept
+    {
+        try
+        {
+            const auto requested_type = static_cast<SequenceType>(data.sequenceID);
+            if (requested_type != _sequenceType || !_currentSequence)
+            {
+                switch (requested_type)
+                {
+                case SequenceType::Standard:
+                    StartStandardSequence();
+                    break;
+                case SequenceType::Debug:
+                    StartDebugSequence();
+                    break;
+                default:
+                    return false;
+                }
+            }
+
+            return _currentSequence != nullptr && _sequenceType == requested_type &&
+                _currentSequence->Load(data);
+        }
+        catch (...)
+        {
+            return false;
         }
     }
 

@@ -63,6 +63,7 @@ namespace mm2hack::core::assembly
         // Play frame counter management
         void ResetPlayFrameCounter() noexcept override;
         void IncrementPlayFrameCounter() noexcept override;
+        void SetPlayFrameCounter(std::uint64_t value) noexcept override;
         [[nodiscard]] std::uint64_t GetPlayFrameCounter() const noexcept override;
 
     private:

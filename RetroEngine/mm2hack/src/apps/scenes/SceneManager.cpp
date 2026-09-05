@@ -88,7 +88,10 @@ namespace mm2hack::apps::scenes
             return false;
         }
 
-        RequestSceneChange(scene_id, {});
+        if (!_currentScene || _currentScene->GetSceneID() != scene_id)
+        {
+            RequestSceneChange(scene_id, {});
+        }
         if (!_currentScene || _currentScene->GetSceneID() != scene_id)
         {
             return false;
