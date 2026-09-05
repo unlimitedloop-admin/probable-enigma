@@ -223,22 +223,22 @@ but incorrect state.
 |---|---:|---|---|---|
 | SS-001 | P0 | Done | Add bounded binary reader/writer | Truncated reads fail without mutating destination state |
 | SS-002 | P0 | Done | Replace raw `SaveData` dump with explicit file envelope | Header fields are fixed-width; payload size is bounded |
-| SS-003 | P0 | Ready | Connect Sequence -> SceneManager -> Scene | Saved scene ID and payload reach the active scene on load |
+| SS-003 | P0 | Done | Connect Sequence -> SceneManager -> Scene | Saved scene ID and payload reach the active scene on load |
 | SS-004 | P0 | Done | Make `BgStarField` load transactional | Invalid counts/values/truncation preserve the old star field |
-| SS-005 | P0 | Ready | Restore `BackdoorMenu` phase objects | Credit, top menu, and inside menu resume with matching phase state |
+| SS-005 | P0 | Done | Restore `BackdoorMenu` phase objects | Credit, top menu, and inside menu resume with matching phase state |
 | SS-006 | P1 | Blocked by SS-001/2 | Make slot replacement transactional | Failed writes preserve the previous slot |
 | SS-007 | P0 | Done | Replace `BgStarField` randomness with a scripted pattern | Save/load and replay produce the same star sequence |
-| SS-008 | P1 | Blocked by SS-003 | Define DemoStage2 snapshot schema | Coverage list and reconstruction order are documented |
+| SS-008 | P1 | Ready | Define DemoStage2 snapshot schema | Coverage list and reconstruction order are documented |
 | SS-009 | P1 | Blocked by SS-008 | Restore player and entity state | Player/entities resume without stale references |
 | SS-010 | P1 | Ready | Add save-format and corruption tests | Round-trip, truncation, oversized count, bad magic/version pass |
 | SS-011 | P2 | Ready | Improve user-facing load errors | Missing/corrupt/unsupported/I/O cases are distinguishable |
 | SS-012 | P0 | Done | Audit and remove nondeterministic random sources | No simulation/render path uses wall-clock seed, `rand()`, or `random_device` |
 | SS-013 | P0 | Done | Replace charge-particle LCG with a stable pattern | Particle placement is reproducible without mutable random state |
-| SS-014 | P1 | Blocked by SS-003 | Add logical BGM snapshot/restore | A paused multi-stem BGM resumes at the saved transport position |
+| SS-014 | P1 | Ready | Add logical BGM snapshot/restore | A paused multi-stem BGM resumes at the saved transport position |
 | SS-015 | P1 | Ready | Classify SE as transient or continuous | Transients stop and continuous emitters restore according to policy |
 | SS-016 | P1 | Blocked by SS-012/13 | Define replay input/event format and checksum boundary | Same initial state and input log reproduce the same simulation checksums |
-| SS-017 | P0 | Ready | Add a frame-boundary snapshot barrier | Capture is rejected during update or unsupported transitions |
-| SS-018 | P0 | Blocked by SS-003 | Make sequence loading two-phase | Invalid scene/component payload does not discard the current paused game |
+| SS-017 | P0 | Done | Add a frame-boundary snapshot barrier | Capture is rejected during update or unsupported transitions |
+| SS-018 | P0 | Ready | Make sequence loading two-phase | Invalid scene/component payload does not discard the current paused game |
 | SS-019 | P1 | Blocked by SS-008 | Add stable entity IDs and snapshot factory | Entity graphs rebuild without serialized pointers or resource handles |
 | SS-020 | P1 | Ready | Add game/content compatibility identity | Incompatible runtime content is rejected with a specific result |
 

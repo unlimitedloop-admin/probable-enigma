@@ -88,9 +88,10 @@ namespace mm2hack::apps::scenes
 
         // === Save/Load state ===
         // Save the current state to an output stream
-        void Save(std::ostream& out);
+        [[nodiscard]] bool CanSaveState() const noexcept override { return false; }
+        bool Save(std::ostream& out) const override;
         // Load the state from an input stream
-        void Load(std::istream& in);
+        bool Load(std::istream& in) override;
 
     private:
         void onEnter_(const Parameters& params) override;               // Scene enter hook

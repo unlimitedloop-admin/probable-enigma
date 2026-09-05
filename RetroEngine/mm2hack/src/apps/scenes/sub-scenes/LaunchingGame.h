@@ -47,6 +47,9 @@ namespace mm2hack::apps::scenes
         SceneID GetSceneID() const override { return SceneID::LaunchingGame; }
         // Get the name of this scene as a wstring
         std::wstring GetSceneName() const override { return kClassName; }
+        [[nodiscard]] bool CanSaveState() const noexcept override { return false; }
+        bool Save(std::ostream&) const override { return false; }
+        bool Load(std::istream&) override { return false; }
 
     private:
         // Initialize the scene with parameters

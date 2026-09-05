@@ -140,14 +140,16 @@ namespace mm2hack::apps::scenes
         }
     }
 
-    void DemoStage2::Save(std::ostream& out)
+    bool DemoStage2::Save(std::ostream& out) const
     {
-        // Save the demo stage state
+        (void)out;
+        return false;
     }
 
-    void DemoStage2::Load(std::istream& in)
+    bool DemoStage2::Load(std::istream& in)
     {
-        // Load the demo stage state
+        (void)in;
+        return false;
     }
 
     void DemoStage2::onEnter_(const Parameters& params)

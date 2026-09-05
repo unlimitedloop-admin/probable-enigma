@@ -2,8 +2,11 @@
 
 #include "SceneManager.h"
 
+#include <sstream>
+#include <string>
 #include "apps/runtime/GameContext.h"
 #include "core/overlay/PauseManager.h"
+#include "core/save/SaveData.h"
 #include "IBaseScene.h"
 #include "SceneFactory.h"
 
@@ -56,6 +59,48 @@ namespace mm2hack::apps::scenes
             return static_cast<int>(_currentScene->GetSceneID());
         }
         return -1;
+    }
+
+    bool SceneManager::SaveState(core::save::SaveData& out) const
+    {
+        if (!_currentScene || !_currentScene->CanSaveState())
+        {
+            return false;
+        }
+
+        std::ostringstream payload(std::ios::out | std::ios::binary);
+        if (!_currentScene->Save(payload) || !payload.good())
+        {
+            return false;
+        }
+
+        const std::string bytes = payload.str();
+        out.sceneID = static_cast<std::int32_t>(_currentScene->GetSceneID());
+        out.scenePayload.assign(bytes.begin(), bytes.end());
+        return true;
+    }
+
+    bool SceneManager::LoadState(const core::save::SaveData& in)
+    {
+        const auto scene_id = static_cast<SceneID>(in.sceneID);
+        if (scene_id == SceneID::None)
+        {
+            return false;
+        }
+
+        RequestSceneChange(scene_id, {});
+        if (!_currentScene || _currentScene->GetSceneID() != scene_id)
+        {
+            return false;
+        }
+
+        const std::string bytes(in.scenePayload.begin(), in.scenePayload.end());
+        std::istringstream payload(bytes, std::ios::in | std::ios::binary);
+        if (!_currentScene->Load(payload))
+        {
+            return false;
+        }
+        return payload.peek() == std::char_traits<char>::eof();
     }
 
     void SceneManager::RequestSceneChange(SceneID nextScene, const Parameters& params)

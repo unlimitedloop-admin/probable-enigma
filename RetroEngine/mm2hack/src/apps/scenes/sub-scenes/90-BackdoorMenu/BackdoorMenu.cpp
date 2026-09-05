@@ -2,6 +2,7 @@
 
 #include "BackdoorMenu.h"
 
+#include <cstdint>
 #include <istream>
 #include <iterator>
 #include <ostream>
@@ -105,25 +106,83 @@ namespace mm2hack::apps::scenes
         // Already fading out or in transition, will switch when ready.
     }
 
-    void BackdoorMenu::Save(std::ostream& out)
+    bool BackdoorMenu::CanSaveState() const noexcept
     {
-        // TODO: Save scene state to a file
-        int phase = static_cast<int>(_phaseId);
-        out.write(reinterpret_cast<const char*>(&phase), sizeof(phase));
-        // Save other necessary data
-        // e.g., background stars, current selection, etc.
-        if (!_starField.Save(out)) out.setstate(std::ios::failbit);
+        return _phase != nullptr && _pendingPhase == nullptr && !_leaving &&
+            _nextScene == SceneID::None &&
+            _fader.Current() == PhaseFadeController::State::Interactive;
     }
 
-    void BackdoorMenu::Load(std::istream& in)
+    bool BackdoorMenu::Save(std::ostream& out) const
     {
-        // TODO: Load scene state from a file
-        int phase = 0;
-        in.read(reinterpret_cast<char*>(&phase), sizeof(phase));
-        _phaseId = static_cast<BackdoorMenuPhaseId>(phase);
-        // Load other necessary data
-        // e.g., background stars, current selection, etc.
-        if (!_starField.Load(in)) in.setstate(std::ios::failbit);
+        constexpr std::uint32_t kStateVersion = 1;
+        if (!CanSaveState()) return false;
+
+        core::save::StateWriter writer(out);
+        if (!writer.WriteU32(kStateVersion) ||
+            !writer.WriteI32(static_cast<std::int32_t>(_phase->Id())) ||
+            !_phase->Save(writer) ||
+            !writer.WriteU32(static_cast<std::uint32_t>(_cursor.AnimationStepIndex())) ||
+            !writer.WriteI32(_cursor.AnimationTicks()))
+        {
+            return false;
+        }
+        return _starField.Save(out);
+    }
+
+    bool BackdoorMenu::Load(std::istream& in)
+    {
+        constexpr std::uint32_t kStateVersion = 1;
+        core::save::StateReader reader(in);
+        std::uint32_t state_version{};
+        std::int32_t phase_value{};
+        if (!reader.ReadU32(state_version) || state_version != kStateVersion ||
+            !reader.ReadI32(phase_value))
+        {
+            return false;
+        }
+
+        const auto phase_id = static_cast<BackdoorMenuPhaseId>(phase_value);
+        std::unique_ptr<IBackdoorMenuPhase> phase;
+        switch (phase_id)
+        {
+        case BackdoorMenuPhaseId::Credit:
+            phase = std::make_unique<BackdoorMenu_::CreditPhase>(*this);
+            break;
+        case BackdoorMenuPhaseId::TopMenu:
+            phase = std::make_unique<BackdoorMenu_::TopMenuPhase>(*this);
+            break;
+        case BackdoorMenuPhaseId::InsideMenu:
+            phase = std::make_unique<BackdoorMenu_::InsideMenuPhase>(*this);
+            break;
+        default:
+            return false;
+        }
+
+        if (!phase->Load(reader)) return false;
+
+        std::uint32_t cursor_step{};
+        std::int32_t cursor_ticks{};
+        if (!reader.ReadU32(cursor_step) || !reader.ReadI32(cursor_ticks) ||
+            !_cursor.CanRestoreAnimation(cursor_step, cursor_ticks) || _resource == nullptr)
+        {
+            return false;
+        }
+
+        // BgStarField validates into temporary containers before committing.
+        // No fallible operation follows it, keeping this scene load transactional.
+        if (!_starField.Load(in)) return false;
+
+        _phase = std::move(phase);
+        _phaseId = phase_id;
+        _pendingPhase.reset();
+        _pendingPlan = {};
+        _nextScene = SceneID::None;
+        _nextParams = {};
+        _leaving = false;
+        _cursor.RestoreAnimation(cursor_step, cursor_ticks);
+        _fader.RestoreInteractive(*_resource);
+        return true;
     }
 
     void BackdoorMenu::SetNextScene(SceneID scene, const Parameters& params)

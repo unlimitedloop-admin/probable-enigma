@@ -9,6 +9,7 @@
 #pragma once
 
 #include <cassert>
+#include <iosfwd>
 #include <string>
 #include "apps/resources/parameters/Parameters.h"
 
@@ -84,6 +85,12 @@ namespace mm2hack::apps::scenes
         virtual void Update() = 0;
         virtual void RenderWorld() = 0;
         virtual void RenderOverlay() = 0;
+
+        // Runtime snapshot support. A scene may reject capture while it is in an
+        // unsupported transitional state.
+        [[nodiscard]] virtual bool CanSaveState() const noexcept = 0;
+        virtual bool Save(std::ostream& out) const = 0;
+        virtual bool Load(std::istream& in) = 0;
 
         // === Scene identification ===
         virtual SceneID GetSceneID() const = 0;

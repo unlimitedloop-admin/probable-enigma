@@ -6,6 +6,14 @@
 
 namespace mm2hack::apps::scenes
 {
+    void PhaseFadeController::RestoreInteractive(ResourceManager& res)
+    {
+        _plan = {};
+        _state = State::Interactive;
+        _counter = 0;
+        lightUp_(res);
+    }
+
     void PhaseFadeController::BeginPhase(const PhaseFadePlan& plan, ResourceManager& res)
     {
         _plan = plan;

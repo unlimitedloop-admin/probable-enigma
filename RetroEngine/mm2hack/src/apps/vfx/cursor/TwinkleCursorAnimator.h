@@ -59,6 +59,10 @@ namespace mm2hack::apps::vfx::cursor
         void SetBaseTileDuration(int frames) noexcept;
         // Get the current tile index being displayed
         [[nodiscard]] int CurrentTile() const noexcept { return _steps[_stepIndex].tile; }
+        [[nodiscard]] std::size_t AnimationStepIndex() const noexcept { return _stepIndex; }
+        [[nodiscard]] int AnimationTicks() const noexcept { return _ticks; }
+        [[nodiscard]] bool CanRestoreAnimation(std::size_t step_index, int ticks) const noexcept;
+        void RestoreAnimation(std::size_t step_index, int ticks) noexcept;
 
         // Fade animator default loop (7 steps)
         static constexpr std::array<Step, 7> kDefaultFadeLoop{

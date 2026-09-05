@@ -113,8 +113,9 @@ namespace mm2hack::apps::scenes
         void QueuePhase(std::unique_ptr<IDemoStage1Phase> next, PhaseFadePlan nextPlan);
 
         // === Save/Load state ===
-        void Save(std::ostream& out);
-        void Load(std::istream& in);
+        [[nodiscard]] bool CanSaveState() const noexcept override { return false; }
+        bool Save(std::ostream& out) const override;
+        bool Load(std::istream& in) override;
 
         // Access the fade controller for scene transitions
         PhaseFadeController& Fader() noexcept { return _fader; }
