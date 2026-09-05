@@ -10,8 +10,8 @@
 
 #include "IPhase.h"
 
-#include <memory>
 #include <cstdint>
+#include <memory>
 #include <string>
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/world/entity/avatar/PlayerFrameOutput.h"
@@ -97,8 +97,6 @@ namespace mm2hack::apps::scenes::phases
         IPhaseHost* _host{};                                // Host for phase transitions
         bool _entered{ false };                             // Indicates if the phase has been entered
         bool _operate{ false };                             // Indicates if the operate phase is enabled (Disable at fade-in and fade-out)
-        int _charge_effect_ticks{ 0 };                      // Particle emission interval while B is held
-        std::uint32_t _charge_effect_random{ 0x5EED1234u }; // Deterministic lightweight particle random source
         bool _charge_sound_playing{ false };                // Temporary B-hold charge sound playback state
         world::entity::avatar::ChargePhase _charge_phase{ world::entity::avatar::ChargePhase::Idle };
 

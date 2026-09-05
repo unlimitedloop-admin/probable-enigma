@@ -491,6 +491,7 @@
     <ClInclude Include="src\core\overlay\InputConfigOverlay.h" />
     <ClInclude Include="src\core\overlay\PauseManager.h" />
     <ClInclude Include="src\core\save\SaveData.h" />
+    <ClInclude Include="src\core\save\StateIO.h" />
     <ClInclude Include="src\core\save\SaveSystem.h" />
     <ClInclude Include="src\core\ui\CheatCodeInjectionUI.h" />
     <ClInclude Include="src\core\ui\CommonUIStyle.h" />

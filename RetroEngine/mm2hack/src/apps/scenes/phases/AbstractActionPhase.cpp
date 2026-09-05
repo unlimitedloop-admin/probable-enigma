@@ -2,6 +2,7 @@
 
 #include "AbstractActionPhase.h"
 
+#include <array>
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/resources/parameters/Parameters.h"
@@ -30,6 +31,32 @@
 
 namespace mm2hack::apps::scenes::phases
 {
+    namespace
+    {
+        struct ChargeParticleStep final
+        {
+            int offset_x;
+            int base_texture;
+        };
+
+        // Cosmetic variation must be independent of wall-clock time and mutable
+        // random-generator state so save/load and input replay follow the same path.
+        constexpr std::array kChargeParticlePattern{
+            ChargeParticleStep{ -12, 0 },
+            ChargeParticleStep{   7, 8 },
+            ChargeParticleStep{  -3, 0 },
+            ChargeParticleStep{  11, 0 },
+            ChargeParticleStep{  -8, 8 },
+            ChargeParticleStep{   2, 8 },
+            ChargeParticleStep{  12, 0 },
+            ChargeParticleStep{  -5, 8 },
+            ChargeParticleStep{   5, 0 },
+            ChargeParticleStep{ -10, 0 },
+            ChargeParticleStep{   0, 8 },
+            ChargeParticleStep{   9, 8 },
+        };
+    }
+
     AbstractActionPhase::AbstractActionPhase(std::unique_ptr<StageRuntimeContext> ctx, IStageScript* script, IPhaseHost& host) noexcept
         : _ctx(std::move(ctx)), _script(script), _host(&host)
     {
@@ -388,7 +415,6 @@ namespace mm2hack::apps::scenes::phases
                 audio.StopSe(L"rock_buster_charge");
                 _charge_sound_playing = false;
             }
-            _charge_effect_ticks = 0;
             _charge_phase = charge.phase;
             return;
         }
@@ -401,27 +427,23 @@ namespace mm2hack::apps::scenes::phases
 
         const int spawn_interval_ticks = charge.phase == ChargePhase::Level2 ? 4 : 8;
         const bool spawn_now = charge.phase != _charge_phase ||
-            ++_charge_effect_ticks >= spawn_interval_ticks;
+            charge.phaseFrames % static_cast<std::uint32_t>(spawn_interval_ticks) == 0;
         _charge_phase = charge.phase;
         if (!spawn_now) return;
 
-        _charge_effect_ticks = 0;
         const auto sprite_id = _ctx->asset_provider->ChargeEffectSprite();
         if (sprite_id == static_cast<rendering::sprite::SpriteManager::Id>(-1)) return;
 
-        _charge_effect_random = _charge_effect_random * 1664525u + 1013904223u;
-        constexpr int kOffsetRange = 25;
-        constexpr int kOffsetCenter = 12;
-        const int offset_x = static_cast<int>(_charge_effect_random % kOffsetRange) - kOffsetCenter;
-
-        _charge_effect_random = _charge_effect_random * 1664525u + 1013904223u;
-        const int base_texture = ((_charge_effect_random >> 16) & 1u) == 0u ? 0 : 8;
+        const auto pattern_index =
+            (charge.phaseFrames / static_cast<std::uint32_t>(spawn_interval_ticks)) %
+            kChargeParticlePattern.size();
+        const auto& particle = kChargeParticlePattern[pattern_index];
 
         _ctx->entity_mgr->Spawn<world::entity::effects::ChargeEffectEntity>(
             world::entity::common::SpawnChargeEffectCommand{
-                .spawnPos = player.pos + Vec2{ static_cast<double>(offset_x), 12.0 },
+                .spawnPos = player.pos + Vec2{ static_cast<double>(particle.offset_x), 12.0 },
                 .spriteId = sprite_id,
-                .baseTexture = base_texture
+                .baseTexture = particle.base_texture
             });
     }
 }

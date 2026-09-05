@@ -181,6 +181,7 @@
     <ClInclude Include="src\apps\scenes\ISceneChangedListener.h" />
     <ClInclude Include="src\apps\scenes\SceneChangeMediator.h" />
     <ClInclude Include="src\core\save\SaveData.h" />
+    <ClInclude Include="src\core\save\StateIO.h" />
     <ClInclude Include="src\core\save\SaveSystem.h" />
     <ClInclude Include="src\test\driver\002\DrawGraph.h" />
     <ClInclude Include="src\core\winapi\WindowContext.h" />

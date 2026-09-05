@@ -8,6 +8,7 @@
 //==============================================================================
 #pragma once
 
+#include <cstddef>
 #include <string>
 
 namespace mm2hack::core::save
@@ -42,6 +43,7 @@ namespace mm2hack::core::save
 
     private:
         inline static const std::wstring kClassName{ L"SaveSystem" };
+        static constexpr std::size_t kMaximumPayloadSize = 16U * 1024U * 1024U;
 
         inline static int _currentSlot = 0;     // Current save slot index
     };
