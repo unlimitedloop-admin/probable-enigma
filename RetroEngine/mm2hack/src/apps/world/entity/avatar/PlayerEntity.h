@@ -83,6 +83,7 @@ namespace mm2hack::apps::world::entity::avatar
         bool IsAlive() const noexcept override;
         // Kill (IEntity)
         void Kill() noexcept override;
+        [[nodiscard]] EntityTypeId StateTypeId() const noexcept override { return EntityTypeId::Player; }
         // Bounding box (ICollider)
         RectF Bounds() const override;
         // Is collidable? (ICollider)

@@ -33,6 +33,7 @@ namespace mm2hack::apps::world::entity::effects
         void Update(const systems::view::ViewState* view, double dt) override;
         // Render (IRenderable)
         void Render(systems::view::RenderContext& ctx) override;
+        [[nodiscard]] EntityTypeId StateTypeId() const noexcept override { return EntityTypeId::Projectile; }
 
     private:
         Layer _draw_layer{ Layer::Actors };             // Drawing layer

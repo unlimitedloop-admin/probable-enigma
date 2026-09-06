@@ -8,6 +8,7 @@
 //==============================================================================
 #pragma once
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <type_traits>
@@ -33,6 +34,8 @@ namespace mm2hack::apps::world::entity
         // Adds an entity to the manager
         // If called during UpdateAll, the entity will be deferred until the end of the update
         void Add(std::unique_ptr<IEntity> entity);
+        // Adds an entity with a saved identity while rebuilding a snapshot
+        bool AddRestored(std::unique_ptr<IEntity> entity, EntityInstanceId instance_id);
 
         // Spawns an entity of type T and returns reference.
         template <typename T, typename... Args>
@@ -60,6 +63,8 @@ namespace mm2hack::apps::world::entity
 
         // Counts the total number of entities (alive + dead)
         std::size_t Count() const noexcept;
+        [[nodiscard]] EntityInstanceId NextInstanceId() const noexcept { return _next_instance_id; }
+        [[nodiscard]] bool CanCaptureState() const noexcept;
 
     private:
         void flushPending_();       // Flushes pending entities to the main list
@@ -71,6 +76,7 @@ namespace mm2hack::apps::world::entity
         std::vector<std::unique_ptr<IEntity>> _entities{};          // Main entity list (avatars, projectiles, effects, etc)
         std::vector<std::unique_ptr<IEntity>> _pending_add{};       // Pending entities to be added
         bool _is_updating{ false };                                 // Indicates if currently updating entities
+        EntityInstanceId _next_instance_id{ 1 };
     };
 
     template <typename T, typename... Args>

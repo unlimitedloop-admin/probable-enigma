@@ -22,6 +22,8 @@ namespace mm2hack::apps::world::entity
     public:
         bool IsAlive() const noexcept override { return _alive; }
         void Kill() noexcept override { _alive = false; }
+        [[nodiscard]] EntityInstanceId StateInstanceId() const noexcept override { return _instance_id; }
+        void AssignStateInstanceId(EntityInstanceId id) noexcept override { _instance_id = id; }
 
         // Position and velocity
         Vec2 pos{};
@@ -29,5 +31,8 @@ namespace mm2hack::apps::world::entity
 
     protected:
         bool _alive{ true };
+
+    private:
+        EntityInstanceId _instance_id{};
     };
 }

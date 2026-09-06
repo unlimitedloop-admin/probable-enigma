@@ -27,6 +27,7 @@ namespace mm2hack::apps::world::entity::effects
         systems::view::Layer DrawLayer() const noexcept override;
         void Update(const systems::view::ViewState* view, double dt) override;
         void Render(systems::view::RenderContext& ctx) override;
+        [[nodiscard]] EntityTypeId StateTypeId() const noexcept override { return EntityTypeId::ChargeEffect; }
 
     private:
         const std::wstring kClassName{ L"ChargeEffectEntity" };

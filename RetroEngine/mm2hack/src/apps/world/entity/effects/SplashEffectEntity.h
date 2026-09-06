@@ -29,6 +29,7 @@ namespace mm2hack::apps::world::entity::effects
         void Update(const systems::view::ViewState* view, double dt) override;
         // Draw the current animation frame (IRenderable)
         void Render(systems::view::RenderContext& ctx) override;
+        [[nodiscard]] EntityTypeId StateTypeId() const noexcept override { return EntityTypeId::SplashEffect; }
 
     private:
         static constexpr int kTicksPerFrame{ 7 };
