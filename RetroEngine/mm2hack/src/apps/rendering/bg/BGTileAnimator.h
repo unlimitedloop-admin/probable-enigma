@@ -10,9 +10,25 @@
 
 #include <cstdint>
 #include <span>
+#include "core/save/StateIO.h"
 
 namespace mm2hack::apps::rendering::bg
 {
+    struct BGTileAnimatorState final
+    {
+        std::uint32_t frame_counter{};
+
+        bool Save(core::save::StateWriter& writer) const
+        {
+            return writer.WriteU32(frame_counter);
+        }
+
+        bool Load(core::save::StateReader& reader)
+        {
+            return reader.ReadU32(frame_counter);
+        }
+    };
+
     // Single frame of a BG tile animation
     struct BGTileAnimationFrame
     {
@@ -155,6 +171,16 @@ namespace mm2hack::apps::rendering::bg
         void Reset() noexcept
         {
             _frame_counter = 0;
+        }
+
+        [[nodiscard]] BGTileAnimatorState CaptureState() const noexcept
+        {
+            return BGTileAnimatorState{ _frame_counter };
+        }
+
+        void RestoreState(const BGTileAnimatorState& state) noexcept
+        {
+            _frame_counter = state.frame_counter;
         }
 
     private:

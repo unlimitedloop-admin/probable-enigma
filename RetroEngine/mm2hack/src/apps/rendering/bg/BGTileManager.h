@@ -91,6 +91,14 @@ namespace mm2hack::apps::rendering::bg
         void SetTileAnimations(std::span<const BGTileAnimation> animations) noexcept;
         // Advance BG tile animations by one frame
         void UpdateTileAnimations() noexcept;
+        [[nodiscard]] BGTileAnimatorState CaptureAnimationState() const noexcept
+        {
+            return _tile_animator.CaptureState();
+        }
+        void RestoreAnimationState(const BGTileAnimatorState& state) noexcept
+        {
+            _tile_animator.RestoreState(state);
+        }
     private:
         const std::wstring kClassName{ L"BGTileManager" };
 

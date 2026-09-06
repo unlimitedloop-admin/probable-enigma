@@ -10,9 +10,21 @@
 
 #include <string>
 #include "apps/foundation/math/CoordinateTypes.h"
+#include "core/save/StateIO.h"
 
 namespace mm2hack::apps::ui::productions
 {
+    struct StageIntroUIState final
+    {
+        double total_duration{};
+        double elapsed{};
+        bool finished{};
+
+        bool Save(core::save::StateWriter& writer) const;
+        bool Load(core::save::StateReader& reader);
+        [[nodiscard]] bool IsValid() const noexcept;
+    };
+
     // Stage introduction UI component
     class StageIntroUI
     {
@@ -30,6 +42,8 @@ namespace mm2hack::apps::ui::productions
         void Render() const;
         // Checks if the intro sequence is finished
         bool IsFinished() const;
+        [[nodiscard]] StageIntroUIState CaptureState() const noexcept;
+        bool RestoreState(const StageIntroUIState& state) noexcept;
 
     private:
         const std::wstring kClassName{ L"StageIntroUI" };
