@@ -210,8 +210,8 @@ Reconstruction order is fixed:
 | DS2-004 | Done | Add entity type/instance IDs and manager record envelope | Entity order and bounded payloads round-trip without pointers or resource handles |
 | DS2-005 | Done | Restore projectile and transient effect entities | Active entity position, velocity, lifetime, and animation tick resume exactly |
 | DS2-006 | Done | Restore Player and owned state machines | Movement, animation, attack, charge, buffers, and pending requests resume exactly |
-| DS2-007 | Ready | Integrate DemoStage2 scene save/load | A paused action phase round-trips through an external slot |
-| DS2-008 | Blocked by DS2-007 | Add corruption and deterministic-continuation tests | Invalid records are non-destructive and subsequent simulation checksums match |
+| DS2-007 | Done | Integrate DemoStage2 scene save/load | A paused action phase round-trips through an external slot |
+| DS2-008 | Ready | Add corruption and deterministic-continuation tests | Invalid records are non-destructive and subsequent simulation checksums match |
 
 ### P0: Sequence replacement must not make load failure destructive
 

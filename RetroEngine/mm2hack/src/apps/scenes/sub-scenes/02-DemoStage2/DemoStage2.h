@@ -88,8 +88,10 @@ namespace mm2hack::apps::scenes
 
         // === Save/Load state ===
         // Save the current state to an output stream
-        [[nodiscard]] bool CanSaveState() const noexcept override { return false; }
+        [[nodiscard]] bool CanSaveState() const noexcept override;
         bool Save(std::ostream& out) const override;
+        // Validate a serialized state without touching live scene resources
+        static bool ValidateState(std::istream& in);
         // Load the state from an input stream
         bool Load(std::istream& in) override;
 

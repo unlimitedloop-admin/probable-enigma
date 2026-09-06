@@ -4,11 +4,13 @@
 
 #include <sstream>
 #include <string>
+#include <string_view>
 #include "apps/runtime/GameContext.h"
 #include "core/overlay/PauseManager.h"
 #include "core/save/SaveData.h"
 #include "IBaseScene.h"
 #include "SceneFactory.h"
+#include "sub-scenes/02-DemoStage2/DemoStage2.h"
 #include "sub-scenes/90-BackdoorMenu/BackdoorMenu.h"
 
 namespace mm2hack::apps::scenes
@@ -120,9 +122,8 @@ namespace mm2hack::apps::scenes
             valid = BackdoorMenu::ValidateState(payload);
             break;
         case SceneID::DemoStage2:
-            // The complete action-stage DTO is introduced incrementally by
-            // DS2-003 through DS2-006. Keep the load gate closed until then.
-            return false;
+            valid = DemoStage2::ValidateState(payload);
+            break;
         default:
             return false;
         }

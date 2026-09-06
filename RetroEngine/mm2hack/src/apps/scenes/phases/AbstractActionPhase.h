@@ -32,6 +32,11 @@ namespace mm2hack::apps::world::entity::avatar
     class PlayerEntity;
 }
 
+namespace mm2hack::apps::world::entity
+{
+    struct EntityManagerState;
+}
+
 namespace mm2hack::apps::scenes::phases
 {
     class IStageScript;
@@ -91,7 +96,14 @@ namespace mm2hack::apps::scenes::phases
         void SetEnableOperatePhase(bool enable) override;
         // Gets whether the operate phase is enabled
         bool GetEnableOperatePhase() const override { return _operate; }
+        [[nodiscard]] bool CanCaptureState() const noexcept;
         [[nodiscard]] bool CaptureState(AbstractActionPhaseState& state) const noexcept;
+        bool CaptureEntityState(world::entity::EntityManagerState& state) const;
+        bool RestoreScrollState(const AbstractActionPhaseState& state) noexcept;
+        bool RestoreEntityState(
+            const world::entity::EntityManagerState& state,
+            const AbstractActionPhaseState& phase_state);
+        bool RestoreRuntimeState(const AbstractActionPhaseState& state) noexcept;
         bool RestoreState(const AbstractActionPhaseState& state) noexcept;
 
     private:

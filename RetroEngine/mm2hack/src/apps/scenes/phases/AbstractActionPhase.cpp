@@ -23,6 +23,7 @@
 #include "apps/world/entity/effects/SlidingDustEffectEntity.h"
 #include "apps/world/entity/effects/SplashEffectEntity.h"
 #include "apps/world/entity/EntityManager.h"
+#include "apps/world/entity/EntityStateFactory.h"
 #include "config/ConfigUIManager.h"
 #include "core/overlay/DebugHud.h"
 #include "core/save/StateIO.h"
@@ -155,9 +156,16 @@ namespace mm2hack::apps::scenes::phases
         }
     }
 
+    bool AbstractActionPhase::CanCaptureState() const noexcept
+    {
+        return _ctx != nullptr && _ctx->scroll != nullptr &&
+            _ctx->entity_mgr != nullptr && _ctx->asset_provider != nullptr &&
+            _ctx->entity_mgr->CanCaptureState();
+    }
+
     bool AbstractActionPhase::CaptureState(AbstractActionPhaseState& state) const noexcept
     {
-        if (!_ctx || !_ctx->scroll)
+        if (!CanCaptureState())
         {
             return false;
         }
@@ -175,14 +183,64 @@ namespace mm2hack::apps::scenes::phases
         return state.IsValid();
     }
 
-    bool AbstractActionPhase::RestoreState(const AbstractActionPhaseState& state) noexcept
+    bool AbstractActionPhase::CaptureEntityState(
+        world::entity::EntityManagerState& state) const
     {
-        if (!state.IsValid() || !_ctx || !_ctx->scroll)
+        return CanCaptureState() && _ctx->entity_mgr->CaptureState(state);
+    }
+
+    bool AbstractActionPhase::RestoreScrollState(
+        const AbstractActionPhaseState& state) noexcept
+    {
+        return state.IsValid() && _ctx != nullptr && _ctx->scroll != nullptr &&
+            _ctx->scroll->RestoreState(state.scroll);
+    }
+
+    bool AbstractActionPhase::RestoreEntityState(
+        const world::entity::EntityManagerState& state,
+        const AbstractActionPhaseState& phase_state)
+    {
+        if (!state.IsValid() || !phase_state.IsValid() || !_ctx ||
+            !_ctx->entity_mgr || !_ctx->asset_provider || !_ctx->scroll ||
+            !_ctx->page_grid || !_ctx->terrain_probe || !_ctx->ladder_service)
         {
             return false;
         }
 
-        if (!_ctx->scroll->RestoreState(state.scroll) ||
+        const world::entity::EntityStateFactory factory(*_ctx->asset_provider);
+        if (!_ctx->entity_mgr->RestoreState(state, factory))
+        {
+            return false;
+        }
+
+        auto* player = _ctx->entity_mgr->FindFirst<world::entity::avatar::PlayerEntity>();
+        if (player == nullptr)
+        {
+            return false;
+        }
+
+        player->SetTerrainProbe(_ctx->terrain_probe.get());
+        player->SetLadderService(_ctx->ladder_service.get());
+        player->SetScrollRuleProvider(_ctx->scroll->Rules());
+        if (phase_state.phase == ActionPhaseState::Active)
+        {
+            player->SetInput(_ctx->input);
+        }
+        if (const auto page = _ctx->page_grid->ResolvePageIndexFromWorldPos(player->pos); page)
+        {
+            _ctx->terrain_probe->SetCurrentPage(*page);
+        }
+        else
+        {
+            return false;
+        }
+        return true;
+    }
+
+    bool AbstractActionPhase::RestoreRuntimeState(
+        const AbstractActionPhaseState& state) noexcept
+    {
+        if (!state.IsValid() || !_ctx || !_ctx->scroll ||
             !_ready_ui.RestoreState(state.ready_ui))
         {
             return false;
@@ -200,6 +258,11 @@ namespace mm2hack::apps::scenes::phases
         _charge_sound_playing = false;
         _charge_phase = world::entity::avatar::ChargePhase::Idle;
         return true;
+    }
+
+    bool AbstractActionPhase::RestoreState(const AbstractActionPhaseState& state) noexcept
+    {
+        return RestoreScrollState(state) && RestoreRuntimeState(state);
     }
 
     void AbstractActionPhase::Initialize(const resources::parameters::Parameters& params)

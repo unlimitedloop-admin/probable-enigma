@@ -30,8 +30,8 @@
 #include "apps/systems/view/ViewState.h"
 #include "apps/world/entity/common/AnimeStepper.h"
 #include "apps/world/entity/IEntity.h"
-#include "core/save/StateIO.h"
 #include "AvatarStatus.h"
+#include "core/save/StateIO.h"
 #include "PlayerContext.h"
 #include "PlayerEntityState.h"
 #include "PlayerEnvironmentController.h"
@@ -131,6 +131,7 @@ namespace mm2hack::apps::world::entity::avatar
         void SetTerrainProbe(ITerrainProbe* p) noexcept { _terrain_probe = p; }
         void SetLadderService(ILadderService* s) { _ladder_service = s; }
         void SetScrollContext(const IScrollRuleProvider* rules, std::size_t pageIndex);
+        void SetScrollRuleProvider(const IScrollRuleProvider* rules) noexcept { _scroll_rules = rules; }
         void SetEntityContext(const ExPlayerContextForEntity& cx) noexcept { _entityContext = cx; }
 
         // Get scrolling request (if any) and consume it

@@ -23,13 +23,93 @@
 #include "apps/scenes/SceneChangeMediator.h"
 #include "apps/systems/physics/TileAttribute.h"
 #include "apps/world/entity/enemy/lists/EnemyLists.h"
+#include "apps/world/entity/EntityManager.h"
+#include "apps/world/entity/EntityStateFactory.h"
+#include "apps/world/entity/IEntity.h"
 #include "config/GameAssets.h"
 #include "config/PathDefsJsonProps.h"
 #include "core/assembly/FilteredJoystickInputProvider.h"
+#include "core/save/StateIO.h"
 #include "utils/output_debug.h"
 
 namespace mm2hack::apps::scenes
 {
+    namespace
+    {
+        constexpr std::uint32_t kDemoStage2StateVersion = 1;
+
+        enum class DemoStage2PhaseType : std::uint8_t
+        {
+            AbstractAction = 1
+        };
+
+        struct DemoStage2State final
+        {
+            DemoStage2PhaseType phase_type{ DemoStage2PhaseType::AbstractAction };
+            std::uint32_t page_index{};
+            rendering::bg::BGTileAnimatorState background_animation{};
+            phases::AbstractActionPhaseState phase{};
+            world::entity::EntityManagerState entities{};
+
+            [[nodiscard]] bool IsValid() const
+            {
+                if (phase_type != DemoStage2PhaseType::AbstractAction ||
+                    page_index != phase.scroll.page_index ||
+                    !phase.IsValid() || !entities.IsValid())
+                {
+                    return false;
+                }
+
+                std::size_t player_count{};
+                for (const auto& record : entities.records)
+                {
+                    if (!world::entity::EntityStateFactory::ValidateRecord(record))
+                    {
+                        return false;
+                    }
+                    if (record.type == world::entity::EntityTypeId::Player)
+                    {
+                        ++player_count;
+                    }
+                }
+                return player_count == 1;
+            }
+
+            bool Save(core::save::StateWriter& writer) const
+            {
+                return IsValid() &&
+                    writer.WriteU32(kDemoStage2StateVersion) &&
+                    writer.WriteU8(static_cast<std::uint8_t>(phase_type)) &&
+                    writer.WriteU32(page_index) &&
+                    background_animation.Save(writer) &&
+                    phase.Save(writer) && entities.Save(writer);
+            }
+
+            bool Load(core::save::StateReader& reader)
+            {
+                DemoStage2State loaded{};
+                std::uint32_t version{};
+                std::uint8_t phase_type_value{};
+                if (!reader.ReadU32(version) || version != kDemoStage2StateVersion ||
+                    !reader.ReadU8(phase_type_value) ||
+                    !reader.ReadU32(loaded.page_index) ||
+                    !loaded.background_animation.Load(reader) ||
+                    !loaded.phase.Load(reader) || !loaded.entities.Load(reader))
+                {
+                    return false;
+                }
+
+                loaded.phase_type = static_cast<DemoStage2PhaseType>(phase_type_value);
+                if (!loaded.IsValid())
+                {
+                    return false;
+                }
+                *this = std::move(loaded);
+                return true;
+            }
+        };
+    }
+
     DemoStage2::DemoStage2(SceneChangeMediator* mediator)
         : _mediator(mediator)
     {
@@ -141,16 +221,77 @@ namespace mm2hack::apps::scenes
         }
     }
 
+    bool DemoStage2::CanSaveState() const noexcept
+    {
+        const auto* phase = dynamic_cast<const phases::AbstractActionPhase*>(_phase.get());
+        return phase != nullptr && phase->CanCaptureState() &&
+            _pendingPhase == nullptr && _nextScene == SceneID::None &&
+            _stageScript == nullptr && _resource != nullptr &&
+            _fader.Current() == PhaseFadeController::State::Interactive;
+    }
+
     bool DemoStage2::Save(std::ostream& out) const
     {
-        (void)out;
-        return false;
+        if (!CanSaveState())
+        {
+            return false;
+        }
+
+        const auto* phase = dynamic_cast<const phases::AbstractActionPhase*>(_phase.get());
+        DemoStage2State state{};
+        if (phase == nullptr ||
+            !phase->CaptureState(state.phase) ||
+            !phase->CaptureEntityState(state.entities))
+        {
+            return false;
+        }
+
+        state.page_index = state.phase.scroll.page_index;
+        state.background_animation = _resource->GetBGTileManager().CaptureAnimationState();
+        core::save::StateWriter writer(out);
+        return state.Save(writer);
+    }
+
+    bool DemoStage2::ValidateState(std::istream& in)
+    {
+        DemoStage2State state{};
+        core::save::StateReader reader(in);
+        return state.Load(reader);
     }
 
     bool DemoStage2::Load(std::istream& in)
     {
-        (void)in;
-        return false;
+        DemoStage2State state{};
+        core::save::StateReader reader(in);
+        if (!state.Load(reader) || _resource == nullptr ||
+            _stageScript != nullptr || _pendingPhase != nullptr ||
+            _nextScene != SceneID::None)
+        {
+            return false;
+        }
+
+        auto* phase = dynamic_cast<phases::AbstractActionPhase*>(_phase.get());
+        if (phase == nullptr)
+        {
+            return false;
+        }
+
+        auto& background = _resource->GetBGTileManager();
+        background.RestoreAnimationState(state.background_animation);
+        if (!phase->RestoreScrollState(state.phase) ||
+            !phase->RestoreEntityState(state.entities, state.phase) ||
+            !phase->RestoreRuntimeState(state.phase))
+        {
+            return false;
+        }
+
+        _roomState.pageIndex = static_cast<int>(state.page_index);
+        _pendingPhase.reset();
+        _pendingPlan = {};
+        _nextScene = SceneID::None;
+        _nextParams = {};
+        _fader.RestoreInteractive(*_resource);
+        return true;
     }
 
     void DemoStage2::onEnter_(const Parameters& params)
@@ -158,6 +299,7 @@ namespace mm2hack::apps::scenes
         using namespace apps::runtime;
         auto& gc = GameContext::GetInstance();
         auto& resource = gc.GetResourceManager();
+        _resource = &resource;
         auto& font = resource.GetFontTileManager();
         font.SetUp();
 
@@ -209,6 +351,7 @@ namespace mm2hack::apps::scenes
         GameContext::GetInstance().GetResourceManager().GetFontTileManager().ShutDown();
         GameContext::GetInstance().GetResourceManager().GetAudioManager().Release();
         if (_phase) _phase.reset();
+        _resource = nullptr;
 
         utils::debug_log(kClassName + L" finalized.");
     }
