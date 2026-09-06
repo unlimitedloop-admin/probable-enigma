@@ -265,18 +265,17 @@ namespace mm2hack::apps::world::entity
                 return false;
             }
 
-            EntityStateRecord record{
-                .type = entity->StateTypeId(),
-                .instance_id = entity->StateInstanceId(),
-                .component_version = version,
-            };
+            captured.records.emplace_back();
+            auto& record = captured.records.back();
+            record.type = entity->StateTypeId();
+            record.instance_id = entity->StateInstanceId();
+            record.component_version = version;
             const std::string payload_bytes = payload.str();
             record.payload.reserve(payload_bytes.size());
             for (const char value : payload_bytes)
             {
                 record.payload.emplace_back(static_cast<std::uint8_t>(value));
             }
-            captured.records.emplace_back(std::move(record));
         }
 
         if (!captured.IsValid())

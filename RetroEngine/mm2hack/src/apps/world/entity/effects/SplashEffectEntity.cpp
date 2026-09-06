@@ -2,10 +2,13 @@
 
 #include "SplashEffectEntity.h"
 
+#include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/runtime/GameContext.h"
 #include "apps/systems/view/RenderContext.h"
 #include "apps/systems/view/ViewState.h"
 #include "apps/world/entity/common/SpawnSplashEffectCommand.h"
+#include "apps/world/entity/EntityBase.h"
+#include "core/save/StateIO.h"
 
 namespace mm2hack::apps::world::entity::effects
 {
