@@ -4,14 +4,16 @@
 
 #include <array>
 #include <cmath>
-#include <cstddef>
 #include <cstdint>
+#include <cstdlib>
 #include <optional>
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/systems/view/ViewState.h"
+#include "core/save/StateIO.h"
 #include "FreeScrollDriver.h"
 #include "IScrollRuleProvider.h"
 #include "MapRenderer2D.h"
+#include "ScrollFreezeState.h"
 #include "ScrollTypes.h"
 
 #include "core/winapi/WindowManager.h"  // Use for draw reference lines for debug HUD

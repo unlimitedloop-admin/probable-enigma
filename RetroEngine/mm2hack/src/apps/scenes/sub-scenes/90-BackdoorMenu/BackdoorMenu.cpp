@@ -5,7 +5,6 @@
 #include <array>
 #include <cstdint>
 #include <istream>
-#include <iterator>
 #include <ostream>
 #include "apps/foundation/NES/NESPalette.h"
 #include "apps/resources/parameters/Parameters.h"
@@ -14,6 +13,7 @@
 #include "apps/scenes/PhaseFadeController.h"
 #include "apps/scenes/SceneChangeMediator.h"
 #include "apps/vfx/cursor/TwinkleCursorAnimator.h"
+#include "apps/vfx/stareffects/BgStarField.h"
 #include "BackdoorMenuPhase.h"
 #include "config/GameAssets.h"
 #include "config/PathDefsJsonProps.h"

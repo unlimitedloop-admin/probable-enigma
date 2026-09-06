@@ -8,8 +8,6 @@
 //==============================================================================
 #pragma once
 
-#include <cstddef>
-
 #include "TileAttribute.h"
 
 namespace mm2hack::apps::systems::physics

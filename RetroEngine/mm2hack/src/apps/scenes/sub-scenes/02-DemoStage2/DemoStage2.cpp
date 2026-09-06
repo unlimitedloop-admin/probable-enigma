@@ -8,6 +8,7 @@
 #include "apps/foundation/NES/NESPalette.h"
 #include "apps/rendering/bg/BGTileAnimator.h"
 #include "apps/rendering/bg/BGTileManager.h"
+#include "apps/rendering/sprite/SpriteAtlas.h"
 #include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/resources/stages/StageTileAnimations.h"
 #include "apps/resources/stages/StageTileAttributes.h"

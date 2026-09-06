@@ -9,7 +9,10 @@
 #include <ostream>
 #include <random>
 #include <string>
+#include <string_view>
 #include <vector>
+#include "apps/rendering/sprite/SpriteAtlas.h"
+#include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/runtime/GameContext.h"
 #include "config/GameAssets.h"
 #include "core/save/StateIO.h"

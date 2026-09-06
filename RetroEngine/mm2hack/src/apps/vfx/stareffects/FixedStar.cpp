@@ -2,6 +2,7 @@
 
 #include "FixedStar.h"
 
+#include "apps/rendering/sprite/SpriteManager.h"
 #include "StarState.h"
 
 namespace mm2hack::apps::vfx::stareffects

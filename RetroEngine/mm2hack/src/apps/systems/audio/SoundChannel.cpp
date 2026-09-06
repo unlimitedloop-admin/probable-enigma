@@ -2,8 +2,6 @@
 
 #include "SoundChannel.h"
 
-//#include "utils/output_debug.h"
-
 namespace mm2hack::apps::systems::audio
 {
     SoundChannel::SoundChannel() = default;

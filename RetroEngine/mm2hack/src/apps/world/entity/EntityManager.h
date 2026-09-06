@@ -8,17 +8,38 @@
 //==============================================================================
 #pragma once
 
+#include <algorithm>
 #include <cstdint>
 #include <memory>
 #include <string>
 #include <type_traits>
+#include <utility>
 #include <vector>
 #include "apps/systems/view/RenderContext.h"
 #include "apps/systems/view/ViewState.h"
+#include "core/save/StateIO.h"
 #include "IEntity.h"
 
 namespace mm2hack::apps::world::entity
 {
+    struct EntityStateRecord final
+    {
+        EntityTypeId type{ EntityTypeId::Unknown };
+        EntityInstanceId instance_id{};
+        std::uint16_t component_version{};
+        std::vector<std::uint8_t> payload{};
+    };
+
+    struct EntityManagerState final
+    {
+        EntityInstanceId next_instance_id{ 1 };
+        std::vector<EntityStateRecord> records{};
+
+        bool Save(core::save::StateWriter& writer) const;
+        bool Load(core::save::StateReader& reader);
+        [[nodiscard]] bool IsValid() const noexcept;
+    };
+
     // Manages lifetime/update/render for entities
     // This is a minimal version to support spawning projectiles/effects etc
     class EntityManager final
@@ -65,6 +86,7 @@ namespace mm2hack::apps::world::entity
         std::size_t Count() const noexcept;
         [[nodiscard]] EntityInstanceId NextInstanceId() const noexcept { return _next_instance_id; }
         [[nodiscard]] bool CanCaptureState() const noexcept;
+        bool RestoreNextInstanceId(EntityInstanceId next_instance_id) noexcept;
 
     private:
         void flushPending_();       // Flushes pending entities to the main list

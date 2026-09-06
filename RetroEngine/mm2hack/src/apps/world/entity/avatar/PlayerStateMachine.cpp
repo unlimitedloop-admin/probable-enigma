@@ -4,7 +4,6 @@
 
 #include <cassert>
 #include <exception>
-#include <utility>
 #include "AvatarStatus.h"
 #include "core/assembly/StateProvider.h"
 #include "IPlayerState.h"

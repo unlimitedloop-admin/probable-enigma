@@ -9,7 +9,6 @@
 #pragma once
 
 #include <bit>
-#include <cstddef>
 #include <cstdint>
 #include <istream>
 #include <limits>

@@ -4,6 +4,7 @@
 
 #include <array>
 #include <cmath>
+#include <cstdlib>
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/resources/parameters/Parameters.h"
@@ -24,6 +25,7 @@
 #include "apps/world/entity/EntityManager.h"
 #include "config/ConfigUIManager.h"
 #include "core/overlay/DebugHud.h"
+#include "core/save/StateIO.h"
 #include "input/Jpbtn.h"
 #include "IPhaseHost.h"
 #include "IStageScript.h"

@@ -16,6 +16,7 @@
 #include "apps/systems/view/RenderContext.h"
 #include "apps/systems/view/ViewState.h"
 #include "apps/world/entity/common/SpawnChargeEffectCommand.h"
+#include "apps/world/entity/IEntity.h"
 
 namespace mm2hack::apps::world::entity::effects
 {
