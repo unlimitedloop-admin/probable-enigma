@@ -33,6 +33,11 @@ namespace mm2hack::apps::systems::scrolling::atomic
         void ClearDrawSnapshot() noexcept { _draw_snapshot.reset(); }
 
         const std::optional<PageScroll>& DrawSnapshot() const noexcept { return _draw_snapshot; }
+        void RestoreState(int frames, const std::optional<PageScroll>& draw_snapshot) noexcept
+        {
+            _frames = frames;
+            _draw_snapshot = draw_snapshot;
+        }
     
     private:
         std::optional<PageScroll> _draw_snapshot{};

@@ -8,6 +8,7 @@
 //==============================================================================
 #pragma once
 
+#include <cstddef>
 #include <optional>
 #include "PageScrollAnimator.h"
 #include "ScrollFreezeState.h"
@@ -38,6 +39,14 @@ namespace mm2hack::apps::systems::scrolling::atomic
         bool Request(const FixedScrollRequest& req) noexcept;
         // Update per frame. Returns true if fixed scroll is active (freeze/anim/pending)
         bool Update(int page_w, int page_h, Camera& cam, std::size_t& page_index, ScrollFreezeState& freeze, ScrollEffect& out_fx) noexcept;
+        [[nodiscard]] double CarryTotalPx() const noexcept { return _carry_total_px; }
+        [[nodiscard]] const std::optional<FixedScrollRequest>& Pending() const noexcept { return _pending; }
+        void RestoreState(
+            const std::optional<FixedScrollRequest>& pending, double carry_total_px) noexcept
+        {
+            _pending = pending;
+            _carry_total_px = carry_total_px;
+        }
 
     private:
         // Attempt to start fixed scroll animation. Returns true if started

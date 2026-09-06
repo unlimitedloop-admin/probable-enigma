@@ -2,6 +2,11 @@
 
 #include "ScrollController.h"
 
+#include <array>
+#include <cmath>
+#include <cstddef>
+#include <cstdint>
+#include <optional>
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/systems/view/ViewState.h"
 #include "FreeScrollDriver.h"
@@ -14,6 +19,237 @@
 namespace mm2hack::apps::systems::scrolling::atomic
 {
     using foundation::math::Vec2;
+
+    namespace
+    {
+        constexpr std::uint32_t kMaximumPageIndex = 65535;
+        constexpr double kMaximumCoordinate = 1000000.0;
+
+        bool IsFiniteCoordinate(double value) noexcept
+        {
+            return std::isfinite(value) && std::abs(value) <= kMaximumCoordinate;
+        }
+
+        bool IsValidDirection(PageScroll::Dir dir) noexcept
+        {
+            return dir >= PageScroll::Dir::None && dir <= PageScroll::Dir::Up;
+        }
+
+        bool IsValidPageScroll(const PageScroll& state) noexcept
+        {
+            return IsValidDirection(state.dir) &&
+                std::isfinite(state.progress) && state.progress >= 0.0 &&
+                state.progress <= kMaximumCoordinate &&
+                std::isfinite(state.speed) && state.speed > 0.0 &&
+                state.speed <= kMaximumCoordinate &&
+                state.from_index <= kMaximumPageIndex &&
+                state.to_index <= kMaximumPageIndex &&
+                ((state.active && state.dir != PageScroll::Dir::None &&
+                  state.from_index != state.to_index) ||
+                 (!state.active && state.dir == PageScroll::Dir::None &&
+                  state.progress == 0.0));
+        }
+
+        bool WritePageScroll(core::save::StateWriter& writer, const PageScroll& state)
+        {
+            return writer.WriteBool(state.active) &&
+                writer.WriteU8(static_cast<std::uint8_t>(state.dir)) &&
+                writer.WriteF64(state.progress) && writer.WriteF64(state.speed) &&
+                writer.WriteU32(static_cast<std::uint32_t>(state.from_index)) &&
+                writer.WriteU32(static_cast<std::uint32_t>(state.to_index));
+        }
+
+        bool ReadPageScroll(core::save::StateReader& reader, PageScroll& state)
+        {
+            bool active{};
+            std::uint8_t direction{};
+            double progress{};
+            double speed{};
+            std::uint32_t from_index{};
+            std::uint32_t to_index{};
+            if (!reader.ReadBool(active) || !reader.ReadU8(direction) ||
+                !reader.ReadF64(progress) || !reader.ReadF64(speed) ||
+                !reader.ReadU32(from_index) || !reader.ReadU32(to_index))
+            {
+                return false;
+            }
+            state = PageScroll{
+                active,
+                static_cast<PageScroll::Dir>(direction),
+                progress,
+                speed,
+                static_cast<std::size_t>(from_index),
+                static_cast<std::size_t>(to_index)
+            };
+            return IsValidPageScroll(state);
+        }
+    }
+
+    bool ScrollControllerState::Save(core::save::StateWriter& writer) const
+    {
+        if (!IsValid()) return false;
+        if (!writer.WriteU8(static_cast<std::uint8_t>(mode)) ||
+            !writer.WriteU32(page_index) ||
+            !writer.WriteF64(view_world.x) || !writer.WriteF64(view_world.y) ||
+            !writer.WriteF64(object_pos.x) || !writer.WriteF64(object_pos.y) ||
+            !writer.WriteF64(target_pos.x) || !writer.WriteF64(target_pos.y) ||
+            !writer.WriteF64(camera_x) || !writer.WriteF64(camera_y) ||
+            !WritePageScroll(writer, animator) || !writer.WriteBool(pending.has_value()))
+        {
+            return false;
+        }
+        if (pending.has_value() &&
+            (!writer.WriteBool(pending->available) ||
+             !writer.WriteU8(static_cast<std::uint8_t>(pending->dir)) ||
+             !writer.WriteF64(pending->carryTotalPx)))
+        {
+            return false;
+        }
+        if (!writer.WriteF64(carry_total_px) || !writer.WriteI32(freeze_frames) ||
+            !writer.WriteBool(freeze_draw.has_value()))
+        {
+            return false;
+        }
+        return !freeze_draw.has_value() || WritePageScroll(writer, *freeze_draw);
+    }
+
+    bool ScrollControllerState::Load(core::save::StateReader& reader)
+    {
+        ScrollControllerState loaded{};
+        std::uint8_t mode_value{};
+        bool has_pending{};
+        if (!reader.ReadU8(mode_value) || !reader.ReadU32(loaded.page_index) ||
+            !reader.ReadF64(loaded.view_world.x) || !reader.ReadF64(loaded.view_world.y) ||
+            !reader.ReadF64(loaded.object_pos.x) || !reader.ReadF64(loaded.object_pos.y) ||
+            !reader.ReadF64(loaded.target_pos.x) || !reader.ReadF64(loaded.target_pos.y) ||
+            !reader.ReadF64(loaded.camera_x) || !reader.ReadF64(loaded.camera_y) ||
+            !ReadPageScroll(reader, loaded.animator) || !reader.ReadBool(has_pending))
+        {
+            return false;
+        }
+        loaded.mode = static_cast<ScrollMode>(mode_value);
+        if (has_pending)
+        {
+            bool available{};
+            std::uint8_t direction{};
+            double carry{};
+            if (!reader.ReadBool(available) || !reader.ReadU8(direction) ||
+                !reader.ReadF64(carry))
+            {
+                return false;
+            }
+            loaded.pending = FixedScrollRequest{
+                available, static_cast<PageScroll::Dir>(direction), carry
+            };
+        }
+        bool has_freeze_draw{};
+        if (!reader.ReadF64(loaded.carry_total_px) ||
+            !reader.ReadI32(loaded.freeze_frames) ||
+            !reader.ReadBool(has_freeze_draw))
+        {
+            return false;
+        }
+        if (has_freeze_draw)
+        {
+            PageScroll draw{};
+            if (!ReadPageScroll(reader, draw)) return false;
+            loaded.freeze_draw = draw;
+        }
+        if (!loaded.IsValid()) return false;
+        *this = loaded;
+        return true;
+    }
+
+    bool ScrollControllerState::IsValid() const noexcept
+    {
+        if (mode < ScrollMode::None || mode > ScrollMode::TargetFollow ||
+            page_index > kMaximumPageIndex ||
+            !IsFiniteCoordinate(view_world.x) || !IsFiniteCoordinate(view_world.y) ||
+            !IsFiniteCoordinate(object_pos.x) || !IsFiniteCoordinate(object_pos.y) ||
+            !IsFiniteCoordinate(target_pos.x) || !IsFiniteCoordinate(target_pos.y) ||
+            !IsFiniteCoordinate(camera_x) || !IsFiniteCoordinate(camera_y) ||
+            !IsValidPageScroll(animator) ||
+            !std::isfinite(carry_total_px) || carry_total_px < 0.0 ||
+            carry_total_px > kMaximumCoordinate ||
+            (!animator.active && carry_total_px != 0.0) ||
+            freeze_frames < 0 || freeze_frames > ScrollFreezeState::kFreezeOnStart)
+        {
+            return false;
+        }
+        if (pending.has_value() &&
+            (!pending->available || !IsValidDirection(pending->dir) ||
+             pending->dir == PageScroll::Dir::None ||
+             !std::isfinite(pending->carryTotalPx) || pending->carryTotalPx < 0.0 ||
+             pending->carryTotalPx > kMaximumCoordinate || animator.active ||
+             freeze_frames != 0))
+        {
+            return false;
+        }
+        if (freeze_draw.has_value() &&
+            (freeze_frames == 0 || !freeze_draw->active || !IsValidPageScroll(*freeze_draw)))
+        {
+            return false;
+        }
+        if (freeze_frames != 0 && !freeze_draw.has_value() && !animator.active)
+        {
+            return false;
+        }
+        return true;
+    }
+
+    ScrollControllerState ScrollController::CaptureState() const noexcept
+    {
+        return ScrollControllerState{
+            _mode,
+            static_cast<std::uint32_t>(
+                _page_index <= kMaximumPageIndex ? _page_index : kMaximumPageIndex + 1U),
+            _view_world,
+            _object_pos,
+            _target_pos,
+            _cam.x,
+            _cam.y,
+            _anim.State(),
+            _fixed_driver.Pending(),
+            _fixed_driver.CarryTotalPx(),
+            _fixed_freeze.Frames(),
+            _fixed_freeze.DrawSnapshot()
+        };
+    }
+
+    bool ScrollController::RestoreState(const ScrollControllerState& state) noexcept
+    {
+        if (!state.IsValid()) return false;
+        const int page_w = _params.tile_px * _tileX;
+        const int page_h = _params.tile_px * _tileY;
+        const auto is_runtime_valid_scroll = [&](const PageScroll& scroll)
+            {
+                if (!scroll.active) return true;
+                const double maximum_progress = IsHorizontal(scroll.dir)
+                    ? static_cast<double>(page_w)
+                    : static_cast<double>(page_h);
+                const auto expected = _neighbor.ResolveFixedNeighbor(scroll.dir, scroll.from_index);
+                return scroll.progress <= maximum_progress && expected.has_value() &&
+                    *expected == scroll.to_index;
+            };
+        if (!is_runtime_valid_scroll(state.animator) ||
+            (state.freeze_draw.has_value() &&
+             !is_runtime_valid_scroll(*state.freeze_draw)))
+        {
+            return false;
+        }
+        _mode = state.mode;
+        _page_index = state.page_index;
+        _view_world = state.view_world;
+        _object_pos = state.object_pos;
+        _target_pos = state.target_pos;
+        _cam.x = state.camera_x;
+        _cam.y = state.camera_y;
+        _anim.RestoreState(state.animator);
+        _fixed_driver.RestoreState(state.pending, state.carry_total_px);
+        _fixed_freeze.RestoreState(state.freeze_frames, state.freeze_draw);
+        updateViewState_();
+        return true;
+    }
 
     static inline int MaxX(int view_w) { return view_w - 1; }
     static inline int MaxY(int view_h) { return view_h - 1; }
@@ -170,6 +406,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
         _viewState.viewWorldY = viewWorldY;
         _viewState.camX = _cam.x;
         _viewState.camY = _cam.y;
+        _viewState.pageIndex = static_cast<int>(_page_index);
     }
 
     const PageScroll* ScrollController::activeFixedScrollState_() const noexcept
