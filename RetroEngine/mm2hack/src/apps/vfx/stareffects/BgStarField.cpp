@@ -9,6 +9,7 @@
 #include <ostream>
 #include <random>
 #include <string>
+#include <vector>
 #include "apps/runtime/GameContext.h"
 #include "config/GameAssets.h"
 #include "core/save/StateIO.h"
@@ -25,6 +26,14 @@ namespace mm2hack::apps::vfx::stareffects
         constexpr std::uint32_t kMaximumFixedStars = 256;
         constexpr std::uint32_t kMaximumMovingStars = 1024;
         constexpr std::array<int, 8> kPaletteColumns{ 1, 2, 3, 5, 6, 8, 9, 10 };
+
+        struct StarFieldState final
+        {
+            std::uint32_t pattern_id{};
+            std::uint64_t elapsed_ticks{};
+            std::vector<FixedStarState> fixed_stars{};
+            std::vector<StarState> stars{};
+        };
 
         std::uint32_t Mix32(std::uint32_t value) noexcept
         {
@@ -105,6 +114,47 @@ namespace mm2hack::apps::vfx::stareffects
             return state.type >= 0 && state.type <= 2 &&
                 IsFiniteAndReasonable(state.x) && IsFiniteAndReasonable(state.y) &&
                 IsFiniteAndReasonable(state.vx) && IsFiniteAndReasonable(state.vy);
+        }
+
+        bool ParseState(std::istream& in, StarFieldState& state)
+        {
+            core::save::StateReader reader(in);
+            std::uint32_t state_version{};
+            if (!reader.ReadU32(state_version) || state_version != kStateVersion ||
+                !reader.ReadU32(state.pattern_id) ||
+                !reader.ReadU64(state.elapsed_ticks))
+            {
+                return false;
+            }
+
+            std::uint32_t fixed_count{};
+            if (!reader.ReadU32(fixed_count) || fixed_count > kMaximumFixedStars)
+            {
+                return false;
+            }
+            state.fixed_stars.clear();
+            state.fixed_stars.reserve(fixed_count);
+            for (std::uint32_t i = 0; i < fixed_count; ++i)
+            {
+                FixedStarState fixed_star{};
+                if (!fixed_star.Load(reader) || !IsValid(fixed_star)) return false;
+                state.fixed_stars.push_back(fixed_star);
+            }
+
+            std::uint32_t count{};
+            if (!reader.ReadU32(count) || count > kMaximumMovingStars)
+            {
+                return false;
+            }
+            state.stars.clear();
+            state.stars.reserve(count);
+            for (std::uint32_t i = 0; i < count; ++i)
+            {
+                StarState star{};
+                if (!star.Load(reader) || !IsValid(star)) return false;
+                state.stars.push_back(star);
+            }
+            return reader.Good();
         }
     }
 
@@ -250,56 +300,39 @@ namespace mm2hack::apps::vfx::stareffects
         return writer.Good();
     }
 
+    bool BgStarField::Validate(std::istream& in)
+    {
+        StarFieldState state{};
+        return ParseState(in, state);
+    }
+
     bool BgStarField::Load(std::istream& in)
     {
-        core::save::StateReader reader(in);
-        std::uint32_t state_version{};
-        std::uint32_t pattern_id{};
-        std::uint64_t elapsed_ticks{};
-        if (!reader.ReadU32(state_version) || state_version != kStateVersion ||
-            !reader.ReadU32(pattern_id) ||
-            !reader.ReadU64(elapsed_ticks))
-        {
-            return false;
-        }
+        StarFieldState state{};
+        if (!ParseState(in, state)) return false;
 
-        std::uint32_t fixed_count{};
-        if (!reader.ReadU32(fixed_count) || fixed_count > kMaximumFixedStars)
-        {
-            return false;
-        }
-        std::vector<std::unique_ptr<FixedStar>> fixed_stars;
-        fixed_stars.reserve(fixed_count);
-        for (std::uint32_t i = 0; i < fixed_count; ++i)
-        {
-            FixedStarState state{};
-            if (!state.Load(reader) || !IsValid(state)) return false;
-            fixed_stars.emplace_back(std::make_unique<FixedStar>(state));
-        }
-
-        std::uint32_t count{};
-        if (!reader.ReadU32(count) || count > kMaximumMovingStars)
-        {
-            return false;
-        }
-        std::vector<std::unique_ptr<Star>> stars;
-        stars.reserve(count);
-        for (std::uint32_t i = 0; i < count; ++i)
-        {
-            StarState state{};
-            if (!state.Load(reader) || !IsValid(state)) return false;
-            stars.emplace_back(std::make_unique<Star>(state));
-        }
-
-        const auto sprite_id = LoadStarSprite(pattern_id);
+        const auto sprite_id = LoadStarSprite(state.pattern_id);
         if (sprite_id == static_cast<rendering::sprite::SpriteManager::Id>(-1))
         {
             return false;
         }
 
-        _pattern_id = pattern_id;
+        std::vector<std::unique_ptr<FixedStar>> fixed_stars;
+        fixed_stars.reserve(state.fixed_stars.size());
+        for (const auto& fixed_star : state.fixed_stars)
+        {
+            fixed_stars.emplace_back(std::make_unique<FixedStar>(fixed_star));
+        }
+        std::vector<std::unique_ptr<Star>> stars;
+        stars.reserve(state.stars.size());
+        for (const auto& star : state.stars)
+        {
+            stars.emplace_back(std::make_unique<Star>(star));
+        }
+
+        _pattern_id = state.pattern_id;
         _sprite_id = sprite_id;
-        _elapsed_ticks = elapsed_ticks;
+        _elapsed_ticks = state.elapsed_ticks;
         _fixedStars.swap(fixed_stars);
         _stars.swap(stars);
         return true;

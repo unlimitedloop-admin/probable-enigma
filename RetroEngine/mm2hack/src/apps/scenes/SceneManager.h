@@ -58,6 +58,7 @@ namespace mm2hack::apps::scenes
         // Sets the mediator for scene changes
         void SetMediator(SceneChangeMediator* mediator) { _mediator = mediator; }
         bool SaveState(core::save::SaveData& out) const;
+        static bool ValidateState(const core::save::SaveData& in);
         bool LoadState(const core::save::SaveData& in);
 
     private:

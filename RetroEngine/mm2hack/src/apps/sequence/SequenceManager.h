@@ -52,7 +52,7 @@ namespace mm2hack::apps::sequence
         void StopCurrentSequence();
         // Reboots the current sequence, resetting it to its initial state
         void RebootCurrentSequence();
-        // Applies a snapshot and restores the previous snapshot if loading fails.
+        // Validates a snapshot before replacing the current sequence.
         bool LoadState(const core::save::SaveData& data);
 
         // Executes the current sequence, which is responsible for running the game logic
@@ -85,7 +85,7 @@ namespace mm2hack::apps::sequence
         SequenceManager() = default;
         ~SequenceManager() = default;
 
-        bool tryLoadSnapshot_(const core::save::SaveData& data) noexcept;
+        bool tryLoadValidatedSnapshot_(const core::save::SaveData& data) noexcept;
 
         const std::wstring kClassName{ L"SequenceManager" };
 

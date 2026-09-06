@@ -99,6 +99,7 @@ namespace mm2hack::apps::scenes
         // === Save/Load state ===
         [[nodiscard]] bool CanSaveState() const noexcept override;
         bool Save(std::ostream& out) const override;
+        static bool ValidateState(std::istream& in);
         bool Load(std::istream& in) override;
 
         // === Getters for internal components ===

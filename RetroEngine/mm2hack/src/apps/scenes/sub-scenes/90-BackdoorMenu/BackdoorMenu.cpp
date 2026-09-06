@@ -2,6 +2,7 @@
 
 #include "BackdoorMenu.h"
 
+#include <array>
 #include <cstdint>
 #include <istream>
 #include <iterator>
@@ -21,6 +22,92 @@
 
 namespace mm2hack::apps::scenes
 {
+    namespace
+    {
+        using CursorStep = vfx::cursor::TwinkleCursorAnimator::Step;
+
+        constexpr std::array<CursorStep, 7> kCursorLoop{
+            CursorStep{ 0, 40 }, CursorStep{ 1, 6 }, CursorStep{ 2, 6 },
+            CursorStep{ 3, 6 }, CursorStep{ 2, 6 }, CursorStep{ 1, 6 },
+            CursorStep{ 0, 15 }
+        };
+
+        bool ValidateInsideMenuState(core::save::StateReader& reader)
+        {
+            constexpr std::uint32_t kMaximumCrumbs = 1;
+            std::int32_t top_item{};
+            std::int32_t cursor{};
+            std::uint32_t back_behavior{};
+            std::int32_t room_no{};
+            std::uint32_t room_edit_active{};
+            std::int32_t room_edit_digit{};
+            std::int32_t room_edit_blink{};
+            std::int32_t room_edit_snapshot{};
+            std::uint32_t crumb_count{};
+
+            if (!reader.ReadI32(top_item) || !reader.ReadI32(cursor) ||
+                !reader.ReadU32(back_behavior) || !reader.ReadI32(room_no) ||
+                !reader.ReadU32(room_edit_active) || !reader.ReadI32(room_edit_digit) ||
+                !reader.ReadI32(room_edit_blink) || !reader.ReadI32(room_edit_snapshot) ||
+                !reader.ReadU32(crumb_count) ||
+                top_item < 0 ||
+                top_item >= static_cast<std::int32_t>(BackdoorMenu_::TopItemCount()) ||
+                cursor < 0 ||
+                back_behavior > static_cast<std::uint32_t>(BackdoorMenu_::BackBehavior::ToTop) ||
+                room_no < 0 || room_no > 99 || room_edit_active > 1 ||
+                room_edit_digit < 0 || room_edit_digit > 1 || room_edit_blink < 0 ||
+                room_edit_snapshot < 0 || room_edit_snapshot > 99 ||
+                crumb_count > kMaximumCrumbs)
+            {
+                return false;
+            }
+
+            for (std::uint32_t i = 0; i < crumb_count; ++i)
+            {
+                std::int32_t sub_id{};
+                std::int32_t crumb_cursor{};
+                if (!reader.ReadI32(sub_id) || !reader.ReadI32(crumb_cursor) ||
+                    sub_id < 0 || sub_id > 1 || crumb_cursor < 0 || crumb_cursor > 1)
+                {
+                    return false;
+                }
+            }
+
+            if ((crumb_count != 0 && top_item != 3) ||
+                (room_edit_active != 0 && (top_item != 3 || crumb_count != 1)))
+            {
+                return false;
+            }
+
+            int selectable_count = 1;
+            if (top_item == 3)
+            {
+                selectable_count = crumb_count == 0 ? 3 : 4;
+            }
+            return cursor < selectable_count;
+        }
+
+        bool ValidatePhaseState(
+            core::save::StateReader& reader, BackdoorMenuPhaseId phase_id)
+        {
+            switch (phase_id)
+            {
+            case BackdoorMenuPhaseId::Credit:
+                return reader.Good();
+            case BackdoorMenuPhaseId::TopMenu:
+            {
+                std::int32_t cursor{};
+                return reader.ReadI32(cursor) && cursor >= 0 &&
+                    cursor < static_cast<std::int32_t>(BackdoorMenu_::TopItemCount());
+            }
+            case BackdoorMenuPhaseId::InsideMenu:
+                return ValidateInsideMenuState(reader);
+            default:
+                return false;
+            }
+        }
+    }
+
     BackdoorMenu::BackdoorMenu(SceneChangeMediator* mediator)
         : _mediator(mediator)
         , _cursor(runtime::GameContext::GetInstance().GetResourceManager().GetSpriteManager(), 16, 16)
@@ -131,6 +218,32 @@ namespace mm2hack::apps::scenes
         return _starField.Save(out);
     }
 
+    bool BackdoorMenu::ValidateState(std::istream& in)
+    {
+        constexpr std::uint32_t kStateVersion = 1;
+        core::save::StateReader reader(in);
+        std::uint32_t state_version{};
+        std::int32_t phase_value{};
+        if (!reader.ReadU32(state_version) || state_version != kStateVersion ||
+            !reader.ReadI32(phase_value))
+        {
+            return false;
+        }
+
+        const auto phase_id = static_cast<BackdoorMenuPhaseId>(phase_value);
+        if (!ValidatePhaseState(reader, phase_id)) return false;
+
+        std::uint32_t cursor_step{};
+        std::int32_t cursor_ticks{};
+        if (!reader.ReadU32(cursor_step) || !reader.ReadI32(cursor_ticks) ||
+            cursor_step >= kCursorLoop.size() || cursor_ticks < 0 ||
+            cursor_ticks >= kCursorLoop[cursor_step].duration)
+        {
+            return false;
+        }
+        return vfx::stareffects::BgStarField::Validate(in);
+    }
+
     bool BackdoorMenu::Load(std::istream& in)
     {
         constexpr std::uint32_t kStateVersion = 1;
@@ -221,10 +334,7 @@ namespace mm2hack::apps::scenes
 
         _cursor.Load(L"Cursor", MM2H_GRAPHICS(FlatCursor), MM2H_GRAPHPROPS(FlatCursor));
         _cursor.SetBaseTileDuration(40); // Slower twinkle
-        vfx::cursor::TwinkleCursorAnimator::Step customLoop[] = {
-            {0, 40}, {1, 6}, {2, 6}, {3, 6}, {2, 6}, {1, 6}, {0, 15}
-        };
-        _cursor.SetLoop(customLoop, std::size(customLoop));
+        _cursor.SetLoop(kCursorLoop.data(), kCursorLoop.size());
 
         _starField.InitStars();
         _resource = GameContext::GetInstance().GetResourceManagerPtr();

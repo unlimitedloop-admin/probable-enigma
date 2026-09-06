@@ -205,7 +205,7 @@ Reconstruction order is fixed:
 | ID | Status | Task | Acceptance criterion |
 |---|---|---|---|
 | DS2-001 | Done | Complete fixed-width primitive state I/O and freeze the schema | Boolean, 8/16-bit integers, and IEEE-754 double values have strict portable codecs |
-| DS2-002 | Ready | Add pure DemoStage2 DTO parsing and replace snapshot rollback | Invalid target payload leaves the current scene untouched without calling its `Save` |
+| DS2-002 | Done | Add pure target DTO validation and replace snapshot rollback | Invalid target payload leaves the current scene untouched without calling its `Save`; incomplete DemoStage2 DTOs remain gated |
 | DS2-003 | Blocked by DS2-002 | Add stable phase, BG animation, and scroll snapshots | Restored camera/page/animation continues from the captured tick |
 | DS2-004 | Blocked by DS2-002 | Add entity type/instance IDs and manager record envelope | Entity order and bounded payloads round-trip without pointers or resource handles |
 | DS2-005 | Blocked by DS2-004 | Restore projectile and transient effect entities | Active entity position, velocity, lifetime, and animation tick resume exactly |
@@ -229,13 +229,13 @@ Use a two-phase load:
 
 Some resources are global and mutate during scene initialization, so fully
 transactional candidate construction is currently impractical. The implemented
-first stage captures the current supported state to an in-memory `SaveData`
-before applying the requested snapshot. Same-scene loads reuse the current
-scene's transactional component loaders. A cross-scene or cross-sequence load
-may rebuild runtime resources; if it fails, the manager immediately rebuilds
-the captured snapshot instead of leaving the rejected scene active. Candidate
-construction can replace this recovery path after global resources are
-isolated.
+first stage parses and validates the target payload without calling `Save` on
+the current scene or initializing target resources. Only a validated target may
+replace the current sequence/scene. BackdoorMenu has a complete pure validator;
+DemoStage2 remains rejected until all nested action-stage DTO decoders are
+implemented. A failure while loading external resources after validation is an
+environment/runtime failure and leaves the application with no active sequence,
+rather than attempting an in-memory snapshot rollback.
 
 ### P0: Save must occur at a defined frame boundary
 
@@ -313,7 +313,7 @@ but incorrect state.
 | SS-015 | P1 | Ready | Classify SE as transient or continuous | Transients stop and continuous emitters restore according to policy |
 | SS-016 | P1 | Blocked by SS-012/13 | Define replay input/event format and checksum boundary | Same initial state and input log reproduce the same simulation checksums |
 | SS-017 | P0 | Done | Add a frame-boundary snapshot barrier | Capture is rejected during update or unsupported transitions |
-| SS-018 | P0 | In progress | Make sequence loading target-validated and two-phase | Invalid target payload preserves the current scene without requiring it to support save |
+| SS-018 | P0 | Done | Make sequence loading target-validated and two-phase | Invalid target payload preserves the current scene without requiring it to support save |
 | SS-019 | P1 | Ready | Add stable entity IDs and snapshot factory | Entity graphs rebuild without serialized pointers or resource handles |
 | SS-020 | P1 | Ready | Add game/content compatibility identity | Incompatible runtime content is rejected with a specific result |
 | SS-021 | P0 | Done | Persist star-field initial entropy | Pattern ID is saved, restored, and injectable by replay/new-game setup |

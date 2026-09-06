@@ -9,6 +9,7 @@
 #include "core/save/SaveData.h"
 #include "IBaseScene.h"
 #include "SceneFactory.h"
+#include "sub-scenes/90-BackdoorMenu/BackdoorMenu.h"
 
 namespace mm2hack::apps::scenes
 {
@@ -104,6 +105,28 @@ namespace mm2hack::apps::scenes
             return false;
         }
         return payload.peek() == std::char_traits<char>::eof();
+    }
+
+    bool SceneManager::ValidateState(const core::save::SaveData& in)
+    {
+        const auto scene_id = static_cast<SceneID>(in.sceneID);
+        const std::string bytes(in.scenePayload.begin(), in.scenePayload.end());
+        std::istringstream payload(bytes, std::ios::in | std::ios::binary);
+
+        bool valid = false;
+        switch (scene_id)
+        {
+        case SceneID::BackdoorMenu:
+            valid = BackdoorMenu::ValidateState(payload);
+            break;
+        case SceneID::DemoStage2:
+            // The complete action-stage DTO is introduced incrementally by
+            // DS2-003 through DS2-006. Keep the load gate closed until then.
+            return false;
+        default:
+            return false;
+        }
+        return valid && payload.peek() == std::char_traits<char>::eof();
     }
 
     void SceneManager::RequestSceneChange(SceneID nextScene, const Parameters& params)

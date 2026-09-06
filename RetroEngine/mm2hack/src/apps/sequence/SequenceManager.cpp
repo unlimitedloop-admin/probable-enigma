@@ -2,9 +2,8 @@
 
 #include "SequenceManager.h"
 
-#include <cstdint>
 #include "apps/runtime/GameContext.h"
-#include "core/assembly/ITimeController.h"
+#include "apps/scenes/SceneManager.h"
 #include "core/GameState.h"
 #include "core/GameStateManager.h"
 #include "core/overlay/DebugHud.h"
@@ -81,39 +80,25 @@ namespace mm2hack::apps::sequence
         {
             return false;
         }
-
-        core::save::SaveData previous{};
-        const bool had_previous = _currentSequence != nullptr;
-        auto* time = runtime::GameContext::GetInstance().TryTime();
-        const std::uint64_t previous_play_frames =
-            time != nullptr ? time->GetPlayFrameCounter() : 0;
-        if (had_previous)
+        // No Standard-sequence scene currently publishes a snapshot schema.
+        if (requested_type == SequenceType::Standard)
         {
-            try
-            {
-                if (!_currentSequence->Save(previous)) return false;
-            }
-            catch (...)
-            {
-                return false;
-            }
-        }
-
-        if (tryLoadSnapshot_(data)) return true;
-
-        if (had_previous && tryLoadSnapshot_(previous))
-        {
-            if (time != nullptr) time->SetPlayFrameCounter(previous_play_frames);
-            utils::debug_log(L"Load failed; restored the previous in-memory snapshot.");
             return false;
         }
 
+        if (!scenes::SceneManager::ValidateState(data))
+        {
+            return false;
+        }
+
+        if (tryLoadValidatedSnapshot_(data)) return true;
+
         Release();
-        utils::debug_log(L"Load failed and the previous snapshot could not be restored.");
+        utils::debug_log(L"Validated state could not be applied to the rebuilt runtime.");
         return false;
     }
 
-    bool SequenceManager::tryLoadSnapshot_(const core::save::SaveData& data) noexcept
+    bool SequenceManager::tryLoadValidatedSnapshot_(const core::save::SaveData& data) noexcept
     {
         try
         {

@@ -38,6 +38,7 @@ namespace mm2hack::apps::vfx::stareffects
 
         // === Save/Load state ===
         bool Save(std::ostream& out) const;
+        static bool Validate(std::istream& in);
         bool Load(std::istream& in);
         [[nodiscard]] std::uint32_t PatternId() const noexcept { return _pattern_id; }
 
