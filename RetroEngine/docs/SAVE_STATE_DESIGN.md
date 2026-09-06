@@ -157,6 +157,62 @@ machine, room/scroll state, phase and fade state, animation counters, pending
 commands, RNGs, and relevant time counters. Audio playback and GPU/resource IDs
 should normally be reconstructed from logical state rather than serialized.
 
+## DemoStage2 snapshot schema
+
+`DemoStage1` is intentionally unsupported. It targets the obsolete pre-header
+stage-map binary format and cannot be launched by the current `BGPageHeader`
+reader. `LaunchingGame` is also intentionally unsupported because it is a
+resource-validation transition rather than a resumable scene.
+
+`DemoStage2` is the only action-stage snapshot target. Its initial schema is:
+
+1. Scene payload version and action-phase type ID.
+2. Stable scene state: current room/page identity and BG animation tick.
+3. `AbstractActionPhase` state: action/intro mode, intro step and timers,
+   operation flags, previous player position, and `StageIntroUI` progress.
+4. `ScrollController` aggregate: mode, page, camera/view positions, target and
+   tracked-object positions, active page-scroll animation, pending request,
+   carry distance, and freeze state.
+5. `EntityManager` aggregate: next instance ID and ordered live entity records.
+6. Each entity record: stable type ID, stable instance ID, component version,
+   bounded payload size, and entity-owned logical payload.
+7. Optional versioned stage-script state. The current DemoStage2 script is null,
+   so version 1 records no script payload.
+
+Runtime sprite/BG handles, service pointers, map caches, collision-service
+objects, and other reconstructible resources are excluded. Debug-only display
+counters are also excluded. Transient visual entities are included initially
+because their payloads are small and exact visual continuation is easier to
+reason about than a mixed discard policy. Logical BGM restoration remains
+separate under SS-014; one-shot SE is not resumed.
+
+The save barrier requires an active phase, no pending phase/scene transition,
+an interactive fader, and an `EntityManager` that is neither updating nor
+holding pending additions. A player with unconsumed output also rejects capture.
+
+Reconstruction order is fixed:
+
+1. Parse and validate the entire save into lightweight DTOs without touching
+   the live scene.
+2. Initialize DemoStage2 resources, map data, and runtime services.
+3. Restore BG timing and scrolling before entities.
+4. Create all entities in saved order and build the instance-ID lookup.
+5. Inject runtime services and resolve entity references in a second pass.
+6. Restore phase/UI/script state, then expose the scene as current.
+
+### DemoStage2 implementation plan
+
+| ID | Status | Task | Acceptance criterion |
+|---|---|---|---|
+| DS2-001 | Done | Complete fixed-width primitive state I/O and freeze the schema | Boolean, 8/16-bit integers, and IEEE-754 double values have strict portable codecs |
+| DS2-002 | Ready | Add pure DemoStage2 DTO parsing and replace snapshot rollback | Invalid target payload leaves the current scene untouched without calling its `Save` |
+| DS2-003 | Blocked by DS2-002 | Add stable phase, BG animation, and scroll snapshots | Restored camera/page/animation continues from the captured tick |
+| DS2-004 | Blocked by DS2-002 | Add entity type/instance IDs and manager record envelope | Entity order and bounded payloads round-trip without pointers or resource handles |
+| DS2-005 | Blocked by DS2-004 | Restore projectile and transient effect entities | Active entity position, velocity, lifetime, and animation tick resume exactly |
+| DS2-006 | Blocked by DS2-004 | Restore Player and owned state machines | Movement, animation, attack, charge, buffers, and pending requests resume exactly |
+| DS2-007 | Blocked by DS2-003/5/6 | Integrate DemoStage2 scene save/load | A paused action phase round-trips through an external slot |
+| DS2-008 | Blocked by DS2-007 | Add corruption and deterministic-continuation tests | Invalid records are non-destructive and subsequent simulation checksums match |
+
 ### P0: Sequence replacement must not make load failure destructive
 
 The window command calls `SequenceManager::LoadSequence` before applying the
@@ -247,8 +303,8 @@ but incorrect state.
 | SS-005 | P0 | Done | Restore `BackdoorMenu` phase objects | Credit, top menu, and inside menu resume with matching phase state |
 | SS-006 | P1 | Done | Make slot replacement transactional | Failed writes preserve the previous slot |
 | SS-007 | P0 | Done | Give `BgStarField` a persisted deterministic pattern ID | Save/load and replay produce the same star sequence and NES palette scheme |
-| SS-008 | P1 | Ready | Define DemoStage2 snapshot schema | Coverage list and reconstruction order are documented |
-| SS-009 | P1 | Blocked by SS-008 | Restore player and entity state | Player/entities resume without stale references |
+| SS-008 | P1 | Done | Define DemoStage2 snapshot schema | Coverage list and reconstruction order are documented |
+| SS-009 | P1 | Ready | Restore player and entity state | Player/entities resume without stale references |
 | SS-010 | P1 | Ready | Add save-format and corruption tests | Round-trip, truncation, oversized count, bad magic/version pass |
 | SS-011 | P2 | Ready | Improve user-facing load errors | Missing/corrupt/unsupported/I/O cases are distinguishable |
 | SS-012 | P0 | Done | Isolate nondeterministic entropy from simulation | Only new-pattern creation may use entropy; simulation/render paths use persisted stable inputs |
@@ -257,8 +313,8 @@ but incorrect state.
 | SS-015 | P1 | Ready | Classify SE as transient or continuous | Transients stop and continuous emitters restore according to policy |
 | SS-016 | P1 | Blocked by SS-012/13 | Define replay input/event format and checksum boundary | Same initial state and input log reproduce the same simulation checksums |
 | SS-017 | P0 | Done | Add a frame-boundary snapshot barrier | Capture is rejected during update or unsupported transitions |
-| SS-018 | P0 | Done | Make sequence loading recoverable and two-phase | Invalid scene/component payload restores the previous supported paused state |
-| SS-019 | P1 | Blocked by SS-008 | Add stable entity IDs and snapshot factory | Entity graphs rebuild without serialized pointers or resource handles |
+| SS-018 | P0 | In progress | Make sequence loading target-validated and two-phase | Invalid target payload preserves the current scene without requiring it to support save |
+| SS-019 | P1 | Ready | Add stable entity IDs and snapshot factory | Entity graphs rebuild without serialized pointers or resource handles |
 | SS-020 | P1 | Ready | Add game/content compatibility identity | Incompatible runtime content is rejected with a specific result |
 | SS-021 | P0 | Done | Persist star-field initial entropy | Pattern ID is saved, restored, and injectable by replay/new-game setup |
 | SS-022 | P1 | Ready | Add save payload integrity checking | Accidental byte corruption is rejected before runtime reconstruction |
