@@ -8,8 +8,10 @@
 //==============================================================================
 #pragma once
 
+#include <cstdint>
 #include <memory>
 #include <unordered_map>
+#include "core/save/StateIO.h"
 #include "AvatarStatus.h"
 #include "IPlayerState.h"
 #include "PlayerContext.h"
@@ -22,6 +24,20 @@ namespace mm2hack::core::assembly
 
 namespace mm2hack::apps::world::entity::avatar
 {
+    struct PlayerStateMachineState final
+    {
+        AvatarStatus status{ AvatarStatus::Standing };
+        AvatarStatus next_status{ AvatarStatus::Standing };
+        std::uint8_t sliding_elapsed_frames{};
+        std::uint8_t dashing_elapsed_frames{};
+        AvatarDirection dashing_direction{ AvatarDirection::Right };
+        bool dash_jump_active{};
+
+        bool Save(core::save::StateWriter& writer) const;
+        bool Load(core::save::StateReader& reader);
+        [[nodiscard]] bool IsValid() const noexcept;
+    };
+
     // State machine for the player's mutually exclusive locomotion behavior
     class PlayerStateMachine final
     {
@@ -42,10 +58,13 @@ namespace mm2hack::apps::world::entity::avatar
         void TickAnimation(AnimeContext& ax, core::assembly::StateProvider* input, const PlayerTuning& tuning, double dt);
 
         [[nodiscard]] AvatarStatus Status() const noexcept { return _status; }
+        [[nodiscard]] PlayerStateMachineState CaptureState() const noexcept;
+        bool RestoreState(const PlayerStateMachineState& state) noexcept;
 
     private:
         void registerState_(std::unique_ptr<IPlayerState> state);
         IPlayerState& findState_(AvatarStatus status) noexcept;
+        const IPlayerState& findState_(AvatarStatus status) const noexcept;
 
     private:
         AvatarStatus _status{ AvatarStatus::Standing };

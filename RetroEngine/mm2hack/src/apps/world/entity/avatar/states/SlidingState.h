@@ -26,6 +26,8 @@ namespace mm2hack::apps::world::entity::avatar::states
         void OnEnter(PlayerContext& cx, StateProvider* in, const PlayerTuning& t) override;
         AvatarStatus Update(PlayerContext& cx, StateProvider* in, const PlayerTuning& t, double dt) override;
         void TickAnimationOnly(AnimeContext& ax, StateProvider* in, const PlayerTuning& t, double dt) override;
+        [[nodiscard]] std::uint8_t ElapsedFrames() const noexcept { return _elapsed_frames; }
+        void RestoreState(std::uint8_t elapsed_frames) noexcept { _elapsed_frames = elapsed_frames; }
 
     private:
         [[nodiscard]] Probes makeSlidingProbes_(const PlayerContext& cx, const PlayerTuning& t) const;

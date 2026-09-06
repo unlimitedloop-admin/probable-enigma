@@ -27,6 +27,9 @@ namespace mm2hack::apps::world::entity::avatar::states
         void OnEnter(PlayerContext& cx, StateProvider* in, const PlayerTuning& t) override;
         AvatarStatus Update(PlayerContext& cx, StateProvider* in, const PlayerTuning& t, double dt) override;
         void TickAnimationOnly(AnimeContext& ax, StateProvider* in, const PlayerTuning& t, double dt) override;
+        [[nodiscard]] std::uint8_t ElapsedFrames() const noexcept { return _elapsed_frames; }
+        [[nodiscard]] AvatarDirection Direction() const noexcept { return _direction; }
+        bool RestoreState(std::uint8_t elapsed_frames, AvatarDirection direction) noexcept;
 
     private:
         const std::wstring kClassName{ L"DashingState" };

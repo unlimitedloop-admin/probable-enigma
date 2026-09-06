@@ -21,6 +21,19 @@ namespace mm2hack::apps::world::entity::avatar::states
         return AvatarStatus::Dashing;
     }
 
+    bool DashingState::RestoreState(
+        std::uint8_t elapsed_frames,
+        AvatarDirection direction) noexcept
+    {
+        if (direction != AvatarDirection::Left && direction != AvatarDirection::Right)
+        {
+            return false;
+        }
+        _elapsed_frames = elapsed_frames;
+        _direction = direction;
+        return true;
+    }
+
     void DashingState::OnEnter(PlayerContext& cx, StateProvider*, const PlayerTuning& t)
     {
         _elapsed_frames = 0;

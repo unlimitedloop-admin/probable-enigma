@@ -36,6 +36,8 @@ namespace mm2hack::apps::world::entity::avatar::states
         void OnEnter(PlayerContext& cx, core::assembly::StateProvider* in, const PlayerTuning& t) override;
         // Update state and return next state ID
         AvatarStatus Update(PlayerContext& cx, core::assembly::StateProvider* in, const PlayerTuning& t, double /*dt*/) override;
+        [[nodiscard]] bool DashJumpActive() const noexcept { return _dash_jump_active; }
+        void RestoreState(bool dash_jump_active) noexcept { _dash_jump_active = dash_jump_active; }
 
     private:
         // Try to enter laddering state
