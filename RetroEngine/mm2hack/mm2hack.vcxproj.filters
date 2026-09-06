@@ -126,6 +126,8 @@
     <ClCompile Include="src\apps\scenes\phases\AbstractActionPhase.cpp" />
     <ClCompile Include="src\apps\scenes\sub-scenes\02-DemoStage2\DemoStage2.cpp" />
     <ClCompile Include="src\apps\world\entity\EntityManager.cpp" />
+    <ClCompile Include="src\apps\world\entity\EntityBase.cpp" />
+    <ClCompile Include="src\apps\world\entity\EntityStateFactory.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\states\AttackActionState.cpp" />
     <ClCompile Include="src\apps\ui\productions\StageIntroUI.cpp" />
   </ItemGroup>
@@ -288,6 +290,7 @@
     <ClInclude Include="src\apps\world\entity\IUpdatable.h" />
     <ClInclude Include="src\apps\world\entity\IRenderable.h" />
     <ClInclude Include="src\apps\world\entity\EntityBase.h" />
+    <ClInclude Include="src\apps\world\entity\EntityStateFactory.h" />
     <ClInclude Include="src\apps\systems\physics\TileAttribute.h" />
     <ClInclude Include="src\apps\systems\physics\CollisionLayer.h" />
     <ClInclude Include="src\apps\systems\physics\ICollider.h" />

@@ -5,6 +5,9 @@
 #include <cstdint>
 #include <limits>
 #include <span>
+#include <sstream>
+#include <string>
+#include <utility>
 #include "apps/systems/view/RenderContext.h"
 #include "apps/systems/view/ViewState.h"
 #include "core/save/StateIO.h"
@@ -230,6 +233,58 @@ namespace mm2hack::apps::world::entity
     bool EntityManager::CanCaptureState() const noexcept
     {
         return !_is_updating && _pending_add.empty();
+    }
+
+    bool EntityManager::CaptureState(EntityManagerState& state) const
+    {
+        if (!CanCaptureState())
+        {
+            return false;
+        }
+
+        EntityManagerState captured{};
+        captured.next_instance_id = _next_instance_id;
+        captured.records.reserve(_entities.size());
+        for (const auto& entity : _entities)
+        {
+            if (!entity || !entity->IsAlive())
+            {
+                continue;
+            }
+
+            const auto version = entity->StateComponentVersion();
+            if (version == 0)
+            {
+                return false;
+            }
+
+            std::ostringstream payload(std::ios::out | std::ios::binary);
+            core::save::StateWriter writer(payload);
+            if (!entity->SaveState(writer))
+            {
+                return false;
+            }
+
+            EntityStateRecord record{
+                .type = entity->StateTypeId(),
+                .instance_id = entity->StateInstanceId(),
+                .component_version = version,
+            };
+            const std::string payload_bytes = payload.str();
+            record.payload.reserve(payload_bytes.size());
+            for (const char value : payload_bytes)
+            {
+                record.payload.emplace_back(static_cast<std::uint8_t>(value));
+            }
+            captured.records.emplace_back(std::move(record));
+        }
+
+        if (!captured.IsValid())
+        {
+            return false;
+        }
+        state = std::move(captured);
+        return true;
     }
 
     bool EntityManager::RestoreNextInstanceId(EntityInstanceId next_instance_id) noexcept

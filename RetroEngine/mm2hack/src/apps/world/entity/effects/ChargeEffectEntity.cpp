@@ -15,6 +15,39 @@ namespace mm2hack::apps::world::entity::effects
         pos = command.spawnPos;
     }
 
+    ChargeEffectEntity::ChargeEffectEntity(
+        const TimedEffectEntityState& state,
+        rendering::sprite::SpriteManager::Id sprite_id)
+        : _id(sprite_id)
+    {
+        RestoreState(state);
+    }
+
+    bool ChargeEffectEntity::SaveState(core::save::StateWriter& writer) const
+    {
+        return CaptureState().Save(writer, kTotalTicks);
+    }
+
+    TimedEffectEntityState ChargeEffectEntity::CaptureState() const noexcept
+    {
+        return TimedEffectEntityState{
+            CaptureKinematicState(),
+            _base_texture,
+            _elapsed_ticks
+        };
+    }
+
+    bool ChargeEffectEntity::RestoreState(const TimedEffectEntityState& state) noexcept
+    {
+        if (!state.IsValid(kTotalTicks) || !RestoreKinematicState(state.kinematic))
+        {
+            return false;
+        }
+        _base_texture = state.base_texture;
+        _elapsed_ticks = state.elapsed_ticks;
+        return true;
+    }
+
     systems::view::Layer ChargeEffectEntity::DrawLayer() const noexcept
     {
         return systems::view::Layer::Effects;
@@ -29,7 +62,6 @@ namespace mm2hack::apps::world::entity::effects
 
         pos.y -= 2.0;
         ++_elapsed_ticks;
-        constexpr int kTotalTicks = 3 + 5 + 5 + 3 + 2 + 1;
         if (_elapsed_ticks >= kTotalTicks)
         {
             Kill();

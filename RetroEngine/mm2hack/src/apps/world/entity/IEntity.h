@@ -9,6 +9,7 @@
 #pragma once
 
 #include <cstdint>
+#include "core/save/StateIO.h"
 #include "IRenderable.h"
 #include "IUpdatable.h"
 
@@ -34,5 +35,11 @@ namespace mm2hack::apps::world::entity
         [[nodiscard]] virtual EntityTypeId StateTypeId() const noexcept = 0;
         [[nodiscard]] virtual EntityInstanceId StateInstanceId() const noexcept = 0;
         virtual void AssignStateInstanceId(EntityInstanceId id) noexcept = 0;
+        [[nodiscard]] virtual std::uint16_t StateComponentVersion() const noexcept { return 0; }
+        virtual bool SaveState(core::save::StateWriter& writer) const
+        {
+            (void)writer;
+            return false;
+        }
     };
 }

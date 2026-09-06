@@ -3,6 +3,8 @@
 #include "ProjectileEntity.h"
 
 #include <algorithm>
+#include <cmath>
+#include <cstdint>
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/runtime/GameContext.h"
 #include "apps/systems/view/RenderContext.h"
@@ -14,6 +16,63 @@ namespace mm2hack::apps::world::entity::effects
     using systems::view::Layer;
     using systems::view::RenderContext;
     using systems::view::ViewState;
+
+    bool ProjectileEntityState::Save(core::save::StateWriter& writer) const
+    {
+        return IsValid() && kinematic.Save(writer) &&
+            writer.WriteU8(static_cast<std::uint8_t>(draw_layer)) &&
+            writer.WriteI32(base_texture) &&
+            writer.WriteU8(static_cast<std::uint8_t>(visual)) &&
+            writer.WriteI32(animation_frames) &&
+            writer.WriteF64(animation_fps) &&
+            writer.WriteF64(lifetime_seconds) &&
+            writer.WriteF64(age_seconds) &&
+            writer.WriteU32(elapsed_ticks);
+    }
+
+    bool ProjectileEntityState::Load(core::save::StateReader& reader)
+    {
+        ProjectileEntityState loaded{};
+        std::uint8_t encoded_layer{};
+        std::uint8_t encoded_visual{};
+        if (!loaded.kinematic.Load(reader) ||
+            !reader.ReadU8(encoded_layer) ||
+            !reader.ReadI32(loaded.base_texture) ||
+            !reader.ReadU8(encoded_visual) ||
+            !reader.ReadI32(loaded.animation_frames) ||
+            !reader.ReadF64(loaded.animation_fps) ||
+            !reader.ReadF64(loaded.lifetime_seconds) ||
+            !reader.ReadF64(loaded.age_seconds) ||
+            !reader.ReadU32(loaded.elapsed_ticks))
+        {
+            return false;
+        }
+        loaded.draw_layer = static_cast<systems::view::Layer>(encoded_layer);
+        loaded.visual = static_cast<common::ProjectileVisual>(encoded_visual);
+        if (!loaded.IsValid())
+        {
+            return false;
+        }
+        *this = loaded;
+        return true;
+    }
+
+    bool ProjectileEntityState::IsValid() const noexcept
+    {
+        constexpr double kMaximumDurationSeconds = 3'600.0;
+        return kinematic.IsValid() &&
+            draw_layer >= systems::view::Layer::Background &&
+            draw_layer <= systems::view::Layer::Overlay &&
+            base_texture >= 0 && base_texture <= 65'535 &&
+            visual >= common::ProjectileVisual::Normal &&
+            visual <= common::ProjectileVisual::ChargeLevel2 &&
+            animation_frames >= 1 && animation_frames <= 1'024 &&
+            std::isfinite(animation_fps) && animation_fps >= 0.0 && animation_fps <= 1'000.0 &&
+            std::isfinite(lifetime_seconds) && lifetime_seconds >= 0.0 &&
+            lifetime_seconds <= kMaximumDurationSeconds &&
+            std::isfinite(age_seconds) && age_seconds >= 0.0 &&
+            age_seconds <= kMaximumDurationSeconds;
+    }
 
     ProjectileEntity::ProjectileEntity(const common::SpawnProjectileCommand& cmd)
     {
@@ -33,6 +92,52 @@ namespace mm2hack::apps::world::entity::effects
         _half = foundation::math::Vec2{ 16.0, 16.0 };   // Assuming an average size; adjust as needed.
     }
 
+    ProjectileEntity::ProjectileEntity(
+        const ProjectileEntityState& state,
+        rendering::sprite::SpriteManager::Id sprite_id)
+        : _id(sprite_id)
+    {
+        _half = foundation::math::Vec2{ 16.0, 16.0 };
+        RestoreState(state);
+    }
+
+    bool ProjectileEntity::SaveState(core::save::StateWriter& writer) const
+    {
+        return CaptureState().Save(writer);
+    }
+
+    ProjectileEntityState ProjectileEntity::CaptureState() const noexcept
+    {
+        return ProjectileEntityState{
+            .kinematic = CaptureKinematicState(),
+            .draw_layer = _draw_layer,
+            .base_texture = _base_texture,
+            .visual = _visual,
+            .animation_frames = _anim_frames,
+            .animation_fps = _anim_fps,
+            .lifetime_seconds = _life_sec,
+            .age_seconds = _age_sec,
+            .elapsed_ticks = _elapsed_ticks,
+        };
+    }
+
+    bool ProjectileEntity::RestoreState(const ProjectileEntityState& state) noexcept
+    {
+        if (!state.IsValid() || !RestoreKinematicState(state.kinematic))
+        {
+            return false;
+        }
+        _draw_layer = state.draw_layer;
+        _base_texture = state.base_texture;
+        _visual = state.visual;
+        _anim_frames = state.animation_frames;
+        _anim_fps = state.animation_fps;
+        _life_sec = state.lifetime_seconds;
+        _age_sec = state.age_seconds;
+        _elapsed_ticks = state.elapsed_ticks;
+        return true;
+    }
+
     Layer ProjectileEntity::DrawLayer() const noexcept
     {
         return _draw_layer;
@@ -48,6 +153,12 @@ namespace mm2hack::apps::world::entity::effects
         pos += vel * dt;
         _age_sec += dt;
         ++_elapsed_ticks;
+
+        if (_age_sec >= _life_sec)
+        {
+            Kill();
+            return;
+        }
 
         constexpr double margin = 32.0;
 

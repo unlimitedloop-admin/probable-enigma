@@ -19,6 +19,39 @@ namespace mm2hack::apps::world::entity::effects
         pos = command.spawnPos;
     }
 
+    SplashEffectEntity::SplashEffectEntity(
+        const TimedEffectEntityState& state,
+        rendering::sprite::SpriteManager::Id sprite_id)
+        : _id(sprite_id)
+    {
+        RestoreState(state);
+    }
+
+    bool SplashEffectEntity::SaveState(core::save::StateWriter& writer) const
+    {
+        return CaptureState().Save(writer, kTotalTicks);
+    }
+
+    TimedEffectEntityState SplashEffectEntity::CaptureState() const noexcept
+    {
+        return TimedEffectEntityState{
+            CaptureKinematicState(),
+            _base_texture,
+            _elapsed_ticks
+        };
+    }
+
+    bool SplashEffectEntity::RestoreState(const TimedEffectEntityState& state) noexcept
+    {
+        if (!state.IsValid(kTotalTicks) || !RestoreKinematicState(state.kinematic))
+        {
+            return false;
+        }
+        _base_texture = state.base_texture;
+        _elapsed_ticks = state.elapsed_ticks;
+        return true;
+    }
+
     Layer SplashEffectEntity::DrawLayer() const noexcept
     {
         return Layer::Effects;
@@ -35,7 +68,7 @@ namespace mm2hack::apps::world::entity::effects
         }
 
         ++_elapsed_ticks;
-        if (_elapsed_ticks >= kTicksPerFrame * kFrameCount)
+        if (_elapsed_ticks >= kTotalTicks)
         {
             Kill();
         }

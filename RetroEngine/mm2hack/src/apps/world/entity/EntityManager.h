@@ -86,6 +86,7 @@ namespace mm2hack::apps::world::entity
         std::size_t Count() const noexcept;
         [[nodiscard]] EntityInstanceId NextInstanceId() const noexcept { return _next_instance_id; }
         [[nodiscard]] bool CanCaptureState() const noexcept;
+        bool CaptureState(EntityManagerState& state) const;
         bool RestoreNextInstanceId(EntityInstanceId next_instance_id) noexcept;
 
     private:
