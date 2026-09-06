@@ -128,6 +128,8 @@
     <ClCompile Include="src\apps\world\entity\EntityManager.cpp" />
     <ClCompile Include="src\apps\world\entity\EntityBase.cpp" />
     <ClCompile Include="src\apps\world\entity\EntityStateFactory.cpp" />
+    <ClCompile Include="src\apps\world\entity\common\AnimeStepper.cpp" />
+    <ClCompile Include="src\apps\world\entity\common\FrameGate.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\states\AttackActionState.cpp" />
     <ClCompile Include="src\apps\ui\productions\StageIntroUI.cpp" />
   </ItemGroup>

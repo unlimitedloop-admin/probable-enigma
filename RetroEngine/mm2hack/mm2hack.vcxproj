@@ -253,6 +253,8 @@
     <ClCompile Include="src\apps\world\entity\EntityManager.cpp" />
     <ClCompile Include="src\apps\world\entity\EntityBase.cpp" />
     <ClCompile Include="src\apps\world\entity\EntityStateFactory.cpp" />
+    <ClCompile Include="src\apps\world\entity\common\AnimeStepper.cpp" />
+    <ClCompile Include="src\apps\world\entity\common\FrameGate.cpp" />
     <ClCompile Include="src\apps\world\stage\RoomGraphAdapter.cpp" />
     <ClCompile Include="src\config\ConfigUIManager.cpp" />
     <ClCompile Include="src\config\EnvironmentConfig.cpp" />

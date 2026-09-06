@@ -8,8 +8,20 @@
 //==============================================================================
 #pragma once
 
+#include <cstdint>
+#include "core/save/StateIO.h"
+
 namespace mm2hack::apps::world::entity::common
 {
+    struct FrameGateState final
+    {
+        std::int32_t counter{};
+
+        bool Save(core::save::StateWriter& writer) const;
+        bool Load(core::save::StateReader& reader);
+        [[nodiscard]] bool IsValid(std::int32_t interval) const noexcept;
+    };
+
     class FrameGate
     {
     public:
@@ -37,6 +49,9 @@ namespace mm2hack::apps::world::entity::common
         {
             _counter = 0;
         }
+
+        [[nodiscard]] FrameGateState CaptureState() const noexcept;
+        bool RestoreState(const FrameGateState& state, std::int32_t interval) noexcept;
 
     private:
         int _counter{ 0 };

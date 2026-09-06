@@ -16,9 +16,24 @@
 #include "apps/world/entity/avatar/PlayerContext.h"
 #include "apps/world/entity/common/SpawnProjectileCommand.h"
 #include "core/assembly/StateProvider.h"
+#include "core/save/StateIO.h"
 
 namespace mm2hack::apps::world::entity::avatar::states
 {
+    struct AttackActionSnapshot final
+    {
+        bool attacking{};
+        double pose_time_seconds{};
+        bool fire_requested{};
+        bool charging{};
+        std::uint32_t charge_frames{};
+        common::ProjectileVisual requested_visual{ common::ProjectileVisual::Normal };
+
+        bool Save(core::save::StateWriter& writer) const;
+        bool Load(core::save::StateReader& reader);
+        [[nodiscard]] bool IsValid() const noexcept;
+    };
+
     // Rock Buster drawing info
     struct RockBusterDrawInfo final
     {
@@ -83,6 +98,8 @@ namespace mm2hack::apps::world::entity::avatar::states
         void Cancel() noexcept;
         // Tick animation only (no state update)
         void TickAnimationOnly(AnimeContext& ax, const AttackTuning& tuning, RockBusterDrawInfo& out_rb) const noexcept;
+        [[nodiscard]] AttackActionSnapshot CaptureState() const noexcept;
+        bool RestoreState(const AttackActionSnapshot& state) noexcept;
 
     private:
         void restartAttackPose_(bool request_normal_shot = false) noexcept; // Start attack action

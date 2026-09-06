@@ -2,6 +2,8 @@
 
 #include "AttackActionState.h"
 
+#include <cmath>
+#include <cstdint>
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/systems/view/RenderContext.h"
 #include "apps/world/entity/avatar/abilities/RockBusterOffsetTable.h"
@@ -14,6 +16,49 @@
 namespace mm2hack::apps::world::entity::avatar::states
 {
     using StateProvider = core::assembly::StateProvider;
+
+    bool AttackActionSnapshot::Save(core::save::StateWriter& writer) const
+    {
+        return IsValid() && writer.WriteBool(attacking) &&
+            writer.WriteF64(pose_time_seconds) && writer.WriteBool(fire_requested) &&
+            writer.WriteBool(charging) && writer.WriteU32(charge_frames) &&
+            writer.WriteU8(static_cast<std::uint8_t>(requested_visual));
+    }
+
+    bool AttackActionSnapshot::Load(core::save::StateReader& reader)
+    {
+        AttackActionSnapshot loaded{};
+        std::uint8_t encoded_visual{};
+        if (!reader.ReadBool(loaded.attacking) ||
+            !reader.ReadF64(loaded.pose_time_seconds) ||
+            !reader.ReadBool(loaded.fire_requested) ||
+            !reader.ReadBool(loaded.charging) ||
+            !reader.ReadU32(loaded.charge_frames) ||
+            !reader.ReadU8(encoded_visual))
+        {
+            return false;
+        }
+        loaded.requested_visual = static_cast<common::ProjectileVisual>(encoded_visual);
+        if (!loaded.IsValid())
+        {
+            return false;
+        }
+        *this = loaded;
+        return true;
+    }
+
+    bool AttackActionSnapshot::IsValid() const noexcept
+    {
+        constexpr double kMaximumPoseSeconds = 60.0;
+        constexpr std::uint32_t kMaximumChargeFrames = 60U * 60U * 60U;
+        return std::isfinite(pose_time_seconds) && pose_time_seconds >= 0.0 &&
+            pose_time_seconds <= kMaximumPoseSeconds &&
+            (!fire_requested || attacking) &&
+            (charging || charge_frames == 0) &&
+            charge_frames <= kMaximumChargeFrames &&
+            requested_visual >= common::ProjectileVisual::Normal &&
+            requested_visual <= common::ProjectileVisual::ChargeLevel2;
+    }
 
     void AttackActionState::PreUpdate(PlayerContext& cx, StateProvider* in, bool can_spawn) noexcept
     {
@@ -124,6 +169,34 @@ namespace mm2hack::apps::world::entity::avatar::states
     bool AttackActionState::IsAttacking() const noexcept
     {
         return _is_attacking;
+    }
+
+    AttackActionSnapshot AttackActionState::CaptureState() const noexcept
+    {
+        return AttackActionSnapshot{
+            .attacking = _is_attacking,
+            .pose_time_seconds = _pose_time_sec,
+            .fire_requested = _fire_requested,
+            .charging = _charging,
+            .charge_frames = _charge_frames,
+            .requested_visual = _requested_visual,
+        };
+    }
+
+    bool AttackActionState::RestoreState(const AttackActionSnapshot& state) noexcept
+    {
+        if (!state.IsValid())
+        {
+            return false;
+        }
+        _is_attacking = state.attacking;
+        _pose_time_sec = state.pose_time_seconds;
+        _fire_requested = state.fire_requested;
+        _charging = state.charging;
+        _can_spawn = false;
+        _charge_frames = state.charge_frames;
+        _requested_visual = state.requested_visual;
+        return true;
     }
 
     void AttackActionState::Cancel() noexcept
