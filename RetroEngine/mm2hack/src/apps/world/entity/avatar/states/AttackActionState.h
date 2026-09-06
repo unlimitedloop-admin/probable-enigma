@@ -14,6 +14,7 @@
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/world/entity/avatar/PlayerContext.h"
+#include "apps/world/entity/avatar/PlayerFrameOutput.h"
 #include "apps/world/entity/common/SpawnProjectileCommand.h"
 #include "core/assembly/StateProvider.h"
 #include "core/save/StateIO.h"

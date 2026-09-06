@@ -12,6 +12,7 @@
 #include "apps/world/entity/EntityBase.h"
 
 #include <array>
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
@@ -29,8 +30,10 @@
 #include "apps/systems/view/ViewState.h"
 #include "apps/world/entity/common/AnimeStepper.h"
 #include "apps/world/entity/IEntity.h"
+#include "core/save/StateIO.h"
 #include "AvatarStatus.h"
 #include "PlayerContext.h"
+#include "PlayerEntityState.h"
 #include "PlayerEnvironmentController.h"
 #include "PlayerFrameOutput.h"
 #include "PlayerParams.h"
@@ -65,6 +68,7 @@ namespace mm2hack::apps::world::entity::avatar
 
     public:
         using ScrollDir                 = systems::scrolling::atomic::PageScroll::Dir;
+        static constexpr std::uint16_t kStateVersion{ 1 };
 
         PlayerEntity(
             SpriteManagerId id,
@@ -84,6 +88,11 @@ namespace mm2hack::apps::world::entity::avatar
         // Kill (IEntity)
         void Kill() noexcept override;
         [[nodiscard]] EntityTypeId StateTypeId() const noexcept override { return EntityTypeId::Player; }
+        [[nodiscard]] std::uint16_t StateComponentVersion() const noexcept override { return kStateVersion; }
+        bool SaveState(core::save::StateWriter& writer) const override;
+        [[nodiscard]] bool CanCaptureState() const noexcept;
+        [[nodiscard]] PlayerEntityState CaptureState() const noexcept;
+        bool RestoreState(const PlayerEntityState& state) noexcept;
         // Bounding box (ICollider)
         RectF Bounds() const override;
         // Is collidable? (ICollider)

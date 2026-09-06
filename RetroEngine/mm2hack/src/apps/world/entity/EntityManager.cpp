@@ -2,15 +2,12 @@
 
 #include "EntityManager.h"
 
-#include <cstdint>
 #include <limits>
 #include <span>
-#include <sstream>
-#include <string>
-#include <utility>
 #include "apps/systems/view/RenderContext.h"
 #include "apps/systems/view/ViewState.h"
 #include "core/save/StateIO.h"
+#include "EntityStateFactory.h"
 #include "IEntity.h"
 
 namespace mm2hack::apps::world::entity
@@ -283,6 +280,34 @@ namespace mm2hack::apps::world::entity
             return false;
         }
         state = std::move(captured);
+        return true;
+    }
+
+    bool EntityManager::RestoreState(
+        const EntityManagerState& state,
+        const EntityStateFactory& factory)
+    {
+        if (!state.IsValid() || _is_updating || !_pending_add.empty())
+        {
+            return false;
+        }
+
+        std::vector<std::unique_ptr<IEntity>> restored{};
+        restored.reserve(state.records.size());
+        for (const auto& record : state.records)
+        {
+            auto entity = factory.Create(record);
+            if (!entity)
+            {
+                return false;
+            }
+            entity->AssignStateInstanceId(record.instance_id);
+            restored.emplace_back(std::move(entity));
+        }
+
+        _entities = std::move(restored);
+        _pending_add.clear();
+        _next_instance_id = state.next_instance_id;
         return true;
     }
 

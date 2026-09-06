@@ -6,6 +6,7 @@
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/systems/physics/ITerrainProbe.h"
 #include "apps/systems/physics/TileAttribute.h"
+#include "core/save/StateIO.h"
 #include "PlayerParams.h"
 
 namespace mm2hack::apps::world::entity::avatar

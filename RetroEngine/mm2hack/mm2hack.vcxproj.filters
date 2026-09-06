@@ -97,6 +97,7 @@
     <ClCompile Include="src\apps\systems\physics\CollisionLayer.cpp" />
     <ClCompile Include="src\apps\systems\physics\CollisionSystem.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\PlayerEntity.cpp" />
+    <ClCompile Include="src\apps\world\entity\avatar\PlayerEntityState.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\PlayerEnvironmentController.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\PlayerStateMachine.cpp" />
     <ClCompile Include="src\apps\world\entity\effects\ProjectileEntity.cpp" />
@@ -299,6 +300,7 @@
     <ClInclude Include="src\apps\systems\physics\ITileMapProvider.h" />
     <ClInclude Include="src\apps\systems\physics\CollisionSystem.h" />
     <ClInclude Include="src\apps\world\entity\avatar\PlayerEntity.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\PlayerEntityState.h" />
     <ClInclude Include="src\apps\world\entity\avatar\PlayerEnvironmentController.h" />
     <ClInclude Include="src\apps\world\entity\avatar\PlayerStateMachine.h" />
     <ClInclude Include="src\apps\world\entity\effects\ProjectileEntity.h" />

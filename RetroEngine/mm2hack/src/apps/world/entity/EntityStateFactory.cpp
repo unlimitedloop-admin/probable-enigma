@@ -2,18 +2,17 @@
 
 #include "EntityStateFactory.h"
 
-#include <cstdint>
-#include <memory>
-#include <sstream>
-#include <string>
-#include <vector>
+#include <string_view>
 #include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/scenes/IStageAssetProvider.h"
+#include "apps/world/entity/avatar/PlayerEntity.h"
+#include "apps/world/entity/avatar/PlayerEntityState.h"
 #include "apps/world/entity/effects/ChargeEffectEntity.h"
 #include "apps/world/entity/effects/ProjectileEntity.h"
 #include "apps/world/entity/effects/SlidingDustEffectEntity.h"
 #include "apps/world/entity/effects/SplashEffectEntity.h"
 #include "core/save/StateIO.h"
+#include "EntityBase.h"
 #include "EntityManager.h"
 #include "IEntity.h"
 
@@ -54,6 +53,19 @@ namespace mm2hack::apps::world::entity
                 });
         }
 
+        bool ParsePlayer(const EntityStateRecord& record, avatar::PlayerEntityState& state)
+        {
+            if (record.component_version != avatar::PlayerEntity::kStateVersion)
+            {
+                return false;
+            }
+            return ParseState(record, state,
+                [](avatar::PlayerEntityState& value, core::save::StateReader& reader)
+                {
+                    return value.Load(reader);
+                });
+        }
+
         bool ParseTimedEffect(
             const EntityStateRecord& record,
             std::uint16_t expected_version,
@@ -77,10 +89,15 @@ namespace mm2hack::apps::world::entity
         }
     }
 
-    bool EntityStateFactory::ValidateTransientRecord(const EntityStateRecord& record)
+    bool EntityStateFactory::ValidateRecord(const EntityStateRecord& record)
     {
         switch (record.type)
         {
+        case EntityTypeId::Player:
+        {
+            avatar::PlayerEntityState state{};
+            return ParsePlayer(record, state);
+        }
         case EntityTypeId::Projectile:
         {
             effects::ProjectileEntityState state{};
@@ -118,11 +135,41 @@ namespace mm2hack::apps::world::entity
         }
     }
 
-    std::unique_ptr<IEntity> EntityStateFactory::CreateTransient(
+    std::unique_ptr<IEntity> EntityStateFactory::Create(
         const EntityStateRecord& record) const
     {
         switch (record.type)
         {
+        case EntityTypeId::Player:
+        {
+            avatar::PlayerEntityState state{};
+            const auto player_sprite = _assets.PlayerSprite();
+            const auto weapon_sprite = _assets.PlayerAttackSprite();
+            const auto effects_sprite = _assets.EffectsSprite();
+            const auto charge_level1_sprite = _assets.PlayerChargeLevel1Sprite();
+            const auto charge_level2_sprite = _assets.PlayerChargeLevel2Sprite();
+            if (!ParsePlayer(record, state) ||
+                !IsValidSpriteId(player_sprite) ||
+                !IsValidSpriteId(weapon_sprite) ||
+                !IsValidSpriteId(effects_sprite) ||
+                !IsValidSpriteId(charge_level1_sprite) ||
+                !IsValidSpriteId(charge_level2_sprite))
+            {
+                return nullptr;
+            }
+
+            auto player = std::make_unique<avatar::PlayerEntity>(
+                player_sprite,
+                weapon_sprite,
+                effects_sprite,
+                charge_level1_sprite,
+                charge_level2_sprite);
+            if (!player->RestoreState(state))
+            {
+                return nullptr;
+            }
+            return player;
+        }
         case EntityTypeId::Projectile:
         {
             effects::ProjectileEntityState state{};

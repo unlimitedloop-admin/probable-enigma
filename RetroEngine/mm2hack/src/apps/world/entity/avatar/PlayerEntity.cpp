@@ -3,6 +3,8 @@
 #include "PlayerEntity.h"
 
 #include <cmath>
+#include <cstddef>
+#include <cstdint>
 #include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/runtime/GameContext.h"
 #include "apps/systems/physics/CollisionLayer.h"
@@ -14,10 +16,12 @@
 #include "apps/world/entity/common/SpawnSplashEffectCommand.h"
 #include "apps/world/entity/EntityBase.h"
 #include "apps/world/entity/IEntity.h"
+#include "core/save/StateIO.h"
 #include "AvatarStatus.h"
 #include "config/SystemConfig.h"
 #include "input/Jpbtn.h"
 #include "PlayerContext.h"
+#include "PlayerEntityState.h"
 #include "PlayerEnvironmentController.h"
 #include "PlayerFrameOutput.h"
 #include "PlayerParams.h"
@@ -43,6 +47,78 @@ namespace mm2hack::apps::world::entity::avatar
     {
         _attackAction = std::make_unique<states::AttackActionState>(weaponId);
         SetTuning(PlayerTuning{});
+    }
+
+    bool PlayerEntity::SaveState(core::save::StateWriter& writer) const
+    {
+        return CanCaptureState() && CaptureState().Save(writer);
+    }
+
+    bool PlayerEntity::CanCaptureState() const noexcept
+    {
+        return _attackAction != nullptr && _frame_output.events.empty() &&
+            !_frame_output.projectile.has_value() &&
+            !_frame_output.splashEffect.has_value() &&
+            _scroll_page_index <= 65'535;
+    }
+
+    PlayerEntityState PlayerEntity::CaptureState() const noexcept
+    {
+        return PlayerEntityState{
+            .kinematic = CaptureKinematicState(),
+            .collidable = _collidable,
+            .on_ground = onGround,
+            .facing = facingLR,
+            .base_texture = baseTexture,
+            .attack_texture = attackTexture,
+            .locomotion = _state_machine.CaptureState(),
+            .attack = _attackAction->CaptureState(),
+            .rock_buster = _rock_buster,
+            .environment = _environment_controller.CaptureState(),
+            .intro = _intro_states,
+            .animation = _anime_stepper.CaptureState(),
+            .jump_buffered = _jump_buffered,
+            .dash_buffered = _dash_buffered,
+            .view_bounds = _v_bounds,
+            .page_origin = _page_origin_px,
+            .scroll_page_index = static_cast<std::uint32_t>(_scroll_page_index),
+            .pending_scroll = _pending_scroll_req,
+            .fixed_scroll_available = _fixed_scroll_available,
+            .charge = _charge_status,
+        };
+    }
+
+    bool PlayerEntity::RestoreState(const PlayerEntityState& state) noexcept
+    {
+        if (!state.IsValid() || !_attackAction ||
+            !RestoreKinematicState(state.kinematic) ||
+            !_state_machine.RestoreState(state.locomotion) ||
+            !_attackAction->RestoreState(state.attack) ||
+            !_environment_controller.RestoreState(state.environment) ||
+            !_anime_stepper.RestoreState(state.animation))
+        {
+            return false;
+        }
+
+        _collidable = state.collidable;
+        onGround = state.on_ground;
+        facingLR = state.facing;
+        baseTexture = state.base_texture;
+        attackTexture = state.attack_texture;
+        _rock_buster = state.rock_buster;
+        _intro_states = state.intro;
+        _jump_buffered = state.jump_buffered;
+        _dash_buffered = state.dash_buffered;
+        _v_bounds = state.view_bounds;
+        _page_origin_px = state.page_origin;
+        _scroll_page_index = static_cast<std::size_t>(state.scroll_page_index);
+        _pending_scroll_req = state.pending_scroll;
+        _fixed_scroll_available = state.fixed_scroll_available;
+        _entityContext = {};
+        _frame_output = {};
+        _charge_status = state.charge;
+        composeFinalTexture_();
+        return true;
     }
 
     void PlayerEntity::Update(const systems::view::ViewState* view, double dt)

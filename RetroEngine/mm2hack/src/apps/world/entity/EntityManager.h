@@ -22,6 +22,8 @@
 
 namespace mm2hack::apps::world::entity
 {
+    class EntityStateFactory;
+
     struct EntityStateRecord final
     {
         EntityTypeId type{ EntityTypeId::Unknown };
@@ -87,6 +89,7 @@ namespace mm2hack::apps::world::entity
         [[nodiscard]] EntityInstanceId NextInstanceId() const noexcept { return _next_instance_id; }
         [[nodiscard]] bool CanCaptureState() const noexcept;
         bool CaptureState(EntityManagerState& state) const;
+        bool RestoreState(const EntityManagerState& state, const EntityStateFactory& factory);
         bool RestoreNextInstanceId(EntityInstanceId next_instance_id) noexcept;
 
     private:

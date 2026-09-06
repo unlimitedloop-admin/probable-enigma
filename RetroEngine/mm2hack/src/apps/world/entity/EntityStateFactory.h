@@ -23,8 +23,8 @@ namespace mm2hack::apps::world::entity
         {
         }
 
-        [[nodiscard]] static bool ValidateTransientRecord(const EntityStateRecord& record);
-        [[nodiscard]] std::unique_ptr<IEntity> CreateTransient(const EntityStateRecord& record) const;
+        [[nodiscard]] static bool ValidateRecord(const EntityStateRecord& record);
+        [[nodiscard]] std::unique_ptr<IEntity> Create(const EntityStateRecord& record) const;
 
     private:
         const scenes::IStageAssetProvider& _assets;

@@ -7,6 +7,7 @@
 #include <exception>
 #include "AvatarStatus.h"
 #include "core/assembly/StateProvider.h"
+#include "core/save/StateIO.h"
 #include "IPlayerState.h"
 #include "PlayerContext.h"
 #include "PlayerParams.h"

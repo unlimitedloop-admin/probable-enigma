@@ -2,9 +2,7 @@
 
 #include "ProjectileEntity.h"
 
-#include <algorithm>
 #include <cmath>
-#include <cstdint>
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/runtime/GameContext.h"
@@ -156,7 +154,9 @@ namespace mm2hack::apps::world::entity::effects
         _age_sec += dt;
         ++_elapsed_ticks;
 
-        if (_age_sec >= _life_sec)
+        // A non-positive lifetime is the existing sentinel for an entity that
+        // remains alive until it leaves the active view.
+        if (_life_sec > 0.0 && _age_sec >= _life_sec)
         {
             Kill();
             return;

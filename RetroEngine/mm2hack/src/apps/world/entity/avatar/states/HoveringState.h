@@ -11,7 +11,6 @@
 #include "apps/world/entity/avatar/IPlayerState.h"
 
 #include <string>
-#include "apps/systems/physics/ITerrainProbe.h"
 #include "apps/world/entity/avatar/AvatarStatus.h"
 
 namespace mm2hack::apps::world::entity::avatar

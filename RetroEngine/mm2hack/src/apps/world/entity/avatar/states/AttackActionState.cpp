@@ -3,14 +3,15 @@
 #include "AttackActionState.h"
 
 #include <cmath>
-#include <cstdint>
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/systems/view/RenderContext.h"
 #include "apps/world/entity/avatar/abilities/RockBusterOffsetTable.h"
 #include "apps/world/entity/avatar/AvatarStatus.h"
 #include "apps/world/entity/avatar/PlayerContext.h"
 #include "apps/world/entity/avatar/PlayerFrameOutput.h"
+#include "apps/world/entity/common/SpawnProjectileCommand.h"
 #include "core/assembly/StateProvider.h"
+#include "core/save/StateIO.h"
 #include "input/Jpbtn.h"
 
 namespace mm2hack::apps::world::entity::avatar::states
