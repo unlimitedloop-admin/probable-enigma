@@ -206,7 +206,7 @@ Reconstruction order is fixed:
 |---|---|---|---|
 | DS2-001 | Done | Complete fixed-width primitive state I/O and freeze the schema | Boolean, 8/16-bit integers, and IEEE-754 double values have strict portable codecs |
 | DS2-002 | Done | Add pure target DTO validation and replace snapshot rollback | Invalid target payload leaves the current scene untouched without calling its `Save`; incomplete DemoStage2 DTOs remain gated |
-| DS2-003 | In progress | Add stable phase, BG animation, and scroll snapshots | Restored camera/page/animation continues from the captured tick |
+| DS2-003 | Done | Add stable phase, BG animation, and scroll snapshots | Restored camera/page/animation continues from the captured tick |
 | DS2-004 | Blocked by DS2-002 | Add entity type/instance IDs and manager record envelope | Entity order and bounded payloads round-trip without pointers or resource handles |
 | DS2-005 | Blocked by DS2-004 | Restore projectile and transient effect entities | Active entity position, velocity, lifetime, and animation tick resume exactly |
 | DS2-006 | Blocked by DS2-004 | Restore Player and owned state machines | Movement, animation, attack, charge, buffers, and pending requests resume exactly |

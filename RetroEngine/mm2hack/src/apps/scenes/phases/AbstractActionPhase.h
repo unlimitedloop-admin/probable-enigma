@@ -10,11 +10,14 @@
 
 #include "IPhase.h"
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include "apps/foundation/math/CoordinateTypes.h"
+#include "apps/systems/scrolling/atomic/ScrollController.h"
 #include "apps/ui/productions/StageIntroUI.h"
 #include "apps/world/entity/avatar/PlayerFrameOutput.h"
+#include "core/save/StateIO.h"
 #include "IPhaseHost.h"
 #include "PhaseResult.h"
 #include "StageRuntimeContext.h"
@@ -34,10 +37,34 @@ namespace mm2hack::apps::scenes::phases
     class IStageScript;
 
     // States within the action phase
-    enum class ActionPhaseState
+    enum class ActionPhaseState : std::uint8_t
     {
         Intro,  // avatar character warp animation, and more
         Active  // main gameplay state
+    };
+
+    enum class ActionIntroStep : std::uint8_t
+    {
+        Standby,
+        ReadyBlink,
+        WarpIn,
+        Done
+    };
+
+    struct AbstractActionPhaseState final
+    {
+        ActionPhaseState phase{ ActionPhaseState::Intro };
+        ActionIntroStep intro_step{ ActionIntroStep::Standby };
+        double intro_timer{};
+        bool entered{};
+        bool operate{};
+        foundation::math::Vec2 player_previous_position{};
+        ui::productions::StageIntroUIState ready_ui{};
+        systems::scrolling::atomic::ScrollControllerState scroll{};
+
+        bool Save(core::save::StateWriter& writer) const;
+        bool Load(core::save::StateReader& reader);
+        [[nodiscard]] bool IsValid() const noexcept;
     };
 
     // Abstract action phase that manages the runtime context and stage script
@@ -64,6 +91,8 @@ namespace mm2hack::apps::scenes::phases
         void SetEnableOperatePhase(bool enable) override;
         // Gets whether the operate phase is enabled
         bool GetEnableOperatePhase() const override { return _operate; }
+        [[nodiscard]] bool CaptureState(AbstractActionPhaseState& state) const noexcept;
+        bool RestoreState(const AbstractActionPhaseState& state) noexcept;
 
     private:
         void updateIntro_();                                // Handles the intro state update
@@ -76,17 +105,9 @@ namespace mm2hack::apps::scenes::phases
     private:
         const std::wstring kClassName{ L"AbstractActionPhase" };
 
-        enum class IntroStep
-        {
-            Standby,
-            ReadyBlink,
-            WarpIn,
-            Done
-        };
-
         struct IntroSequence
         {
-            IntroStep step{ IntroStep::Standby };
+            ActionIntroStep step{ ActionIntroStep::Standby };
             double    timer{ 0.0 };
         } _intro{};                                         // Intro sequence state
 

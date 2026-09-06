@@ -3,6 +3,7 @@
 #include "AbstractActionPhase.h"
 
 #include <array>
+#include <cmath>
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/resources/parameters/Parameters.h"
@@ -57,6 +58,88 @@ namespace mm2hack::apps::scenes::phases
         };
     }
 
+    bool AbstractActionPhaseState::Save(core::save::StateWriter& writer) const
+    {
+        if (!IsValid())
+        {
+            return false;
+        }
+
+        return
+            writer.WriteU8(static_cast<std::uint8_t>(phase)) &&
+            writer.WriteU8(static_cast<std::uint8_t>(intro_step)) &&
+            writer.WriteF64(intro_timer) &&
+            writer.WriteBool(entered) &&
+            writer.WriteBool(operate) &&
+            writer.WriteF64(player_previous_position.x) &&
+            writer.WriteF64(player_previous_position.y) &&
+            ready_ui.Save(writer) &&
+            scroll.Save(writer);
+    }
+
+    bool AbstractActionPhaseState::Load(core::save::StateReader& reader)
+    {
+        AbstractActionPhaseState loaded{};
+        std::uint8_t encoded_phase{};
+        std::uint8_t encoded_intro_step{};
+        if (!reader.ReadU8(encoded_phase) ||
+            !reader.ReadU8(encoded_intro_step) ||
+            !reader.ReadF64(loaded.intro_timer) ||
+            !reader.ReadBool(loaded.entered) ||
+            !reader.ReadBool(loaded.operate) ||
+            !reader.ReadF64(loaded.player_previous_position.x) ||
+            !reader.ReadF64(loaded.player_previous_position.y) ||
+            !loaded.ready_ui.Load(reader) ||
+            !loaded.scroll.Load(reader))
+        {
+            return false;
+        }
+
+        loaded.phase = static_cast<ActionPhaseState>(encoded_phase);
+        loaded.intro_step = static_cast<ActionIntroStep>(encoded_intro_step);
+        if (!loaded.IsValid())
+        {
+            return false;
+        }
+
+        *this = loaded;
+        return true;
+    }
+
+    bool AbstractActionPhaseState::IsValid() const noexcept
+    {
+        constexpr double kMaximumTimerSeconds = 3'600.0;
+        constexpr double kMaximumWorldCoordinate = 1'000'000.0;
+
+        const bool phase_valid =
+            phase == ActionPhaseState::Intro || phase == ActionPhaseState::Active;
+        const bool intro_step_valid =
+            intro_step == ActionIntroStep::Standby ||
+            intro_step == ActionIntroStep::ReadyBlink ||
+            intro_step == ActionIntroStep::WarpIn ||
+            intro_step == ActionIntroStep::Done;
+        const bool timer_valid =
+            std::isfinite(intro_timer) &&
+            intro_timer >= 0.0 &&
+            intro_timer <= kMaximumTimerSeconds;
+        const bool player_position_valid =
+            std::isfinite(player_previous_position.x) &&
+            std::isfinite(player_previous_position.y) &&
+            std::abs(player_previous_position.x) <= kMaximumWorldCoordinate &&
+            std::abs(player_previous_position.y) <= kMaximumWorldCoordinate;
+        const bool phase_consistent =
+            phase != ActionPhaseState::Active || intro_step == ActionIntroStep::Done;
+
+        return
+            phase_valid &&
+            intro_step_valid &&
+            timer_valid &&
+            player_position_valid &&
+            phase_consistent &&
+            ready_ui.IsValid() &&
+            scroll.IsValid();
+    }
+
     AbstractActionPhase::AbstractActionPhase(std::unique_ptr<StageRuntimeContext> ctx, IStageScript* script, IPhaseHost& host) noexcept
         : _ctx(std::move(ctx)), _script(script), _host(&host)
     {
@@ -68,6 +151,53 @@ namespace mm2hack::apps::scenes::phases
         {
             _script->OnExit(_ctx->area_key, *_ctx);
         }
+    }
+
+    bool AbstractActionPhase::CaptureState(AbstractActionPhaseState& state) const noexcept
+    {
+        if (!_ctx || !_ctx->scroll)
+        {
+            return false;
+        }
+
+        state = AbstractActionPhaseState{
+            .phase = _state,
+            .intro_step = _intro.step,
+            .intro_timer = _intro.timer,
+            .entered = _entered,
+            .operate = _operate,
+            .player_previous_position = _player_prev_pos,
+            .ready_ui = _ready_ui.CaptureState(),
+            .scroll = _ctx->scroll->CaptureState(),
+        };
+        return state.IsValid();
+    }
+
+    bool AbstractActionPhase::RestoreState(const AbstractActionPhaseState& state) noexcept
+    {
+        if (!state.IsValid() || !_ctx || !_ctx->scroll)
+        {
+            return false;
+        }
+
+        if (!_ctx->scroll->RestoreState(state.scroll) ||
+            !_ready_ui.RestoreState(state.ready_ui))
+        {
+            return false;
+        }
+
+        _state = state.phase;
+        _intro.step = state.intro_step;
+        _intro.timer = state.intro_timer;
+        _entered = state.entered;
+        _operate = state.operate;
+        _player_prev_pos = state.player_previous_position;
+
+        // Audio and charge particles are presentation state. Rebuild them from
+        // the player's next frame output instead of serializing channel state.
+        _charge_sound_playing = false;
+        _charge_phase = world::entity::avatar::ChargePhase::Idle;
+        return true;
     }
 
     void AbstractActionPhase::Initialize(const resources::parameters::Parameters& params)
@@ -146,7 +276,7 @@ namespace mm2hack::apps::scenes::phases
 
         _ctx->scroll->Render();
 
-        if (_intro.step == IntroStep::ReadyBlink && !_ready_ui.IsFinished())
+        if (_intro.step == ActionIntroStep::ReadyBlink && !_ready_ui.IsFinished())
         {
             _ready_ui.Render();
         }
@@ -189,7 +319,7 @@ namespace mm2hack::apps::scenes::phases
         if (!_operate)
             return;
 
-        _intro.step = IntroStep::ReadyBlink;
+        _intro.step = ActionIntroStep::ReadyBlink;
     }
 
     void AbstractActionPhase::updateIntro_()
@@ -202,26 +332,26 @@ namespace mm2hack::apps::scenes::phases
 
         switch (_intro.step)
         {
-            case IntroStep::ReadyBlink:
+            case ActionIntroStep::ReadyBlink:
             {
                 _ready_ui.Update(dt);
                 if (_ready_ui.IsFinished())
                 {
-                    _intro.step = IntroStep::WarpIn;
+                    _intro.step = ActionIntroStep::WarpIn;
                     _intro.timer = 0.0;
                     player->BeginIntroDrop();
                 }
                 break;
 
-            case IntroStep::WarpIn:
+            case ActionIntroStep::WarpIn:
                 player->UpdateIntroAnimation(dt);
                 if (player->IsIntroFinished())
                 {
-                    _intro.step = IntroStep::Done;
+                    _intro.step = ActionIntroStep::Done;
                 }
                 break;
 
-            case IntroStep::Done:
+            case ActionIntroStep::Done:
                 player->SetInput(_ctx->input);
                 _state = ActionPhaseState::Active;
                 break;
