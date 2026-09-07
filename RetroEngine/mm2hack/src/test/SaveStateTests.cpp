@@ -2,18 +2,10 @@
 
 #include "SaveStateTests.h"
 
-#include <algorithm>
-#include <cstddef>
-#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <exception>
-#include <optional>
-#include <sstream>
-#include <string>
 #include <string_view>
-#include <utility>
-#include <vector>
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/scenes/IBaseScene.h"
 #include "apps/scenes/IStageAssetProvider.h"
@@ -555,6 +547,11 @@ namespace mm2hack::test
 
     int RunSaveStateTests() noexcept
     {
+        const bool attached_to_parent_console =
+            ::AttachConsole(ATTACH_PARENT_PROCESS) != FALSE;
+        FILE* console_error{};
+        (void)freopen_s(&console_error, "CONOUT$", "w", stderr);
+
         TestRunner runner{};
         try
         {
@@ -571,6 +568,12 @@ namespace mm2hack::test
         {
             runner.Check(false, L"unexpected non-standard exception");
         }
-        return runner.Result();
+        const int result = runner.Result();
+        std::fflush(stderr);
+        if (attached_to_parent_console)
+        {
+            ::FreeConsole();
+        }
+        return result;
     }
 }
