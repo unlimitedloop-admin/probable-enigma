@@ -22,6 +22,7 @@
     <ClCompile Include="src\input\KeyboardInputProvider.cpp" />
     <ClCompile Include="src\input\KeyBinding.cpp" />
     <ClCompile Include="src\input\JoystickManager.cpp" />
+    <ClCompile Include="src\test\SaveStateTests.cpp" />
     <ClCompile Include="src\test\TestSequence.cpp" />
     <ClCompile Include="src\test\driver\001\PressKeyCommand.cpp" />
     <ClCompile Include="src\input\DirectInputProvider.cpp" />
@@ -173,6 +174,7 @@
     <ClInclude Include="src\input\KeyboardInputProvider.h" />
     <ClInclude Include="src\input\KeyBinding.h" />
     <ClInclude Include="src\input\JoystickManager.h" />
+    <ClInclude Include="src\test\SaveStateTests.h" />
     <ClInclude Include="src\test\TestSequence.h" />
     <ClInclude Include="src\test\driver\001\PressKeyCommand.h" />
     <ClInclude Include="src\test\driver\ITestDriver.h" />

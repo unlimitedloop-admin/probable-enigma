@@ -304,6 +304,7 @@
     <ClCompile Include="src\test\driver\003\SoundTest.cpp" />
     <ClCompile Include="src\test\driver\004\OuterSpaceBG.cpp" />
     <ClCompile Include="src\test\driver\005\LissajousCurveBG.cpp" />
+    <ClCompile Include="src\test\SaveStateTests.cpp" />
     <ClCompile Include="src\test\TestSequence.cpp" />
     <ClCompile Include="src\utils\decimal_decoder.cpp" />
     <ClCompile Include="src\utils\Fps.cpp" />
@@ -529,6 +530,7 @@
     <ClInclude Include="src\input\xi\XInputToken.h" />
     <ClInclude Include="src\libs\json.hpp" />
     <ClInclude Include="src\pch.h" />
+    <ClInclude Include="src\test\SaveStateTests.h" />
     <ClInclude Include="src\test\driver\001\PressKeyCommand.h" />
     <ClInclude Include="src\test\driver\002\DrawGraph.h" />
     <ClInclude Include="src\test\driver\003\SoundTest.h" />

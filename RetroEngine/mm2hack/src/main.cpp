@@ -12,8 +12,10 @@
 #include "pch.h"
 
 #include <cstdlib>
+#include <string_view>
 #include <sal.h>
 #include "core/bootstrap.h"
+#include "test/SaveStateTests.h"
 
 /// Entry point
 /// ENTRYPOINT
@@ -22,6 +24,11 @@
 INT APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
 {
     using namespace mm2hack::core;
+
+    if (std::wstring_view(lpCmdLine) == L"--state-tests")
+    {
+        return mm2hack::test::RunSaveStateTests();
+    }
 
     // Initialize the application environment.
     Bootstrapper(lpCmdLine);
