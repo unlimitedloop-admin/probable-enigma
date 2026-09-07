@@ -2,6 +2,11 @@
 
 #include "AudioInitializer.h"
 
+#include <cstddef>
+#include <string>
+#include <vector>
+
+#include "ApuVoice.h"
 #include "AudioConfigLoader.h"
 #include "BgmManager.h"
 #include "ChannelManager.h"
@@ -22,19 +27,22 @@ namespace mm2hack::apps::systems::audio
         {
             std::vector<std::wstring> filepaths;
             std::vector<int> volumes;
+            std::vector<ApuVoice> voices;
             for (const auto& ch : config.channels)
             {
                 filepaths.push_back(ch.file);
                 volumes.push_back(ch.volume);
+                voices.push_back(ch.voice);
             }
-            bgmManager.RegisterBgm(name, filepaths, volumes, config.loopStart, config.loopEnd);
+            bgmManager.RegisterBgm(name, filepaths, volumes, voices, config.loopStart, config.loopEnd);
 
             // Initial volume settings.
             for (size_t i = 0; i < config.channels.size(); ++i)
             {
-                if (i < static_cast<size_t>(bgmChannels.GetChannelCount()))
+                const int channel_index = static_cast<int>(ToIndex(config.channels[i].voice));
+                if (channel_index < bgmChannels.GetChannelCount())
                 {
-                    bgmChannels.SetVolume(static_cast<int>(i), config.channels[i].volume);
+                    bgmChannels.SetVolume(channel_index, config.channels[i].volume);
                 }
             }
         }
@@ -44,13 +52,13 @@ namespace mm2hack::apps::systems::audio
         {
             std::vector<std::wstring> filepaths;
             std::vector<int> volumes;
-            std::vector<int> targetBgmChannels;
+            std::vector<ApuVoice> voices;
             std::vector<SePriority> priorities;
             for (const auto& ch : config.channels)
             {
                 filepaths.push_back(ch.file);
                 volumes.push_back(ch.volume);
-                targetBgmChannels.push_back(ch.target_bgm_channels);
+                voices.push_back(ch.voice);
                 priorities.push_back(ch.priority);
 
             }
@@ -58,7 +66,7 @@ namespace mm2hack::apps::systems::audio
                 name,
                 filepaths,
                 volumes,
-                targetBgmChannels,
+                voices,
                 priorities,
                 config.loopStart,
                 config.loopEnd);

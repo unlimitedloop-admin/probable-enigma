@@ -11,6 +11,8 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+#include "ApuVoice.h"
 #include "AudioMixer.h"
 #include "config/SystemConfig.h"
 #include "SeManager.h"
@@ -31,7 +33,8 @@ namespace mm2hack::apps::systems::audio
 
         // Register a BGM with its name, file paths, volumes, and optional loop points
         bool RegisterBgm(const std::wstring& name, const std::vector<std::wstring>& filepaths,
-            const std::vector<int>& volumes, double loopStart = 0.0, double loopEnd = 0.0);
+            const std::vector<int>& volumes, const std::vector<ApuVoice>& voices,
+            double loopStart = 0.0, double loopEnd = 0.0);
         // Play a registered BGM by name
         bool Play(const std::wstring& name);
         // Stop the currently playing BGM
@@ -72,6 +75,7 @@ namespace mm2hack::apps::systems::audio
         {
             std::vector<std::wstring> filepaths;
             std::vector<int> volumes;
+            std::vector<ApuVoice> voices;
             double loopStart = 0.0;
             double loopEnd = 0.0;
         };

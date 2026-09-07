@@ -7,12 +7,12 @@
                 {
                     "file": "assets/sounds/SoundEffects/ENTER_EFFECT_N0_SE_Square1.wav",
                     "volume": 255,
-                    "target_bgm_channels": 1
+                    "voice": "pulse1"
                 },
                 {
                     "file": "assets/sounds/SoundEffects/ENTER_EFFECT_N0_SE_Square2.wav",
                     "volume": 255,
-                    "target_bgm_channels": 2
+                    "voice": "pulse2"
                 }
             ]
         },
@@ -21,7 +21,7 @@
                 {
                     "file": "assets/sounds/SoundEffects/PLINK_EFFECT_N0_SE_Square1.wav",
                     "volume": 255,
-                    "target_bgm_channels": 1
+                    "voice": "pulse1"
                 }
             ]
         }

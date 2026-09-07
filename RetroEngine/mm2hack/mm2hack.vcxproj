@@ -409,6 +409,7 @@
     <ClInclude Include="src\apps\systems\audio\AudioInitializer.h" />
     <ClInclude Include="src\apps\systems\audio\AudioManager.h" />
     <ClInclude Include="src\apps\systems\audio\AudioMixer.h" />
+    <ClInclude Include="src\apps\systems\audio\ApuVoice.h" />
     <ClInclude Include="src\apps\systems\audio\BgmManager.h" />
     <ClInclude Include="src\apps\systems\audio\ChannelManager.h" />
     <ClInclude Include="src\apps\systems\audio\ISoundChannel.h" />

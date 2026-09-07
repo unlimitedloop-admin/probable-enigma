@@ -4,23 +4,28 @@
             "channels": [
                 {
                     "file": "assets/sounds/BGMs/02_DemoStage2/BGM_02/Rockman3__BGM_DrWilyStage1_Square1.wav",
-                    "volume": 255
+                    "volume": 255,
+                    "voice": "pulse1"
                 },
                 {
                     "file": "assets/sounds/BGMs/02_DemoStage2/BGM_02/Rockman3__BGM_DrWilyStage1_Square2.wav",
-                    "volume": 255
+                    "volume": 255,
+                    "voice": "pulse2"
                 },
                 {
                     "file": "assets/sounds/BGMs/02_DemoStage2/BGM_02/Rockman3__BGM_DrWilyStage1_Triangle.wav",
-                    "volume": 255
+                    "volume": 255,
+                    "voice": "triangle"
                 },
                 {
                     "file": "assets/sounds/BGMs/02_DemoStage2/BGM_02/Rockman3__BGM_DrWilyStage1_Noise.wav",
-                    "volume": 255
+                    "volume": 255,
+                    "voice": "noise"
                 },
                 {
                     "file": "assets/sounds/BGMs/02_DemoStage2/BGM_02/Rockman3__BGM_DrWilyStage1_DPCM_Unused_ch.wav",
-                    "volume": 255
+                    "volume": 255,
+                    "voice": "dpcm"
                 }
             ],
             "loop_start": 11.77,
@@ -33,7 +38,7 @@
                 {
                     "file": "assets/sounds/SoundEffects/LANDING_EFFECT_N0_SE_Square2.wav",
                     "volume": 255,
-                    "target_bgm_channels": 1,
+                    "voice": "pulse2",
                     "priority": 1
                 }
             ]
@@ -43,7 +48,7 @@
                 {
                     "file": "assets/sounds/SoundEffects/SHOT_EFFECT_N0_SE_Square2.wav",
                     "volume": 255,
-                    "target_bgm_channels": 1,
+                    "voice": "pulse2",
                     "priority": 2
                 }
             ]
@@ -53,7 +58,7 @@
                 {
                     "file": "assets/sounds/SoundEffects/EXBUSTERCHARGE_EFFECT_N0_SE_Square2.wav",
                     "volume": 255,
-                    "target_bgm_channels": 1,
+                    "voice": "pulse2",
                     "priority": 2
                 }
             ],
@@ -65,7 +70,7 @@
                 {
                     "file": "assets/sounds/SoundEffects/CHARGESHOTBANG_EFFECT_N0_SE_Noise.wav",
                     "volume": 255,
-                    "target_bgm_channels": 3,
+                    "voice": "noise",
                     "priority": 2
                 }
             ]
@@ -75,13 +80,13 @@
                 {
                     "file": "assets/sounds/SoundEffects/SPLASH_EFFECT_N0_SE_Square2.wav",
                     "volume": 255,
-                    "target_bgm_channels": 1,
+                    "voice": "pulse2",
                     "priority": 1
                 },
                 {
                     "file": "assets/sounds/SoundEffects/SPLASH_EFFECT_N0_SE_Noise.wav",
                     "volume": 255,
-                    "target_bgm_channels": 3,
+                    "voice": "noise",
                     "priority": 1
                 }
             ]
@@ -91,13 +96,13 @@
                 {
                     "file": "assets/sounds/SoundEffects/ONSTAGE_EFFECT_N0_SE_Square2.wav",
                     "volume": 255,
-                    "target_bgm_channels": 1,
+                    "voice": "pulse2",
                     "priority": 1
                 },
                 {
                     "file": "assets/sounds/SoundEffects/ONSTAGE_EFFECT_N0_SE_Noise.wav",
                     "volume": 255,
-                    "target_bgm_channels": 3,
+                    "voice": "noise",
                     "priority": 1
                 }
             ]

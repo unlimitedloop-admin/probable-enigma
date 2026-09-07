@@ -2,6 +2,10 @@
 
 #include "BgmManager.h"
 
+#include <algorithm>
+#include <cstddef>
+
+#include "ApuVoice.h"
 #include "ChannelManager.h"
 
 namespace mm2hack::apps::systems::audio
@@ -12,10 +16,11 @@ namespace mm2hack::apps::systems::audio
     }
 
     bool BgmManager::RegisterBgm(const std::wstring& name, const std::vector<std::wstring>& filepaths,
-        const std::vector<int>& volumes, double loopStart, double loopEnd)
+        const std::vector<int>& volumes, const std::vector<ApuVoice>& voices,
+        double loopStart, double loopEnd)
     {
-        if (name.empty() || filepaths.empty()) return false;
-        _bgmData[name] = { filepaths, volumes, loopStart, loopEnd };
+        if (name.empty() || filepaths.empty() || filepaths.size() != voices.size()) return false;
+        _bgmData[name] = { filepaths, volumes, voices, loopStart, loopEnd };
         return true;
     }
 
@@ -27,29 +32,30 @@ namespace mm2hack::apps::systems::audio
         if (it == _bgmData.end()) return false;
 
         const auto& config = it->second;
-        _channels.EnsureChannelCount(static_cast<int>(config.filepaths.size()));
+        _channels.EnsureChannelCount(static_cast<int>(kApuVoiceCount));
 
-        _currentVolumes.resize(config.filepaths.size());
+        _currentVolumes.assign(kApuVoiceCount, 0);
 
         // Load all files and set volumes.
         for (size_t i = 0; i < config.filepaths.size(); ++i)
         {
-            _channels.Load(static_cast<int>(i), config.filepaths[i]);
+            const int channel_index = static_cast<int>(ToIndex(config.voices[i]));
+            _channels.Load(channel_index, config.filepaths[i]);
 
             int baseVol = (i < config.volumes.size()) ? config.volumes[i] : MAX_VOLUME;
             int master = _mixer ? _mixer->GetMasterVolume() : MAX_VOLUME;
             int adjustedVol = (baseVol * master) / MAX_VOLUME;
 
-            _channels.SetVolume(static_cast<int>(i), adjustedVol);
-            _currentVolumes[i] = adjustedVol;
+            _channels.SetVolume(channel_index, adjustedVol);
+            _currentVolumes[static_cast<std::size_t>(channel_index)] = adjustedVol;
 
-            SetSoundCurrentPosition(0, _channels.GetHandle(static_cast<int>(i)));
+            SetSoundCurrentPosition(0, _channels.GetHandle(channel_index));
         }
 
         // Play all channels with loop.
         for (size_t i = 0; i < config.filepaths.size(); ++i)
         {
-            _channels.Play(static_cast<int>(i), true);
+            _channels.Play(static_cast<int>(ToIndex(config.voices[i])), true);
         }
 
         _loopStart = config.loopStart;
@@ -102,9 +108,11 @@ namespace mm2hack::apps::systems::audio
 
         for (size_t i = 0; i < config.filepaths.size(); ++i)
         {
+            const int channel_index = static_cast<int>(ToIndex(config.voices[i]));
             int baseVol = (i < config.volumes.size()) ? config.volumes[i] : MAX_VOLUME;
             int adjustedVol = (baseVol * _masterVolume) / MAX_VOLUME;
-            _channels.SetVolume(static_cast<int>(i), adjustedVol);
+            _channels.SetVolume(channel_index, adjustedVol);
+            _currentVolumes[static_cast<std::size_t>(channel_index)] = adjustedVol;
         }
     }
 
@@ -128,16 +136,19 @@ namespace mm2hack::apps::systems::audio
     {
         if (!_isPlaying || _loopEnd <= 0.0) return;
 
-        for (int i = 0; i < _channels.GetChannelCount(); ++i)
+        const auto data_it = _bgmData.find(_currentBgm);
+        if (data_it == _bgmData.end()) return;
+        for (const ApuVoice voice : data_it->second.voices)
         {
-            if (_channels.IsPlaying(i))
+            const int channel_index = static_cast<int>(ToIndex(voice));
+            if (_channels.IsPlaying(channel_index))
             {
-                LONGLONG posMs = DxLib::GetSoundCurrentTime(_channels.GetHandle(i));
+                LONGLONG posMs = DxLib::GetSoundCurrentTime(_channels.GetHandle(channel_index));
                 double posSec = posMs / 1000.0;
                 if (posSec >= _loopEnd)
                 {
                     auto loop = static_cast<LONGLONG>(_loopStart * 1000);
-                    DxLib::SetSoundCurrentTime(loop, _channels.GetHandle(i));
+                    DxLib::SetSoundCurrentTime(loop, _channels.GetHandle(channel_index));
                     //utils::debug_log(L"BGM looped: {} at channel: {}", loop, i);
                 }
             }

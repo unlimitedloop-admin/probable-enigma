@@ -1,8 +1,12 @@
 #include "pch.h"
 
-#include <string_view>
-#include "AudioInitializer.h"
 #include "AudioManager.h"
+
+#include <algorithm>
+#include <string_view>
+
+#include "ApuVoice.h"
+#include "AudioInitializer.h"
 #include "ChannelManager.h"
 #include "config/SoundConfig.h"
 #include "SoundChannel.h"
@@ -11,7 +15,7 @@
 namespace mm2hack::apps::systems::audio
 {
     AudioManager::AudioManager()
-        : _bgmChannels(5), _seChannels(8),
+        : _bgmChannels(static_cast<int>(kApuVoiceCount)), _seChannels(8),
         _bgmManager(_bgmChannels), _seManager(_bgmChannels, 8),
         _mixer(_bgmManager, _seManager)
     {

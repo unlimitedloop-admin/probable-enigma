@@ -206,6 +206,7 @@
     <ClInclude Include="src\apps\rendering\bg\BGTileManager.h" />
     <ClInclude Include="src\apps\runtime\IGameContext.h" />
     <ClInclude Include="src\apps\runtime\GameContext.h" />
+    <ClInclude Include="src\apps\systems\audio\ApuVoice.h" />
     <ClInclude Include="src\apps\systems\audio\ISoundChannel.h" />
     <ClInclude Include="src\apps\systems\audio\SoundChannel.h" />
     <ClInclude Include="src\pch.h" />

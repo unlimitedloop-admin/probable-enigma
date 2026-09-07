@@ -1,8 +1,14 @@
 #include "pch.h"
 
-#include "AudioConfigLoader.h"
-#include "ChannelManager.h"
 #include "SeManager.h"
+
+#include <algorithm>
+#include <cstddef>
+#include <string>
+#include <vector>
+
+#include "ApuVoice.h"
+#include "ChannelManager.h"
 
 namespace mm2hack::apps::systems::audio
 {
@@ -16,14 +22,14 @@ namespace mm2hack::apps::systems::audio
         const std::wstring& name,
         const std::vector<std::wstring>& filepath,
         const std::vector<int>& volume,
-        const std::vector<int>& targetChannels,
+        const std::vector<ApuVoice>& voices,
         const std::vector<SePriority> priority,
         double loopStart,
         double loopEnd
         )
     {
-        if (name.empty() || filepath.empty()) return false;
-        _seData[name] = { filepath, volume, targetChannels, priority, loopStart, loopEnd };
+        if (name.empty() || filepath.empty() || filepath.size() != voices.size()) return false;
+        _seData[name] = { filepath, volume, voices, priority, loopStart, loopEnd };
         return true;
     }
 
@@ -74,9 +80,9 @@ namespace mm2hack::apps::systems::audio
 
             _channelToSeName[chIndex] = name;
 
-            if (i < se.targetBgmChannels.size())
+            if (i < se.voices.size())
             {
-                int bgmCh = se.targetBgmChannels[i];
+                int bgmCh = static_cast<int>(ToIndex(se.voices[i]));
                 if (bgmCh >= 0 && bgmCh < _bgmChannels.GetChannelCount())
                 {
                     if (_bgmVolumeBackup[bgmCh] == -1)

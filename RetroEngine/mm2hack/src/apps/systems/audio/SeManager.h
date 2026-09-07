@@ -11,6 +11,8 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+#include "ApuVoice.h"
 #include "AudioConfigLoader.h"
 #include "AudioMixer.h"
 #include "BgmManager.h"
@@ -31,7 +33,7 @@ namespace mm2hack::apps::systems::audio
             const std::wstring& name,
             const std::vector<std::wstring>& filepath,
             const std::vector<int>& volume,
-            const std::vector<int>& targetChannels = {},
+            const std::vector<ApuVoice>& voices,
             const std::vector<SePriority> priority = {},
             double loopStart = 0.0,
             double loopEnd = 0.0
@@ -66,7 +68,7 @@ namespace mm2hack::apps::systems::audio
         {
             std::vector<std::wstring> filepaths;    // SE file paths
             std::vector<int> volumes;               // SE volumes
-            std::vector<int> targetBgmChannels;     // Target BGM channels for muting
+            std::vector<ApuVoice> voices;           // Logical APU voices occupied by the SE stems
             std::vector<SePriority> priority;       // SE priorities
             double loopStart = 0.0;                 // Loop start in seconds
             double loopEnd = 0.0;                   // Loop end in seconds; disabled when <= loopStart

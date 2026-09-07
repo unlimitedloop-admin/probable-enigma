@@ -11,6 +11,8 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+#include "ApuVoice.h"
 #include "config/SystemConfig.h"
 
 namespace mm2hack::apps::systems::audio
@@ -20,6 +22,7 @@ namespace mm2hack::apps::systems::audio
     {
         std::wstring file;
         int volume = config::SystemConfig::kAudioMaxVolume; // Volume level (0-255)
+        ApuVoice voice = ApuVoice::Pulse1;
     };
 
     // Configuration structure for BGM, which includes multiple channels and loop points
@@ -41,7 +44,7 @@ namespace mm2hack::apps::systems::audio
     {
         std::wstring file;
         int volume = config::SystemConfig::kAudioMaxVolume; // Volume level (0-255)
-        int target_bgm_channels = -1;                       // Channel to restore BGM volume after SE playback, -1 means no specific channel
+        ApuVoice voice = ApuVoice::Pulse1;                  // Logical APU voice occupied by the SE stem
         SePriority priority = SePriority::Normal;           // Priority of the SE
     };
 
