@@ -13,17 +13,13 @@
 #include <vector>
 
 #include "ApuVoice.h"
-#include "AudioMixer.h"
 #include "config/SystemConfig.h"
-#include "SeManager.h"
 
 namespace mm2hack::apps::systems::audio
 {
     class ChannelManager;
-}
+    class SeManager;
 
-namespace mm2hack::apps::systems::audio
-{
     // BgmManager is responsible for managing background music (BGM) playback, including registration, playback, stopping, and fading
     class BgmManager
     {
@@ -53,6 +49,8 @@ namespace mm2hack::apps::systems::audio
         void SetMasterVolume(int volume);
         // Get the current master volume (0-255)
         int GetMasterVolume() const { return _masterVolume; }
+        // Reapply logical BGM volumes after APU voice ownership changes.
+        void RefreshOutputVolumes();
 
         // Update the BGM manager (handle fading and looping)
         void Update();
@@ -61,14 +59,12 @@ namespace mm2hack::apps::systems::audio
         // Get the name of the currently playing BGM
         std::wstring GetCurrentBgmName() const { return _currentBgm; }
 
-        int GetCurrentBgmVolume(int channelIndex) const;
-
         void SetSeManager(SeManager* manager) { _seManager = manager; }
-        void SetAudioMixer(AudioMixer* mixer) { _mixer = mixer; }
 
     private:
         void applyFade_();           // Apply fade effect if active
         void checkAndApplyLoop_();   // Check and apply loop points if necessary
+        int effectiveVolume_(ApuVoice voice, int logicalVolume) const;
 
     private:
         struct BgmData
@@ -89,7 +85,7 @@ namespace mm2hack::apps::systems::audio
         std::unordered_map<std::wstring, BgmData> _bgmData; // Registered BGM data
 
         std::wstring _currentBgm;                           // Name of the currently playing BGM
-        std::vector<int> _currentVolumes;                   // Current volumes for each BGM channel
+        std::vector<int> _logical_volumes;                  // Logical volumes before SE voice preemption
         bool _isPlaying = false;
 
         // Loop parameters
@@ -103,6 +99,5 @@ namespace mm2hack::apps::systems::audio
         int _fadeFramesRemaining = 0;
 
         SeManager* _seManager = nullptr;                    // Pointer to the SE manager for sound effect interactions
-        AudioMixer* _mixer = nullptr;                       // Pointer to the audio mixer for volume control
     };
 }

@@ -7,6 +7,7 @@
 
 #include "ApuVoice.h"
 #include "ChannelManager.h"
+#include "SeManager.h"
 
 namespace mm2hack::apps::systems::audio
 {
@@ -34,7 +35,7 @@ namespace mm2hack::apps::systems::audio
         const auto& config = it->second;
         _channels.EnsureChannelCount(static_cast<int>(kApuVoiceCount));
 
-        _currentVolumes.assign(kApuVoiceCount, 0);
+        _logical_volumes.assign(kApuVoiceCount, 0);
 
         // Load all files and set volumes.
         for (size_t i = 0; i < config.filepaths.size(); ++i)
@@ -43,14 +44,13 @@ namespace mm2hack::apps::systems::audio
             _channels.Load(channel_index, config.filepaths[i]);
 
             int baseVol = (i < config.volumes.size()) ? config.volumes[i] : MAX_VOLUME;
-            int master = _mixer ? _mixer->GetMasterVolume() : MAX_VOLUME;
-            int adjustedVol = (baseVol * master) / MAX_VOLUME;
+            int adjustedVol = (baseVol * _masterVolume) / MAX_VOLUME;
 
-            _channels.SetVolume(channel_index, adjustedVol);
-            _currentVolumes[static_cast<std::size_t>(channel_index)] = adjustedVol;
+            _logical_volumes[static_cast<std::size_t>(channel_index)] = adjustedVol;
 
             SetSoundCurrentPosition(0, _channels.GetHandle(channel_index));
         }
+        RefreshOutputVolumes();
 
         // Play all channels with loop.
         for (size_t i = 0; i < config.filepaths.size(); ++i)
@@ -111,8 +111,23 @@ namespace mm2hack::apps::systems::audio
             const int channel_index = static_cast<int>(ToIndex(config.voices[i]));
             int baseVol = (i < config.volumes.size()) ? config.volumes[i] : MAX_VOLUME;
             int adjustedVol = (baseVol * _masterVolume) / MAX_VOLUME;
-            _channels.SetVolume(channel_index, adjustedVol);
-            _currentVolumes[static_cast<std::size_t>(channel_index)] = adjustedVol;
+            _logical_volumes[static_cast<std::size_t>(channel_index)] = adjustedVol;
+        }
+        RefreshOutputVolumes();
+    }
+
+    void BgmManager::RefreshOutputVolumes()
+    {
+        const auto data_it = _bgmData.find(_currentBgm);
+        if (data_it == _bgmData.end()) return;
+
+        for (const ApuVoice voice : data_it->second.voices)
+        {
+            const std::size_t index = ToIndex(voice);
+            const int logical_volume = index < _logical_volumes.size() ? _logical_volumes[index] : 0;
+            _channels.SetVolume(
+                static_cast<int>(index),
+                effectiveVolume_(voice, logical_volume));
         }
     }
 
@@ -166,12 +181,8 @@ namespace mm2hack::apps::systems::audio
             int vol = _channels.GetVolume(i);
         }
     }
-    int audio::BgmManager::GetCurrentBgmVolume(int channelIndex) const
+    int BgmManager::effectiveVolume_(ApuVoice voice, int logicalVolume) const
     {
-        if (channelIndex < 0 || channelIndex >= static_cast<int>(_currentVolumes.size()))
-        {
-            return MAX_VOLUME;
-        }
-        return _currentVolumes[channelIndex];
+        return _seManager != nullptr && _seManager->IsVoiceOwnedBySe(voice) ? 0 : logicalVolume;
     }
 }

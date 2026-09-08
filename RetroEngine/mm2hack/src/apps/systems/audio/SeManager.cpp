@@ -17,8 +17,8 @@
 
 namespace mm2hack::apps::systems::audio
 {
-    SeManager::SeManager(ChannelManager& bgmChannels)
-        : _bgmChannels(bgmChannels), _seChannels(static_cast<int>(kApuVoiceCount))
+    SeManager::SeManager()
+        : _seChannels(static_cast<int>(kApuVoiceCount))
     {
     }
 
@@ -199,25 +199,15 @@ namespace mm2hack::apps::systems::audio
         return _voiceArbiter.GetCurrentMaxPriority();
     }
 
-    bool SeManager::IsBgmChannelMuted(int index) const
+    bool SeManager::IsVoiceOwnedBySe(ApuVoice voice) const
     {
-        if (index < 0 || index >= static_cast<int>(kApuVoiceCount))
-        {
-            return false;
-        }
-        return _voiceArbiter.IsOwned(static_cast<ApuVoice>(index));
+        return _voiceArbiter.IsOwned(voice);
     }
 
     void SeManager::applyBgmOwnership_()
     {
         if (_bgmManager == nullptr) return;
-        for (std::size_t index = 0; index < kApuVoiceCount; ++index)
-        {
-            const ApuVoice voice = static_cast<ApuVoice>(index);
-            const int volume = _voiceArbiter.IsOwned(voice) ?
-                0 : _bgmManager->GetCurrentBgmVolume(static_cast<int>(index));
-            _bgmChannels.SetVolume(static_cast<int>(index), volume);
-        }
+        _bgmManager->RefreshOutputVolumes();
     }
 
     void SeManager::stopPlaybackForOwners_(const std::vector<std::wstring>& owners)

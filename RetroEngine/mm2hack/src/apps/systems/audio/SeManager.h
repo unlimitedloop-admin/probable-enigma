@@ -20,14 +20,13 @@
 
 namespace mm2hack::apps::systems::audio
 {
-    class AudioMixer;
     class BgmManager;
 
     // Sound Effect (SE) Manager
     class SeManager
     {
     public:
-        explicit SeManager(ChannelManager& bgmChannels);
+        SeManager();
         ~SeManager() = default;
 
         // Load SE data from file
@@ -58,11 +57,10 @@ namespace mm2hack::apps::systems::audio
         // Get the highest priority among currently playing SE
         SePriority GetCurrentMaxPriority() const;
 
-        // Check if a specific BGM channel is muted due to SE playback
-        bool IsBgmChannelMuted(int index) const;
+        // Check if an SE currently owns a logical APU voice.
+        bool IsVoiceOwnedBySe(ApuVoice voice) const;
 
         void SetBgmManager(BgmManager* manager) { _bgmManager = manager; }
-        void SetAudioMixer(AudioMixer* mixer) { _mixer = mixer; }
 
     private:
         // SE data structure
@@ -86,12 +84,10 @@ namespace mm2hack::apps::systems::audio
 
         int _masterVolume = MAX_VOLUME;
         ChannelManager _seChannels;                                 // SE channels manager
-        ChannelManager& _bgmChannels;                               // BGM channels reference (for mute control)
         ApuVoiceArbiter _voiceArbiter;                              // Exclusive logical APU voice ownership
         std::unordered_map<std::wstring, SeData> _seData;           // Name -> SE data
         std::unordered_map<int, std::wstring> _channelToSeName;     // Channel index -> SE name mapping
 
         BgmManager* _bgmManager = nullptr;                          // Pointer to the BGM manager for volume adjustments
-        AudioMixer* _mixer = nullptr;                               // Pointer to the audio mixer for volume control
     };
 }

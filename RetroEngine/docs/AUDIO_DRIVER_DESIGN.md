@@ -62,7 +62,7 @@ Restore order:
 |---|---:|---|---|---|
 | AUD-001 | P0 | Done | Add stable APU voice IDs and explicit configuration mapping | BGM and SE stems no longer infer their voice from array position or a numeric BGM index |
 | AUD-002 | P0 | Done | Add five-slot voice ownership and per-voice SE arbitration | No two audible sources can own the same APU voice; multi-stem acquisition is atomic |
-| AUD-003 | P0 | Ready | Route effective BGM volume through ownership | Fade and volume changes cannot make a preempted BGM voice audible |
+| AUD-003 | P0 | Done | Route effective BGM volume through ownership | Fade and volume changes cannot make a preempted BGM voice audible |
 | AUD-004 | P1 | Ready | Remove duplicate SE channel ownership from `AudioManager` | Each backend channel has one clear owner and release path |
 | AUD-005 | P1 | Ready | Add pure arbitration and configuration tests | Voice conflicts, priorities, atomic acquisition, and invalid mappings are covered without audio hardware |
 | AUD-006 | P1 | Ready | Add logical BGM transport snapshots | Paused multi-stem BGM restores by stable track and voice IDs |

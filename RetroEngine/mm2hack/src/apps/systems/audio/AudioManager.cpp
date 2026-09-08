@@ -16,14 +16,12 @@ namespace mm2hack::apps::systems::audio
 {
     AudioManager::AudioManager()
         : _bgmChannels(static_cast<int>(kApuVoiceCount)), _seChannels(8),
-        _bgmManager(_bgmChannels), _seManager(_bgmChannels),
+        _bgmManager(_bgmChannels), _seManager(),
         _mixer(_bgmManager, _seManager)
     {
         // Link BGM manager with SE manager.
         _bgmManager.SetSeManager(&_seManager);
-        _bgmManager.SetAudioMixer(&_mixer);
         _seManager.SetBgmManager(&_bgmManager);
-        _seManager.SetAudioMixer(&_mixer);
     }
 
     bool AudioManager::Initialize(const std::wstring& configPath)
@@ -39,7 +37,6 @@ namespace mm2hack::apps::systems::audio
     void AudioManager::PlayBgm(const std::wstring& name)
     {
         _bgmManager.Play(name);
-        SetBgmVolume(_mixer.GetMasterVolume());
     }
 
     void AudioManager::StopBgm()
