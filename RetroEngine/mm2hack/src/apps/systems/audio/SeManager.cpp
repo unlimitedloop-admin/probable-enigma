@@ -82,6 +82,7 @@ namespace mm2hack::apps::systems::audio
         if (!acquisition.accepted) return;
 
         stopPlaybackForOwners_(acquisition.displacedOwners);
+        _seChannels.EnsureChannelCount(static_cast<int>(kApuVoiceCount));
 
         // NOTE: We assume that each SE consists of multiple files played simultaneously on separate channels.
         // Load and play each file, adjusting volume as needed.
@@ -110,6 +111,13 @@ namespace mm2hack::apps::systems::audio
         _channelToSeName.clear();
         _voiceArbiter.Clear();
         applyBgmOwnership_();
+    }
+
+    void SeManager::Release()
+    {
+        StopAll();
+        _seChannels.Clear();
+        _seData.clear();
     }
 
     void SeManager::Pause()

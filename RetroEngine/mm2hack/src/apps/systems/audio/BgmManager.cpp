@@ -73,6 +73,19 @@ namespace mm2hack::apps::systems::audio
         _isPlaying = false;
     }
 
+    void BgmManager::Release()
+    {
+        Stop();
+        _channels.Clear();
+        _bgmData.clear();
+        _currentBgm.clear();
+        _logical_volumes.clear();
+        _loopStart = 0.0;
+        _loopEnd = 0.0;
+        _isFading = false;
+        _fadeFramesRemaining = 0;
+    }
+
     void BgmManager::Pause()
     {
         _channels.PauseAll();

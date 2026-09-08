@@ -2,20 +2,21 @@
 
 #include "AudioInitializer.h"
 
-#include <cstddef>
 #include <string>
 #include <vector>
 
 #include "ApuVoice.h"
 #include "AudioConfigLoader.h"
 #include "BgmManager.h"
-#include "ChannelManager.h"
 #include "SeManager.h"
 #include "SePriority.h"
 
 namespace mm2hack::apps::systems::audio
 {
-    bool AudioInitializer::InitializeAudio(const std::wstring& configPath, BgmManager& bgmManager, SeManager& seManager, ChannelManager& bgmChannels, ChannelManager& seChannels)
+    bool AudioInitializer::InitializeAudio(
+        const std::wstring& configPath,
+        BgmManager& bgmManager,
+        SeManager& seManager)
     {
         AudioConfigLoader loader;
         if (!loader.LoadFromFile(configPath))
@@ -35,16 +36,10 @@ namespace mm2hack::apps::systems::audio
                 volumes.push_back(ch.volume);
                 voices.push_back(ch.voice);
             }
-            bgmManager.RegisterBgm(name, filepaths, volumes, voices, config.loopStart, config.loopEnd);
-
-            // Initial volume settings.
-            for (size_t i = 0; i < config.channels.size(); ++i)
+            if (!bgmManager.RegisterBgm(
+                name, filepaths, volumes, voices, config.loopStart, config.loopEnd))
             {
-                const int channel_index = static_cast<int>(ToIndex(config.channels[i].voice));
-                if (channel_index < bgmChannels.GetChannelCount())
-                {
-                    bgmChannels.SetVolume(channel_index, config.channels[i].volume);
-                }
+                return false;
             }
         }
 
@@ -61,24 +56,17 @@ namespace mm2hack::apps::systems::audio
                 volumes.push_back(ch.volume);
                 voices.push_back(ch.voice);
                 priorities.push_back(ch.priority);
-
             }
-            seManager.LoadSe(
+            if (!seManager.LoadSe(
                 name,
                 filepaths,
                 volumes,
                 voices,
                 priorities,
                 config.loopStart,
-                config.loopEnd);
-
-            // Initial volume settings.
-            for (size_t i = 0; i < config.channels.size(); ++i)
+                config.loopEnd))
             {
-                if (i < static_cast<size_t>(seChannels.GetChannelCount()))
-                {
-                    seChannels.SetVolume(static_cast<int>(i), config.channels[i].volume);
-                }
+                return false;
             }
         }
 

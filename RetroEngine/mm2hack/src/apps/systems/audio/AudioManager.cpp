@@ -15,7 +15,7 @@
 namespace mm2hack::apps::systems::audio
 {
     AudioManager::AudioManager()
-        : _bgmChannels(static_cast<int>(kApuVoiceCount)), _seChannels(8),
+        : _bgmChannels(static_cast<int>(kApuVoiceCount)),
         _bgmManager(_bgmChannels), _seManager(),
         _mixer(_bgmManager, _seManager)
     {
@@ -26,7 +26,7 @@ namespace mm2hack::apps::systems::audio
 
     bool AudioManager::Initialize(const std::wstring& configPath)
     {
-        return AudioInitializer::InitializeAudio(configPath, _bgmManager, _seManager, _bgmChannels, _seChannels);
+        return AudioInitializer::InitializeAudio(configPath, _bgmManager, _seManager);
     }
 
     bool AudioManager::Initialize(const std::wstring_view configPath)
@@ -124,11 +124,8 @@ namespace mm2hack::apps::systems::audio
 
     void AudioManager::Release()
     {
-        _bgmManager.Stop();
-        _seManager.StopAll();
-
-        _bgmChannels.Clear();
-        _seChannels.Clear();
+        _bgmManager.Release();
+        _seManager.Release();
     }
 
     int AudioManager::toDxVolume_(int uiVolume)

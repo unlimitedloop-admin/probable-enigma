@@ -92,7 +92,6 @@ namespace mm2hack::apps::systems::audio
 
         // ==== Sound engine components ====
         ChannelManager _bgmChannels;                        // BGM channel manager
-        ChannelManager _seChannels;                         // SE channel manager
         BgmManager _bgmManager;                             // BGM manager
         SeManager _seManager;                               // SE manager
         AudioMixer _mixer;                                  // Audio mixer

@@ -35,6 +35,8 @@ namespace mm2hack::apps::systems::audio
         bool Play(const std::wstring& name);
         // Stop the currently playing BGM
         void Stop();
+        // Release playback resources and registered BGM definitions.
+        void Release();
         // Pause the currently playing BGM
         void Pause();
         // Resume the paused BGM

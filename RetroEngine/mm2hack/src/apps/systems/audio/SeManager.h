@@ -45,6 +45,8 @@ namespace mm2hack::apps::systems::audio
         void StopSe(const std::wstring& name);
         // Stop all SE
         void StopAll();
+        // Release playback resources and registered SE definitions.
+        void Release();
         // Pause all SE
         void Pause();
         // Resume all SE
