@@ -9,6 +9,7 @@
 #pragma once
 
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <vector>
 
@@ -56,6 +57,8 @@ namespace mm2hack::apps::systems::audio
     public:
         // Loads audio configurations from a JSON file
         bool LoadFromFile(const std::wstring& filepath);
+        // Parses audio configurations from UTF-8 JSON without accessing audio or files.
+        bool LoadFromJson(std::string_view source);
 
         const std::unordered_map<std::wstring, BgmConfig>& GetBgmConfigs() const { return _bgmConfigs; }
         const std::unordered_map<std::wstring, SeConfig>& GetSeConfigs() const { return _seConfigs; }

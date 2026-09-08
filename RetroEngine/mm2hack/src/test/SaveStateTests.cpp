@@ -21,6 +21,7 @@
 #include "apps/scenes/SceneManager.h"
 #include "apps/systems/audio/ApuVoice.h"
 #include "apps/systems/audio/ApuVoiceArbiter.h"
+#include "apps/systems/audio/AudioConfigLoader.h"
 #include "apps/systems/audio/SePriority.h"
 #include "apps/systems/physics/ILadderService.h"
 #include "apps/systems/physics/ITerrainProbe.h"
@@ -48,6 +49,7 @@ namespace mm2hack::test
         using apps::systems::audio::ApuVoice;
         using apps::systems::audio::ApuVoiceArbiter;
         using apps::systems::audio::ApuVoiceClaim;
+        using apps::systems::audio::AudioConfigLoader;
         using apps::systems::audio::SePriority;
         using apps::systems::physics::AvatarDirection;
         using apps::systems::physics::ILadderService;
@@ -401,6 +403,15 @@ namespace mm2hack::test
                 IsVoiceOwner(arbiter, ApuVoice::Triangle, L"ladder"),
                 L"independent APU voices coexist");
 
+            const auto higher_priority = arbiter.Acquire(L"high_priority", {
+                ApuVoiceClaim{ ApuVoice::Triangle, SePriority::High }
+                });
+            runner.Check(
+                higher_priority.accepted && higher_priority.displacedOwners.size() == 1 &&
+                higher_priority.displacedOwners.front() == L"ladder" &&
+                IsVoiceOwner(arbiter, ApuVoice::Triangle, L"high_priority"),
+                L"higher priority replaces the prior voice owner");
+
             const auto duplicate = arbiter.Acquire(L"invalid", {
                 ApuVoiceClaim{ ApuVoice::Dpcm, SePriority::High },
                 ApuVoiceClaim{ ApuVoice::Dpcm, SePriority::High }
@@ -408,6 +419,83 @@ namespace mm2hack::test
             runner.Check(
                 !duplicate.accepted && !arbiter.IsOwned(ApuVoice::Dpcm),
                 L"reject duplicate voice claims");
+        }
+
+        void TestAudioConfiguration(TestRunner& runner)
+        {
+            AudioConfigLoader loader{};
+            constexpr std::string_view valid = R"json(
+                {
+                    "bgm": {
+                        "track": {
+                            "channels": [
+                                { "file": "noise.wav", "volume": 128, "voice": "noise" },
+                                { "file": "pulse.wav", "voice": "pulse1" }
+                            ],
+                            "loop_start": 1.5,
+                            "loop_end": 2.5
+                        }
+                    },
+                    "se": {
+                        "effect": {
+                            "channels": [
+                                { "file": "pulse.wav", "voice": "pulse2", "priority": 0 },
+                                { "file": "dpcm.wav", "voice": "dpcm", "priority": 2 }
+                            ]
+                        }
+                    }
+                }
+                )json";
+
+            const bool loaded = loader.LoadFromJson(valid);
+            const auto bgm = loader.GetBgmConfigs().find(L"track");
+            const auto se = loader.GetSeConfigs().find(L"effect");
+            runner.Check(
+                loaded && bgm != loader.GetBgmConfigs().end() &&
+                bgm->second.channels.size() == 2 &&
+                bgm->second.channels[0].voice == ApuVoice::Noise &&
+                bgm->second.channels[0].volume == 128 &&
+                se != loader.GetSeConfigs().end() && se->second.channels.size() == 2 &&
+                se->second.channels[0].priority == SePriority::Low &&
+                se->second.channels[1].priority == SePriority::High,
+                L"parse valid explicit APU voice configuration");
+
+            const auto preserved = [&loader]()
+            {
+                return loader.GetBgmConfigs().size() == 1 &&
+                    loader.GetBgmConfigs().contains(L"track") &&
+                    loader.GetSeConfigs().size() == 1 &&
+                    loader.GetSeConfigs().contains(L"effect");
+            };
+            const auto rejects_without_mutation = [&loader, &preserved](
+                std::string_view source)
+            {
+                return !loader.LoadFromJson(source) && preserved();
+            };
+
+            runner.Check(
+                rejects_without_mutation(
+                    R"json({"se":{"bad":{"channels":[{"file":"x.wav","voice":"saw"}]}}})json"),
+                L"reject unknown APU voice without mutating configuration");
+            runner.Check(
+                rejects_without_mutation(
+                    R"json({"se":{"bad":{"channels":[{"file":"a.wav","voice":"noise"},{"file":"b.wav","voice":"noise"}]}}})json"),
+                L"reject duplicate APU voices without mutating configuration");
+            runner.Check(
+                rejects_without_mutation(
+                    R"json({"se":{"bad":{"channels":[{"file":"x.wav","voice":"pulse1","priority":3}]}}})json"),
+                L"reject out-of-range SE priority without mutating configuration");
+            runner.Check(
+                rejects_without_mutation(
+                    R"json({"bgm":{"bad":{"channels":[{"file":"x.wav","voice":"pulse1","volume":256}]}}})json"),
+                L"reject out-of-range volume without mutating configuration");
+            runner.Check(
+                rejects_without_mutation(
+                    R"json({"se":{"bad":{"channels":[{"file":"x.wav"}]}}})json"),
+                L"reject missing APU voice without mutating configuration");
+            runner.Check(
+                rejects_without_mutation(R"json({"se":)json"),
+                L"reject malformed audio JSON without mutating configuration");
         }
 
         void TestCorruptionValidation(TestRunner& runner)
@@ -632,6 +720,7 @@ namespace mm2hack::test
         try
         {
             TestApuVoiceArbitration(runner);
+            TestAudioConfiguration(runner);
             TestCorruptionValidation(runner);
             TestInvalidRestoreIsNonDestructive(runner);
             TestDeterministicContinuation(runner);
