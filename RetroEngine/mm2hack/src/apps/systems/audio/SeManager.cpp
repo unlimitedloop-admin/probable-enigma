@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <cstdint>
 #include <string>
 #include <utility>
 #include <vector>
@@ -97,7 +98,7 @@ namespace mm2hack::apps::systems::audio
             int baseVol = (i < se.volumes.size()) ? se.volumes[i] : MAX_VOLUME;
             int adjustedVol = ((overrideVolume >= 0 ? overrideVolume : baseVol) * _masterVolume) / MAX_VOLUME;
             _seChannels.SetVolume(chIndex, adjustedVol);
-            DxLib::SetSoundCurrentPosition(0, _seChannels.GetHandle(chIndex));
+            _seChannels.SetPositionMilliseconds(chIndex, 0);
             _seChannels.Play(chIndex, false);
 
             _channelToSeName[chIndex] = name;
@@ -147,15 +148,12 @@ namespace mm2hack::apps::systems::audio
                 continue;
             }
 
-            const int handle = _seChannels.GetHandle(channel_index);
-            if (handle == -1) continue;
-
-            const auto position_ms = DxLib::GetSoundCurrentTime(handle);
-            const auto loop_end_ms = static_cast<LONGLONG>(se.loopEnd * 1000.0);
+            const auto position_ms = _seChannels.GetPositionMilliseconds(channel_index);
+            const auto loop_end_ms = static_cast<std::int64_t>(se.loopEnd * 1000.0);
             if (position_ms >= loop_end_ms)
             {
-                const auto loop_start_ms = static_cast<LONGLONG>(se.loopStart * 1000.0);
-                DxLib::SetSoundCurrentTime(loop_start_ms, handle);
+                const auto loop_start_ms = static_cast<std::int64_t>(se.loopStart * 1000.0);
+                _seChannels.SetPositionMilliseconds(channel_index, loop_start_ms);
             }
         }
 

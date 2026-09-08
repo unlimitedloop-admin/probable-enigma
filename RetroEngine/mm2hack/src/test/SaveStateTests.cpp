@@ -7,6 +7,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <exception>
+#include <memory>
 #include <optional>
 #include <sstream>
 #include <string>
@@ -22,6 +23,10 @@
 #include "apps/systems/audio/ApuVoice.h"
 #include "apps/systems/audio/ApuVoiceArbiter.h"
 #include "apps/systems/audio/AudioConfigLoader.h"
+#include "apps/systems/audio/BgmManager.h"
+#include "apps/systems/audio/BgmTransportState.h"
+#include "apps/systems/audio/ChannelManager.h"
+#include "apps/systems/audio/ISoundChannel.h"
 #include "apps/systems/audio/SePriority.h"
 #include "apps/systems/physics/ILadderService.h"
 #include "apps/systems/physics/ITerrainProbe.h"
@@ -50,6 +55,11 @@ namespace mm2hack::test
         using apps::systems::audio::ApuVoiceArbiter;
         using apps::systems::audio::ApuVoiceClaim;
         using apps::systems::audio::AudioConfigLoader;
+        using apps::systems::audio::BgmManager;
+        using apps::systems::audio::BgmPlaybackStatus;
+        using apps::systems::audio::BgmTransportState;
+        using apps::systems::audio::ChannelManager;
+        using apps::systems::audio::ISoundChannel;
         using apps::systems::audio::SePriority;
         using apps::systems::physics::AvatarDirection;
         using apps::systems::physics::ILadderService;
@@ -124,6 +134,71 @@ namespace mm2hack::test
 
         private:
             InputSnapshot _snapshot{};
+        };
+
+        class FakeSoundChannel final : public ISoundChannel
+        {
+        public:
+            bool Load(const std::wstring& filepath) override
+            {
+                _loaded = !filepath.empty();
+                _playing = false;
+                _paused = false;
+                _position_milliseconds = 0;
+                return _loaded;
+            }
+            void Play(bool loop) override
+            {
+                (void)loop;
+                if (!_loaded) return;
+                _position_milliseconds = 0;
+                _playing = true;
+                _paused = false;
+            }
+            void Stop() override
+            {
+                _playing = false;
+                _paused = false;
+                _position_milliseconds = 0;
+            }
+            void Pause() override
+            {
+                if (!_playing) return;
+                _playing = false;
+                _paused = true;
+            }
+            void Resume(bool loop) override
+            {
+                (void)loop;
+                if (!_paused) return;
+                _playing = true;
+                _paused = false;
+            }
+            void SetVolume(int volume) override { _volume = volume; }
+            int GetVolume() const override { return _volume; }
+            bool IsPlaying() const override { return _playing; }
+            std::int64_t GetPositionMilliseconds() const override
+            {
+                return _position_milliseconds;
+            }
+            void SetPositionMilliseconds(std::int64_t position) override
+            {
+                _position_milliseconds = position;
+            }
+            void StartFade(int targetVolume, int durationFrames) override
+            {
+                (void)durationFrames;
+                _volume = targetVolume;
+            }
+            void Update() override {}
+            int GetNativeHandle() const override { return -1; }
+
+        private:
+            bool _loaded = false;
+            bool _playing = false;
+            bool _paused = false;
+            int _volume = 0;
+            std::int64_t _position_milliseconds = 0;
         };
 
         class EmptyTerrain final : public ITerrainProbe
@@ -498,6 +573,117 @@ namespace mm2hack::test
                 L"reject malformed audio JSON without mutating configuration");
         }
 
+        void AddFakeApuChannels(ChannelManager& channels)
+        {
+            for (std::size_t index = 0; index < apps::systems::audio::kApuVoiceCount; ++index)
+            {
+                channels.AddChannel(std::make_unique<FakeSoundChannel>());
+            }
+        }
+
+        bool EqualBgmTransport(
+            const BgmTransportState& left,
+            const BgmTransportState& right)
+        {
+            if (left.track_name != right.track_name ||
+                left.playback_status != right.playback_status ||
+                left.master_volume != right.master_volume ||
+                left.loop_start_seconds != right.loop_start_seconds ||
+                left.loop_end_seconds != right.loop_end_seconds ||
+                left.is_fading != right.is_fading ||
+                left.fade_target != right.fade_target ||
+                left.fade_step != right.fade_step ||
+                left.fade_frames_remaining != right.fade_frames_remaining ||
+                left.voices.size() != right.voices.size())
+            {
+                return false;
+            }
+            for (std::size_t index = 0; index < left.voices.size(); ++index)
+            {
+                const auto& left_voice = left.voices[index];
+                const auto& right_voice = right.voices[index];
+                if (left_voice.voice != right_voice.voice ||
+                    left_voice.position_milliseconds != right_voice.position_milliseconds ||
+                    left_voice.logical_volume != right_voice.logical_volume)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        void TestBgmTransportState(TestRunner& runner)
+        {
+            const std::vector<std::wstring> files{ L"noise.wav", L"pulse.wav" };
+            const std::vector<int> volumes{ 128, 255 };
+            const std::vector<ApuVoice> voices{ ApuVoice::Noise, ApuVoice::Pulse1 };
+
+            ChannelManager source_channels{ 0 };
+            AddFakeApuChannels(source_channels);
+            BgmManager source{ source_channels };
+            const bool source_ready =
+                source.RegisterBgm(L"track", files, volumes, voices, 1.5, 2.5);
+            source.SetMasterVolume(200);
+            const bool source_played = source.Play(L"track");
+            source_channels.SetPositionMilliseconds(
+                static_cast<int>(apps::systems::audio::ToIndex(ApuVoice::Noise)), 1234);
+            source_channels.SetPositionMilliseconds(
+                static_cast<int>(apps::systems::audio::ToIndex(ApuVoice::Pulse1)), 1250);
+            source.Pause();
+            source.FadeOut(10);
+
+            BgmTransportState snapshot{};
+            const bool captured = source.CaptureState(snapshot);
+            runner.Check(
+                source_ready && source_played && captured && snapshot.IsValid() &&
+                snapshot.playback_status == BgmPlaybackStatus::Paused &&
+                snapshot.voices.size() == 2 &&
+                snapshot.voices[0].voice == ApuVoice::Noise &&
+                snapshot.voices[0].position_milliseconds == 1234 &&
+                snapshot.voices[1].voice == ApuVoice::Pulse1 &&
+                snapshot.voices[1].position_milliseconds == 1250 &&
+                snapshot.is_fading && snapshot.fade_frames_remaining == 10,
+                L"capture paused multi-stem BGM transport");
+
+            ChannelManager restored_channels{ 0 };
+            AddFakeApuChannels(restored_channels);
+            BgmManager restored{ restored_channels };
+            const bool target_ready =
+                restored.RegisterBgm(L"track", files, volumes, voices, 1.5, 2.5);
+            const bool validated = restored.ValidateState(snapshot);
+            const bool restored_ok = restored.RestoreState(snapshot);
+            BgmTransportState round_trip{};
+            const bool recaptured = restored.CaptureState(round_trip);
+            runner.Check(
+                target_ready && validated && restored_ok && recaptured &&
+                EqualBgmTransport(snapshot, round_trip),
+                L"restore logical BGM transport by stable voice IDs");
+
+            const BgmTransportState before_rejection = round_trip;
+            auto invalid = snapshot;
+            invalid.voices.push_back(invalid.voices.front());
+            const bool rejected = !restored.ValidateState(invalid) &&
+                !restored.RestoreState(invalid);
+            BgmTransportState after_rejection{};
+            runner.Check(
+                rejected && restored.CaptureState(after_rejection) &&
+                EqualBgmTransport(before_rejection, after_rejection),
+                L"invalid BGM transport does not mutate live state");
+
+            auto unknown_track = snapshot;
+            unknown_track.track_name = L"missing";
+            runner.Check(
+                !restored.ValidateState(unknown_track),
+                L"public BGM state validation rejects unknown resources");
+
+            auto oversized_position = snapshot;
+            oversized_position.voices.front().position_milliseconds =
+                apps::systems::audio::BgmVoiceTransportState::kMaxPositionMilliseconds + 1;
+            runner.Check(
+                !restored.ValidateState(oversized_position),
+                L"BGM state validation rejects oversized transport positions");
+        }
+
         void TestCorruptionValidation(TestRunner& runner)
         {
             EntityManagerState entities{};
@@ -721,6 +907,7 @@ namespace mm2hack::test
         {
             TestApuVoiceArbitration(runner);
             TestAudioConfiguration(runner);
+            TestBgmTransportState(runner);
             TestCorruptionValidation(runner);
             TestInvalidRestoreIsNonDestructive(runner);
             TestDeterministicContinuation(runner);

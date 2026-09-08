@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "ApuVoice.h"
+#include "BgmTransportState.h"
 #include "config/SystemConfig.h"
 
 namespace mm2hack::apps::systems::audio
@@ -37,6 +38,10 @@ namespace mm2hack::apps::systems::audio
         void Stop();
         // Release playback resources and registered BGM definitions.
         void Release();
+        // Capture, validate, and restore backend-independent BGM transport.
+        bool CaptureState(BgmTransportState& state) const;
+        bool ValidateState(const BgmTransportState& state) const;
+        bool RestoreState(const BgmTransportState& state);
         // Pause the currently playing BGM
         void Pause();
         // Resume the paused BGM
@@ -89,6 +94,7 @@ namespace mm2hack::apps::systems::audio
         std::wstring _currentBgm;                           // Name of the currently playing BGM
         std::vector<int> _logical_volumes;                  // Logical volumes before SE voice preemption
         bool _isPlaying = false;
+        bool _isPaused = false;
 
         // Loop parameters
         double _loopStart = 0.0;

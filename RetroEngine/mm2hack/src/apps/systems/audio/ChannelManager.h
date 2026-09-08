@@ -8,9 +8,11 @@
 //==============================================================================
 #pragma once
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
+
 #include "ISoundChannel.h"
 #include "SoundChannel.h"
 
@@ -37,6 +39,9 @@ namespace mm2hack::apps::systems::audio
         int GetVolume(int channelIndex) const;
         // Check if the specified channel is currently playing
         bool IsPlaying(int channelIndex) const;
+        // Get and set playback position in milliseconds.
+        std::int64_t GetPositionMilliseconds(int channelIndex) const;
+        void SetPositionMilliseconds(int channelIndex, std::int64_t position);
 
         // Start fade effect for the specified channel
         void StartFade(int channelIndex, int targetVolume, int durationFrames);

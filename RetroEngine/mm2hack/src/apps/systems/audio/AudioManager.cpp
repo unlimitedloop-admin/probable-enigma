@@ -7,6 +7,7 @@
 
 #include "ApuVoice.h"
 #include "AudioInitializer.h"
+#include "BgmTransportState.h"
 #include "ChannelManager.h"
 #include "config/SoundConfig.h"
 #include "SoundChannel.h"
@@ -101,6 +102,21 @@ namespace mm2hack::apps::systems::audio
     {
         _bgmManager.Resume();
         _seManager.Resume();
+    }
+
+    bool AudioManager::CaptureBgmState(BgmTransportState& state) const
+    {
+        return _bgmManager.CaptureState(state);
+    }
+
+    bool AudioManager::ValidateBgmState(const BgmTransportState& state) const
+    {
+        return _bgmManager.ValidateState(state);
+    }
+
+    bool AudioManager::RestoreBgmState(const BgmTransportState& state)
+    {
+        return _bgmManager.RestoreState(state);
     }
 
     void AudioManager::SetEnabled(bool enabled)

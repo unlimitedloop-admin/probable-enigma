@@ -53,6 +53,7 @@
     <ClCompile Include="src\apps\systems\audio\AudioInitializer.cpp" />
     <ClCompile Include="src\apps\systems\audio\AudioMixer.cpp" />
     <ClCompile Include="src\apps\systems\audio\ApuVoiceArbiter.cpp" />
+    <ClCompile Include="src\apps\systems\audio\BgmTransportState.cpp" />
     <ClCompile Include="src\test\driver\003\SoundTest.cpp" />
     <ClCompile Include="src\apps\systems\audio\AudioManager.cpp" />
     <ClCompile Include="src\apps\resources\ResourceManager.cpp" />
@@ -209,6 +210,7 @@
     <ClInclude Include="src\apps\runtime\GameContext.h" />
     <ClInclude Include="src\apps\systems\audio\ApuVoice.h" />
     <ClInclude Include="src\apps\systems\audio\ApuVoiceArbiter.h" />
+    <ClInclude Include="src\apps\systems\audio\BgmTransportState.h" />
     <ClInclude Include="src\apps\systems\audio\ISoundChannel.h" />
     <ClInclude Include="src\apps\systems\audio\SoundChannel.h" />
     <ClInclude Include="src\pch.h" />

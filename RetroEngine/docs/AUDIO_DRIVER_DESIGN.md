@@ -65,7 +65,7 @@ Restore order:
 | AUD-003 | P0 | Done | Route effective BGM volume through ownership | Fade and volume changes cannot make a preempted BGM voice audible |
 | AUD-004 | P1 | Done | Remove duplicate SE channel ownership from `AudioManager` | Each backend channel has one clear owner and release path |
 | AUD-005 | P1 | Done | Add pure arbitration and configuration tests | Voice conflicts, priorities, atomic acquisition, and invalid mappings are covered without audio hardware |
-| AUD-006 | P1 | Ready | Add logical BGM transport snapshots | Paused multi-stem BGM restores by stable track and voice IDs |
+| AUD-006 | P1 | Done | Add logical BGM transport snapshots | Paused multi-stem BGM restores by stable track and voice IDs |
 | AUD-007 | P1 | Ready | Classify and restore continuous SE | One-shots stop on load; configured continuous emitters restore with ownership |
 
 `AUD-001` through `AUD-005` are prerequisites for save-state tasks `SS-014`

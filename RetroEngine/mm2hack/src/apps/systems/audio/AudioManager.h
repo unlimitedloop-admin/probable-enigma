@@ -16,6 +16,7 @@
 #include "AudioConfigLoader.h"
 #include "AudioMixer.h"
 #include "BgmManager.h"
+#include "BgmTransportState.h"
 #include "ChannelManager.h"
 #include "config/SoundConfig.h"
 #include "SeManager.h"
@@ -65,6 +66,10 @@ namespace mm2hack::apps::systems::audio
         void Pause();
         // Resume a all sounds
         void Resume();
+        // Capture, validate, and restore logical BGM transport state.
+        bool CaptureBgmState(BgmTransportState& state) const;
+        bool ValidateBgmState(const BgmTransportState& state) const;
+        bool RestoreBgmState(const BgmTransportState& state);
 
         // Enable / disable all sounds
         void SetEnabled(bool enabled);

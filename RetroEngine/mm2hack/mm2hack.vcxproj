@@ -196,6 +196,7 @@
     <ClCompile Include="src\apps\systems\audio\AudioMixer.cpp" />
     <ClCompile Include="src\apps\systems\audio\ApuVoiceArbiter.cpp" />
     <ClCompile Include="src\apps\systems\audio\BgmManager.cpp" />
+    <ClCompile Include="src\apps\systems\audio\BgmTransportState.cpp" />
     <ClCompile Include="src\apps\systems\audio\ChannelManager.cpp" />
     <ClCompile Include="src\apps\systems\audio\SeManager.cpp" />
     <ClCompile Include="src\apps\systems\audio\SoundChannel.cpp" />
@@ -413,6 +414,7 @@
     <ClInclude Include="src\apps\systems\audio\ApuVoice.h" />
     <ClInclude Include="src\apps\systems\audio\ApuVoiceArbiter.h" />
     <ClInclude Include="src\apps\systems\audio\BgmManager.h" />
+    <ClInclude Include="src\apps\systems\audio\BgmTransportState.h" />
     <ClInclude Include="src\apps\systems\audio\ChannelManager.h" />
     <ClInclude Include="src\apps\systems\audio\ISoundChannel.h" />
     <ClInclude Include="src\apps\systems\audio\SeManager.h" />

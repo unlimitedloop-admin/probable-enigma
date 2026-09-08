@@ -2,6 +2,9 @@
 
 #include "ChannelManager.h"
 
+#include <cstdint>
+#include <utility>
+
 #include "ISoundChannel.h"
 
 namespace mm2hack::apps::systems::audio
@@ -57,6 +60,18 @@ namespace mm2hack::apps::systems::audio
     {
         if (channelIndex < 0 || channelIndex >= GetChannelCount()) return false;
         return _channels[channelIndex]->IsPlaying();
+    }
+
+    std::int64_t ChannelManager::GetPositionMilliseconds(int channelIndex) const
+    {
+        if (channelIndex < 0 || channelIndex >= GetChannelCount()) return 0;
+        return _channels[channelIndex]->GetPositionMilliseconds();
+    }
+
+    void ChannelManager::SetPositionMilliseconds(int channelIndex, std::int64_t position)
+    {
+        if (channelIndex < 0 || channelIndex >= GetChannelCount() || position < 0) return;
+        _channels[channelIndex]->SetPositionMilliseconds(position);
     }
 
     void ChannelManager::StartFade(int channelIndex, int targetVolume, int durationFrames)
