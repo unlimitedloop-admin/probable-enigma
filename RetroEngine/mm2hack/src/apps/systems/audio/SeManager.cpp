@@ -3,19 +3,23 @@
 #include "SeManager.h"
 
 #include <algorithm>
+#include <array>
 #include <cstddef>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "ApuVoice.h"
+#include "ApuVoiceArbiter.h"
+#include "BgmManager.h"
 #include "ChannelManager.h"
+#include "SePriority.h"
 
 namespace mm2hack::apps::systems::audio
 {
-    SeManager::SeManager(ChannelManager& bgmChannels, int seChannelCount)
-        : _bgmChannels(bgmChannels), _seChannels(seChannelCount)
+    SeManager::SeManager(ChannelManager& bgmChannels)
+        : _bgmChannels(bgmChannels), _seChannels(static_cast<int>(kApuVoiceCount))
     {
-        _bgmVolumeBackup.resize(_bgmChannels.GetChannelCount(), -1);
     }
 
     bool SeManager::LoadSe(
@@ -28,28 +32,37 @@ namespace mm2hack::apps::systems::audio
         double loopEnd
         )
     {
-        if (name.empty() || filepath.empty() || filepath.size() != voices.size()) return false;
-        _seData[name] = { filepath, volume, voices, priority, loopStart, loopEnd };
+        if (name.empty() || filepath.empty() || filepath.size() != voices.size() ||
+            (!priority.empty() && filepath.size() != priority.size()))
+        {
+            return false;
+        }
+
+        std::array<bool, kApuVoiceCount> occupied{};
+        for (const ApuVoice voice : voices)
+        {
+            const std::size_t index = ToIndex(voice);
+            if (index >= occupied.size() || occupied[index])
+            {
+                return false;
+            }
+            occupied[index] = true;
+        }
+
+        std::vector<SePriority> priorities = priority;
+        if (priorities.empty())
+        {
+            priorities.assign(filepath.size(), SePriority::Normal);
+        }
+        _seData[name] = { filepath, volume, voices, std::move(priorities), loopStart, loopEnd };
         return true;
     }
 
     void SeManager::StopSe(const std::wstring& name)
     {
-        std::vector<int> channels_to_stop;
-        for (const auto& [channel_index, se_name] : _channelToSeName)
-        {
-            if (se_name == name)
-            {
-                channels_to_stop.push_back(channel_index);
-            }
-        }
-
-        for (const int channel_index : channels_to_stop)
-        {
-            _seChannels.Stop(channel_index);
-            _channelToSeName.erase(channel_index);
-        }
-        restoreBgmForSe_(name);
+        stopPlaybackForOwners_({ name });
+        _voiceArbiter.Release(name);
+        applyBgmOwnership_();
     }
 
     void SeManager::PlaySe(const std::wstring& name, int overrideVolume)
@@ -58,20 +71,28 @@ namespace mm2hack::apps::systems::audio
         if (it == _seData.end()) return;
         const auto& se = it->second;
 
-        if (!canPlaySe_(se))
+        std::vector<ApuVoiceClaim> claims;
+        claims.reserve(se.voices.size());
+        for (std::size_t index = 0; index < se.voices.size(); ++index)
         {
-            // Cannot play due to priority.
-            return;
+            claims.push_back({ se.voices[index], se.priority[index] });
         }
-        // Check if we have enough channels.
-        _seChannels.EnsureChannelCount(static_cast<int>(se.filepaths.size()));
+
+        const ApuVoiceAcquisition acquisition = _voiceArbiter.Acquire(name, claims);
+        if (!acquisition.accepted) return;
+
+        stopPlaybackForOwners_(acquisition.displacedOwners);
 
         // NOTE: We assume that each SE consists of multiple files played simultaneously on separate channels.
         // Load and play each file, adjusting volume as needed.
-        for (size_t i = 0; i < se.filepaths.size(); ++i)
+        for (std::size_t i = 0; i < se.filepaths.size(); ++i)
         {
-            int chIndex = static_cast<int>(i);
-            _seChannels.Load(chIndex, se.filepaths[i]);
+            const int chIndex = static_cast<int>(ToIndex(se.voices[i]));
+            if (!_seChannels.Load(chIndex, se.filepaths[i]))
+            {
+                StopSe(name);
+                return;
+            }
             int baseVol = (i < se.volumes.size()) ? se.volumes[i] : MAX_VOLUME;
             int adjustedVol = ((overrideVolume >= 0 ? overrideVolume : baseVol) * _masterVolume) / MAX_VOLUME;
             _seChannels.SetVolume(chIndex, adjustedVol);
@@ -79,38 +100,16 @@ namespace mm2hack::apps::systems::audio
             _seChannels.Play(chIndex, false);
 
             _channelToSeName[chIndex] = name;
-
-            if (i < se.voices.size())
-            {
-                int bgmCh = static_cast<int>(ToIndex(se.voices[i]));
-                if (bgmCh >= 0 && bgmCh < _bgmChannels.GetChannelCount())
-                {
-                    if (_bgmVolumeBackup[bgmCh] == -1)
-                    {
-                        int currentVol = _bgmManager->GetCurrentBgmVolume(bgmCh);
-                        _bgmVolumeBackup[bgmCh] = currentVol;
-                    }
-                    _bgmChannels.SetVolume(bgmCh, 0);
-                    _activeSeChannels[bgmCh] = { name, chIndex };
-                }
-            }
         }
+        applyBgmOwnership_();
     }
 
     void SeManager::StopAll()
     {
         _seChannels.StopAll();
-
-        // Release all ownerships and restore BGM.
-        for (auto& [bgmCh, activeSe] : _activeSeChannels)
-        {
-            if (_bgmVolumeBackup[bgmCh] >= 0)
-            {
-                _bgmChannels.SetVolume(bgmCh, _bgmVolumeBackup[bgmCh]);
-                _bgmVolumeBackup[bgmCh] = -1;
-            }
-        }
-        _activeSeChannels.clear();
+        _channelToSeName.clear();
+        _voiceArbiter.Clear();
+        applyBgmOwnership_();
     }
 
     void SeManager::Pause()
@@ -152,36 +151,22 @@ namespace mm2hack::apps::systems::audio
             }
         }
 
-        std::vector<int> toRelease;
-        for (auto& [bgmCh, activeSe] : _activeSeChannels)
+        bool ownership_changed = false;
+        for (std::size_t index = 0; index < kApuVoiceCount; ++index)
         {
-            // If the SE assigned to this BGM channel has ended, restore it.
-            if (!_seChannels.IsPlaying(activeSe.seChannelIndex))
+            const ApuVoice voice = static_cast<ApuVoice>(index);
+            const ApuVoiceOwner* owner = _voiceArbiter.GetOwner(voice);
+            if (owner != nullptr && !_seChannels.IsPlaying(static_cast<int>(index)))
             {
-                if (_bgmVolumeBackup[bgmCh] >= 0)
-                {
-                    _bgmChannels.SetVolume(bgmCh, _bgmVolumeBackup[bgmCh]);
-                    _bgmVolumeBackup[bgmCh] = -1;
-                }
-                toRelease.push_back(bgmCh);
+                const std::wstring owner_name = owner->name;
+                _voiceArbiter.Release(voice, owner_name);
+                _channelToSeName.erase(static_cast<int>(index));
+                ownership_changed = true;
             }
         }
-        for (int ch : toRelease)
+        if (ownership_changed)
         {
-            _activeSeChannels.erase(ch);
-        }
-
-        std::vector<int> toErase;
-        for (const auto& [chIndex, name] : _channelToSeName)
-        {
-            if (!_seChannels.IsPlaying(chIndex))
-            {
-                toErase.push_back(chIndex);
-            }
-        }
-        for (int ch : toErase)
-        {
-            _channelToSeName.erase(ch);
+            applyBgmOwnership_();
         }
     }
 
@@ -189,80 +174,67 @@ namespace mm2hack::apps::systems::audio
     {
         _masterVolume = std::clamp(volume, 0, MAX_VOLUME);
 
-        for (auto& [bgmCh, activeSe] : _activeSeChannels)
+        for (std::size_t index = 0; index < kApuVoiceCount; ++index)
         {
-            const auto& se = _seData[activeSe.seName];
-            for (size_t i = 0; i < se.filepaths.size(); ++i)
+            const ApuVoice voice = static_cast<ApuVoice>(index);
+            const ApuVoiceOwner* owner = _voiceArbiter.GetOwner(voice);
+            if (owner == nullptr) continue;
+
+            const auto data_it = _seData.find(owner->name);
+            if (data_it == _seData.end()) continue;
+            const SeData& se = data_it->second;
+            for (std::size_t stem = 0; stem < se.voices.size(); ++stem)
             {
-                int baseVol = (i < se.volumes.size()) ? se.volumes[i] : MAX_VOLUME;
+                if (se.voices[stem] != voice) continue;
+                int baseVol = (stem < se.volumes.size()) ? se.volumes[stem] : MAX_VOLUME;
                 int adjustedVol = (baseVol * _masterVolume) / MAX_VOLUME;
-                _seChannels.SetVolume(activeSe.seChannelIndex, adjustedVol);
+                _seChannels.SetVolume(static_cast<int>(index), adjustedVol);
+                break;
             }
         }
     }
 
     SePriority SeManager::GetCurrentMaxPriority() const
     {
-        SePriority maxPriority = SePriority::Low;
-        for (int i = 0; i < _seChannels.GetChannelCount(); ++i)
-        {
-            if (_seChannels.IsPlaying(i))
-            {
-                auto it = _channelToSeName.find(i);
-                if (it != _channelToSeName.end())
-                {
-                    const auto& seName = it->second;
-                    auto dataIt = _seData.find(seName);
-                    if (dataIt != _seData.end())
-                    {
-                        for (const auto& prio : dataIt->second.priority) {
-                            maxPriority = std::max(maxPriority, prio);
-                        }
-                    }
-                }
-            }
-        }
-        return maxPriority;
+        return _voiceArbiter.GetCurrentMaxPriority();
     }
 
     bool SeManager::IsBgmChannelMuted(int index) const
     {
-        if (index < 0 || index >= static_cast<int>(_bgmVolumeBackup.size()))
+        if (index < 0 || index >= static_cast<int>(kApuVoiceCount))
         {
             return false;
         }
-        return _bgmVolumeBackup[index] != -1;
+        return _voiceArbiter.IsOwned(static_cast<ApuVoice>(index));
     }
 
-    bool SeManager::canPlaySe_(const SeData& newSe) const
+    void SeManager::applyBgmOwnership_()
     {
-        SePriority currentPriority = GetCurrentMaxPriority();
-        for (const auto& prio : newSe.priority) {
-            if (prio < currentPriority) {
-                return false;
-            }
+        if (_bgmManager == nullptr) return;
+        for (std::size_t index = 0; index < kApuVoiceCount; ++index)
+        {
+            const ApuVoice voice = static_cast<ApuVoice>(index);
+            const int volume = _voiceArbiter.IsOwned(voice) ?
+                0 : _bgmManager->GetCurrentBgmVolume(static_cast<int>(index));
+            _bgmChannels.SetVolume(static_cast<int>(index), volume);
         }
-        return true;
     }
 
-    void SeManager::restoreBgmForSe_(const std::wstring& name)
+    void SeManager::stopPlaybackForOwners_(const std::vector<std::wstring>& owners)
     {
         std::vector<int> channels_to_release;
-        for (const auto& [bgm_channel, active_se] : _activeSeChannels)
+        for (const auto& [channel_index, owner] : _channelToSeName)
         {
-            if (active_se.seName != name) continue;
-
-            if (_bgmVolumeBackup[bgm_channel] >= 0)
+            if (std::find(owners.begin(), owners.end(), owner) != owners.end())
             {
-                _bgmChannels.SetVolume(bgm_channel, _bgmVolumeBackup[bgm_channel]);
-                _bgmVolumeBackup[bgm_channel] = -1;
+                channels_to_release.push_back(channel_index);
             }
-            channels_to_release.push_back(bgm_channel);
         }
 
-        for (const int bgm_channel : channels_to_release)
+        for (const int channel_index : channels_to_release)
         {
-            _activeSeChannels.erase(bgm_channel);
+            _seChannels.Stop(channel_index);
+            _channelToSeName.erase(channel_index);
         }
     }
 }

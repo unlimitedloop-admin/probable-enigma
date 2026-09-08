@@ -11,6 +11,7 @@
 #include "BgmManager.h"
 #include "ChannelManager.h"
 #include "SeManager.h"
+#include "SePriority.h"
 
 namespace mm2hack::apps::systems::audio
 {

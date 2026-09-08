@@ -2,15 +2,26 @@
 
 #include "SaveStateTests.h"
 
+#include <algorithm>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <exception>
+#include <optional>
+#include <sstream>
+#include <string>
 #include <string_view>
+#include <utility>
+#include <vector>
+
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/scenes/IBaseScene.h"
 #include "apps/scenes/IStageAssetProvider.h"
 #include "apps/scenes/phases/AbstractActionPhase.h"
 #include "apps/scenes/SceneManager.h"
+#include "apps/systems/audio/ApuVoice.h"
+#include "apps/systems/audio/ApuVoiceArbiter.h"
+#include "apps/systems/audio/SePriority.h"
 #include "apps/systems/physics/ILadderService.h"
 #include "apps/systems/physics/ITerrainProbe.h"
 #include "apps/systems/physics/Probes.h"
@@ -34,6 +45,10 @@ namespace mm2hack::test
         using apps::foundation::math::Vec2;
         using apps::scenes::SceneID;
         using apps::scenes::SpriteManagerId;
+        using apps::systems::audio::ApuVoice;
+        using apps::systems::audio::ApuVoiceArbiter;
+        using apps::systems::audio::ApuVoiceClaim;
+        using apps::systems::audio::SePriority;
         using apps::systems::physics::AvatarDirection;
         using apps::systems::physics::ILadderService;
         using apps::systems::physics::ITerrainProbe;
@@ -334,6 +349,67 @@ namespace mm2hack::test
             player.SetViewBounds({ -10'000.0, 10'000.0, -10'000.0, 10'000.0 });
         }
 
+        bool IsVoiceOwner(
+            const ApuVoiceArbiter& arbiter,
+            ApuVoice voice,
+            std::wstring_view expected_owner)
+        {
+            const auto* owner = arbiter.GetOwner(voice);
+            return owner != nullptr && owner->name == expected_owner;
+        }
+
+        void TestApuVoiceArbitration(TestRunner& runner)
+        {
+            ApuVoiceArbiter arbiter{};
+            const auto splash = arbiter.Acquire(L"splash", {
+                ApuVoiceClaim{ ApuVoice::Pulse2, SePriority::Normal },
+                ApuVoiceClaim{ ApuVoice::Noise, SePriority::Normal }
+                });
+            runner.Check(
+                splash.accepted &&
+                IsVoiceOwner(arbiter, ApuVoice::Pulse2, L"splash") &&
+                IsVoiceOwner(arbiter, ApuVoice::Noise, L"splash"),
+                L"acquire all voices for a multi-stem SE");
+
+            const auto rejected = arbiter.Acquire(L"low_priority", {
+                ApuVoiceClaim{ ApuVoice::Pulse1, SePriority::High },
+                ApuVoiceClaim{ ApuVoice::Noise, SePriority::Low }
+                });
+            runner.Check(
+                !rejected.accepted &&
+                !arbiter.IsOwned(ApuVoice::Pulse1) &&
+                IsVoiceOwner(arbiter, ApuVoice::Pulse2, L"splash") &&
+                IsVoiceOwner(arbiter, ApuVoice::Noise, L"splash"),
+                L"reject multi-stem acquisition atomically");
+
+            const auto replacement = arbiter.Acquire(L"buster", {
+                ApuVoiceClaim{ ApuVoice::Pulse2, SePriority::Normal }
+                });
+            runner.Check(
+                replacement.accepted && replacement.displacedOwners.size() == 1 &&
+                replacement.displacedOwners.front() == L"splash" &&
+                IsVoiceOwner(arbiter, ApuVoice::Pulse2, L"buster") &&
+                !arbiter.IsOwned(ApuVoice::Noise),
+                L"equal priority replaces the prior complete SE");
+
+            const auto independent = arbiter.Acquire(L"ladder", {
+                ApuVoiceClaim{ ApuVoice::Triangle, SePriority::Low }
+                });
+            runner.Check(
+                independent.accepted && independent.displacedOwners.empty() &&
+                IsVoiceOwner(arbiter, ApuVoice::Pulse2, L"buster") &&
+                IsVoiceOwner(arbiter, ApuVoice::Triangle, L"ladder"),
+                L"independent APU voices coexist");
+
+            const auto duplicate = arbiter.Acquire(L"invalid", {
+                ApuVoiceClaim{ ApuVoice::Dpcm, SePriority::High },
+                ApuVoiceClaim{ ApuVoice::Dpcm, SePriority::High }
+                });
+            runner.Check(
+                !duplicate.accepted && !arbiter.IsOwned(ApuVoice::Dpcm),
+                L"reject duplicate voice claims");
+        }
+
         void TestCorruptionValidation(TestRunner& runner)
         {
             EntityManagerState entities{};
@@ -555,6 +631,7 @@ namespace mm2hack::test
         TestRunner runner{};
         try
         {
+            TestApuVoiceArbitration(runner);
             TestCorruptionValidation(runner);
             TestInvalidRestoreIsNonDestructive(runner);
             TestDeterministicContinuation(runner);

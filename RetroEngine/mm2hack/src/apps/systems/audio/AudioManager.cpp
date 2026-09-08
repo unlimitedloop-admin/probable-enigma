@@ -16,7 +16,7 @@ namespace mm2hack::apps::systems::audio
 {
     AudioManager::AudioManager()
         : _bgmChannels(static_cast<int>(kApuVoiceCount)), _seChannels(8),
-        _bgmManager(_bgmChannels), _seManager(_bgmChannels, 8),
+        _bgmManager(_bgmChannels), _seManager(_bgmChannels),
         _mixer(_bgmManager, _seManager)
     {
         // Link BGM manager with SE manager.

@@ -14,6 +14,7 @@
 
 #include "ApuVoice.h"
 #include "config/SystemConfig.h"
+#include "SePriority.h"
 
 namespace mm2hack::apps::systems::audio
 {
@@ -31,13 +32,6 @@ namespace mm2hack::apps::systems::audio
         std::vector<BgmChannelConfig> channels;
         double loopStart = 0.0;
         double loopEnd = 0.0;
-    };
-
-    enum class SePriority
-    {
-        Low,    // Low priority SE, can be interrupted by higher priority SE
-        Normal, // Normal priority SE, will not be interrupted by lower priority SE
-        High    // High priority SE, will interrupt any currently playing SE
     };
 
     struct SeChannelConfig

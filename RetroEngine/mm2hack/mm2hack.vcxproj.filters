@@ -52,6 +52,7 @@
     <ClCompile Include="src\apps\systems\audio\AudioConfigLoader.cpp" />
     <ClCompile Include="src\apps\systems\audio\AudioInitializer.cpp" />
     <ClCompile Include="src\apps\systems\audio\AudioMixer.cpp" />
+    <ClCompile Include="src\apps\systems\audio\ApuVoiceArbiter.cpp" />
     <ClCompile Include="src\test\driver\003\SoundTest.cpp" />
     <ClCompile Include="src\apps\systems\audio\AudioManager.cpp" />
     <ClCompile Include="src\apps\resources\ResourceManager.cpp" />
@@ -207,11 +208,13 @@
     <ClInclude Include="src\apps\runtime\IGameContext.h" />
     <ClInclude Include="src\apps\runtime\GameContext.h" />
     <ClInclude Include="src\apps\systems\audio\ApuVoice.h" />
+    <ClInclude Include="src\apps\systems\audio\ApuVoiceArbiter.h" />
     <ClInclude Include="src\apps\systems\audio\ISoundChannel.h" />
     <ClInclude Include="src\apps\systems\audio\SoundChannel.h" />
     <ClInclude Include="src\pch.h" />
     <ClInclude Include="src\apps\systems\audio\ChannelManager.h" />
     <ClInclude Include="src\apps\systems\audio\SeManager.h" />
+    <ClInclude Include="src\apps\systems\audio\SePriority.h" />
     <ClInclude Include="src\apps\systems\audio\BgmManager.h" />
     <ClInclude Include="src\libs\json.hpp" />
     <ClInclude Include="src\apps\systems\audio\AudioConfigLoader.h" />

@@ -13,19 +13,21 @@
 #include <vector>
 
 #include "ApuVoice.h"
-#include "AudioConfigLoader.h"
-#include "AudioMixer.h"
-#include "BgmManager.h"
+#include "ApuVoiceArbiter.h"
 #include "ChannelManager.h"
 #include "config/SystemConfig.h"
+#include "SePriority.h"
 
 namespace mm2hack::apps::systems::audio
 {
+    class AudioMixer;
+    class BgmManager;
+
     // Sound Effect (SE) Manager
     class SeManager
     {
     public:
-        explicit SeManager(ChannelManager& bgmChannels, int seChannelCount = 8);
+        explicit SeManager(ChannelManager& bgmChannels);
         ~SeManager() = default;
 
         // Load SE data from file
@@ -74,15 +76,8 @@ namespace mm2hack::apps::systems::audio
             double loopEnd = 0.0;                   // Loop end in seconds; disabled when <= loopStart
         };
 
-        // Active SE channel information
-        struct ActiveSeChannel
-        {
-            std::wstring seName;                    // SE name being played
-            int seChannelIndex = 0;                 // SE channel index
-        };
-
-        bool canPlaySe_(const SeData& newSe) const; // Check if a new SE can be played based on priority
-        void restoreBgmForSe_(const std::wstring& name);
+        void applyBgmOwnership_();
+        void stopPlaybackForOwners_(const std::vector<std::wstring>& owners);
 
     private:
         const std::wstring kClassName{ L"SeManager" };
@@ -92,10 +87,9 @@ namespace mm2hack::apps::systems::audio
         int _masterVolume = MAX_VOLUME;
         ChannelManager _seChannels;                                 // SE channels manager
         ChannelManager& _bgmChannels;                               // BGM channels reference (for mute control)
+        ApuVoiceArbiter _voiceArbiter;                              // Exclusive logical APU voice ownership
         std::unordered_map<std::wstring, SeData> _seData;           // Name -> SE data
-        std::unordered_map<int, ActiveSeChannel> _activeSeChannels; // Active SE channels (index -> SE name and channel index)
         std::unordered_map<int, std::wstring> _channelToSeName;     // Channel index -> SE name mapping
-        std::vector<int> _bgmVolumeBackup;                          // Backup for restoring BGM channel volume after SE playback
 
         BgmManager* _bgmManager = nullptr;                          // Pointer to the BGM manager for volume adjustments
         AudioMixer* _mixer = nullptr;                               // Pointer to the audio mixer for volume control
