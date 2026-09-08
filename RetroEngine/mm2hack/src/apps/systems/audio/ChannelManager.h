@@ -33,6 +33,9 @@ namespace mm2hack::apps::systems::audio
         void Play(int channelIndex, bool loop = false);
         // Stop the sound in the specified channel
         void Stop(int channelIndex);
+        // Pause and resume the sound in the specified channel.
+        void Pause(int channelIndex);
+        void Resume(int channelIndex, bool loop);
         // Set volume for the specified channel (0-255)
         void SetVolume(int channelIndex, int volume);
         // Get current volume of the specified channel

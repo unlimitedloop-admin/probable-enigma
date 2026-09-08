@@ -199,6 +199,7 @@
     <ClCompile Include="src\apps\systems\audio\BgmTransportState.cpp" />
     <ClCompile Include="src\apps\systems\audio\ChannelManager.cpp" />
     <ClCompile Include="src\apps\systems\audio\SeManager.cpp" />
+    <ClCompile Include="src\apps\systems\audio\SeTransportState.cpp" />
     <ClCompile Include="src\apps\systems\audio\SoundChannel.cpp" />
     <ClCompile Include="src\apps\runtime\GameContext.cpp" />
     <ClCompile Include="src\apps\resources\bg\AddressScraper.cpp" />
@@ -419,6 +420,8 @@
     <ClInclude Include="src\apps\systems\audio\ISoundChannel.h" />
     <ClInclude Include="src\apps\systems\audio\SeManager.h" />
     <ClInclude Include="src\apps\systems\audio\SePriority.h" />
+    <ClInclude Include="src\apps\systems\audio\SeRestorePolicy.h" />
+    <ClInclude Include="src\apps\systems\audio\SeTransportState.h" />
     <ClInclude Include="src\apps\systems\audio\SoundChannel.h" />
     <ClInclude Include="src\apps\runtime\GameContext.h" />
     <ClInclude Include="src\apps\runtime\IGameContext.h" />

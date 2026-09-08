@@ -44,6 +44,18 @@ namespace mm2hack::apps::systems::audio
         _channels[channelIndex]->Stop();
     }
 
+    void ChannelManager::Pause(int channelIndex)
+    {
+        if (channelIndex < 0 || channelIndex >= GetChannelCount()) return;
+        _channels[channelIndex]->Pause();
+    }
+
+    void ChannelManager::Resume(int channelIndex, bool loop)
+    {
+        if (channelIndex < 0 || channelIndex >= GetChannelCount()) return;
+        _channels[channelIndex]->Resume(loop);
+    }
+
     void ChannelManager::SetVolume(int channelIndex, int volume)
     {
         if (channelIndex < 0 || channelIndex >= GetChannelCount()) return;

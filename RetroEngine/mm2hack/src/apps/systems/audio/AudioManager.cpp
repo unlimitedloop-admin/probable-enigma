@@ -10,6 +10,7 @@
 #include "BgmTransportState.h"
 #include "ChannelManager.h"
 #include "config/SoundConfig.h"
+#include "SeTransportState.h"
 #include "SoundChannel.h"
 #include "utils/output_debug.h"
 
@@ -117,6 +118,21 @@ namespace mm2hack::apps::systems::audio
     bool AudioManager::RestoreBgmState(const BgmTransportState& state)
     {
         return _bgmManager.RestoreState(state);
+    }
+
+    bool AudioManager::CaptureSeState(SeTransportState& state) const
+    {
+        return _seManager.CaptureState(state);
+    }
+
+    bool AudioManager::ValidateSeState(const SeTransportState& state) const
+    {
+        return _seManager.ValidateState(state);
+    }
+
+    bool AudioManager::RestoreSeState(const SeTransportState& state)
+    {
+        return _seManager.RestoreState(state);
     }
 
     void AudioManager::SetEnabled(bool enabled)

@@ -20,6 +20,7 @@
 #include "ApuVoice.h"
 #include "config/SystemConfig.h"
 #include "SePriority.h"
+#include "SeRestorePolicy.h"
 #include "utils/string_converter.h"
 
 using json = nlohmann::json;
@@ -88,6 +89,30 @@ namespace mm2hack::apps::systems::audio
             }
             file = utils::utf8_to_wstring(value->get<std::string>());
             return !file.empty();
+        }
+
+        bool try_read_restore_policy(const json& source, SeRestorePolicy& result)
+        {
+            const auto value = source.find("restore_policy");
+            if (value == source.end())
+            {
+                result = SeRestorePolicy::Transient;
+                return true;
+            }
+            if (!value->is_string()) return false;
+
+            const std::string policy = value->get<std::string>();
+            if (policy == "transient")
+            {
+                result = SeRestorePolicy::Transient;
+                return true;
+            }
+            if (policy == "continuous")
+            {
+                result = SeRestorePolicy::Continuous;
+                return true;
+            }
+            return false;
         }
 
         template<typename ChannelConfig>
@@ -191,9 +216,15 @@ namespace mm2hack::apps::systems::audio
                 result.channels.push_back(std::move(channel));
             }
 
-            return has_unique_voices(result.channels) &&
-                try_read_nonnegative_number(source, "loop_start", result.loopStart) &&
-                try_read_nonnegative_number(source, "loop_end", result.loopEnd);
+            if (!has_unique_voices(result.channels) ||
+                !try_read_restore_policy(source, result.restorePolicy) ||
+                !try_read_nonnegative_number(source, "loop_start", result.loopStart) ||
+                !try_read_nonnegative_number(source, "loop_end", result.loopEnd))
+            {
+                return false;
+            }
+            return result.restorePolicy != SeRestorePolicy::Continuous ||
+                (result.loopEnd > result.loopStart && result.loopEnd > 0.0);
         }
 
         bool try_parse_config(

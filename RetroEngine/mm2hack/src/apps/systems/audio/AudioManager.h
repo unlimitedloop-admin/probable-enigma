@@ -13,6 +13,7 @@
 #include <string>
 #include <string_view>
 #include <utility>
+
 #include "AudioConfigLoader.h"
 #include "AudioMixer.h"
 #include "BgmManager.h"
@@ -20,6 +21,7 @@
 #include "ChannelManager.h"
 #include "config/SoundConfig.h"
 #include "SeManager.h"
+#include "SeTransportState.h"
 #include "SoundChannel.h"
 
 namespace mm2hack::apps::systems::audio
@@ -70,6 +72,10 @@ namespace mm2hack::apps::systems::audio
         bool CaptureBgmState(BgmTransportState& state) const;
         bool ValidateBgmState(const BgmTransportState& state) const;
         bool RestoreBgmState(const BgmTransportState& state);
+        // Capture, validate, and restore configured continuous SE instances.
+        bool CaptureSeState(SeTransportState& state) const;
+        bool ValidateSeState(const SeTransportState& state) const;
+        bool RestoreSeState(const SeTransportState& state);
 
         // Enable / disable all sounds
         void SetEnabled(bool enabled);

@@ -16,6 +16,7 @@
 #include "ApuVoice.h"
 #include "config/SystemConfig.h"
 #include "SePriority.h"
+#include "SeRestorePolicy.h"
 
 namespace mm2hack::apps::systems::audio
 {
@@ -49,6 +50,7 @@ namespace mm2hack::apps::systems::audio
         std::vector<SeChannelConfig> channels;  // SE channels configuration
         double loopStart = 0.0;
         double loopEnd = 0.0;
+        SeRestorePolicy restorePolicy = SeRestorePolicy::Transient;
     };
 
     // Audio configuration loader that reads BGM and SE configurations from a JSON file

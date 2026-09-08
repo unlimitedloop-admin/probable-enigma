@@ -48,6 +48,7 @@
     <ClCompile Include="src\pch.cpp" />
     <ClCompile Include="src\apps\systems\audio\ChannelManager.cpp" />
     <ClCompile Include="src\apps\systems\audio\SeManager.cpp" />
+    <ClCompile Include="src\apps\systems\audio\SeTransportState.cpp" />
     <ClCompile Include="src\apps\systems\audio\BgmManager.cpp" />
     <ClCompile Include="src\apps\systems\audio\AudioConfigLoader.cpp" />
     <ClCompile Include="src\apps\systems\audio\AudioInitializer.cpp" />
@@ -217,6 +218,8 @@
     <ClInclude Include="src\apps\systems\audio\ChannelManager.h" />
     <ClInclude Include="src\apps\systems\audio\SeManager.h" />
     <ClInclude Include="src\apps\systems\audio\SePriority.h" />
+    <ClInclude Include="src\apps\systems\audio\SeRestorePolicy.h" />
+    <ClInclude Include="src\apps\systems\audio\SeTransportState.h" />
     <ClInclude Include="src\apps\systems\audio\BgmManager.h" />
     <ClInclude Include="src\libs\json.hpp" />
     <ClInclude Include="src\apps\systems\audio\AudioConfigLoader.h" />

@@ -64,7 +64,8 @@ namespace mm2hack::apps::systems::audio
                 voices,
                 priorities,
                 config.loopStart,
-                config.loopEnd))
+                config.loopEnd,
+                config.restorePolicy))
             {
                 return false;
             }

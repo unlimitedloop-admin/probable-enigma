@@ -27,7 +27,10 @@
 #include "apps/systems/audio/BgmTransportState.h"
 #include "apps/systems/audio/ChannelManager.h"
 #include "apps/systems/audio/ISoundChannel.h"
+#include "apps/systems/audio/SeManager.h"
 #include "apps/systems/audio/SePriority.h"
+#include "apps/systems/audio/SeRestorePolicy.h"
+#include "apps/systems/audio/SeTransportState.h"
 #include "apps/systems/physics/ILadderService.h"
 #include "apps/systems/physics/ITerrainProbe.h"
 #include "apps/systems/physics/Probes.h"
@@ -59,8 +62,13 @@ namespace mm2hack::test
         using apps::systems::audio::BgmPlaybackStatus;
         using apps::systems::audio::BgmTransportState;
         using apps::systems::audio::ChannelManager;
+        using apps::systems::audio::ContinuousSeTransportState;
         using apps::systems::audio::ISoundChannel;
+        using apps::systems::audio::SeManager;
+        using apps::systems::audio::SePlaybackStatus;
         using apps::systems::audio::SePriority;
+        using apps::systems::audio::SeRestorePolicy;
+        using apps::systems::audio::SeTransportState;
         using apps::systems::physics::AvatarDirection;
         using apps::systems::physics::ILadderService;
         using apps::systems::physics::ITerrainProbe;
@@ -517,6 +525,13 @@ namespace mm2hack::test
                                 { "file": "pulse.wav", "voice": "pulse2", "priority": 0 },
                                 { "file": "dpcm.wav", "voice": "dpcm", "priority": 2 }
                             ]
+                        },
+                        "continuous": {
+                            "file": "loop.wav",
+                            "voice": "triangle",
+                            "loop_start": 1.0,
+                            "loop_end": 2.0,
+                            "restore_policy": "continuous"
                         }
                     }
                 }
@@ -532,15 +547,19 @@ namespace mm2hack::test
                 bgm->second.channels[0].volume == 128 &&
                 se != loader.GetSeConfigs().end() && se->second.channels.size() == 2 &&
                 se->second.channels[0].priority == SePriority::Low &&
-                se->second.channels[1].priority == SePriority::High,
+                se->second.channels[1].priority == SePriority::High &&
+                se->second.restorePolicy == SeRestorePolicy::Transient &&
+                loader.GetSeConfigs().at(L"continuous").restorePolicy ==
+                    SeRestorePolicy::Continuous,
                 L"parse valid explicit APU voice configuration");
 
             const auto preserved = [&loader]()
             {
                 return loader.GetBgmConfigs().size() == 1 &&
                     loader.GetBgmConfigs().contains(L"track") &&
-                    loader.GetSeConfigs().size() == 1 &&
-                    loader.GetSeConfigs().contains(L"effect");
+                    loader.GetSeConfigs().size() == 2 &&
+                    loader.GetSeConfigs().contains(L"effect") &&
+                    loader.GetSeConfigs().contains(L"continuous");
             };
             const auto rejects_without_mutation = [&loader, &preserved](
                 std::string_view source)
@@ -571,6 +590,14 @@ namespace mm2hack::test
             runner.Check(
                 rejects_without_mutation(R"json({"se":)json"),
                 L"reject malformed audio JSON without mutating configuration");
+            runner.Check(
+                rejects_without_mutation(
+                    R"json({"se":{"bad":{"file":"x.wav","voice":"pulse1","restore_policy":"forever"}}})json"),
+                L"reject unknown SE restore policy without mutating configuration");
+            runner.Check(
+                rejects_without_mutation(
+                    R"json({"se":{"bad":{"file":"x.wav","voice":"pulse1","restore_policy":"continuous"}}})json"),
+                L"reject continuous SE without a loop range");
         }
 
         void AddFakeApuChannels(ChannelManager& channels)
@@ -682,6 +709,128 @@ namespace mm2hack::test
             runner.Check(
                 !restored.ValidateState(oversized_position),
                 L"BGM state validation rejects oversized transport positions");
+        }
+
+        bool EqualSeTransport(const SeTransportState& left, const SeTransportState& right)
+        {
+            if (left.master_volume != right.master_volume ||
+                left.continuous_instances.size() != right.continuous_instances.size())
+            {
+                return false;
+            }
+            for (std::size_t instance_index = 0;
+                instance_index < left.continuous_instances.size(); ++instance_index)
+            {
+                const ContinuousSeTransportState& left_instance =
+                    left.continuous_instances[instance_index];
+                const ContinuousSeTransportState& right_instance =
+                    right.continuous_instances[instance_index];
+                if (left_instance.name != right_instance.name ||
+                    left_instance.playback_status != right_instance.playback_status ||
+                    left_instance.voices.size() != right_instance.voices.size())
+                {
+                    return false;
+                }
+                for (std::size_t voice_index = 0;
+                    voice_index < left_instance.voices.size(); ++voice_index)
+                {
+                    const auto& left_voice = left_instance.voices[voice_index];
+                    const auto& right_voice = right_instance.voices[voice_index];
+                    if (left_voice.voice != right_voice.voice ||
+                        left_voice.position_milliseconds != right_voice.position_milliseconds ||
+                        left_voice.logical_volume != right_voice.logical_volume)
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        void TestSeTransportState(TestRunner& runner)
+        {
+            const auto channel_factory = []()
+            {
+                return std::make_unique<FakeSoundChannel>();
+            };
+            const std::vector<std::wstring> continuous_files{ L"charge.wav" };
+            const std::vector<int> continuous_volumes{ 180 };
+            const std::vector<ApuVoice> continuous_voices{ ApuVoice::Pulse2 };
+            const std::vector<SePriority> continuous_priorities{ SePriority::High };
+            const std::vector<std::wstring> transient_files{ L"splash.wav" };
+            const std::vector<int> transient_volumes{ 255 };
+            const std::vector<ApuVoice> transient_voices{ ApuVoice::Noise };
+
+            SeManager source{ channel_factory };
+            const bool source_ready = source.LoadSe(
+                L"charge",
+                continuous_files,
+                continuous_volumes,
+                continuous_voices,
+                continuous_priorities,
+                1.0,
+                2.0,
+                SeRestorePolicy::Continuous) &&
+                source.LoadSe(
+                    L"splash",
+                    transient_files,
+                    transient_volumes,
+                    transient_voices);
+            source.SetMasterVolume(200);
+            source.PlaySe(L"charge");
+            source.PlaySe(L"splash");
+            source.Pause();
+            source.Update();
+
+            SeTransportState snapshot{};
+            const bool captured = source.CaptureState(snapshot);
+            runner.Check(
+                source_ready && captured && snapshot.IsValid() &&
+                snapshot.master_volume == 200 &&
+                snapshot.continuous_instances.size() == 1 &&
+                snapshot.continuous_instances.front().name == L"charge" &&
+                snapshot.continuous_instances.front().playback_status ==
+                    SePlaybackStatus::Paused &&
+                snapshot.continuous_instances.front().voices.front().logical_volume == 180,
+                L"capture only configured continuous SE");
+
+            snapshot.continuous_instances.front().voices.front().position_milliseconds = 1234;
+            SeManager restored{ channel_factory };
+            const bool target_ready = restored.LoadSe(
+                L"charge",
+                continuous_files,
+                continuous_volumes,
+                continuous_voices,
+                continuous_priorities,
+                1.0,
+                2.0,
+                SeRestorePolicy::Continuous) &&
+                restored.LoadSe(
+                    L"splash",
+                    transient_files,
+                    transient_volumes,
+                    transient_voices);
+            restored.PlaySe(L"splash");
+            const bool restored_ok = restored.RestoreState(snapshot);
+            SeTransportState round_trip{};
+            const bool recaptured = restored.CaptureState(round_trip);
+            runner.Check(
+                target_ready && restored_ok && recaptured &&
+                EqualSeTransport(snapshot, round_trip) &&
+                restored.IsVoiceOwnedBySe(ApuVoice::Pulse2) &&
+                !restored.IsVoiceOwnedBySe(ApuVoice::Noise),
+                L"restore continuous SE and discard transient ownership");
+
+            const SeTransportState before_rejection = round_trip;
+            auto invalid = snapshot;
+            invalid.continuous_instances.front().name = L"missing";
+            const bool rejected = !restored.ValidateState(invalid) &&
+                !restored.RestoreState(invalid);
+            SeTransportState after_rejection{};
+            runner.Check(
+                rejected && restored.CaptureState(after_rejection) &&
+                EqualSeTransport(before_rejection, after_rejection),
+                L"invalid continuous SE state does not mutate live audio");
         }
 
         void TestCorruptionValidation(TestRunner& runner)
@@ -908,6 +1057,7 @@ namespace mm2hack::test
             TestApuVoiceArbitration(runner);
             TestAudioConfiguration(runner);
             TestBgmTransportState(runner);
+            TestSeTransportState(runner);
             TestCorruptionValidation(runner);
             TestInvalidRestoreIsNonDestructive(runner);
             TestDeterministicContinuation(runner);

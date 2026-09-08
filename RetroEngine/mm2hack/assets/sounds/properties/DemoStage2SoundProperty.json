@@ -63,7 +63,8 @@
                 }
             ],
             "loop_start": 3.68,
-            "loop_end": 4.35
+            "loop_end": 4.35,
+            "restore_policy": "continuous"
         },
         "charge_shot_bang": {
             "channels": [
