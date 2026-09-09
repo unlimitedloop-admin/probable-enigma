@@ -502,6 +502,26 @@ namespace mm2hack::test
                 rejects_without_mutation(oversized),
                 L"reject oversized save-file payload without allocation");
 
+            auto corrupted_metadata = canonical;
+            constexpr std::size_t kSequenceIdOffset = 12;
+            corrupted_metadata[kSequenceIdOffset] ^= 0x01;
+            runner.Check(
+                rejects_without_mutation(corrupted_metadata),
+                L"reject save-file metadata checksum mismatch");
+
+            auto corrupted_checksum = canonical;
+            constexpr std::size_t kChecksumOffset = 24;
+            corrupted_checksum[kChecksumOffset] ^= 0x01;
+            runner.Check(
+                rejects_without_mutation(corrupted_checksum),
+                L"reject save-file checksum corruption");
+
+            auto corrupted_payload = canonical;
+            corrupted_payload.back() ^= 0x01;
+            runner.Check(
+                rejects_without_mutation(corrupted_payload),
+                L"reject save-file payload checksum mismatch");
+
             auto trailing = canonical;
             trailing.push_back(0xA5);
             runner.Check(

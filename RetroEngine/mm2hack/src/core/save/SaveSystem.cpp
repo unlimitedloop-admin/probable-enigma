@@ -2,12 +2,16 @@
 
 #include "SaveSystem.h"
 
+#include <array>
+#include <bit>
 #include <cstdint>
 #include <cstdio>
 #include <filesystem>
 #include <limits>
+#include <span>
 #include <string_view>
 #include <system_error>
+
 #include "SaveData.h"
 #include "StateIO.h"
 
@@ -20,6 +24,43 @@ namespace mm2hack::core::save
         constexpr std::array<std::uint8_t, 8> kSaveMagic{
             'M', 'M', '2', 'S', 'A', 'V', 'E', 0
         };
+        constexpr std::uint32_t kCrc32Polynomial = 0xEDB88320U;
+
+        void AccumulateCrc32(std::uint32_t& checksum, std::uint8_t value) noexcept
+        {
+            checksum ^= value;
+            for (int bit = 0; bit < 8; ++bit)
+            {
+                const std::uint32_t mask =
+                    0U - static_cast<std::uint32_t>(checksum & 1U);
+                checksum = (checksum >> 1) ^ (kCrc32Polynomial & mask);
+            }
+        }
+
+        void AccumulateCrc32(std::uint32_t& checksum, std::uint32_t value) noexcept
+        {
+            for (int byte = 0; byte < 4; ++byte)
+            {
+                AccumulateCrc32(checksum, static_cast<std::uint8_t>(value));
+                value >>= 8;
+            }
+        }
+
+        std::uint32_t ComputeSaveChecksum(
+            std::int32_t sequence_id,
+            std::int32_t scene_id,
+            std::span<const std::uint8_t> payload) noexcept
+        {
+            std::uint32_t checksum = 0xFFFFFFFFU;
+            AccumulateCrc32(checksum, std::bit_cast<std::uint32_t>(sequence_id));
+            AccumulateCrc32(checksum, std::bit_cast<std::uint32_t>(scene_id));
+            AccumulateCrc32(checksum, static_cast<std::uint32_t>(payload.size()));
+            for (const std::uint8_t byte : payload)
+            {
+                AccumulateCrc32(checksum, byte);
+            }
+            return ~checksum;
+        }
     }
 
     bool SaveSystem::Save(const std::wstring& path, const SaveData& data)
@@ -53,12 +94,17 @@ namespace mm2hack::core::save
         }
 
         StateWriter writer(ofs);
+        const std::uint32_t checksum = ComputeSaveChecksum(
+            data.sequenceID,
+            data.sceneID,
+            data.scenePayload);
         const bool wroteAll =
             writer.WriteBytes(kSaveMagic) &&
             writer.WriteU32(config::SystemConfig::kCurrentSaveVersion) &&
             writer.WriteI32(data.sequenceID) &&
             writer.WriteI32(data.sceneID) &&
             writer.WriteU32(static_cast<std::uint32_t>(data.scenePayload.size())) &&
+            writer.WriteU32(checksum) &&
             writer.WriteBytes(data.scenePayload);
         ofs.flush();
         const bool flushed = ofs.good();
@@ -97,6 +143,7 @@ namespace mm2hack::core::save
         std::int32_t sequenceID{};
         std::int32_t sceneID{};
         std::uint32_t payloadSize{};
+        std::uint32_t expectedChecksum{};
 
         if (!reader.ReadBytes(magic) || magic != kSaveMagic ||
             !reader.ReadU32(fileVersion) ||
@@ -104,7 +151,8 @@ namespace mm2hack::core::save
             !reader.ReadI32(sequenceID) ||
             !reader.ReadI32(sceneID) ||
             !reader.ReadU32(payloadSize) ||
-            payloadSize > kMaximumPayloadSize)
+            payloadSize > kMaximumPayloadSize ||
+            !reader.ReadU32(expectedChecksum))
         {
             return false;
         }
@@ -118,7 +166,9 @@ namespace mm2hack::core::save
             return false;
         }
 
-        if (ifs.peek() != std::char_traits<char>::eof())
+        if (ComputeSaveChecksum(sequenceID, sceneID, loaded.scenePayload) !=
+            expectedChecksum ||
+            ifs.peek() != std::char_traits<char>::eof())
         {
             return false;
         }

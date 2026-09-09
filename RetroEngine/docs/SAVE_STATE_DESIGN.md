@@ -11,14 +11,15 @@ its `BgStarField`. Later milestones add gameplay scenes and entities.
 ## Current implementation
 
 - `WindowMessageHandlers` accepts save/load only while the game is paused.
-- `SaveSystem` writes a version followed by the in-memory bytes of `SaveData`.
-- `SaveData` currently contains only sequence, scene, and phase integers.
-- `StandardSequence::Save/Load` and `DebugSequence::Save/Load` only handle the
-  sequence ID; neither delegates to `SceneManager`.
-- `SceneManager` has no state I/O API.
-- `BackdoorMenu::Save/Load` and `BgStarField::Save/Load` exist, but nothing in
-  the application save path calls them.
-- `DemoStage1` and `DemoStage2` contain empty state I/O methods.
+- `SaveSystem` writes an explicit versioned envelope with fixed-width fields and
+  a CRC-32 covering its metadata and scene payload.
+- `SaveData` carries the sequence ID, scene ID, and a variable-sized scene
+  payload without exposing its in-memory object layout.
+- `StandardSequence` and `DebugSequence` delegate scene state to `SceneManager`.
+- Target scene payloads are validated before sequence replacement, and loaders
+  commit parsed state only after complete validation.
+- `BackdoorMenu` and `DemoStage2` serialize their owned runtime state;
+  unsupported scenes such as `DemoStage1` do not advertise save support.
 
 ## Problems and design decisions
 
@@ -39,7 +40,8 @@ explicit header and fixed-width fields:
 3. sequence ID
 4. scene ID
 5. payload byte count
-6. scene payload
+6. CRC-32
+7. scene payload
 
 All counts must be bounded before allocating or looping.
 
@@ -75,10 +77,10 @@ distinguish missing, corrupt, unsupported, and I/O-failed files. Component
 payload versions should be independent of the outer file version where useful.
 
 An older well-formed save is "unsupported", not corrupt. Truncated data,
-impossible sizes/IDs/values, and unexpected trailing bytes are corrupt. The
-current format validates structure but has no checksum or authentication, so a
-tampered file that still contains structurally valid values cannot yet be
-distinguished from a legitimate save.
+impossible sizes/IDs/values, unexpected trailing bytes, and a CRC-32 mismatch
+are corrupt. The checksum covers the canonical little-endian sequence ID, scene
+ID, payload byte count, and scene payload. It detects accidental corruption but
+is not authentication: a deliberate editor can recalculate it.
 
 ### P0: Nondeterministic and call-order-dependent randomness blocks replay
 
@@ -332,7 +334,7 @@ but incorrect state.
 | SS-019 | P1 | Done | Add stable entity IDs and snapshot factory | Entity graphs rebuild without serialized pointers or resource handles |
 | SS-020 | P1 | Ready | Add game/content compatibility identity | Incompatible runtime content is rejected with a specific result |
 | SS-021 | P0 | Done | Persist star-field initial entropy | Pattern ID is saved, restored, and injectable by replay/new-game setup |
-| SS-022 | P1 | Ready | Add save payload integrity checking | Accidental byte corruption is rejected before runtime reconstruction |
+| SS-022 | P1 | Done | Add save payload integrity checking | Accidental byte corruption is rejected before runtime reconstruction |
 | SS-023 | P1 | Ready (deferred) | Reconcile restored charge state with live attack input | A loaded charge snapshot follows an explicit cancel-or-resume policy and its continuous SE cannot diverge from simulation state |
 
 `AUD-006` and `AUD-007` completed the backend-independent BGM/SE DTOs,
@@ -350,11 +352,12 @@ the audio-driver work.
    attack-button state, then keep simulation and charge audio synchronized.
 4. `SS-010` (Done): cover the outer slot-file envelope, including bad magic,
    unsupported version, oversized payload, trailing bytes, and every truncation.
-5. Continue external-slot hardening under `SS-022`, then improve diagnostic
-   classification under `SS-011`.
+5. `SS-022` (Done): protect the envelope metadata and scene payload with CRC-32
+   and reject mismatches before runtime reconstruction.
+6. Improve external-slot diagnostic classification under `SS-011`.
 
-The remaining independent hardening tasks are `SS-011`, `SS-020`, `SS-022`,
-and `SS-023`. Replay format work is tracked separately as `SS-016`.
+The remaining independent hardening tasks are `SS-011`, `SS-020`, and `SS-023`.
+Replay format work is tracked separately as `SS-016`.
 
 ## Milestones
 
