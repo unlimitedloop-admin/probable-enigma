@@ -224,7 +224,15 @@ Reconstruction order is fixed:
 3. Restore BG timing and scrolling before entities.
 4. Create all entities in saved order and build the instance-ID lookup.
 5. Inject runtime services and resolve entity references in a second pass.
-6. Restore phase/UI/script state, then expose the scene as current.
+6. Restore phase/UI/script state and synchronize charge-presentation ownership
+   with the restored continuous-SE snapshot.
+7. Restore BGM/SE transport, then expose the scene as current.
+
+A restored charge is reconciled on the first subsequent simulation input tick,
+after the input provider has sampled the live controller. Holding B continues
+from the saved charge count and SE position. Releasing B cancels the charge
+without firing a shot, and the phase stops the restored charge SE on that same
+tick. A held `JustPressed` edge does not reset the restored count.
 
 ### DemoStage2 implementation plan
 
@@ -343,14 +351,14 @@ but incorrect state.
 | SS-013 | P0 | Done | Replace charge-particle LCG with a stable pattern | Particle placement is reproducible without mutable random state |
 | SS-014 | P1 | Done | Connect BGM transport to the DemoStage2 save payload | The AUD-006 DTO round-trips through an external slot and restores after audio resources are registered |
 | SS-015 | P1 | Done | Connect continuous SE transport to the DemoStage2 save payload | The AUD-007 DTO round-trips through an external slot; transient SE stops and charge audio restores with ownership |
-| SS-016 | P1 | Ready | Define replay input/event format and checksum boundary | Same initial state and input log reproduce the same simulation checksums |
+| SS-016 | P1 | Ready (deferred) | Define replay input/event format and checksum boundary | Same initial state and input log reproduce the same simulation checksums |
 | SS-017 | P0 | Done | Add a frame-boundary snapshot barrier | Capture is rejected during update or unsupported transitions |
 | SS-018 | P0 | Done | Make sequence loading target-validated and two-phase | Invalid target payload preserves the current scene without requiring it to support save |
 | SS-019 | P1 | Done | Add stable entity IDs and snapshot factory | Entity graphs rebuild without serialized pointers or resource handles |
 | SS-020 | P1 | Done | Add game/content compatibility identity | Incompatible runtime content is rejected with a specific result |
 | SS-021 | P0 | Done | Persist star-field initial entropy | Pattern ID is saved, restored, and injectable by replay/new-game setup |
 | SS-022 | P1 | Done | Add save payload integrity checking | Accidental byte corruption is rejected before runtime reconstruction |
-| SS-023 | P1 | Ready (deferred) | Reconcile restored charge state with live attack input | A loaded charge snapshot follows an explicit cancel-or-resume policy and its continuous SE cannot diverge from simulation state |
+| SS-023 | P1 | Done | Reconcile restored charge state with live attack input | A loaded charge snapshot follows an explicit cancel-or-resume policy and its continuous SE cannot diverge from simulation state |
 
 `AUD-006` and `AUD-007` completed the backend-independent BGM/SE DTOs,
 validation, and manager-level restoration. `SS-014` and `SS-015` now refer only
@@ -363,8 +371,8 @@ the audio-driver work.
    connect BGM capture, validation, and restoration.
 2. `SS-015` (Done): serialize continuous-SE state and complete
    BGM/SE ownership restoration. Transient SE remains intentionally absent.
-3. `SS-023` (Deferred): choose how a restored charge interacts with the live
-   attack-button state, then keep simulation and charge audio synchronized.
+3. `SS-023` (Done): reconcile restored charge on the first live-input tick;
+   held B resumes while released B cancels without firing, with matching SE.
 4. `SS-010` (Done): cover the outer slot-file envelope, including bad magic,
    unsupported version, oversized payload, trailing bytes, and every truncation.
 5. `SS-022` (Done): protect the envelope metadata and scene payload with CRC-32
@@ -374,8 +382,9 @@ the audio-driver work.
 7. `SS-020` (Done): persist a stable game/content compatibility ID and reject a
    valid save made for incompatible runtime content with a specific result.
 
-The remaining independent hardening task is deferred `SS-023`. Replay format
-work is tracked separately as `SS-016`.
+The current save-state implementation has no remaining independent hardening
+task. Replay format work remains explicitly deferred under `SS-016` until an
+input/event recording implementation can validate the format end to end.
 
 ## Milestones
 

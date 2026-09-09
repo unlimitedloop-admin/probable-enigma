@@ -64,7 +64,17 @@ namespace mm2hack::apps::world::entity::avatar::states
     void AttackActionState::PreUpdate(PlayerContext& cx, StateProvider* in, bool can_spawn) noexcept
     {
         _can_spawn = can_spawn;
-        if (in->JustPressed(JPBTN::B))
+        if (_reconcile_restored_charge_input)
+        {
+            _reconcile_restored_charge_input = false;
+            if (!in->IsPressed(JPBTN::B))
+            {
+                _charging = false;
+                _charge_frames = 0;
+            }
+        }
+
+        if (!_charging && in->JustPressed(JPBTN::B))
         {
             _charging = true;
             _charge_frames = 0;
@@ -193,9 +203,8 @@ namespace mm2hack::apps::world::entity::avatar::states
         _is_attacking = state.attacking;
         _pose_time_sec = state.pose_time_seconds;
         _fire_requested = state.fire_requested;
-        // REVIEW: SS-023 must reconcile restored charging with the live B-button
-        // state/history by explicitly choosing cancel-on-load or held-input seeding.
         _charging = state.charging;
+        _reconcile_restored_charge_input = state.charging;
         _can_spawn = false;
         _charge_frames = state.charge_frames;
         _requested_visual = state.requested_visual;
@@ -206,6 +215,7 @@ namespace mm2hack::apps::world::entity::avatar::states
     {
         _fire_requested = false;
         _charging = false;
+        _reconcile_restored_charge_input = false;
         _charge_frames = 0;
         finishAttackPose_();
     }

@@ -118,6 +118,7 @@ namespace mm2hack::apps::world::entity::avatar::states
 
         bool _fire_requested{ false };              // Whether fire button was requested
         bool _charging{ false };
+        bool _reconcile_restored_charge_input{ false };
         bool _can_spawn{ false };
         std::uint32_t _charge_frames{ 0 };
         common::ProjectileVisual _requested_visual{ common::ProjectileVisual::Normal };

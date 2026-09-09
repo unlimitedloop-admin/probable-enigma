@@ -302,6 +302,7 @@ namespace mm2hack::apps::scenes
         {
             return false;
         }
+        phase->RestoreChargePresentationState(state.se);
 
         _roomState.pageIndex = static_cast<int>(state.page_index);
         _pendingPhase.reset();

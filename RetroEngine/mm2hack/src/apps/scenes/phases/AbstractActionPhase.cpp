@@ -2,14 +2,19 @@
 
 #include "AbstractActionPhase.h"
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstdlib>
+#include <string>
+
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/resources/parameters/Parameters.h"
 #include "apps/runtime/GameContext.h"
 #include "apps/scenes/PhaseFadeController.h"
+#include "apps/systems/audio/AudioManager.h"
+#include "apps/systems/audio/SeTransportState.h"
 #include "apps/systems/scrolling/atomic/ScrollController.h"
 #include "apps/systems/view/RenderContext.h"
 #include "apps/world/entity/avatar/AvatarStatus.h"
@@ -37,6 +42,8 @@ namespace mm2hack::apps::scenes::phases
 {
     namespace
     {
+        const std::wstring kChargeSeName{ L"rock_buster_charge" };
+
         struct ChargeParticleStep final
         {
             int offset_x;
@@ -263,6 +270,37 @@ namespace mm2hack::apps::scenes::phases
     bool AbstractActionPhase::RestoreState(const AbstractActionPhaseState& state) noexcept
     {
         return RestoreScrollState(state) && RestoreRuntimeState(state);
+    }
+
+    void AbstractActionPhase::RestoreChargePresentationState(
+        const systems::audio::SeTransportState& se_state) noexcept
+    {
+        if (!_ctx || !_ctx->entity_mgr)
+        {
+            _charge_sound_playing = false;
+            _charge_phase = world::entity::avatar::ChargePhase::Idle;
+            return;
+        }
+
+        const auto* player =
+            _ctx->entity_mgr->FindFirst<world::entity::avatar::PlayerEntity>();
+        if (player == nullptr)
+        {
+            _charge_sound_playing = false;
+            _charge_phase = world::entity::avatar::ChargePhase::Idle;
+            return;
+        }
+
+        const auto& charge = player->ChargeState();
+        const bool charge_sound_restored = std::any_of(
+            se_state.continuous_instances.begin(),
+            se_state.continuous_instances.end(),
+            [](const systems::audio::ContinuousSeTransportState& instance)
+            {
+                return instance.name == kChargeSeName;
+            });
+        _charge_sound_playing = charge_sound_restored;
+        _charge_phase = charge.phase;
     }
 
     void AbstractActionPhase::Initialize(const resources::parameters::Parameters& params)
@@ -607,7 +645,7 @@ namespace mm2hack::apps::scenes::phases
         {
             if (_charge_sound_playing)
             {
-                audio.StopSe(L"rock_buster_charge");
+                audio.StopSe(kChargeSeName);
                 _charge_sound_playing = false;
             }
             _charge_phase = charge.phase;
@@ -616,7 +654,7 @@ namespace mm2hack::apps::scenes::phases
 
         if (!_charge_sound_playing)
         {
-            audio.PlaySe(L"rock_buster_charge");
+            audio.PlaySe(kChargeSeName);
             _charge_sound_playing = true;
         }
 

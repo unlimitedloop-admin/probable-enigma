@@ -52,6 +52,7 @@
 #include "core/save/SaveData.h"
 #include "core/save/SaveSystem.h"
 #include "core/save/StateIO.h"
+#include "input/Jpbtn.h"
 
 namespace mm2hack::test
 {
@@ -147,6 +148,13 @@ namespace mm2hack::test
             [[nodiscard]] bool IsPressed(Key16 key) const noexcept override { return Get(key).pressed; }
             [[nodiscard]] std::int32_t Frames(Key16 key) const noexcept override { return Get(key).frames; }
             void SetBindings(const std::vector<LogicalBinding>& bindings) override { (void)bindings; }
+            void SetKey(Key16 key, bool pressed, bool changed = false) noexcept
+            {
+                auto& state = _snapshot.keys[static_cast<std::size_t>(key)];
+                state.pressed = pressed;
+                state.frames = pressed ? 1 : -1;
+                state.changed = changed;
+            }
 
         private:
             InputSnapshot _snapshot{};
@@ -683,6 +691,65 @@ namespace mm2hack::test
             player.SetLadderService(&ladder);
             player.SetScrollContext(&scroll_rules, 0);
             player.SetViewBounds({ -10'000.0, 10'000.0, -10'000.0, 10'000.0 });
+        }
+
+        void TestRestoredChargeInputReconciliation(TestRunner& runner)
+        {
+            PlayerEntity source(1, 4, 5, 2, 3);
+            PlayerEntityState charged_state = source.CaptureState();
+            charged_state.attack.charging = true;
+            charged_state.attack.charge_frames = 25;
+            charged_state.charge = {
+                apps::world::entity::avatar::ChargePhase::Level1,
+                25,
+                5
+            };
+            runner.Check(charged_state.IsValid(), L"prepare restored charge input state");
+
+            EmptyInput released_input{};
+            EmptyTerrain released_terrain{};
+            EmptyLadder released_ladder{};
+            EmptyScrollRules released_scroll{};
+            PlayerEntity released_player(1, 4, 5, 2, 3);
+            const bool released_ready = released_player.RestoreState(charged_state);
+            InjectPlayerServices(
+                released_player,
+                released_input,
+                released_terrain,
+                released_ladder,
+                released_scroll);
+            released_player.Update(nullptr, 1.0 / 60.0);
+            const auto released_output = released_player.TakeFrameOutput();
+            const auto released_state = released_player.CaptureState();
+            runner.Check(
+                released_ready && !released_state.attack.charging &&
+                released_state.attack.charge_frames == 0 &&
+                released_state.charge.phase ==
+                    apps::world::entity::avatar::ChargePhase::Idle &&
+                !released_output.projectile.has_value(),
+                L"cancel restored charge without firing when B is released");
+
+            EmptyInput held_input{};
+            held_input.SetKey(JPBTN::B, true, true);
+            EmptyTerrain held_terrain{};
+            EmptyLadder held_ladder{};
+            EmptyScrollRules held_scroll{};
+            PlayerEntity held_player(1, 4, 5, 2, 3);
+            const bool held_ready = held_player.RestoreState(charged_state);
+            InjectPlayerServices(
+                held_player,
+                held_input,
+                held_terrain,
+                held_ladder,
+                held_scroll);
+            held_player.Update(nullptr, 1.0 / 60.0);
+            const auto held_state = held_player.CaptureState();
+            runner.Check(
+                held_ready && held_state.attack.charging &&
+                held_state.attack.charge_frames == 26 &&
+                held_state.charge.phase ==
+                    apps::world::entity::avatar::ChargePhase::Level1,
+                L"continue restored charge without resetting on held B edge");
         }
 
         bool IsVoiceOwner(
@@ -1373,6 +1440,7 @@ namespace mm2hack::test
             TestBgmTransportState(runner);
             TestSeTransportState(runner);
             TestSaveFileEnvelope(runner);
+            TestRestoredChargeInputReconciliation(runner);
             TestCorruptionValidation(runner);
             TestInvalidRestoreIsNonDestructive(runner);
             TestDeterministicContinuation(runner);

@@ -93,6 +93,7 @@ namespace mm2hack::apps::world::entity::avatar
         [[nodiscard]] bool CanCaptureState() const noexcept;
         [[nodiscard]] PlayerEntityState CaptureState() const noexcept;
         bool RestoreState(const PlayerEntityState& state) noexcept;
+        [[nodiscard]] const ChargeStatus& ChargeState() const noexcept { return _charge_status; }
         // Bounding box (ICollider)
         RectF Bounds() const override;
         // Is collidable? (ICollider)

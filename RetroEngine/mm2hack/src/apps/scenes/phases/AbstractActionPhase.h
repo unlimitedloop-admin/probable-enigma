@@ -37,6 +37,11 @@ namespace mm2hack::apps::world::entity
     struct EntityManagerState;
 }
 
+namespace mm2hack::apps::systems::audio
+{
+    struct SeTransportState;
+}
+
 namespace mm2hack::apps::scenes::phases
 {
     class IStageScript;
@@ -105,6 +110,8 @@ namespace mm2hack::apps::scenes::phases
             const AbstractActionPhaseState& phase_state);
         bool RestoreRuntimeState(const AbstractActionPhaseState& state) noexcept;
         bool RestoreState(const AbstractActionPhaseState& state) noexcept;
+        void RestoreChargePresentationState(
+            const systems::audio::SeTransportState& se_state) noexcept;
 
     private:
         void updateIntro_();                                // Handles the intro state update
