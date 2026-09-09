@@ -726,8 +726,10 @@ namespace mm2hack::test
                 released_state.attack.charge_frames == 0 &&
                 released_state.charge.phase ==
                     apps::world::entity::avatar::ChargePhase::Idle &&
-                !released_output.projectile.has_value(),
-                L"cancel restored charge without firing when B is released");
+                released_output.projectile.has_value() &&
+                released_output.projectile->visual ==
+                    apps::world::entity::common::ProjectileVisual::ChargeLevel1,
+                L"release restored charged shot when B is released");
 
             EmptyInput held_input{};
             held_input.SetKey(JPBTN::B, true, true);

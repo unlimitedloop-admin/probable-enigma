@@ -64,16 +64,6 @@ namespace mm2hack::apps::world::entity::avatar::states
     void AttackActionState::PreUpdate(PlayerContext& cx, StateProvider* in, bool can_spawn) noexcept
     {
         _can_spawn = can_spawn;
-        if (_reconcile_restored_charge_input)
-        {
-            _reconcile_restored_charge_input = false;
-            if (!in->IsPressed(JPBTN::B))
-            {
-                _charging = false;
-                _charge_frames = 0;
-            }
-        }
-
         if (!_charging && in->JustPressed(JPBTN::B))
         {
             _charging = true;
@@ -99,12 +89,17 @@ namespace mm2hack::apps::world::entity::avatar::states
         using namespace abilities;
         ActionUpdateResult result{};
 
+        const bool release_restored_charge =
+            _reconcile_restored_charge_input && !in->IsPressed(JPBTN::B);
+        _reconcile_restored_charge_input = false;
+
         if (_charging && in->IsPressed(JPBTN::B))
         {
             ++_charge_frames;
         }
 
-        if (_charging && in->JustReleased(JPBTN::B))
+        if (_charging &&
+            (release_restored_charge || in->JustReleased(JPBTN::B)))
         {
             requestChargedShot_(tuning);
             _charging = false;

@@ -230,9 +230,10 @@ Reconstruction order is fixed:
 
 A restored charge is reconciled on the first subsequent simulation input tick,
 after the input provider has sampled the live controller. Holding B continues
-from the saved charge count and SE position. Releasing B cancels the charge
-without firing a shot, and the phase stops the restored charge SE on that same
-tick. A held `JustPressed` edge does not reset the restored count.
+from the saved charge count and SE position. Releasing B completes the charge
+through the normal charged-shot request using the saved count, and the phase
+stops the restored charge SE on that same tick. A held `JustPressed` edge does
+not reset the restored count.
 
 ### DemoStage2 implementation plan
 
@@ -358,7 +359,7 @@ but incorrect state.
 | SS-020 | P1 | Done | Add game/content compatibility identity | Incompatible runtime content is rejected with a specific result |
 | SS-021 | P0 | Done | Persist star-field initial entropy | Pattern ID is saved, restored, and injectable by replay/new-game setup |
 | SS-022 | P1 | Done | Add save payload integrity checking | Accidental byte corruption is rejected before runtime reconstruction |
-| SS-023 | P1 | Done | Reconcile restored charge state with live attack input | A loaded charge snapshot follows an explicit cancel-or-resume policy and its continuous SE cannot diverge from simulation state |
+| SS-023 | P1 | Done | Reconcile restored charge state with live attack input | A loaded charge snapshot follows an explicit release-or-resume policy and its continuous SE cannot diverge from simulation state |
 
 `AUD-006` and `AUD-007` completed the backend-independent BGM/SE DTOs,
 validation, and manager-level restoration. `SS-014` and `SS-015` now refer only
@@ -372,7 +373,8 @@ the audio-driver work.
 2. `SS-015` (Done): serialize continuous-SE state and complete
    BGM/SE ownership restoration. Transient SE remains intentionally absent.
 3. `SS-023` (Done): reconcile restored charge on the first live-input tick;
-   held B resumes while released B cancels without firing, with matching SE.
+   held B resumes while released B requests the saved charged shot, with
+   matching SE.
 4. `SS-010` (Done): cover the outer slot-file envelope, including bad magic,
    unsupported version, oversized payload, trailing bytes, and every truncation.
 5. `SS-022` (Done): protect the envelope metadata and scene payload with CRC-32
