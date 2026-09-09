@@ -237,12 +237,11 @@ Use a two-phase load:
 Some resources are global and mutate during scene initialization, so fully
 transactional candidate construction is currently impractical. The implemented
 first stage parses and validates the target payload without calling `Save` on
-the current scene or initializing target resources. Only a validated target may
-replace the current sequence/scene. BackdoorMenu has a complete pure validator;
-DemoStage2 remains rejected until all nested action-stage DTO decoders are
-implemented. A failure while loading external resources after validation is an
-environment/runtime failure and leaves the application with no active sequence,
-rather than attempting an in-memory snapshot rollback.
+the current scene or initializing target resources. BackdoorMenu and DemoStage2
+both have complete pure validators, and only a validated target may replace the
+current sequence/scene. A failure while loading external resources after
+validation is an environment/runtime failure and leaves the application with no
+active sequence, rather than attempting an in-memory snapshot rollback.
 
 ### P0: Save must occur at a defined frame boundary
 
@@ -311,20 +310,37 @@ but incorrect state.
 | SS-006 | P1 | Done | Make slot replacement transactional | Failed writes preserve the previous slot |
 | SS-007 | P0 | Done | Give `BgStarField` a persisted deterministic pattern ID | Save/load and replay produce the same star sequence and NES palette scheme |
 | SS-008 | P1 | Done | Define DemoStage2 snapshot schema | Coverage list and reconstruction order are documented |
-| SS-009 | P1 | Ready | Restore player and entity state | Player/entities resume without stale references |
-| SS-010 | P1 | Ready | Add save-format and corruption tests | Round-trip, truncation, oversized count, bad magic/version pass |
+| SS-009 | P1 | Done | Restore player and entity state | Player/entities resume without stale references |
+| SS-010 | P1 | Ready | Add outer `.sav` envelope and corruption tests | Slot-file round-trip, truncation, oversized payload, and bad magic/version pass |
 | SS-011 | P2 | Ready | Improve user-facing load errors | Missing/corrupt/unsupported/I/O cases are distinguishable |
 | SS-012 | P0 | Done | Isolate nondeterministic entropy from simulation | Only new-pattern creation may use entropy; simulation/render paths use persisted stable inputs |
 | SS-013 | P0 | Done | Replace charge-particle LCG with a stable pattern | Particle placement is reproducible without mutable random state |
-| SS-014 | P1 | Ready | Add logical BGM snapshot/restore | A paused multi-stem BGM resumes at the saved transport position |
-| SS-015 | P1 | Ready | Classify SE as transient or continuous | Transients stop and continuous emitters restore according to policy |
-| SS-016 | P1 | Blocked by SS-012/13 | Define replay input/event format and checksum boundary | Same initial state and input log reproduce the same simulation checksums |
+| SS-014 | P1 | Ready (next) | Connect BGM transport to the DemoStage2 save payload | The AUD-006 DTO round-trips through an external slot and restores after audio resources are registered |
+| SS-015 | P1 | Ready (after SS-014) | Connect continuous SE transport to the DemoStage2 save payload | The AUD-007 DTO round-trips through an external slot; transient SE stops and charge audio restores with ownership |
+| SS-016 | P1 | Ready | Define replay input/event format and checksum boundary | Same initial state and input log reproduce the same simulation checksums |
 | SS-017 | P0 | Done | Add a frame-boundary snapshot barrier | Capture is rejected during update or unsupported transitions |
 | SS-018 | P0 | Done | Make sequence loading target-validated and two-phase | Invalid target payload preserves the current scene without requiring it to support save |
-| SS-019 | P1 | Ready | Add stable entity IDs and snapshot factory | Entity graphs rebuild without serialized pointers or resource handles |
+| SS-019 | P1 | Done | Add stable entity IDs and snapshot factory | Entity graphs rebuild without serialized pointers or resource handles |
 | SS-020 | P1 | Ready | Add game/content compatibility identity | Incompatible runtime content is rejected with a specific result |
 | SS-021 | P0 | Done | Persist star-field initial entropy | Pattern ID is saved, restored, and injectable by replay/new-game setup |
 | SS-022 | P1 | Ready | Add save payload integrity checking | Accidental byte corruption is rejected before runtime reconstruction |
+
+`AUD-006` and `AUD-007` completed the backend-independent BGM/SE DTOs,
+validation, and manager-level restoration. `SS-014` and `SS-015` now refer only
+to serialization and DemoStage2 / external-slot integration; they do not repeat
+the audio-driver work.
+
+### Current implementation order
+
+1. `SS-014`: add the versioned audio section to the DemoStage2 payload and
+   connect BGM capture, validation, and restoration.
+2. `SS-015`: serialize continuous-SE state in that audio section and complete
+   BGM/SE ownership restoration. Transient SE remains intentionally absent.
+3. Run the existing headless suite and add external-slot audio round-trip and
+   corruption cases.
+
+The remaining independent hardening tasks are `SS-010`, `SS-011`, `SS-020`,
+and `SS-022`. Replay format work is tracked separately as `SS-016`.
 
 ## Milestones
 

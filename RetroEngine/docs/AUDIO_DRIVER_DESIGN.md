@@ -73,5 +73,6 @@ Restore order:
 | AUD-006 | P1 | Done | Add logical BGM transport snapshots | Paused multi-stem BGM restores by stable track and voice IDs |
 | AUD-007 | P1 | Done | Classify and restore continuous SE | One-shots stop on load; configured continuous emitters restore with ownership |
 
-`AUD-001` through `AUD-005` are prerequisites for save-state tasks `SS-014`
-and `SS-015`.
+The audio-driver layer is complete through `AUD-007`. Remaining `.sav`
+serialization and DemoStage2 integration are tracked as `SS-014` for BGM and
+`SS-015` for continuous SE in `SAVE_STATE_DESIGN.md`.
