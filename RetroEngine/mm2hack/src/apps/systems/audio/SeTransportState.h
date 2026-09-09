@@ -15,6 +15,12 @@
 
 #include "ApuVoice.h"
 
+namespace mm2hack::core::save
+{
+    class StateReader;
+    class StateWriter;
+}
+
 namespace mm2hack::apps::systems::audio
 {
     enum class SePlaybackStatus : std::uint8_t
@@ -51,6 +57,10 @@ namespace mm2hack::apps::systems::audio
         std::vector<ContinuousSeTransportState> continuous_instances;
         int master_volume = 0;
 
+        /// Serializes a versioned logical snapshot without backend handles.
+        bool Save(core::save::StateWriter& writer) const;
+        /// Loads transactionally, preserving this object when decoding fails.
+        bool Load(core::save::StateReader& reader);
         /// Performs resource-independent structural and bounds validation.
         bool IsValid() const noexcept;
     };

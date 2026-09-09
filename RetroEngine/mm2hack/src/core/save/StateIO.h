@@ -14,6 +14,8 @@
 #include <limits>
 #include <ostream>
 #include <span>
+#include <string>
+#include <string_view>
 
 namespace mm2hack::core::save
 {
@@ -84,6 +86,23 @@ namespace mm2hack::core::save
             static_assert(sizeof(double) == sizeof(std::uint64_t));
             static_assert(std::numeric_limits<double>::is_iec559);
             return WriteU64(std::bit_cast<std::uint64_t>(value));
+        }
+
+        bool WriteWString(std::wstring_view value, std::uint16_t maximum_length)
+        {
+            if (value.size() > maximum_length ||
+                !WriteU16(static_cast<std::uint16_t>(value.size())))
+            {
+                return false;
+            }
+            for (const wchar_t code_unit : value)
+            {
+                if (!WriteU32(static_cast<std::uint32_t>(code_unit)))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         bool WriteBytes(std::span<const std::uint8_t> bytes)
@@ -211,6 +230,29 @@ namespace mm2hack::core::save
                 return false;
             }
             value = std::bit_cast<double>(encoded);
+            return true;
+        }
+
+        bool ReadWString(std::wstring& value, std::uint16_t maximum_length)
+        {
+            std::uint16_t length{};
+            if (!ReadU16(length) || length > maximum_length)
+            {
+                return false;
+            }
+
+            std::wstring loaded(length, L'\0');
+            for (wchar_t& code_unit : loaded)
+            {
+                std::uint32_t encoded{};
+                if (!ReadU32(encoded) ||
+                    encoded > static_cast<std::uint32_t>((std::numeric_limits<wchar_t>::max)()))
+                {
+                    return false;
+                }
+                code_unit = static_cast<wchar_t>(encoded);
+            }
+            value = loaded;
             return true;
         }
 

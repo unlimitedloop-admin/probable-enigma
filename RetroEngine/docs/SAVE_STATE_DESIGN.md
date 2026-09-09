@@ -164,7 +164,7 @@ stage-map binary format and cannot be launched by the current `BGPageHeader`
 reader. `LaunchingGame` is also intentionally unsupported because it is a
 resource-validation transition rather than a resumable scene.
 
-`DemoStage2` is the only action-stage snapshot target. Its current version 2
+`DemoStage2` is the only action-stage snapshot target. Its current version 3
 schema is:
 
 1. Scene payload version and action-phase type ID.
@@ -182,14 +182,18 @@ schema is:
 8. Versioned logical BGM transport: registered track name, playback status,
    stable APU voices, per-voice positions and logical volumes, master volume,
    loop range, and fade progress.
+9. Versioned continuous-SE transport: configured emitter names, playback
+   status, stable APU voices, per-voice positions and logical volumes, and SE
+   master volume. Transient SE is intentionally absent.
 
 Runtime sprite/BG handles, service pointers, map caches, collision-service
 objects, and other reconstructible resources are excluded. Debug-only display
 counters are also excluded. Transient visual entities are included initially
 because their payloads are small and exact visual continuation is easier to
 reason about than a mixed discard policy. Logical BGM restoration is included
-as of version 2. Continuous-SE serialization remains under SS-015; one-shot SE
-is not resumed.
+as of version 2, and continuous-SE restoration is included as of version 3.
+One-shot SE is not resumed. Versions 1 and 2 are intentionally rejected by the
+current decoder rather than partially restoring audio.
 
 The save barrier requires an active phase, no pending phase/scene transition,
 an interactive fader, and an `EntityManager` that is neither updating nor
@@ -321,7 +325,7 @@ but incorrect state.
 | SS-012 | P0 | Done | Isolate nondeterministic entropy from simulation | Only new-pattern creation may use entropy; simulation/render paths use persisted stable inputs |
 | SS-013 | P0 | Done | Replace charge-particle LCG with a stable pattern | Particle placement is reproducible without mutable random state |
 | SS-014 | P1 | Done | Connect BGM transport to the DemoStage2 save payload | The AUD-006 DTO round-trips through an external slot and restores after audio resources are registered |
-| SS-015 | P1 | Ready (next) | Connect continuous SE transport to the DemoStage2 save payload | The AUD-007 DTO round-trips through an external slot; transient SE stops and charge audio restores with ownership |
+| SS-015 | P1 | Done | Connect continuous SE transport to the DemoStage2 save payload | The AUD-007 DTO round-trips through an external slot; transient SE stops and charge audio restores with ownership |
 | SS-016 | P1 | Ready | Define replay input/event format and checksum boundary | Same initial state and input log reproduce the same simulation checksums |
 | SS-017 | P0 | Done | Add a frame-boundary snapshot barrier | Capture is rejected during update or unsupported transitions |
 | SS-018 | P0 | Done | Make sequence loading target-validated and two-phase | Invalid target payload preserves the current scene without requiring it to support save |
@@ -329,6 +333,7 @@ but incorrect state.
 | SS-020 | P1 | Ready | Add game/content compatibility identity | Incompatible runtime content is rejected with a specific result |
 | SS-021 | P0 | Done | Persist star-field initial entropy | Pattern ID is saved, restored, and injectable by replay/new-game setup |
 | SS-022 | P1 | Ready | Add save payload integrity checking | Accidental byte corruption is rejected before runtime reconstruction |
+| SS-023 | P1 | Ready (deferred) | Reconcile restored charge state with live attack input | A loaded charge snapshot follows an explicit cancel-or-resume policy and its continuous SE cannot diverge from simulation state |
 
 `AUD-006` and `AUD-007` completed the backend-independent BGM/SE DTOs,
 validation, and manager-level restoration. `SS-014` and `SS-015` now refer only
@@ -339,13 +344,14 @@ the audio-driver work.
 
 1. `SS-014` (Done): add the versioned BGM section to the DemoStage2 payload and
    connect BGM capture, validation, and restoration.
-2. `SS-015` (Next): serialize continuous-SE state and complete
+2. `SS-015` (Done): serialize continuous-SE state and complete
    BGM/SE ownership restoration. Transient SE remains intentionally absent.
-3. Run the existing headless suite and add external-slot audio round-trip and
-   corruption cases.
+3. `SS-023` (Deferred): choose how a restored charge interacts with the live
+   attack-button state, then keep simulation and charge audio synchronized.
+4. Continue external-slot hardening under `SS-010`, `SS-011`, and `SS-022`.
 
 The remaining independent hardening tasks are `SS-010`, `SS-011`, `SS-020`,
-and `SS-022`. Replay format work is tracked separately as `SS-016`.
+`SS-022`, and `SS-023`. Replay format work is tracked separately as `SS-016`.
 
 ## Milestones
 

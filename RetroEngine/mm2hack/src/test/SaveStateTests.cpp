@@ -94,7 +94,7 @@ namespace mm2hack::test
         using core::save::StateReader;
         using core::save::StateWriter;
 
-        constexpr std::uint32_t kDemoStage2StateVersion = 2;
+        constexpr std::uint32_t kDemoStage2StateVersion = 3;
         constexpr std::uint8_t kAbstractActionPhaseType = 1;
 
         class TestRunner final
@@ -395,6 +395,15 @@ namespace mm2hack::test
             bgm.loop_start_seconds = 11.77;
             bgm.loop_end_seconds = 58.49;
             bgm.fade_target = 255;
+            SeTransportState se{};
+            se.master_volume = 255;
+            se.continuous_instances = {
+                {
+                    L"rock_buster_charge",
+                    SePlaybackStatus::Paused,
+                    { { ApuVoice::Pulse2, 3'900, 255 } }
+                }
+            };
 
             std::ostringstream stream(std::ios::out | std::ios::binary);
             StateWriter writer(stream);
@@ -403,7 +412,7 @@ namespace mm2hack::test
                 !writer.WriteU32(phase.scroll.page_index) ||
                 !writer.WriteU32(1234) ||
                 !phase.Save(writer) || !entities.Save(writer) ||
-                !bgm.Save(writer) || !stream.good())
+                !bgm.Save(writer) || !se.Save(writer) || !stream.good())
             {
                 return false;
             }
@@ -831,6 +840,30 @@ namespace mm2hack::test
                 L"capture only configured continuous SE");
 
             snapshot.continuous_instances.front().voices.front().position_milliseconds = 1234;
+            std::ostringstream encoded_stream(std::ios::out | std::ios::binary);
+            StateWriter encoded_writer(encoded_stream);
+            const bool encoded = snapshot.Save(encoded_writer);
+            std::istringstream decoded_stream(
+                encoded_stream.str(), std::ios::in | std::ios::binary);
+            StateReader decoded_reader(decoded_stream);
+            SeTransportState decoded{};
+            runner.Check(
+                encoded && decoded.Load(decoded_reader) &&
+                decoded_stream.peek() == std::char_traits<char>::eof() &&
+                EqualSeTransport(snapshot, decoded),
+                L"round-trip versioned continuous SE transport codec");
+
+            const SeTransportState before_decode_failure = decoded;
+            std::string bad_version = encoded_stream.str();
+            bad_version.front() ^= 0x01;
+            std::istringstream invalid_stream(
+                bad_version, std::ios::in | std::ios::binary);
+            StateReader invalid_reader(invalid_stream);
+            runner.Check(
+                !decoded.Load(invalid_reader) &&
+                EqualSeTransport(before_decode_failure, decoded),
+                L"invalid continuous SE codec input preserves destination state");
+
             SeManager restored{ channel_factory };
             const bool target_ready = restored.LoadSe(
                 L"charge",
@@ -911,6 +944,12 @@ namespace mm2hack::test
             runner.Check(
                 !IsValidDemoStage2Payload(obsolete_version),
                 L"reject obsolete DemoStage2 version without BGM state");
+
+            auto bgm_only_version = valid;
+            bgm_only_version[0] = 2;
+            runner.Check(
+                !IsValidDemoStage2Payload(bgm_only_version),
+                L"reject obsolete DemoStage2 version without SE state");
 
             auto bad_phase = valid;
             bad_phase[4] = 0xFF;

@@ -193,6 +193,8 @@ namespace mm2hack::apps::world::entity::avatar::states
         _is_attacking = state.attacking;
         _pose_time_sec = state.pose_time_seconds;
         _fire_requested = state.fire_requested;
+        // REVIEW: SS-023 must reconcile restored charging with the live B-button
+        // state/history by explicitly choosing cancel-on-load or held-input seeding.
         _charging = state.charging;
         _can_spawn = false;
         _charge_frames = state.charge_frames;

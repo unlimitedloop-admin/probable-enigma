@@ -24,6 +24,7 @@
 #include "apps/scenes/SceneChangeMediator.h"
 #include "apps/systems/audio/AudioManager.h"
 #include "apps/systems/audio/BgmTransportState.h"
+#include "apps/systems/audio/SeTransportState.h"
 #include "apps/systems/physics/TileAttribute.h"
 #include "apps/world/entity/enemy/lists/EnemyLists.h"
 #include "apps/world/entity/EntityManager.h"
@@ -39,7 +40,7 @@ namespace mm2hack::apps::scenes
 {
     namespace
     {
-        constexpr std::uint32_t kDemoStage2StateVersion = 2;
+        constexpr std::uint32_t kDemoStage2StateVersion = 3;
 
         enum class DemoStage2PhaseType : std::uint8_t
         {
@@ -54,12 +55,14 @@ namespace mm2hack::apps::scenes
             phases::AbstractActionPhaseState phase{};
             world::entity::EntityManagerState entities{};
             systems::audio::BgmTransportState bgm{};
+            systems::audio::SeTransportState se{};
 
             [[nodiscard]] bool IsValid() const
             {
                 if (phase_type != DemoStage2PhaseType::AbstractAction ||
                     page_index != phase.scroll.page_index ||
-                    !phase.IsValid() || !entities.IsValid() || !bgm.IsValid())
+                    !phase.IsValid() || !entities.IsValid() ||
+                    !bgm.IsValid() || !se.IsValid())
                 {
                     return false;
                 }
@@ -86,7 +89,8 @@ namespace mm2hack::apps::scenes
                     writer.WriteU8(static_cast<std::uint8_t>(phase_type)) &&
                     writer.WriteU32(page_index) &&
                     background_animation.Save(writer) &&
-                    phase.Save(writer) && entities.Save(writer) && bgm.Save(writer);
+                    phase.Save(writer) && entities.Save(writer) &&
+                    bgm.Save(writer) && se.Save(writer);
             }
 
             bool Load(core::save::StateReader& reader)
@@ -99,7 +103,7 @@ namespace mm2hack::apps::scenes
                     !reader.ReadU32(loaded.page_index) ||
                     !loaded.background_animation.Load(reader) ||
                     !loaded.phase.Load(reader) || !loaded.entities.Load(reader) ||
-                    !loaded.bgm.Load(reader))
+                    !loaded.bgm.Load(reader) || !loaded.se.Load(reader))
                 {
                     return false;
                 }
@@ -247,7 +251,8 @@ namespace mm2hack::apps::scenes
         if (phase == nullptr ||
             !phase->CaptureState(state.phase) ||
             !phase->CaptureEntityState(state.entities) ||
-            !_resource->GetAudioManager().CaptureBgmState(state.bgm))
+            !_resource->GetAudioManager().CaptureBgmState(state.bgm) ||
+            !_resource->GetAudioManager().CaptureSeState(state.se))
         {
             return false;
         }
@@ -283,7 +288,8 @@ namespace mm2hack::apps::scenes
         }
 
         auto& audio = _resource->GetAudioManager();
-        if (!audio.ValidateBgmState(state.bgm))
+        if (!audio.ValidateBgmState(state.bgm) ||
+            !audio.ValidateSeState(state.se))
         {
             return false;
         }
@@ -303,7 +309,8 @@ namespace mm2hack::apps::scenes
         _nextScene = SceneID::None;
         _nextParams = {};
         _fader.RestoreInteractive(*_resource);
-        return audio.RestoreBgmState(state.bgm);
+        return audio.RestoreBgmState(state.bgm) &&
+            audio.RestoreSeState(state.se);
     }
 
     void DemoStage2::onEnter_(const Parameters& params)
