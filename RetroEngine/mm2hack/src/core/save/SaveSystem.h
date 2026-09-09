@@ -25,6 +25,7 @@ namespace mm2hack::core::save
         FileNotFound,
         Corrupt,
         UnsupportedVersion,
+        IncompatibleContent,
         IoError
     };
 

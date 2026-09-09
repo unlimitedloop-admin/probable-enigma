@@ -37,11 +37,12 @@ explicit header and fixed-width fields:
 
 1. magic value
 2. format version
-3. sequence ID
-4. scene ID
-5. payload byte count
-6. CRC-32
-7. scene payload
+3. game/content compatibility ID
+4. sequence ID
+5. scene ID
+6. payload byte count
+7. CRC-32
+8. scene payload
 
 All counts must be bounded before allocating or looping.
 
@@ -78,15 +79,23 @@ payload versions should be independent of the outer file version where useful.
 
 An older well-formed save is "unsupported", not corrupt. Truncated data,
 impossible sizes/IDs/values, unexpected trailing bytes, and a CRC-32 mismatch
-are corrupt. The checksum covers the canonical little-endian sequence ID, scene
-ID, payload byte count, and scene payload. It detects accidental corruption but
-is not authentication: a deliberate editor can recalculate it.
+are corrupt. The checksum covers the canonical little-endian compatibility ID,
+sequence ID, scene ID, payload byte count, and scene payload. It detects
+accidental corruption but is not authentication: a deliberate editor can
+recalculate it.
 
 `SaveSystem::Load` reports `Success`, `FileNotFound`, `Corrupt`,
-`UnsupportedVersion`, or `IoError` without changing the destination on failure.
-The command UI maps these results to distinct messages. A structurally valid
-file that cannot be reconstructed by the current runtime is reported separately
-from an outer-file read or integrity failure.
+`UnsupportedVersion`, `IncompatibleContent`, or `IoError` without changing the
+destination on failure. The command UI maps these results to distinct messages.
+A structurally valid file that cannot be reconstructed by the current runtime
+is reported separately from an outer-file read or integrity failure.
+
+The 64-bit game/content compatibility ID is stable across builds and across
+asset-only changes that do not alter saved-state interpretation. Increment it
+when map structure, collision/tuning data, entity semantics, or other runtime
+content changes make existing logical snapshots unsafe to resume. It is an
+explicit compatibility contract rather than a hash of every packaged byte, so
+cosmetic or audio balancing changes do not invalidate saves unnecessarily.
 
 ### P0: Nondeterministic and call-order-dependent randomness blocks replay
 
@@ -338,7 +347,7 @@ but incorrect state.
 | SS-017 | P0 | Done | Add a frame-boundary snapshot barrier | Capture is rejected during update or unsupported transitions |
 | SS-018 | P0 | Done | Make sequence loading target-validated and two-phase | Invalid target payload preserves the current scene without requiring it to support save |
 | SS-019 | P1 | Done | Add stable entity IDs and snapshot factory | Entity graphs rebuild without serialized pointers or resource handles |
-| SS-020 | P1 | Ready | Add game/content compatibility identity | Incompatible runtime content is rejected with a specific result |
+| SS-020 | P1 | Done | Add game/content compatibility identity | Incompatible runtime content is rejected with a specific result |
 | SS-021 | P0 | Done | Persist star-field initial entropy | Pattern ID is saved, restored, and injectable by replay/new-game setup |
 | SS-022 | P1 | Done | Add save payload integrity checking | Accidental byte corruption is rejected before runtime reconstruction |
 | SS-023 | P1 | Ready (deferred) | Reconcile restored charge state with live attack input | A loaded charge snapshot follows an explicit cancel-or-resume policy and its continuous SE cannot diverge from simulation state |
@@ -362,10 +371,11 @@ the audio-driver work.
    and reject mismatches before runtime reconstruction.
 6. `SS-011` (Done): classify missing, corrupt, unsupported-version, and I/O
    failures and show a specific load message for each result.
-7. Add game/content compatibility identity under `SS-020`.
+7. `SS-020` (Done): persist a stable game/content compatibility ID and reject a
+   valid save made for incompatible runtime content with a specific result.
 
-The remaining independent hardening tasks are `SS-020` and `SS-023`. Replay
-format work is tracked separately as `SS-016`.
+The remaining independent hardening task is deferred `SS-023`. Replay format
+work is tracked separately as `SS-016`.
 
 ## Milestones
 

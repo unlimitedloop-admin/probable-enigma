@@ -53,12 +53,23 @@ namespace mm2hack::core::save
             }
         }
 
+        void AccumulateCrc32(std::uint32_t& checksum, std::uint64_t value) noexcept
+        {
+            for (int byte = 0; byte < 8; ++byte)
+            {
+                AccumulateCrc32(checksum, static_cast<std::uint8_t>(value));
+                value >>= 8;
+            }
+        }
+
         std::uint32_t ComputeSaveChecksum(
+            std::uint64_t compatibility_id,
             std::int32_t sequence_id,
             std::int32_t scene_id,
             std::span<const std::uint8_t> payload) noexcept
         {
             std::uint32_t checksum = 0xFFFFFFFFU;
+            AccumulateCrc32(checksum, compatibility_id);
             AccumulateCrc32(checksum, std::bit_cast<std::uint32_t>(sequence_id));
             AccumulateCrc32(checksum, std::bit_cast<std::uint32_t>(scene_id));
             AccumulateCrc32(checksum, static_cast<std::uint32_t>(payload.size()));
@@ -107,12 +118,14 @@ namespace mm2hack::core::save
 
         StateWriter writer(ofs);
         const std::uint32_t checksum = ComputeSaveChecksum(
+            data.gameContentCompatibilityId,
             data.sequenceID,
             data.sceneID,
             data.scenePayload);
         const bool wroteAll =
             writer.WriteBytes(kSaveMagic) &&
             writer.WriteU32(config::SystemConfig::kCurrentSaveVersion) &&
+            writer.WriteU64(data.gameContentCompatibilityId) &&
             writer.WriteI32(data.sequenceID) &&
             writer.WriteI32(data.sceneID) &&
             writer.WriteU32(static_cast<std::uint32_t>(data.scenePayload.size())) &&
@@ -162,6 +175,7 @@ namespace mm2hack::core::save
 
         std::array<std::uint8_t, kSaveMagic.size()> magic{};
         std::uint32_t fileVersion{};
+        std::uint64_t compatibilityId{};
         std::int32_t sequenceID{};
         std::int32_t sceneID{};
         std::uint32_t payloadSize{};
@@ -183,7 +197,8 @@ namespace mm2hack::core::save
         {
             return LoadResult::UnsupportedVersion;
         }
-        if (!reader.ReadI32(sequenceID) ||
+        if (!reader.ReadU64(compatibilityId) ||
+            !reader.ReadI32(sequenceID) ||
             !reader.ReadI32(sceneID) ||
             !reader.ReadU32(payloadSize))
         {
@@ -199,6 +214,7 @@ namespace mm2hack::core::save
         }
 
         SaveData loaded{};
+        loaded.gameContentCompatibilityId = compatibilityId;
         loaded.sequenceID = sequenceID;
         loaded.sceneID = sceneID;
         loaded.scenePayload.resize(payloadSize);
@@ -207,7 +223,11 @@ namespace mm2hack::core::save
             return ClassifyReadFailure(ifs);
         }
 
-        if (ComputeSaveChecksum(sequenceID, sceneID, loaded.scenePayload) !=
+        if (ComputeSaveChecksum(
+            compatibilityId,
+            sequenceID,
+            sceneID,
+            loaded.scenePayload) !=
             expectedChecksum)
         {
             return LoadResult::Corrupt;
@@ -221,6 +241,10 @@ namespace mm2hack::core::save
         if (trailing_byte != std::char_traits<char>::eof())
         {
             return LoadResult::Corrupt;
+        }
+        if (compatibilityId != config::SystemConfig::kGameContentCompatibilityId)
+        {
+            return LoadResult::IncompatibleContent;
         }
 
         outData = std::move(loaded);

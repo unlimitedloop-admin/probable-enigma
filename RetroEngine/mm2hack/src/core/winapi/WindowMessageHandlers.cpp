@@ -45,6 +45,8 @@ namespace
             return L"The save data is corrupted.";
         case save::LoadResult::UnsupportedVersion:
             return L"This save data version is not supported.";
+        case save::LoadResult::IncompatibleContent:
+            return L"This save data is not compatible with the current game content.";
         case save::LoadResult::IoError:
             return L"The save data could not be read. Check file access and storage.";
         case save::LoadResult::Success:

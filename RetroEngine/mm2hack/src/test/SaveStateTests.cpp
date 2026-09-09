@@ -416,7 +416,8 @@ namespace mm2hack::test
         {
             return left.sequenceID == right.sequenceID &&
                 left.sceneID == right.sceneID &&
-                left.scenePayload == right.scenePayload;
+                left.scenePayload == right.scenePayload &&
+                left.gameContentCompatibilityId == right.gameContentCompatibilityId;
         }
 
         bool ReadFileBytes(const std::wstring& path, std::vector<std::uint8_t>& bytes)
@@ -498,6 +499,26 @@ namespace mm2hack::test
                     EqualSaveData(before, destination);
             };
 
+            SaveData incompatible = expected;
+            ++incompatible.gameContentCompatibilityId;
+            SaveData destination{ 99, 88, { 0x11, 0x22, 0x33 } };
+            const SaveData before_incompatible_load = destination;
+            runner.Check(
+                SaveSystem::Save(file.Path(), incompatible) &&
+                SaveSystem::Load(file.Path(), destination) ==
+                    LoadResult::IncompatibleContent &&
+                EqualSaveData(before_incompatible_load, destination),
+                L"reject incompatible game content without mutating destination");
+
+            auto corrupted_compatibility_id = canonical;
+            constexpr std::size_t kCompatibilityIdOffset = 12;
+            corrupted_compatibility_id[kCompatibilityIdOffset] ^= 0x01;
+            runner.Check(
+                rejects_without_mutation(
+                    corrupted_compatibility_id,
+                    LoadResult::Corrupt),
+                L"classify unchecked compatibility-ID edits as corruption");
+
             auto bad_magic = canonical;
             bad_magic.front() ^= 0xFF;
             runner.Check(
@@ -512,7 +533,7 @@ namespace mm2hack::test
                 L"reject unsupported save-file version without mutating destination");
 
             auto oversized = canonical;
-            constexpr std::size_t kPayloadSizeOffset = 20;
+            constexpr std::size_t kPayloadSizeOffset = 28;
             for (std::size_t index = 0; index < sizeof(std::uint32_t); ++index)
             {
                 oversized[kPayloadSizeOffset + index] = 0xFF;
@@ -522,14 +543,14 @@ namespace mm2hack::test
                 L"reject oversized save-file payload without allocation");
 
             auto corrupted_metadata = canonical;
-            constexpr std::size_t kSequenceIdOffset = 12;
+            constexpr std::size_t kSequenceIdOffset = 20;
             corrupted_metadata[kSequenceIdOffset] ^= 0x01;
             runner.Check(
                 rejects_without_mutation(corrupted_metadata, LoadResult::Corrupt),
                 L"reject save-file metadata checksum mismatch");
 
             auto corrupted_checksum = canonical;
-            constexpr std::size_t kChecksumOffset = 24;
+            constexpr std::size_t kChecksumOffset = 32;
             corrupted_checksum[kChecksumOffset] ^= 0x01;
             runner.Check(
                 rejects_without_mutation(corrupted_checksum, LoadResult::Corrupt),

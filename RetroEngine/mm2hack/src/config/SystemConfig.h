@@ -51,7 +51,9 @@ namespace mm2hack::config
         static constexpr float kScreenScale = 2.0f;                 // Scale factor for the screen
         static constexpr float kScreenScaleMax = 4.0f;              // Maximum scale factor for the screen
 
-        static constexpr uint32_t kCurrentSaveVersion = 3;          // Current save version
+        static constexpr uint32_t kCurrentSaveVersion = 4;          // Current save version
+        // Increment only when saved logical state is incompatible with game/content data.
+        static constexpr uint64_t kGameContentCompatibilityId = 0x4D4D324800000001ULL;
 
         static constexpr uint32_t kFeedbackOverlayDuration = 180;   // Duration for feedback overlay display (milliseconds)
 
