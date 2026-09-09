@@ -3,15 +3,20 @@
 #include "SaveStateTests.h"
 
 #include <algorithm>
+#include <chrono>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <exception>
+#include <filesystem>
+#include <fstream>
+#include <iterator>
 #include <memory>
 #include <optional>
 #include <sstream>
 #include <string>
 #include <string_view>
+#include <system_error>
 #include <utility>
 #include <vector>
 
@@ -45,6 +50,7 @@
 #include "core/assembly/InputTypes.h"
 #include "core/assembly/StateProvider.h"
 #include "core/save/SaveData.h"
+#include "core/save/SaveSystem.h"
 #include "core/save/StateIO.h"
 
 namespace mm2hack::test
@@ -91,6 +97,7 @@ namespace mm2hack::test
         using core::assembly::LogicalBinding;
         using core::assembly::StateProvider;
         using core::save::SaveData;
+        using core::save::SaveSystem;
         using core::save::StateReader;
         using core::save::StateWriter;
 
@@ -207,6 +214,56 @@ namespace mm2hack::test
             bool _paused = false;
             int _volume = 0;
             std::int64_t _position_milliseconds = 0;
+        };
+
+        class TemporarySaveFile final
+        {
+        public:
+            TemporarySaveFile()
+            {
+                std::error_code error;
+                const std::filesystem::path temporary_root =
+                    std::filesystem::temp_directory_path(error);
+                if (error) return;
+
+                const auto nonce = std::chrono::steady_clock::now()
+                    .time_since_epoch().count();
+                const std::wstring prefix = L"mm2hack_save_state_tests_" +
+                    std::to_wstring(nonce) + L"_";
+                for (int attempt = 0; attempt < 100; ++attempt)
+                {
+                    _directory = temporary_root / (prefix + std::to_wstring(attempt));
+                    if (std::filesystem::create_directory(_directory, error))
+                    {
+                        _path = _directory / L"state.sav";
+                        _ready = true;
+                        return;
+                    }
+                    if (error)
+                    {
+                        error.clear();
+                    }
+                }
+            }
+
+            ~TemporarySaveFile()
+            {
+                if (!_ready) return;
+                std::error_code ignored;
+                std::filesystem::remove(_path, ignored);
+                std::filesystem::path temporary_path = _path;
+                temporary_path += L".tmp";
+                std::filesystem::remove(temporary_path, ignored);
+                std::filesystem::remove(_directory, ignored);
+            }
+
+            [[nodiscard]] bool IsReady() const noexcept { return _ready; }
+            [[nodiscard]] std::wstring Path() const { return _path.wstring(); }
+
+        private:
+            std::filesystem::path _directory{};
+            std::filesystem::path _path{};
+            bool _ready = false;
         };
 
         class EmptyTerrain final : public ITerrainProbe
@@ -352,6 +409,119 @@ namespace mm2hack::test
                 value.push_back(static_cast<char>(byte));
             }
             return value;
+        }
+
+        bool EqualSaveData(const SaveData& left, const SaveData& right)
+        {
+            return left.sequenceID == right.sequenceID &&
+                left.sceneID == right.sceneID &&
+                left.scenePayload == right.scenePayload;
+        }
+
+        bool ReadFileBytes(const std::wstring& path, std::vector<std::uint8_t>& bytes)
+        {
+            std::ifstream stream(path, std::ios::in | std::ios::binary);
+            if (!stream) return false;
+
+            const std::string source{
+                std::istreambuf_iterator<char>(stream),
+                std::istreambuf_iterator<char>()
+            };
+            if (stream.bad()) return false;
+            bytes = ToBytes(source);
+            return true;
+        }
+
+        bool WriteFileBytes(const std::wstring& path, const std::vector<std::uint8_t>& bytes)
+        {
+            std::ofstream stream(path, std::ios::out | std::ios::binary | std::ios::trunc);
+            if (!stream) return false;
+            if (!bytes.empty())
+            {
+                stream.write(
+                    reinterpret_cast<const char*>(bytes.data()),
+                    static_cast<std::streamsize>(bytes.size()));
+            }
+            stream.flush();
+            return stream.good();
+        }
+
+        void TestSaveFileEnvelope(TestRunner& runner)
+        {
+            TemporarySaveFile file{};
+            const SaveData expected{
+                7,
+                static_cast<std::int32_t>(SceneID::DemoStage2),
+                { 0x00, 0x01, 0x7F, 0x80, 0xFF }
+            };
+            SaveData loaded{};
+            const bool round_trip = file.IsReady() &&
+                SaveSystem::Save(file.Path(), expected) &&
+                SaveSystem::Load(file.Path(), loaded) &&
+                EqualSaveData(expected, loaded);
+            runner.Check(round_trip, L"round-trip outer save-file envelope");
+            if (!round_trip) return;
+
+            std::vector<std::uint8_t> canonical{};
+            if (!ReadFileBytes(file.Path(), canonical))
+            {
+                runner.Check(false, L"read canonical save-file bytes");
+                return;
+            }
+
+            const auto rejects_without_mutation = [&file](
+                const std::vector<std::uint8_t>& candidate)
+            {
+                SaveData destination{ 99, 88, { 0x11, 0x22, 0x33 } };
+                const SaveData before = destination;
+                return WriteFileBytes(file.Path(), candidate) &&
+                    !SaveSystem::Load(file.Path(), destination) &&
+                    EqualSaveData(before, destination);
+            };
+
+            auto bad_magic = canonical;
+            bad_magic.front() ^= 0xFF;
+            runner.Check(
+                rejects_without_mutation(bad_magic),
+                L"reject bad save-file magic without mutating destination");
+
+            auto bad_version = canonical;
+            constexpr std::size_t kVersionOffset = 8;
+            bad_version[kVersionOffset] ^= 0x01;
+            runner.Check(
+                rejects_without_mutation(bad_version),
+                L"reject unsupported save-file version without mutating destination");
+
+            auto oversized = canonical;
+            constexpr std::size_t kPayloadSizeOffset = 20;
+            for (std::size_t index = 0; index < sizeof(std::uint32_t); ++index)
+            {
+                oversized[kPayloadSizeOffset + index] = 0xFF;
+            }
+            runner.Check(
+                rejects_without_mutation(oversized),
+                L"reject oversized save-file payload without allocation");
+
+            auto trailing = canonical;
+            trailing.push_back(0xA5);
+            runner.Check(
+                rejects_without_mutation(trailing),
+                L"reject trailing save-file bytes without mutating destination");
+
+            bool rejected_all_truncations = true;
+            for (std::size_t size = 0; size < canonical.size(); ++size)
+            {
+                auto truncated = canonical;
+                truncated.resize(size);
+                if (!rejects_without_mutation(truncated))
+                {
+                    rejected_all_truncations = false;
+                    break;
+                }
+            }
+            runner.Check(
+                rejected_all_truncations,
+                L"reject every truncated save-file envelope");
         }
 
         bool SerializePlayerState(const PlayerEntityState& state, std::vector<std::uint8_t>& bytes)
@@ -1142,6 +1312,7 @@ namespace mm2hack::test
             TestAudioConfiguration(runner);
             TestBgmTransportState(runner);
             TestSeTransportState(runner);
+            TestSaveFileEnvelope(runner);
             TestCorruptionValidation(runner);
             TestInvalidRestoreIsNonDestructive(runner);
             TestDeterministicContinuation(runner);

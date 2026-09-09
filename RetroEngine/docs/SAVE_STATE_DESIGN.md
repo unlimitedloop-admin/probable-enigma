@@ -320,7 +320,7 @@ but incorrect state.
 | SS-007 | P0 | Done | Give `BgStarField` a persisted deterministic pattern ID | Save/load and replay produce the same star sequence and NES palette scheme |
 | SS-008 | P1 | Done | Define DemoStage2 snapshot schema | Coverage list and reconstruction order are documented |
 | SS-009 | P1 | Done | Restore player and entity state | Player/entities resume without stale references |
-| SS-010 | P1 | Ready | Add outer `.sav` envelope and corruption tests | Slot-file round-trip, truncation, oversized payload, and bad magic/version pass |
+| SS-010 | P1 | Done | Add outer `.sav` envelope and corruption tests | Slot-file round-trip, truncation, oversized payload, and bad magic/version pass |
 | SS-011 | P2 | Ready | Improve user-facing load errors | Missing/corrupt/unsupported/I/O cases are distinguishable |
 | SS-012 | P0 | Done | Isolate nondeterministic entropy from simulation | Only new-pattern creation may use entropy; simulation/render paths use persisted stable inputs |
 | SS-013 | P0 | Done | Replace charge-particle LCG with a stable pattern | Particle placement is reproducible without mutable random state |
@@ -348,10 +348,13 @@ the audio-driver work.
    BGM/SE ownership restoration. Transient SE remains intentionally absent.
 3. `SS-023` (Deferred): choose how a restored charge interacts with the live
    attack-button state, then keep simulation and charge audio synchronized.
-4. Continue external-slot hardening under `SS-010`, `SS-011`, and `SS-022`.
+4. `SS-010` (Done): cover the outer slot-file envelope, including bad magic,
+   unsupported version, oversized payload, trailing bytes, and every truncation.
+5. Continue external-slot hardening under `SS-022`, then improve diagnostic
+   classification under `SS-011`.
 
-The remaining independent hardening tasks are `SS-010`, `SS-011`, `SS-020`,
-`SS-022`, and `SS-023`. Replay format work is tracked separately as `SS-016`.
+The remaining independent hardening tasks are `SS-011`, `SS-020`, `SS-022`,
+and `SS-023`. Replay format work is tracked separately as `SS-016`.
 
 ## Milestones
 
