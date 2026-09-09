@@ -164,7 +164,8 @@ stage-map binary format and cannot be launched by the current `BGPageHeader`
 reader. `LaunchingGame` is also intentionally unsupported because it is a
 resource-validation transition rather than a resumable scene.
 
-`DemoStage2` is the only action-stage snapshot target. Its initial schema is:
+`DemoStage2` is the only action-stage snapshot target. Its current version 2
+schema is:
 
 1. Scene payload version and action-phase type ID.
 2. Stable scene state: current room/page identity and BG animation tick.
@@ -177,14 +178,18 @@ resource-validation transition rather than a resumable scene.
 6. Each entity record: stable type ID, stable instance ID, component version,
    bounded payload size, and entity-owned logical payload.
 7. Optional versioned stage-script state. The current DemoStage2 script is null,
-   so version 1 records no script payload.
+   so no script payload is recorded.
+8. Versioned logical BGM transport: registered track name, playback status,
+   stable APU voices, per-voice positions and logical volumes, master volume,
+   loop range, and fade progress.
 
 Runtime sprite/BG handles, service pointers, map caches, collision-service
 objects, and other reconstructible resources are excluded. Debug-only display
 counters are also excluded. Transient visual entities are included initially
 because their payloads are small and exact visual continuation is easier to
-reason about than a mixed discard policy. Logical BGM restoration remains
-separate under SS-014; one-shot SE is not resumed.
+reason about than a mixed discard policy. Logical BGM restoration is included
+as of version 2. Continuous-SE serialization remains under SS-015; one-shot SE
+is not resumed.
 
 The save barrier requires an active phase, no pending phase/scene transition,
 an interactive fader, and an `EntityManager` that is neither updating nor
@@ -315,8 +320,8 @@ but incorrect state.
 | SS-011 | P2 | Ready | Improve user-facing load errors | Missing/corrupt/unsupported/I/O cases are distinguishable |
 | SS-012 | P0 | Done | Isolate nondeterministic entropy from simulation | Only new-pattern creation may use entropy; simulation/render paths use persisted stable inputs |
 | SS-013 | P0 | Done | Replace charge-particle LCG with a stable pattern | Particle placement is reproducible without mutable random state |
-| SS-014 | P1 | Ready (next) | Connect BGM transport to the DemoStage2 save payload | The AUD-006 DTO round-trips through an external slot and restores after audio resources are registered |
-| SS-015 | P1 | Ready (after SS-014) | Connect continuous SE transport to the DemoStage2 save payload | The AUD-007 DTO round-trips through an external slot; transient SE stops and charge audio restores with ownership |
+| SS-014 | P1 | Done | Connect BGM transport to the DemoStage2 save payload | The AUD-006 DTO round-trips through an external slot and restores after audio resources are registered |
+| SS-015 | P1 | Ready (next) | Connect continuous SE transport to the DemoStage2 save payload | The AUD-007 DTO round-trips through an external slot; transient SE stops and charge audio restores with ownership |
 | SS-016 | P1 | Ready | Define replay input/event format and checksum boundary | Same initial state and input log reproduce the same simulation checksums |
 | SS-017 | P0 | Done | Add a frame-boundary snapshot barrier | Capture is rejected during update or unsupported transitions |
 | SS-018 | P0 | Done | Make sequence loading target-validated and two-phase | Invalid target payload preserves the current scene without requiring it to support save |
@@ -332,9 +337,9 @@ the audio-driver work.
 
 ### Current implementation order
 
-1. `SS-014`: add the versioned audio section to the DemoStage2 payload and
+1. `SS-014` (Done): add the versioned BGM section to the DemoStage2 payload and
    connect BGM capture, validation, and restoration.
-2. `SS-015`: serialize continuous-SE state in that audio section and complete
+2. `SS-015` (Next): serialize continuous-SE state and complete
    BGM/SE ownership restoration. Transient SE remains intentionally absent.
 3. Run the existing headless suite and add external-slot audio round-trip and
    corruption cases.

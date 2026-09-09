@@ -15,6 +15,12 @@
 
 #include "ApuVoice.h"
 
+namespace mm2hack::core::save
+{
+    class StateReader;
+    class StateWriter;
+}
+
 namespace mm2hack::apps::systems::audio
 {
     /// Logical BGM transport mode independent of backend playback handles.
@@ -56,6 +62,10 @@ namespace mm2hack::apps::systems::audio
         int fade_step = 0;
         int fade_frames_remaining = 0;
 
+        /// Serializes a versioned logical snapshot without backend handles.
+        bool Save(core::save::StateWriter& writer) const;
+        /// Loads transactionally, preserving this object when decoding fails.
+        bool Load(core::save::StateReader& reader);
         /// Performs resource-independent structural and bounds validation.
         bool IsValid() const noexcept;
     };

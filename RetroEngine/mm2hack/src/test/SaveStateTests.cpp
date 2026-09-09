@@ -94,7 +94,7 @@ namespace mm2hack::test
         using core::save::StateReader;
         using core::save::StateWriter;
 
-        constexpr std::uint32_t kDemoStage2StateVersion = 1;
+        constexpr std::uint32_t kDemoStage2StateVersion = 2;
         constexpr std::uint8_t kAbstractActionPhaseType = 1;
 
         class TestRunner final
@@ -384,6 +384,17 @@ namespace mm2hack::test
         {
             apps::scenes::phases::AbstractActionPhaseState phase{};
             phase.ready_ui = { 3.0, 0.0, false };
+            BgmTransportState bgm{};
+            bgm.track_name = L"demo_stage_2_bgm";
+            bgm.playback_status = BgmPlaybackStatus::Paused;
+            bgm.voices = {
+                { ApuVoice::Pulse1, 12'345, 255 },
+                { ApuVoice::Noise, 12'360, 192 }
+            };
+            bgm.master_volume = 255;
+            bgm.loop_start_seconds = 11.77;
+            bgm.loop_end_seconds = 58.49;
+            bgm.fade_target = 255;
 
             std::ostringstream stream(std::ios::out | std::ios::binary);
             StateWriter writer(stream);
@@ -391,7 +402,8 @@ namespace mm2hack::test
                 !writer.WriteU8(kAbstractActionPhaseType) ||
                 !writer.WriteU32(phase.scroll.page_index) ||
                 !writer.WriteU32(1234) ||
-                !phase.Save(writer) || !entities.Save(writer) || !stream.good())
+                !phase.Save(writer) || !entities.Save(writer) ||
+                !bgm.Save(writer) || !stream.good())
             {
                 return false;
             }
@@ -672,6 +684,30 @@ namespace mm2hack::test
                 snapshot.is_fading && snapshot.fade_frames_remaining == 10,
                 L"capture paused multi-stem BGM transport");
 
+            std::ostringstream encoded_stream(std::ios::out | std::ios::binary);
+            StateWriter encoded_writer(encoded_stream);
+            const bool encoded = snapshot.Save(encoded_writer);
+            std::istringstream decoded_stream(
+                encoded_stream.str(), std::ios::in | std::ios::binary);
+            StateReader decoded_reader(decoded_stream);
+            BgmTransportState decoded{};
+            runner.Check(
+                encoded && decoded.Load(decoded_reader) &&
+                decoded_stream.peek() == std::char_traits<char>::eof() &&
+                EqualBgmTransport(snapshot, decoded),
+                L"round-trip versioned BGM transport codec");
+
+            const BgmTransportState before_decode_failure = decoded;
+            std::string bad_version = encoded_stream.str();
+            bad_version.front() ^= 0x01;
+            std::istringstream invalid_stream(
+                bad_version, std::ios::in | std::ios::binary);
+            StateReader invalid_reader(invalid_stream);
+            runner.Check(
+                !decoded.Load(invalid_reader) &&
+                EqualBgmTransport(before_decode_failure, decoded),
+                L"invalid BGM codec input preserves destination state");
+
             ChannelManager restored_channels{ 0 };
             AddFakeApuChannels(restored_channels);
             BgmManager restored{ restored_channels };
@@ -866,6 +902,15 @@ namespace mm2hack::test
             auto bad_version = valid;
             bad_version[0] ^= 0x01;
             runner.Check(!IsValidDemoStage2Payload(bad_version), L"reject unknown scene version");
+
+            auto obsolete_version = valid;
+            obsolete_version[0] = 1;
+            obsolete_version[1] = 0;
+            obsolete_version[2] = 0;
+            obsolete_version[3] = 0;
+            runner.Check(
+                !IsValidDemoStage2Payload(obsolete_version),
+                L"reject obsolete DemoStage2 version without BGM state");
 
             auto bad_phase = valid;
             bad_phase[4] = 0xFF;

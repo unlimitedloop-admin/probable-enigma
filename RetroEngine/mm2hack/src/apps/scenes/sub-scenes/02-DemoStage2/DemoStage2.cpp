@@ -5,6 +5,7 @@
 #include <istream>
 #include <ostream>
 #include <span>
+
 #include "apps/foundation/NES/NESPalette.h"
 #include "apps/rendering/bg/BGTileAnimator.h"
 #include "apps/rendering/bg/BGTileManager.h"
@@ -21,6 +22,8 @@
 #include "apps/scenes/phases/PhaseResult.h"
 #include "apps/scenes/phases/StageDefinition.h"
 #include "apps/scenes/SceneChangeMediator.h"
+#include "apps/systems/audio/AudioManager.h"
+#include "apps/systems/audio/BgmTransportState.h"
 #include "apps/systems/physics/TileAttribute.h"
 #include "apps/world/entity/enemy/lists/EnemyLists.h"
 #include "apps/world/entity/EntityManager.h"
@@ -36,7 +39,7 @@ namespace mm2hack::apps::scenes
 {
     namespace
     {
-        constexpr std::uint32_t kDemoStage2StateVersion = 1;
+        constexpr std::uint32_t kDemoStage2StateVersion = 2;
 
         enum class DemoStage2PhaseType : std::uint8_t
         {
@@ -50,12 +53,13 @@ namespace mm2hack::apps::scenes
             rendering::bg::BGTileAnimatorState background_animation{};
             phases::AbstractActionPhaseState phase{};
             world::entity::EntityManagerState entities{};
+            systems::audio::BgmTransportState bgm{};
 
             [[nodiscard]] bool IsValid() const
             {
                 if (phase_type != DemoStage2PhaseType::AbstractAction ||
                     page_index != phase.scroll.page_index ||
-                    !phase.IsValid() || !entities.IsValid())
+                    !phase.IsValid() || !entities.IsValid() || !bgm.IsValid())
                 {
                     return false;
                 }
@@ -82,7 +86,7 @@ namespace mm2hack::apps::scenes
                     writer.WriteU8(static_cast<std::uint8_t>(phase_type)) &&
                     writer.WriteU32(page_index) &&
                     background_animation.Save(writer) &&
-                    phase.Save(writer) && entities.Save(writer);
+                    phase.Save(writer) && entities.Save(writer) && bgm.Save(writer);
             }
 
             bool Load(core::save::StateReader& reader)
@@ -94,7 +98,8 @@ namespace mm2hack::apps::scenes
                     !reader.ReadU8(phase_type_value) ||
                     !reader.ReadU32(loaded.page_index) ||
                     !loaded.background_animation.Load(reader) ||
-                    !loaded.phase.Load(reader) || !loaded.entities.Load(reader))
+                    !loaded.phase.Load(reader) || !loaded.entities.Load(reader) ||
+                    !loaded.bgm.Load(reader))
                 {
                     return false;
                 }
@@ -241,7 +246,8 @@ namespace mm2hack::apps::scenes
         DemoStage2State state{};
         if (phase == nullptr ||
             !phase->CaptureState(state.phase) ||
-            !phase->CaptureEntityState(state.entities))
+            !phase->CaptureEntityState(state.entities) ||
+            !_resource->GetAudioManager().CaptureBgmState(state.bgm))
         {
             return false;
         }
@@ -276,6 +282,12 @@ namespace mm2hack::apps::scenes
             return false;
         }
 
+        auto& audio = _resource->GetAudioManager();
+        if (!audio.ValidateBgmState(state.bgm))
+        {
+            return false;
+        }
+
         auto& background = _resource->GetBGTileManager();
         background.RestoreAnimationState(state.background_animation);
         if (!phase->RestoreScrollState(state.phase) ||
@@ -291,7 +303,7 @@ namespace mm2hack::apps::scenes
         _nextScene = SceneID::None;
         _nextParams = {};
         _fader.RestoreInteractive(*_resource);
-        return true;
+        return audio.RestoreBgmState(state.bgm);
     }
 
     void DemoStage2::onEnter_(const Parameters& params)

@@ -5,17 +5,150 @@
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
+#include <limits>
+#include <string>
+#include <utility>
 
 #include "ApuVoice.h"
 #include "config/SystemConfig.h"
+#include "core/save/StateIO.h"
 
 namespace mm2hack::apps::systems::audio
 {
+    namespace
+    {
+        constexpr std::uint16_t kBgmTransportStateVersion = 1;
+
+        bool write_wstring(core::save::StateWriter& writer, const std::wstring& value)
+        {
+            if (value.size() > BgmTransportState::kMaxTrackNameLength)
+            {
+                return false;
+            }
+            if (!writer.WriteU16(static_cast<std::uint16_t>(value.size())))
+            {
+                return false;
+            }
+            for (const wchar_t code_unit : value)
+            {
+                if (!writer.WriteU32(static_cast<std::uint32_t>(code_unit)))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        bool read_wstring(core::save::StateReader& reader, std::wstring& value)
+        {
+            std::uint16_t length{};
+            if (!reader.ReadU16(length) ||
+                length > BgmTransportState::kMaxTrackNameLength)
+            {
+                return false;
+            }
+
+            std::wstring loaded(length, L'\0');
+            for (wchar_t& code_unit : loaded)
+            {
+                std::uint32_t encoded{};
+                if (!reader.ReadU32(encoded) ||
+                    encoded > static_cast<std::uint32_t>((std::numeric_limits<wchar_t>::max)()))
+                {
+                    return false;
+                }
+                code_unit = static_cast<wchar_t>(encoded);
+            }
+            value = std::move(loaded);
+            return true;
+        }
+    }
+
     bool BgmVoiceTransportState::IsValid() const noexcept
     {
         return ToIndex(voice) < kApuVoiceCount && position_milliseconds >= 0 &&
             position_milliseconds <= kMaxPositionMilliseconds &&
             logical_volume >= 0 && logical_volume <= config::SystemConfig::kAudioMaxVolume;
+    }
+
+    bool BgmTransportState::Save(core::save::StateWriter& writer) const
+    {
+        if (!IsValid() || voices.size() > (std::numeric_limits<std::uint8_t>::max)())
+        {
+            return false;
+        }
+        if (!writer.WriteU16(kBgmTransportStateVersion) ||
+            !write_wstring(writer, track_name) ||
+            !writer.WriteU8(static_cast<std::uint8_t>(playback_status)) ||
+            !writer.WriteU8(static_cast<std::uint8_t>(voices.size())))
+        {
+            return false;
+        }
+        for (const auto& voice_state : voices)
+        {
+            if (!writer.WriteU8(static_cast<std::uint8_t>(voice_state.voice)) ||
+                !writer.WriteU64(static_cast<std::uint64_t>(voice_state.position_milliseconds)) ||
+                !writer.WriteI32(voice_state.logical_volume))
+            {
+                return false;
+            }
+        }
+        return writer.WriteI32(master_volume) &&
+            writer.WriteF64(loop_start_seconds) &&
+            writer.WriteF64(loop_end_seconds) &&
+            writer.WriteBool(is_fading) &&
+            writer.WriteI32(fade_target) &&
+            writer.WriteI32(fade_step) &&
+            writer.WriteI32(fade_frames_remaining);
+    }
+
+    bool BgmTransportState::Load(core::save::StateReader& reader)
+    {
+        BgmTransportState loaded{};
+        std::uint16_t version{};
+        std::uint8_t playback_status_value{};
+        std::uint8_t voice_count{};
+        if (!reader.ReadU16(version) || version != kBgmTransportStateVersion ||
+            !read_wstring(reader, loaded.track_name) ||
+            !reader.ReadU8(playback_status_value) ||
+            !reader.ReadU8(voice_count) || voice_count > kApuVoiceCount)
+        {
+            return false;
+        }
+
+        loaded.playback_status = static_cast<BgmPlaybackStatus>(playback_status_value);
+        loaded.voices.reserve(voice_count);
+        for (std::uint8_t index = 0; index < voice_count; ++index)
+        {
+            std::uint8_t voice_value{};
+            std::uint64_t position{};
+            BgmVoiceTransportState voice_state{};
+            if (!reader.ReadU8(voice_value) ||
+                !reader.ReadU64(position) ||
+                position > static_cast<std::uint64_t>((std::numeric_limits<std::int64_t>::max)()) ||
+                !reader.ReadI32(voice_state.logical_volume))
+            {
+                return false;
+            }
+            voice_state.voice = static_cast<ApuVoice>(voice_value);
+            voice_state.position_milliseconds = static_cast<std::int64_t>(position);
+            loaded.voices.push_back(voice_state);
+        }
+        if (!reader.ReadI32(loaded.master_volume) ||
+            !reader.ReadF64(loaded.loop_start_seconds) ||
+            !reader.ReadF64(loaded.loop_end_seconds) ||
+            !reader.ReadBool(loaded.is_fading) ||
+            !reader.ReadI32(loaded.fade_target) ||
+            !reader.ReadI32(loaded.fade_step) ||
+            !reader.ReadI32(loaded.fade_frames_remaining) ||
+            !loaded.IsValid())
+        {
+            return false;
+        }
+
+        *this = std::move(loaded);
+        return true;
     }
 
     bool BgmTransportState::IsValid() const noexcept
