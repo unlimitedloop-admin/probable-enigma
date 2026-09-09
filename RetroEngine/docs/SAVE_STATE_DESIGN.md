@@ -82,6 +82,12 @@ are corrupt. The checksum covers the canonical little-endian sequence ID, scene
 ID, payload byte count, and scene payload. It detects accidental corruption but
 is not authentication: a deliberate editor can recalculate it.
 
+`SaveSystem::Load` reports `Success`, `FileNotFound`, `Corrupt`,
+`UnsupportedVersion`, or `IoError` without changing the destination on failure.
+The command UI maps these results to distinct messages. A structurally valid
+file that cannot be reconstructed by the current runtime is reported separately
+from an outer-file read or integrity failure.
+
 ### P0: Nondeterministic and call-order-dependent randomness blocks replay
 
 `BgStarField` uses the process-global `rand()` and reseeds it with wall-clock
@@ -323,7 +329,7 @@ but incorrect state.
 | SS-008 | P1 | Done | Define DemoStage2 snapshot schema | Coverage list and reconstruction order are documented |
 | SS-009 | P1 | Done | Restore player and entity state | Player/entities resume without stale references |
 | SS-010 | P1 | Done | Add outer `.sav` envelope and corruption tests | Slot-file round-trip, truncation, oversized payload, and bad magic/version pass |
-| SS-011 | P2 | Ready | Improve user-facing load errors | Missing/corrupt/unsupported/I/O cases are distinguishable |
+| SS-011 | P2 | Done | Improve user-facing load errors | Missing/corrupt/unsupported/I/O cases are distinguishable |
 | SS-012 | P0 | Done | Isolate nondeterministic entropy from simulation | Only new-pattern creation may use entropy; simulation/render paths use persisted stable inputs |
 | SS-013 | P0 | Done | Replace charge-particle LCG with a stable pattern | Particle placement is reproducible without mutable random state |
 | SS-014 | P1 | Done | Connect BGM transport to the DemoStage2 save payload | The AUD-006 DTO round-trips through an external slot and restores after audio resources are registered |
@@ -354,10 +360,12 @@ the audio-driver work.
    unsupported version, oversized payload, trailing bytes, and every truncation.
 5. `SS-022` (Done): protect the envelope metadata and scene payload with CRC-32
    and reject mismatches before runtime reconstruction.
-6. Improve external-slot diagnostic classification under `SS-011`.
+6. `SS-011` (Done): classify missing, corrupt, unsupported-version, and I/O
+   failures and show a specific load message for each result.
+7. Add game/content compatibility identity under `SS-020`.
 
-The remaining independent hardening tasks are `SS-011`, `SS-020`, and `SS-023`.
-Replay format work is tracked separately as `SS-016`.
+The remaining independent hardening tasks are `SS-020` and `SS-023`. Replay
+format work is tracked separately as `SS-016`.
 
 ## Milestones
 

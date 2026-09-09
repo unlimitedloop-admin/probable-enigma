@@ -2,16 +2,23 @@
 
 #include "SaveSystem.h"
 
+#include <algorithm>
 #include <array>
 #include <bit>
 #include <cstdint>
 #include <cstdio>
 #include <filesystem>
+#include <fstream>
+#include <istream>
 #include <limits>
 #include <span>
 #include <string_view>
 #include <system_error>
+#include <utility>
 
+#include <Windows.h>
+
+#include "config/SystemConfig.h"
 #include "SaveData.h"
 #include "StateIO.h"
 
@@ -60,6 +67,11 @@ namespace mm2hack::core::save
                 AccumulateCrc32(checksum, byte);
             }
             return ~checksum;
+        }
+
+        LoadResult ClassifyReadFailure(const std::istream& stream) noexcept
+        {
+            return stream.bad() ? LoadResult::IoError : LoadResult::Corrupt;
         }
     }
 
@@ -128,12 +140,22 @@ namespace mm2hack::core::save
         return true;
     }
 
-    bool SaveSystem::Load(const std::wstring& path, SaveData& outData)
+    LoadResult SaveSystem::Load(const std::wstring& path, SaveData& outData)
     {
+        std::error_code path_error;
+        if (!fs::exists(path, path_error))
+        {
+            return path_error ? LoadResult::IoError : LoadResult::FileNotFound;
+        }
+        if (!fs::is_regular_file(path, path_error) || path_error)
+        {
+            return LoadResult::IoError;
+        }
+
         std::ifstream ifs(path, std::ios::binary);
         if (!ifs)
         {
-            return false;
+            return LoadResult::IoError;
         }
 
         StateReader reader(ifs);
@@ -145,16 +167,35 @@ namespace mm2hack::core::save
         std::uint32_t payloadSize{};
         std::uint32_t expectedChecksum{};
 
-        if (!reader.ReadBytes(magic) || magic != kSaveMagic ||
-            !reader.ReadU32(fileVersion) ||
-            fileVersion != config::SystemConfig::kCurrentSaveVersion ||
-            !reader.ReadI32(sequenceID) ||
-            !reader.ReadI32(sceneID) ||
-            !reader.ReadU32(payloadSize) ||
-            payloadSize > kMaximumPayloadSize ||
-            !reader.ReadU32(expectedChecksum))
+        if (!reader.ReadBytes(magic))
         {
-            return false;
+            return ClassifyReadFailure(ifs);
+        }
+        if (magic != kSaveMagic)
+        {
+            return LoadResult::Corrupt;
+        }
+        if (!reader.ReadU32(fileVersion))
+        {
+            return ClassifyReadFailure(ifs);
+        }
+        if (fileVersion != config::SystemConfig::kCurrentSaveVersion)
+        {
+            return LoadResult::UnsupportedVersion;
+        }
+        if (!reader.ReadI32(sequenceID) ||
+            !reader.ReadI32(sceneID) ||
+            !reader.ReadU32(payloadSize))
+        {
+            return ClassifyReadFailure(ifs);
+        }
+        if (payloadSize > kMaximumPayloadSize)
+        {
+            return LoadResult::Corrupt;
+        }
+        if (!reader.ReadU32(expectedChecksum))
+        {
+            return ClassifyReadFailure(ifs);
         }
 
         SaveData loaded{};
@@ -163,18 +204,27 @@ namespace mm2hack::core::save
         loaded.scenePayload.resize(payloadSize);
         if (!reader.ReadBytes(loaded.scenePayload))
         {
-            return false;
+            return ClassifyReadFailure(ifs);
         }
 
         if (ComputeSaveChecksum(sequenceID, sceneID, loaded.scenePayload) !=
-            expectedChecksum ||
-            ifs.peek() != std::char_traits<char>::eof())
+            expectedChecksum)
         {
-            return false;
+            return LoadResult::Corrupt;
+        }
+
+        const int trailing_byte = ifs.peek();
+        if (ifs.bad())
+        {
+            return LoadResult::IoError;
+        }
+        if (trailing_byte != std::char_traits<char>::eof())
+        {
+            return LoadResult::Corrupt;
         }
 
         outData = std::move(loaded);
-        return true;
+        return LoadResult::Success;
     }
 
     void SaveSystem::SetCurrentSlot(int slot)

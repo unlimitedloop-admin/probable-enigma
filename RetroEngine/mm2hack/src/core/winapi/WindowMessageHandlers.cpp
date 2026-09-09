@@ -4,6 +4,7 @@
 
 #include <cstdio>
 #include <filesystem>
+
 #include "../resource.h"
 #include "apps/runtime/GameContext.h"
 #include "apps/sequence/SequenceManager.h"
@@ -17,6 +18,8 @@
 #include "core/save/SaveData.h"
 #include "core/save/SaveSystem.h"
 #include "core/ui/SettingsWindow.h"
+#include "exceptions/CoreException.h"
+#include "exceptions/ErrorLevel.h"
 #include "WindowManager.h"
 
 // VC F12 is reserved for use by the debugger, so we use F11 in debug mode.
@@ -31,6 +34,24 @@ constexpr int SCREENSHOT_KEY = VK_F12;  // Use F12 for screenshots in release mo
 namespace
 {
     using namespace mm2hack::core;
+
+    const wchar_t* GetLoadErrorMessage(save::LoadResult result) noexcept
+    {
+        switch (result)
+        {
+        case save::LoadResult::FileNotFound:
+            return L"No save data exists in the selected slot.";
+        case save::LoadResult::Corrupt:
+            return L"The save data is corrupted.";
+        case save::LoadResult::UnsupportedVersion:
+            return L"This save data version is not supported.";
+        case save::LoadResult::IoError:
+            return L"The save data could not be read. Check file access and storage.";
+        case save::LoadResult::Success:
+        default:
+            return L"Failed to load game.";
+        }
+    }
 
     // Update the state of the save/load slot menu items based on the current save slot
     static void UpdateSlotMenuState(HWND hWnd)
@@ -163,15 +184,26 @@ namespace mm2hack::core::winapi
             {
                 SaveData data{};
                 const auto path = SaveSystem::GetCurrentSlotFilename();
-                if (SaveSystem::Load(path, data))
+                const LoadResult load_result = SaveSystem::Load(path, data);
+                if (load_result != LoadResult::Success)
                 {
-                    if (seq.LoadState(data))
-                    {
-                        MessageBox(hWnd, (L"Loaded from " + path).c_str(), L"Load", MB_OK);
-                        break;
-                    }
+                    MessageBox(
+                        hWnd,
+                        GetLoadErrorMessage(load_result),
+                        L"Error",
+                        MB_OK | MB_ICONERROR);
+                    break;
                 }
-                MessageBox(hWnd, L"Failed to load game.", L"Error", MB_OK | MB_ICONERROR);
+                if (seq.LoadState(data))
+                {
+                    MessageBox(hWnd, (L"Loaded from " + path).c_str(), L"Load", MB_OK);
+                    break;
+                }
+                MessageBox(
+                    hWnd,
+                    L"The save data is valid, but its game state could not be restored.",
+                    L"Error",
+                    MB_OK | MB_ICONERROR);
             }
             else
             {

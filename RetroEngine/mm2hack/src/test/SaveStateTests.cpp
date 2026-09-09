@@ -96,6 +96,7 @@ namespace mm2hack::test
         using core::assembly::KeyFrameState;
         using core::assembly::LogicalBinding;
         using core::assembly::StateProvider;
+        using core::save::LoadResult;
         using core::save::SaveData;
         using core::save::SaveSystem;
         using core::save::StateReader;
@@ -449,6 +450,23 @@ namespace mm2hack::test
         void TestSaveFileEnvelope(TestRunner& runner)
         {
             TemporarySaveFile file{};
+            SaveData untouched{ 99, 88, { 0x11, 0x22, 0x33 } };
+            const SaveData before_missing_load = untouched;
+            runner.Check(
+                file.IsReady() &&
+                SaveSystem::Load(file.Path(), untouched) == LoadResult::FileNotFound &&
+                EqualSaveData(before_missing_load, untouched),
+                L"classify missing save file without mutating destination");
+
+            const std::wstring directory_path =
+                std::filesystem::path(file.Path()).parent_path().wstring();
+            const SaveData before_io_error = untouched;
+            runner.Check(
+                file.IsReady() &&
+                SaveSystem::Load(directory_path, untouched) == LoadResult::IoError &&
+                EqualSaveData(before_io_error, untouched),
+                L"classify save-file I/O error without mutating destination");
+
             const SaveData expected{
                 7,
                 static_cast<std::int32_t>(SceneID::DemoStage2),
@@ -457,7 +475,7 @@ namespace mm2hack::test
             SaveData loaded{};
             const bool round_trip = file.IsReady() &&
                 SaveSystem::Save(file.Path(), expected) &&
-                SaveSystem::Load(file.Path(), loaded) &&
+                SaveSystem::Load(file.Path(), loaded) == LoadResult::Success &&
                 EqualSaveData(expected, loaded);
             runner.Check(round_trip, L"round-trip outer save-file envelope");
             if (!round_trip) return;
@@ -470,26 +488,27 @@ namespace mm2hack::test
             }
 
             const auto rejects_without_mutation = [&file](
-                const std::vector<std::uint8_t>& candidate)
+                const std::vector<std::uint8_t>& candidate,
+                LoadResult expected_result)
             {
                 SaveData destination{ 99, 88, { 0x11, 0x22, 0x33 } };
                 const SaveData before = destination;
                 return WriteFileBytes(file.Path(), candidate) &&
-                    !SaveSystem::Load(file.Path(), destination) &&
+                    SaveSystem::Load(file.Path(), destination) == expected_result &&
                     EqualSaveData(before, destination);
             };
 
             auto bad_magic = canonical;
             bad_magic.front() ^= 0xFF;
             runner.Check(
-                rejects_without_mutation(bad_magic),
+                rejects_without_mutation(bad_magic, LoadResult::Corrupt),
                 L"reject bad save-file magic without mutating destination");
 
             auto bad_version = canonical;
             constexpr std::size_t kVersionOffset = 8;
             bad_version[kVersionOffset] ^= 0x01;
             runner.Check(
-                rejects_without_mutation(bad_version),
+                rejects_without_mutation(bad_version, LoadResult::UnsupportedVersion),
                 L"reject unsupported save-file version without mutating destination");
 
             auto oversized = canonical;
@@ -499,33 +518,33 @@ namespace mm2hack::test
                 oversized[kPayloadSizeOffset + index] = 0xFF;
             }
             runner.Check(
-                rejects_without_mutation(oversized),
+                rejects_without_mutation(oversized, LoadResult::Corrupt),
                 L"reject oversized save-file payload without allocation");
 
             auto corrupted_metadata = canonical;
             constexpr std::size_t kSequenceIdOffset = 12;
             corrupted_metadata[kSequenceIdOffset] ^= 0x01;
             runner.Check(
-                rejects_without_mutation(corrupted_metadata),
+                rejects_without_mutation(corrupted_metadata, LoadResult::Corrupt),
                 L"reject save-file metadata checksum mismatch");
 
             auto corrupted_checksum = canonical;
             constexpr std::size_t kChecksumOffset = 24;
             corrupted_checksum[kChecksumOffset] ^= 0x01;
             runner.Check(
-                rejects_without_mutation(corrupted_checksum),
+                rejects_without_mutation(corrupted_checksum, LoadResult::Corrupt),
                 L"reject save-file checksum corruption");
 
             auto corrupted_payload = canonical;
             corrupted_payload.back() ^= 0x01;
             runner.Check(
-                rejects_without_mutation(corrupted_payload),
+                rejects_without_mutation(corrupted_payload, LoadResult::Corrupt),
                 L"reject save-file payload checksum mismatch");
 
             auto trailing = canonical;
             trailing.push_back(0xA5);
             runner.Check(
-                rejects_without_mutation(trailing),
+                rejects_without_mutation(trailing, LoadResult::Corrupt),
                 L"reject trailing save-file bytes without mutating destination");
 
             bool rejected_all_truncations = true;
@@ -533,7 +552,7 @@ namespace mm2hack::test
             {
                 auto truncated = canonical;
                 truncated.resize(size);
-                if (!rejects_without_mutation(truncated))
+                if (!rejects_without_mutation(truncated, LoadResult::Corrupt))
                 {
                     rejected_all_truncations = false;
                     break;

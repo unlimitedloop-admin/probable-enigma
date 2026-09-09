@@ -8,6 +8,8 @@
 //==============================================================================
 #pragma once
 
+#include <cstddef>
+#include <cstdint>
 #include <string>
 
 namespace mm2hack::core::save
@@ -17,6 +19,15 @@ namespace mm2hack::core::save
 
 namespace mm2hack::core::save
 {
+    enum class LoadResult : std::uint8_t
+    {
+        Success,
+        FileNotFound,
+        Corrupt,
+        UnsupportedVersion,
+        IoError
+    };
+
     // Provides save and load functionality
     class SaveSystem
     {
@@ -32,7 +43,7 @@ namespace mm2hack::core::save
         // Saves the game data to the specified path
         static bool Save(const std::wstring& path, const SaveData& data);
         // Loads the game data from the specified path
-        static bool Load(const std::wstring& path, SaveData& outData);
+        static LoadResult Load(const std::wstring& path, SaveData& outData);
         // Sets the current save slot index
         static void SetCurrentSlot(int slot);
         // Gets the current save slot index
