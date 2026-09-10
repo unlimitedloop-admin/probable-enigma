@@ -2,12 +2,11 @@
 
 #include "BGTileMapProvider.h"
 
-#include "apps/resources/bg/IMapPageSource.h"
-#include "BGTileManager.h"
-
 #include <stdexcept>
-#include <utility>
+
+#include "apps/resources/bg/IMapPageSource.h"
 #include "apps/systems/physics/TileAttribute.h"
+#include "BGTileManager.h"
 
 namespace mm2hack::apps::rendering::bg
 {

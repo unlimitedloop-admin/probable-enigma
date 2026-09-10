@@ -2,13 +2,6 @@
 
 #include "BgmManager.h"
 
-#include <algorithm>
-#include <cstddef>
-#include <cstdint>
-#include <string>
-#include <utility>
-#include <vector>
-
 #include "ApuVoice.h"
 #include "BgmTransportState.h"
 #include "ChannelManager.h"

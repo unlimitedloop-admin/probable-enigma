@@ -9,6 +9,7 @@
 //  Source of truth: 
 //    /_ゲーム開発_sse_BD-005_ファイル仕様書.md  (section 3.3)
 //    /_ゲーム開発_sse_BD-006_ファイル仕様書_ステージ定義データ_スキーマ設計.md
+//    (Design document for the dedicated development editor.)
 // 
 //==============================================================================
 #pragma once

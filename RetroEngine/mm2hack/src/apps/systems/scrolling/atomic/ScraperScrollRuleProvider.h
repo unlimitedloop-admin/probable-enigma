@@ -15,6 +15,7 @@
 #include <string>
 #include <unordered_map>
 #include <utility>
+
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/resources/bg/IMapPageSource.h"
 #include "ScrollTypes.h"

@@ -9,8 +9,9 @@
 #pragma once
 
 #include <string>
+
 #include "apps/resources/parameters/Parameters.h"
-#include "apps/scenes/PhaseFadeController.h"    
+#include "apps/scenes/PhaseFadeController.h"
 
 namespace mm2hack::apps::scenes::phases
 {

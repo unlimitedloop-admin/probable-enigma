@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/systems/scrolling/atomic/ScrollController.h"
 #include "apps/ui/productions/StageIntroUI.h"

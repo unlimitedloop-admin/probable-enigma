@@ -8,7 +8,6 @@
 //==============================================================================
 #pragma once
 
-#include <cstddef>
 #include <cstdint>
 
 #include "apps/foundation/math/CoordinateTypes.h"

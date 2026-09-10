@@ -4,6 +4,7 @@
 
 #include <cmath>
 #include <cstdlib>
+
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "core/save/StateIO.h"
 

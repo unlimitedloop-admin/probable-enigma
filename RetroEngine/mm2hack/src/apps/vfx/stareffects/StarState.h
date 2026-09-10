@@ -9,6 +9,7 @@
 #pragma once
 
 #include <cstdint>
+
 #include "core/save/StateIO.h"
 
 namespace mm2hack::apps::vfx::stareffects

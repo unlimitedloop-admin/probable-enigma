@@ -8,8 +8,8 @@
 //==============================================================================
 #pragma once
 
-#include <cstdint>
 #include <optional>
+
 #include "ScrollTypes.h"
 
 namespace mm2hack::apps::systems::scrolling::atomic

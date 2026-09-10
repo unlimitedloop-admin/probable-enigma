@@ -17,6 +17,7 @@
 #include <ostream>
 #include <string>
 #include <string_view>
+
 #include "apps/rendering/bg/BGTileAnimator.h"
 #include "apps/rendering/bg/BGTileManager.h"
 #include "apps/rendering/sprite/SpriteManager.h"

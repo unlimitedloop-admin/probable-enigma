@@ -13,8 +13,6 @@
 #include <cstdint>
 #include <string>
 
-#include <Windows.h>
-
 #include "config/SystemConfig.h"
 
 namespace mm2hack::apps::systems::audio

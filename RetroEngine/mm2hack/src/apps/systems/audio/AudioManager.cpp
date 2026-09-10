@@ -2,7 +2,6 @@
 
 #include "AudioManager.h"
 
-#include <algorithm>
 #include <string_view>
 
 #include "ApuVoice.h"

@@ -2,9 +2,6 @@
 
 #include "ChannelManager.h"
 
-#include <cstdint>
-#include <utility>
-
 #include "ISoundChannel.h"
 
 namespace mm2hack::apps::systems::audio

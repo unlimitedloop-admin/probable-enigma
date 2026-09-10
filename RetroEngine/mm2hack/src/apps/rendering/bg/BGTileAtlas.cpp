@@ -2,8 +2,8 @@
 
 #include "BGTileAtlas.h"
 
-#include <array>
 #include <span>
+
 #include "apps/foundation/NES/NESPalette.h"
 #include "BGTilePalette.h"
 

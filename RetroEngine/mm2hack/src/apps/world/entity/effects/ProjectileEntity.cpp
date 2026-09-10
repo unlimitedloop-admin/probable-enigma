@@ -3,6 +3,7 @@
 #include "ProjectileEntity.h"
 
 #include <cmath>
+
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/runtime/GameContext.h"

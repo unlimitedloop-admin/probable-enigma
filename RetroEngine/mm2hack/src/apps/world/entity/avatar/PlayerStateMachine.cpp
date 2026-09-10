@@ -3,8 +3,8 @@
 #include "PlayerStateMachine.h"
 
 #include <cassert>
-#include <cstdint>
 #include <exception>
+
 #include "AvatarStatus.h"
 #include "core/assembly/StateProvider.h"
 #include "core/save/StateIO.h"

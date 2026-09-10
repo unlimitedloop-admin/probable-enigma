@@ -2,7 +2,6 @@
 
 #include "BGTileManager.h"
 
-#include <algorithm>
 #include <iterator>
 #include <span>
 #include <string_view>

@@ -11,6 +11,7 @@
 #include "apps/world/entity/avatar/states/GroundBaseState.h"
 
 #include <string>
+
 #include "apps/world/entity/avatar/AvatarStatus.h"
 
 namespace mm2hack::apps::world::entity::avatar

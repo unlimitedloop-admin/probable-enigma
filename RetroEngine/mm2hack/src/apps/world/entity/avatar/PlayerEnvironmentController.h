@@ -9,6 +9,7 @@
 #pragma once
 
 #include <cstdint>
+
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/systems/physics/ITerrainProbe.h"
 #include "apps/world/entity/common/FrameGate.h"

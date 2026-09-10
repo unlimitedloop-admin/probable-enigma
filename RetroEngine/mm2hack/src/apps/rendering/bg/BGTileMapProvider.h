@@ -12,6 +12,7 @@
 
 #include <memory>
 #include <string>
+
 #include "apps/systems/physics/TileAttribute.h"
 
 namespace mm2hack::apps::resources::bg

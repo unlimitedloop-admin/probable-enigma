@@ -3,6 +3,7 @@
 #include "LadderingState.h"
 
 #include <cmath>
+
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/systems/physics/ILadderService.h"
 #include "apps/systems/physics/ITerrainProbe.h"

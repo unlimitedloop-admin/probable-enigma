@@ -2,8 +2,8 @@
 
 #include "MapPageCache.h"
 
-#include <algorithm>
 #include <span>
+
 #include "AddressScraper.h"
 #include "apps/systems/scrolling/atomic/ScrollTypes.h"
 

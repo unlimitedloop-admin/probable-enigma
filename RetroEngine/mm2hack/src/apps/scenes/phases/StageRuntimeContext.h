@@ -10,6 +10,7 @@
 
 #include <memory>
 #include <string>
+
 #include "apps/resources/bg/AddressScraper.h"
 #include "apps/resources/bg/MapPageCache.h"
 #include "apps/scenes/IStageAssetProvider.h"

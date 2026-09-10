@@ -3,6 +3,7 @@
 #include "AttackActionState.h"
 
 #include <cmath>
+
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/systems/view/RenderContext.h"
 #include "apps/world/entity/avatar/abilities/RockBusterOffsetTable.h"

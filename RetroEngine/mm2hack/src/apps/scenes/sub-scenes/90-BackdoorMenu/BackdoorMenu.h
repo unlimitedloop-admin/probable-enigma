@@ -14,6 +14,7 @@
 #include <memory>
 #include <ostream>
 #include <string>
+
 #include "apps/scenes/PhaseFadeController.h"
 #include "apps/vfx/cursor/TwinkleCursorAnimator.h"
 #include "apps/vfx/stareffects/BgStarField.h"

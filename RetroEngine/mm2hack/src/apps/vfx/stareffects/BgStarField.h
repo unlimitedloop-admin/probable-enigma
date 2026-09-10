@@ -14,6 +14,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+
 #include "apps/rendering/sprite/SpriteManager.h"
 #include "FixedStar.h"
 #include "Star.h"

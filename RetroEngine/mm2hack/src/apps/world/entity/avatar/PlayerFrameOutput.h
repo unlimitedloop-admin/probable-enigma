@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <optional>
 #include <vector>
+
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/world/entity/common/SpawnProjectileCommand.h"
 #include "apps/world/entity/common/SpawnSplashEffectCommand.h"

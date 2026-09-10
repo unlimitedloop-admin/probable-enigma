@@ -9,6 +9,7 @@
 #pragma once
 
 #include <cstdint>
+
 #include "core/save/StateIO.h"
 #include "IRenderable.h"
 #include "IUpdatable.h"

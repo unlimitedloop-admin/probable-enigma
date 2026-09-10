@@ -11,6 +11,7 @@
 #include "IEntity.h"
 
 #include <cstdint>
+
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "core/save/StateIO.h"
 

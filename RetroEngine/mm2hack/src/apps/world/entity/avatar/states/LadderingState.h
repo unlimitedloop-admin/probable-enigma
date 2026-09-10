@@ -12,6 +12,7 @@
 
 #include <string>
 #include <utility>
+
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/world/entity/avatar/AvatarStatus.h"
 #include "apps/world/entity/avatar/PlayerContext.h"

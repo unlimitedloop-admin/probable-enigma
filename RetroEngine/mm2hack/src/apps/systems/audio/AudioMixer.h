@@ -9,6 +9,7 @@
 #pragma once
 
 #include <string>
+
 #include "config/SystemConfig.h"
 
 namespace mm2hack::apps::systems::audio

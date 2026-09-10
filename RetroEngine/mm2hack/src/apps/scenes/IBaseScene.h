@@ -9,7 +9,8 @@
 #pragma once
 
 #include <cassert>
-#include <iosfwd>
+#include <istream>
+#include <ostream>
 #include <string>
 #include "apps/resources/parameters/Parameters.h"
 

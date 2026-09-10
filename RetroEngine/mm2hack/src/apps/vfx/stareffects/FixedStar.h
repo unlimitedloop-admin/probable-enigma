@@ -8,10 +8,10 @@
 //==============================================================================
 #pragma once
 
+#include <string>
+
 #include "apps/rendering/sprite/SpriteManager.h"
 #include "StarState.h"
-
-#include <string>
 
 namespace mm2hack::apps::vfx::stareffects
 {

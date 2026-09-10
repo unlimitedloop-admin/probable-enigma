@@ -4,6 +4,7 @@
 
 #include <cmath>
 #include <cstdlib>
+
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/systems/scrolling/atomic/ScrollTypes.h"
 #include "apps/world/entity/common/AnimeStepper.h"

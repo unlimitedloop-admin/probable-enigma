@@ -16,6 +16,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/systems/physics/CollisionLayer.h"

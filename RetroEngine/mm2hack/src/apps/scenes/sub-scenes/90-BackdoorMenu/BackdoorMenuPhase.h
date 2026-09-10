@@ -15,6 +15,7 @@
 #include <span>
 #include <string_view>
 #include <vector>
+
 #include "apps/ui/controls/MenuCursorController.h"
 #include "apps/vfx/cursor/TwinkleCursorAnimator.h"
 #include "BackdoorMenuCatalog.h"

@@ -12,8 +12,9 @@
 #include "pch.h"
 
 #include <cstdlib>
-#include <string_view>
 #include <sal.h>
+#include <string_view>
+
 #include "core/bootstrap.h"
 #include "test/SaveStateTests.h"
 

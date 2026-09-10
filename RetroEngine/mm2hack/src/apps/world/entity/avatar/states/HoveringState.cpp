@@ -2,7 +2,8 @@
 
 #include "HoveringState.h"
 
-#include <cmath>
+#include <cstdlib>
+
 #include "apps/systems/physics/ILadderService.h"
 #include "apps/systems/physics/ITerrainProbe.h"
 #include "apps/systems/physics/PageGridIndex.h"

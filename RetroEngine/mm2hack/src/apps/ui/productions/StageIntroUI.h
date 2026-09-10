@@ -3,12 +3,13 @@
 //  Project: mm2hack
 //  StageIntroUI.h
 // 
-//  ** Descriptions **
+//  Animated stage introduction UI component for the game.
 // 
 //==============================================================================
 #pragma once
 
 #include <string>
+
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "core/save/StateIO.h"
 

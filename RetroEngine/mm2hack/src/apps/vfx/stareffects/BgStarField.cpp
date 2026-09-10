@@ -2,15 +2,12 @@
 
 #include "BgStarField.h"
 
-#include <array>
 #include <cmath>
-#include <cstdint>
 #include <istream>
 #include <ostream>
 #include <random>
-#include <string>
 #include <string_view>
-#include <vector>
+
 #include "apps/rendering/sprite/SpriteAtlas.h"
 #include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/runtime/GameContext.h"

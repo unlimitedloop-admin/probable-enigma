@@ -9,6 +9,7 @@
 #pragma once
 
 #include <string>
+
 #include "apps/foundation/math/CoordinateTypes.h"
 
 namespace mm2hack::apps::scenes::phases

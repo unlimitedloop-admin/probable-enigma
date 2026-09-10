@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <optional>
 #include <string>
+
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/systems/view/ViewState.h"
 #include "Camera.h"

@@ -11,8 +11,9 @@
 #include <cstdint>
 #include <memory>
 #include <unordered_map>
-#include "core/save/StateIO.h"
+
 #include "AvatarStatus.h"
+#include "core/save/StateIO.h"
 #include "IPlayerState.h"
 #include "PlayerContext.h"
 #include "PlayerParams.h"

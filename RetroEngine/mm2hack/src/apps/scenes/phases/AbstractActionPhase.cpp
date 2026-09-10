@@ -2,11 +2,8 @@
 
 #include "AbstractActionPhase.h"
 
-#include <algorithm>
-#include <array>
 #include <cmath>
 #include <cstdlib>
-#include <string>
 
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/rendering/sprite/SpriteManager.h"

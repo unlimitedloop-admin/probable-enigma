@@ -4,6 +4,7 @@
 
 #include <span>
 #include <string_view>
+
 #include "SpriteAtlas.h"
 
 namespace mm2hack::apps::rendering::sprite

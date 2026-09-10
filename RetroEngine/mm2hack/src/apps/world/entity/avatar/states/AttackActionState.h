@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <optional>
 #include <string>
+
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/world/entity/avatar/PlayerContext.h"

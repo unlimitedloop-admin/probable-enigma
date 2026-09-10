@@ -2,9 +2,6 @@
 
 #include "AudioInitializer.h"
 
-#include <string>
-#include <vector>
-
 #include "ApuVoice.h"
 #include "AudioConfigLoader.h"
 #include "BgmManager.h"

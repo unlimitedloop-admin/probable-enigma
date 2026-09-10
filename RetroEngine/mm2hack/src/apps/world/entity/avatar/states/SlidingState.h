@@ -11,6 +11,7 @@
 #include "apps/world/entity/avatar/IPlayerState.h"
 
 #include <cstdint>
+
 #include "apps/systems/physics/Probes.h"
 #include "apps/world/entity/avatar/AvatarStatus.h"
 #include "apps/world/entity/avatar/PlayerContext.h"

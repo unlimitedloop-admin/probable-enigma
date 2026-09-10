@@ -10,12 +10,13 @@
 
 #include <cstdint>
 #include <optional>
+
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/systems/scrolling/atomic/ScrollTypes.h"
 #include "apps/world/entity/common/AnimeStepper.h"
 #include "apps/world/entity/EntityBase.h"
-#include "core/save/StateIO.h"
 #include "AvatarStatus.h"
+#include "core/save/StateIO.h"
 #include "PlayerContext.h"
 #include "PlayerEnvironmentController.h"
 #include "PlayerFrameOutput.h"

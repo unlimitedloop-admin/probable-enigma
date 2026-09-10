@@ -11,6 +11,7 @@
 #include "apps/world/entity/EntityBase.h"
 
 #include <cstdint>
+
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/systems/view/RenderContext.h"

@@ -9,6 +9,7 @@
 #pragma once
 
 #include <cstdint>
+
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "ScrollTypes.h"
 

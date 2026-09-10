@@ -10,6 +10,7 @@
 
 #include <array>
 #include <cstdint>
+
 #include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/systems/view/RenderContext.h"
 #include "apps/systems/view/ViewState.h"

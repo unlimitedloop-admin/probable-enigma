@@ -2,9 +2,8 @@
 
 #include "SceneManager.h"
 
-#include <sstream>
-#include <string>
 #include <string_view>
+
 #include "apps/runtime/GameContext.h"
 #include "core/overlay/PauseManager.h"
 #include "core/save/SaveData.h"

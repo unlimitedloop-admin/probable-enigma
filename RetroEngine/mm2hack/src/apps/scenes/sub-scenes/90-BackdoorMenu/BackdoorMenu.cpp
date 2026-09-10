@@ -2,10 +2,9 @@
 
 #include "BackdoorMenu.h"
 
-#include <array>
-#include <cstdint>
 #include <istream>
 #include <ostream>
+
 #include "apps/foundation/NES/NESPalette.h"
 #include "apps/resources/parameters/Parameters.h"
 #include "apps/runtime/GameContext.h"

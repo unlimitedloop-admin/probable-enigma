@@ -10,6 +10,7 @@
 
 #include <memory>
 #include <string>
+
 #include "apps/resources/ResourceManager.h"
 #include "apps/scenes/IStageAssetProvider.h"
 #include "core/assembly/StateProvider.h"

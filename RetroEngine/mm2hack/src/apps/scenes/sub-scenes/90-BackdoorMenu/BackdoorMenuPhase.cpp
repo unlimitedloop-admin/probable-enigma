@@ -3,6 +3,7 @@
 #include "BackdoorMenuPhase.h"
 
 #include <span>
+
 #include "apps/resources/parameters/Parameters.h"
 #include "apps/scenes/PhaseFadeController.h"
 #include "apps/ui/controls/MenuCursorController.h"

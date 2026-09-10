@@ -3,6 +3,7 @@
 #include "EntityStateFactory.h"
 
 #include <string_view>
+
 #include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/scenes/IStageAssetProvider.h"
 #include "apps/world/entity/avatar/PlayerEntity.h"

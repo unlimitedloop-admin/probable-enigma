@@ -12,6 +12,7 @@
 #include <queue>
 #include <type_traits>
 #include <unordered_map>
+
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/world/stage/RoomGraphAdapter.h"
 

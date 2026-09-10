@@ -2,9 +2,8 @@
 
 #include "MapRenderer2D.h"
 
-#include <array>
-#include "apps/resources/ResourceManager.h"
 #include "apps/resources/bg/IMapPageSource.h"
+#include "apps/resources/ResourceManager.h"
 #include "ScrollTypes.h"
 
 namespace mm2hack::apps::systems::scrolling::atomic

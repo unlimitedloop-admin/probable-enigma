@@ -4,6 +4,7 @@
 
 #include <limits>
 #include <span>
+
 #include "apps/systems/view/RenderContext.h"
 #include "apps/systems/view/ViewState.h"
 #include "core/save/StateIO.h"

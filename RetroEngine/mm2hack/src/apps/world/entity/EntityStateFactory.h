@@ -9,6 +9,7 @@
 #pragma once
 
 #include <memory>
+
 #include "apps/scenes/IStageAssetProvider.h"
 #include "EntityManager.h"
 #include "IEntity.h"

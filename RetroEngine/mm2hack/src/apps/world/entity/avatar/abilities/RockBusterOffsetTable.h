@@ -9,6 +9,7 @@
 #pragma once
 
 #include <iterator>
+
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/world/entity/avatar/AvatarStatus.h"
 

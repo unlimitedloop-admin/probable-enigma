@@ -12,6 +12,7 @@
 
 #include <optional>
 #include <string>
+
 #include "apps/world/entity/avatar/AvatarStatus.h"
 #include "apps/world/entity/avatar/PlayerContext.h"
 #include "apps/world/entity/avatar/PlayerParams.h"

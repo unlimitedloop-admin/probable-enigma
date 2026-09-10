@@ -2,21 +2,14 @@
 
 #include "SaveSystem.h"
 
-#include <algorithm>
-#include <array>
 #include <bit>
-#include <cstdint>
 #include <cstdio>
 #include <filesystem>
-#include <fstream>
 #include <istream>
 #include <limits>
 #include <span>
 #include <string_view>
 #include <system_error>
-#include <utility>
-
-#include <Windows.h>
 
 #include "config/SystemConfig.h"
 #include "SaveData.h"

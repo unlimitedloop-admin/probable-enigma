@@ -2,9 +2,9 @@
 
 #include "SpriteAtlas.h"
 
-#include <algorithm>
 #include <cmath>
 #include <span>
+
 #include "apps/foundation/NES/NESPalette.h"
 
 namespace mm2hack::apps::rendering::sprite

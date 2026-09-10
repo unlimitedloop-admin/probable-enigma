@@ -2,12 +2,8 @@
 
 #include "BgmTransportState.h"
 
-#include <array>
 #include <cmath>
-#include <cstddef>
-#include <cstdint>
 #include <limits>
-#include <utility>
 
 #include "ApuVoice.h"
 #include "config/SystemConfig.h"

@@ -2,11 +2,9 @@
 
 #include "ScrollController.h"
 
-#include <array>
 #include <cmath>
-#include <cstdint>
 #include <cstdlib>
-#include <optional>
+
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/systems/view/ViewState.h"
 #include "core/save/StateIO.h"

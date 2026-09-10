@@ -3,8 +3,7 @@
 #include "PlayerEntity.h"
 
 #include <cmath>
-#include <cstddef>
-#include <cstdint>
+
 #include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/runtime/GameContext.h"
 #include "apps/systems/physics/CollisionLayer.h"
@@ -16,9 +15,9 @@
 #include "apps/world/entity/common/SpawnSplashEffectCommand.h"
 #include "apps/world/entity/EntityBase.h"
 #include "apps/world/entity/IEntity.h"
-#include "core/save/StateIO.h"
 #include "AvatarStatus.h"
 #include "config/SystemConfig.h"
+#include "core/save/StateIO.h"
 #include "input/Jpbtn.h"
 #include "PlayerContext.h"
 #include "PlayerEntityState.h"
