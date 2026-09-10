@@ -2,6 +2,8 @@
 
 #include "PlayerEntity.h"
 
+#include <cmath>
+
 #include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/runtime/GameContext.h"
 #include "apps/systems/physics/CollisionLayer.h"
@@ -10,18 +12,19 @@
 #include "apps/systems/scrolling/atomic/ScrollTypes.h"
 #include "apps/systems/view/RenderContext.h"
 #include "apps/systems/view/ViewState.h"
+#include "apps/world/entity/common/SpawnSplashEffectCommand.h"
 #include "apps/world/entity/EntityBase.h"
 #include "apps/world/entity/IEntity.h"
-#include "IPlayerState.h"
+#include "AvatarStatus.h"
+#include "config/SystemConfig.h"
+#include "core/save/StateIO.h"
+#include "input/Jpbtn.h"
 #include "PlayerContext.h"
+#include "PlayerEntityState.h"
+#include "PlayerEnvironmentController.h"
+#include "PlayerFrameOutput.h"
 #include "PlayerParams.h"
-#include "states/BrakeRunState.h"
-#include "states/HoveringState.h"
-#include "states/LadderingState.h"
-#include "states/LandingState.h"
-#include "states/LaunchRunState.h"
-#include "states/RunningState.h"
-#include "states/StandingState.h"
+#include "states/AttackActionState.h"
 
 namespace mm2hack::apps::world::entity::avatar
 {
@@ -29,62 +32,214 @@ namespace mm2hack::apps::world::entity::avatar
     using systems::scrolling::atomic::ScrollController;
     using systems::scrolling::atomic::ViewBounds;
 
-    PlayerEntity::PlayerEntity(SpriteManagerId id)
-        : _id(id), _half{ 16.0, 16.0 }
+    PlayerEntity::PlayerEntity(
+        SpriteManagerId id,
+        SpriteManagerId weaponId,
+        SpriteManagerId effectsId,
+        SpriteManagerId chargeLevel1Id,
+        SpriteManagerId chargeLevel2Id)
+        : _id(id),
+          _effects_id(effectsId),
+          _charge_level1_id(chargeLevel1Id),
+          _charge_level2_id(chargeLevel2Id),
+          _half{ 16.0, 16.0 }
     {
-        _states[0] = std::make_unique<states::StandingState>();
-        _states[1] = std::make_unique<states::RunningState>();
-        _states[2] = std::make_unique<states::HoveringState>();
-        _states[3] = std::make_unique<states::LaunchRunState>();
-        _states[4] = std::make_unique<states::BrakeRunState>();
-        _states[5] = std::make_unique<states::LadderingState>();
-        _states[6] = std::make_unique<states::LandingState>();
+        _attackAction = std::make_unique<states::AttackActionState>(weaponId);
+        SetTuning(PlayerTuning{});
     }
 
-    // IUpdatable
-    void PlayerEntity::Update(double dt)
+    bool PlayerEntity::SaveState(core::save::StateWriter& writer) const
     {
-        using namespace systems::scrolling::atomic;
+        return CanCaptureState() && CaptureState().Save(writer);
+    }
+
+    bool PlayerEntity::CanCaptureState() const noexcept
+    {
+        return _attackAction != nullptr && _frame_output.events.empty() &&
+            !_frame_output.projectile.has_value() &&
+            !_frame_output.splashEffect.has_value() &&
+            _scroll_page_index <= 65'535;
+    }
+
+    PlayerEntityState PlayerEntity::CaptureState() const noexcept
+    {
+        return PlayerEntityState{
+            .kinematic = CaptureKinematicState(),
+            .collidable = _collidable,
+            .on_ground = onGround,
+            .facing = facingLR,
+            .base_texture = baseTexture,
+            .attack_texture = attackTexture,
+            .locomotion = _state_machine.CaptureState(),
+            .attack = _attackAction->CaptureState(),
+            .rock_buster = _rock_buster,
+            .environment = _environment_controller.CaptureState(),
+            .intro = _intro_states,
+            .animation = _anime_stepper.CaptureState(),
+            .jump_buffered = _jump_buffered,
+            .dash_buffered = _dash_buffered,
+            .view_bounds = _v_bounds,
+            .page_origin = _page_origin_px,
+            .scroll_page_index = static_cast<std::uint32_t>(_scroll_page_index),
+            .pending_scroll = _pending_scroll_req,
+            .fixed_scroll_available = _fixed_scroll_available,
+            .charge = _charge_status,
+        };
+    }
+
+    bool PlayerEntity::RestoreState(const PlayerEntityState& state) noexcept
+    {
+        if (!state.IsValid() || !_attackAction ||
+            !RestoreKinematicState(state.kinematic) ||
+            !_state_machine.RestoreState(state.locomotion) ||
+            !_attackAction->RestoreState(state.attack) ||
+            !_environment_controller.RestoreState(state.environment) ||
+            !_anime_stepper.RestoreState(state.animation))
+        {
+            return false;
+        }
+
+        _collidable = state.collidable;
+        onGround = state.on_ground;
+        facingLR = state.facing;
+        baseTexture = state.base_texture;
+        attackTexture = state.attack_texture;
+        _rock_buster = state.rock_buster;
+        _intro_states = state.intro;
+        _jump_buffered = state.jump_buffered;
+        _dash_buffered = state.dash_buffered;
+        _v_bounds = state.view_bounds;
+        _page_origin_px = state.page_origin;
+        _scroll_page_index = static_cast<std::size_t>(state.scroll_page_index);
+        _pending_scroll_req = state.pending_scroll;
+        _fixed_scroll_available = state.fixed_scroll_available;
+        _entityContext = {};
+        _frame_output = {};
+        _charge_status = state.charge;
+        composeFinalTexture_();
+        return true;
+    }
+
+    void PlayerEntity::Update(const systems::view::ViewState* view, double dt)
+    {
+        (void)view;
         if (!IsAlive()) return;
 
-        PlayerContext cx{
-            pos, vel,
-            onGround, /* justLanded */ false, /* isHitCeiling */ false, /* prevOnGround */ onGround,
-            facingLR, texture, _animeStepper,
-            /* probes */ _probes, /* prelimProbes */ _probes, this->Bounds(),
-            _pageOriginPx,
-            _terrainProbe, _ladderService, _vBounds, _scrollRules, _scrollPageIndex,
-            /* pendingFixedScroll */ { _fixedScrollAvailable, ScrollDir::None, 0.0 }
-        };
-
+        PlayerContext cx = makeContext_();
         refreshProbes_(cx);
-        auto& st = FindState(_status);
+        const PlayerEnvironmentUpdate environment = processEnvironment_();
 
-        // Update state machine
-        const auto next = st->Update(cx, _input, _tuning, dt);
-        if (next != _status)
+        const PlayerTuning& tuning = _environment_controller.CurrentTuning();
+
+        updateActions_(cx, tuning, environment.skipPhysics, dt);
+        applyContext_(cx, environment.skipPhysics);
+        resolvePostMovement_(cx);
+    }
+
+    PlayerContext PlayerEntity::makeContext_()
+    {
+        return PlayerContext{
+            pos, vel,
+            onGround, /* justLanded */ false, /* isHitCeiling */ false, /* prevOnGround */ onGround, facingLR,
+            baseTexture, /* textureAdd */ 0, _anime_stepper, /* probes */ _probes, /* prelimProbes */ _probes,
+            _page_origin_px, _terrain_probe, _ladder_service, /* lockClimbMove */ false, _v_bounds, _scroll_rules, _scroll_page_index,
+            /* pendingFixedScroll */ { _fixed_scroll_available, ScrollDir::None, 0.0 },
+            /* jumpEdge */ false, /* dashEdge */ false, _frame_output
+        };
+    }
+
+    PlayerEnvironmentUpdate PlayerEntity::processEnvironment_()
+    {
+        const PlayerEnvironmentUpdate environment =
+            _environment_controller.Update(_terrain_probe, _probes.environment.centerPoint);
+
+        if (environment.EnteredWater())
         {
-            st->OnExit(cx, _input, _tuning);
-            _status = next;
-            FindState(_status)->OnEnter(cx, _input, _tuning);
+            _frame_output.PushEvent(PlayerEventType::EnteredWater);
+
+            constexpr int kRightSplashTexture = 0;
+            constexpr int kLeftSplashTexture = 4;
+            const double tile_size = static_cast<double>(config::SystemConfig::kTileSize);
+            const double surface_y =
+                std::floor(_probes.environment.centerPoint.y / tile_size) * tile_size;
+
+            if (_effects_id != static_cast<SpriteManagerId>(-1))
+            {
+                _frame_output.splashEffect = common::SpawnSplashEffectCommand{
+                    .spawnPos = { pos.x, surface_y },
+                    .spriteId = _effects_id,
+                    .baseTexture = facingLR == AvatarDirection::Right
+                        ? kRightSplashTexture
+                        : kLeftSplashTexture
+                };
+            }
         }
+
+        return environment;
+    }
+
+    void PlayerEntity::updateActions_(PlayerContext& cx, const PlayerTuning& tuning, bool skipPhysics, double dt)
+    {
+        const bool jump_pressed_now = _input->JustPressed(JPBTN::A);
+        const bool dash_pressed_now = _input->JustPressed(JPBTN::Y);
+        if (jump_pressed_now && skipPhysics)
+        {
+            _jump_buffered = true;
+        }
+        if (dash_pressed_now && skipPhysics)
+        {
+            _dash_buffered = true;
+        }
+
+        _attackAction->PreUpdate(cx, _input, _entityContext.canSpawnProjectile);
+
+        if (!skipPhysics)
+        {
+            cx.jumpEdge = jump_pressed_now || _jump_buffered;
+            cx.dashEdge = dash_pressed_now || _dash_buffered;
+            _jump_buffered = false;
+            _dash_buffered = false;
+            _state_machine.Update(cx, _input, tuning, dt);
+        }
+
+        auto action = _attackAction->PostUpdate(cx, _input, _attack_tuning, dt);
+        _charge_status = cx.output.charge;
+        cx.textureAdd += action.textureAdd;
+        cx.lockClimbMove = cx.lockClimbMove || action.lockClimbMove;
+        _rock_buster = action.rockBuster;
+        if (action.spawnProjectile.has_value())
+        {
+            _frame_output.projectile = std::move(action.spawnProjectile);
+        }
+
+        _state_machine.CommitTransition(cx, _input, tuning);
 
         if (cx.pendingFixedScroll.dir != ScrollDir::None)
         {
             requestScroll_(cx.pendingFixedScroll);
         }
+    }
 
+    void PlayerEntity::applyContext_(const PlayerContext& cx, bool skipPhysics)
+    {
+        if (!skipPhysics)
+        {
+            pos = cx.pos + cx.vel;
+        }
 
-        // Apply updated context values
-        pos = cx.pos + cx.vel;
+        baseTexture = cx.basePose;
+        attackTexture = cx.textureAdd;
+        facingLR = cx.facingLR;
+        composeFinalTexture_();
+    }
 
-        // Shift the avatar's position (coordinates) to match the terrain. This is mainly done against the terrain underfoot.
-        // after updating pos with vel.
+    void PlayerEntity::resolvePostMovement_(PlayerContext& cx)
+    {
         refreshProbes_(cx);
 
         if (cx.justLanded)
         {
-            const auto fix = cx.terrain->ResolveOverlapX(cx.probes, config::SystemConfig::kEpsilon);    // Repenetration fix on X-axis.
+            const auto fix = cx.terrain->ResolveOverlapX(cx.probes, config::SystemConfig::kEpsilon);
             if (fix.hit && fix.pushX != 0.0)
             {
                 pos.x += fix.pushX;
@@ -98,15 +253,6 @@ namespace mm2hack::apps::world::entity::avatar
         }
     }
 
-    void PlayerEntity::TickAnimation(double dt)
-    {
-        if (!IsAlive()) return;
-
-        AnimeContext ax{ _animeStepper, facingLR, texture };
-        FindState(_status)->TickAnimationOnly(ax, _input, _tuning, dt);
-    }
-
-    // IRenderable
     PlayerEntity::LayerView PlayerEntity::DrawLayer() const noexcept { return LayerView::Actors; }
 
     void PlayerEntity::Render(RenderContext& ctx)
@@ -114,23 +260,63 @@ namespace mm2hack::apps::world::entity::avatar
         if (!IsAlive()) return;
         if (!ctx.view) return;
 
-        const auto& view = *ctx.view;
-        const double worldX = pos.x;
-        const double worldY = pos.y;
-
-        const double screenX = worldX - view.viewWorldX - _half.x;
-        const double screenY = worldY - view.viewWorldY - _half.y;
+        const auto toScreenPos = [&](const Vec2& worldPos) -> Vec2
+        {
+            return {
+                worldPos.x - ctx.view->viewWorldX - _half.x,
+                worldPos.y - ctx.view->viewWorldY - _half.y
+            };
+        };
 
         auto& res = runtime::GameContext::GetInstance().GetResourceManager();
-        res.GetSpriteManager().UseById(_id, texture, static_cast<int>(screenX), static_cast<int>(screenY));
+        
+        // Draw player sprite
+        auto screenPos = toScreenPos(pos);
+        if (_state_machine.Status() == AvatarStatus::Sliding)
+        {
+            screenPos.x += 2.0 * static_cast<double>(facingLR);
+        }
+        else if (_state_machine.Status() == AvatarStatus::Dashing)
+        {
+            screenPos.x -= 2.0 * static_cast<double>(facingLR);
+        }
+        if (_intro_states.active)
+        {
+            // During intro drop, override the texture to the intro drop texture
+            screenPos += _intro_states.offsetPos;
+        }
+
+        const auto render_sprite_id = renderSpriteId_();
+        auto& sprites = res.GetSpriteManager();
+        if (render_sprite_id == _id)
+        {
+            sprites.UseById(_id, texture, static_cast<int>(screenPos.x), static_cast<int>(screenPos.y));
+        }
+        else
+        {
+            sprites.UseByIdVariant(render_sprite_id, 0, texture, static_cast<int>(screenPos.x), static_cast<int>(screenPos.y));
+        }
+
+        // Draw rock buster arm if visible
+        if (_rock_buster.visible)
+        {
+            const Vec2 armWorldPos = pos + _rock_buster.offset;
+            const auto armScreenPos = toScreenPos(armWorldPos);
+            if (render_sprite_id == _id)
+            {
+                sprites.UseById(_id, _rock_buster.armTexture, static_cast<int>(armScreenPos.x), static_cast<int>(armScreenPos.y));
+            }
+            else
+            {
+                sprites.UseByIdVariant(render_sprite_id, 0, _rock_buster.armTexture, static_cast<int>(armScreenPos.x), static_cast<int>(armScreenPos.y));
+            }
+        }
     }
 
-    // IEntity
     bool PlayerEntity::IsAlive() const noexcept { return EntityBase::IsAlive(); }
 
     void PlayerEntity::Kill() noexcept { EntityBase::Kill(); }
 
-    // ICollider
     PlayerEntity::RectF PlayerEntity::Bounds() const
     {
         return { pos.x - _half.x, pos.y - _half.y,
@@ -159,38 +345,198 @@ namespace mm2hack::apps::world::entity::avatar
 
     const IEntity& PlayerEntity::OwnerEntity() const noexcept { return *this; }
 
+    void PlayerEntity::TickAnimation(double dt)
+    {
+        if (!IsAlive()) return;
+
+        int texture_add = 0;
+        AnimeContext ax{ _anime_stepper, facingLR, baseTexture, texture_add };
+        _attackAction->TickAnimationOnly(ax, _attack_tuning, _rock_buster);
+        _state_machine.TickAnimation(
+            ax,
+            _input,
+            _environment_controller.CurrentTuning(),
+            dt);
+
+        attackTexture = texture_add;
+        composeFinalTexture_();
+    }
+
+    void PlayerEntity::BeginIntroDrop()
+    {
+        _intro_states.offsetPos = Vec2{ -1.0, -6.0 };  // Slight horizontal offset while dropping sprite set.
+        _intro_states.destPos.y = pos.y;
+        // Start above the screen and drop down to the current position.
+
+        pos.y = _v_bounds.topY - _half.y - 16.0; // Start 16px above the top view bound (adjust as needed)
+        baseTexture = static_cast<int>(STile::IntroDropA);  // Intro drop texture index
+        _intro_states.active = true;
+
+        composeFinalTexture_();
+    }
+
+    void PlayerEntity::UpdateIntroAnimation(double dt)
+    {
+        if (!_intro_states.active)
+            return;
+
+        switch (_intro_states.phase)
+        {
+        case IntroPhase::Falling:
+            updateIntroFalling_(dt);
+            break;
+
+        case IntroPhase::Landing:
+            updateIntroLanding_(dt);
+            break;
+
+        case IntroPhase::Done:
+            break;
+        }
+
+        composeFinalTexture_();
+    }
+
+    void PlayerEntity::updateIntroFalling_(double dt)
+    {
+        _intro_states.timer += dt;
+
+        const double duration = _intro_states.dropDuration;
+
+        double t = _intro_states.timer / duration;
+        if (t > 1.0)
+        {
+            t = 1.0;
+        }
+
+        // Ease-in (quadratic)
+        const double eased = t * t;
+
+        const double startY = _intro_states.offsetPos.y;
+        const double destY = _intro_states.destPos.y;
+
+        pos.y = startY + (destY - startY) * eased;
+
+        if (t >= 1.0)
+        {
+            pos.y = destY;
+            _intro_states.phase = IntroPhase::Landing;
+            _intro_states.timer = 0.0;
+
+            _frame_output.PushEvent(PlayerEventType::IntroLanded);
+        }
+    }
+
+    void PlayerEntity::updateIntroLanding_(double dt)
+    {
+        _intro_states.timer += dt;
+
+        double accumulated = 0.0;
+
+        for (const auto& frame : kLandingFrames)
+        {
+            accumulated += frame.duration;
+
+            if (_intro_states.timer < accumulated)
+            {
+                baseTexture = static_cast<int>(frame.tile);
+                return;
+            }
+        }
+
+        // Animation finished
+        baseTexture = static_cast<int>(STile::StandingA);
+        _intro_states.phase = IntroPhase::Done;
+        _intro_states.active = false;
+    }
+
+    bool PlayerEntity::IsIntroFinished() const noexcept
+    {
+        return !_intro_states.active;
+    }
+
     void PlayerEntity::SetCollidable(bool v) noexcept { _collidable = v; }
+
+    void PlayerEntity::SetTuning(const PlayerTuning& t)
+    {
+        _environment_controller.SetTuning(t);
+    }
 
     void PlayerEntity::SetViewBounds(const systems::scrolling::atomic::ViewBounds& b) noexcept
     {
-        _vBounds.leftX = b.leftX;
-        _vBounds.rightX = b.rightX;
-        _vBounds.topY = b.topY;
-        _vBounds.bottomY = b.bottomY;
+        _v_bounds.leftX = b.leftX;
+        _v_bounds.rightX = b.rightX;
+        _v_bounds.topY = b.topY;
+        _v_bounds.bottomY = b.bottomY;
     }
 
     void PlayerEntity::SetScrollContext(const IScrollRuleProvider* rules, std::size_t pageIndex)
     {
-        _scrollRules = rules;
-        _scrollPageIndex = pageIndex;
+        _scroll_rules = rules;
+        _scroll_page_index = pageIndex;
     }
 
     [[nodiscard]] std::optional<FixedScrollRequest> PlayerEntity::ConsumeScrollRequest() noexcept
     {
-        if (!_pendingScrollReq.has_value()) return std::nullopt;
-        auto out = _pendingScrollReq;
-        _pendingScrollReq.reset();
+        if (!_pending_scroll_req.has_value()) return std::nullopt;
+        auto out = _pending_scroll_req;
+        _pending_scroll_req.reset();
         return out;
+    }
+
+    PlayerFrameOutput PlayerEntity::TakeFrameOutput() noexcept
+    {
+        return std::exchange(_frame_output, PlayerFrameOutput{});
+    }
+
+    void PlayerEntity::composeFinalTexture_() noexcept
+    {
+        int t = baseTexture + attackTexture;
+
+        // Facing offset is applied exactly once here.
+        if (facingLR == AvatarDirection::Left)
+        {
+            t += static_cast<int>(STile::ToTheLeft);
+        }
+        else
+        {
+            t += static_cast<int>(STile::ToTheRight);
+        }
+
+        texture = t;
     }
 
     void PlayerEntity::refreshProbes_(PlayerContext& cx) noexcept
     {
-        _probes.refreshAll(cx, _tuning.probeOffsets);
+        _probes.refreshAll(cx, _environment_controller.ProbeOffsets());
     }
 
     void PlayerEntity::requestScroll_(FixedScrollRequest req) noexcept
     {
-        if (_pendingScrollReq.has_value()) return; // keep first!
-        _pendingScrollReq = std::move(req);
+        if (_pending_scroll_req.has_value()) return; // keep first!
+        _pending_scroll_req = std::move(req);
+    }
+
+    PlayerEntity::SpriteManagerId PlayerEntity::renderSpriteId_() const noexcept
+    {
+        constexpr std::uint32_t kLevel1PaletteFrames = 4;
+        constexpr std::uint32_t kLevel2PaletteFrames = 2;
+        const auto invalid_id = static_cast<SpriteManagerId>(-1);
+
+        if (_charge_status.phase == ChargePhase::Level1 && _charge_level1_id != invalid_id)
+        {
+            const auto step = _charge_status.phaseFrames / kLevel1PaletteFrames;
+            return step % 2 == 1 ? _charge_level1_id : _id;
+        }
+
+        if (_charge_status.phase == ChargePhase::Level2)
+        {
+            const auto step = _charge_status.phaseFrames / kLevel2PaletteFrames;
+            const auto cycle = step % 4;
+            if (cycle == 1 && _charge_level1_id != invalid_id) return _charge_level1_id;
+            if (cycle == 3 && _charge_level2_id != invalid_id) return _charge_level2_id;
+        }
+
+        return _id;
     }
 }

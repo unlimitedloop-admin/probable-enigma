@@ -77,4 +77,16 @@ namespace mm2hack::apps::vfx::cursor
             if (s.tile == 0) { s.duration = frames; }
         }
     }
+
+    bool TwinkleCursorAnimator::CanRestoreAnimation(std::size_t step_index, int ticks) const noexcept
+    {
+        return step_index < _steps.size() && ticks >= 0 && ticks < _steps[step_index].duration;
+    }
+
+    void TwinkleCursorAnimator::RestoreAnimation(std::size_t step_index, int ticks) noexcept
+    {
+        if (!CanRestoreAnimation(step_index, ticks)) return;
+        _stepIndex = step_index;
+        _ticks = ticks;
+    }
 }

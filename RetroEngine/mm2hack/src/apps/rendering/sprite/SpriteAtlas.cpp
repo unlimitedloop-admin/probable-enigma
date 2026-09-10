@@ -2,15 +2,16 @@
 
 #include "SpriteAtlas.h"
 
-#include <random>
+#include <cmath>
+#include <span>
+
 #include "apps/foundation/NES/NESPalette.h"
 
 namespace mm2hack::apps::rendering::sprite
 {
-    SpriteAtlas::SpriteAtlas(std::wstring name, DivSettings div,
+    SpriteAtlas::SpriteAtlas(DivSettings div,
                              int soft_image_handle, std::vector<std::vector<int>> graphs_by_variant) noexcept
-        : _name(std::move(name))
-        , _div(div)
+        : _div(div)
         , _soft_image(soft_image_handle)
         , _graphs_by_variant(std::move(graphs_by_variant))
     {
@@ -22,8 +23,7 @@ namespace mm2hack::apps::rendering::sprite
     }
 
     SpriteAtlas::SpriteAtlas(SpriteAtlas&& other) noexcept
-        : _name(std::move(other._name))
-        , _div(other._div)
+        : _div(other._div)
         , _soft_image(other._soft_image)
         , _graphs_by_variant(std::move(other._graphs_by_variant))
     {
@@ -35,22 +35,12 @@ namespace mm2hack::apps::rendering::sprite
         if (this != &other)
         {
             dispose_();
-            _name = std::move(other._name);
             _div = other._div;
             _soft_image = other._soft_image;
             _graphs_by_variant = std::move(other._graphs_by_variant);
             other._soft_image = -1;
         }
         return *this;
-    }
-
-    int SpriteAtlas::FramesPerVariant() const noexcept
-    {
-        if (_graphs_by_variant.empty())
-        {
-            return 0;
-        }
-        return static_cast<int>(_graphs_by_variant.front().size());
     }
 
     void SpriteAtlas::Draw(int variant, int frame, int x, int y) const noexcept
@@ -101,6 +91,101 @@ namespace mm2hack::apps::rendering::sprite
         return rebuildVariantFromSoftImage_(variant);
     }
 
+    bool SpriteAtlas::ReplacePaletteColors(
+        std::span<const PaletteColorMapping> mappings) noexcept
+    {
+        using foundation::NES::NESPalette;
+
+        if (_soft_image == -1) return false;
+        for (const auto& mapping : mappings)
+        {
+            const auto& color = NESPalette::GetColor(mapping.target_palette_index);
+            if (::DxLib::SetPaletteSoftImage(
+                _soft_image, mapping.source_palette_index,
+                static_cast<unsigned char>(color.red),
+                static_cast<unsigned char>(color.green),
+                static_cast<unsigned char>(color.blue), 255) != 0)
+            {
+                return false;
+            }
+        }
+
+        const int variant_count = VariantCount();
+        const int max_variant = std::max(variant_count - 1, 1);
+        for (int variant = 0; variant < variant_count; ++variant)
+        {
+            if (!rebuildVariantFromSoftImage_(variant)) return false;
+
+            const int brightness = -static_cast<int>(std::lround(
+                (variant / static_cast<float>(max_variant)) * 255.0f));
+            if (brightness == 0) continue;
+
+            for (const int handle : _graphs_by_variant[static_cast<std::size_t>(variant)])
+            {
+                if (handle != -1)
+                {
+                    ::DxLib::GraphFilter(
+                        handle, DX_GRAPH_FILTER_HSB, 0, 0, 0, brightness);
+                }
+            }
+        }
+        return true;
+    }
+
+    bool SpriteAtlas::ReplacePixelColors(
+        int variant,
+        std::span<const PaletteColorMapping> mappings) noexcept
+    {
+        if (_soft_image == -1) return false;
+        if (mappings.empty()) return true;
+
+        struct RGBMapping final
+        {
+            foundation::NES::NESPalette::RGB source{};
+            foundation::NES::NESPalette::RGB target{};
+        };
+
+        std::vector<RGBMapping> rgb_mappings;
+        rgb_mappings.reserve(mappings.size());
+        for (const auto& mapping : mappings)
+        {
+            rgb_mappings.push_back(RGBMapping{
+                foundation::NES::NESPalette::GetColor(mapping.source_palette_index),
+                foundation::NES::NESPalette::GetColor(mapping.target_palette_index)
+            });
+        }
+
+        int width = 0;
+        int height = 0;
+        if (::DxLib::GetSoftImageSize(_soft_image, &width, &height) != 0) return false;
+
+        for (int y = 0; y < height; ++y)
+        {
+            for (int x = 0; x < width; ++x)
+            {
+                int r = 0;
+                int g = 0;
+                int b = 0;
+                int a = 0;
+                if (::DxLib::GetPixelSoftImage(_soft_image, x, y, &r, &g, &b, &a) != 0) return false;
+
+                for (const auto& mapping : rgb_mappings)
+                {
+                    if (r != mapping.source.red || g != mapping.source.green || b != mapping.source.blue) continue;
+
+                    if (::DxLib::DrawPixelSoftImage(
+                        _soft_image, x, y, mapping.target.red, mapping.target.green, mapping.target.blue, a) != 0)
+                    {
+                        return false;
+                    }
+                    break;
+                }
+            }
+        }
+
+        return rebuildVariantFromSoftImage_(variant);
+    }
+
     bool SpriteAtlas::ApplyHSBToVariant(int variant, int hueAdd, int satAdd, int briAdd) noexcept
     {
         if (variant < 0 || variant >= static_cast<int>(_graphs_by_variant.size()))
@@ -118,13 +203,6 @@ namespace mm2hack::apps::rendering::sprite
             }
         }
         return true;
-    }
-
-    bool SpriteAtlas::ApplyRandomHueToVariant(int variant) noexcept
-    {
-        static thread_local std::mt19937 rng{ std::random_device{}() };
-        std::uniform_int_distribution<int> dist(-128, 127);
-        return ApplyHSBToVariant(variant, dist(rng), 0, 0);
     }
 
     bool SpriteAtlas::rebuildVariantFromSoftImage_(int variant) noexcept

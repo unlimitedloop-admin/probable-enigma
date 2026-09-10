@@ -1,0 +1,75 @@
+//==============================================================================
+//
+//  Project: mm2hack
+//  PlayerFrameOutput.h
+//
+//  Events and commands emitted by player processing for external consumers.
+//
+//==============================================================================
+#pragma once
+
+#include <cstdint>
+#include <optional>
+#include <vector>
+
+#include "apps/foundation/math/CoordinateTypes.h"
+#include "apps/world/entity/common/SpawnProjectileCommand.h"
+#include "apps/world/entity/common/SpawnSplashEffectCommand.h"
+#include "AvatarStatus.h"
+
+namespace mm2hack::apps::world::entity::avatar
+{
+    enum class ChargePhase : std::uint8_t
+    {
+        Idle,
+        Warmup,
+        Level1,
+        Level2
+    };
+
+    struct ChargeStatus final
+    {
+        ChargePhase phase{ ChargePhase::Idle };
+        std::uint32_t frames{ 0 };
+        std::uint32_t phaseFrames{ 0 };
+    };
+
+    // Semantic player events interpreted by the surrounding gameplay phase
+    enum class PlayerEventType : std::uint8_t
+    {
+        EnteredWater,
+        FiredRockBuster,
+        FiredMaxChargeShot,
+        Landed,
+        IntroLanded,
+        SlidingStarted,
+        DashStarted
+    };
+
+    // A player event emitted during gameplay processing
+    struct PlayerEvent final
+    {
+        PlayerEventType type{};
+        foundation::math::Vec2 position{};
+        AvatarDirection facing{ AvatarDirection::Right };
+    };
+
+    // All externally consumed output accumulated since the previous take
+    struct PlayerFrameOutput final
+    {
+        std::vector<PlayerEvent> events{};
+        std::optional<common::SpawnProjectileCommand> projectile{};
+        std::optional<common::SpawnSplashEffectCommand> splashEffect{};
+        ChargeStatus charge{};
+
+        void PushEvent(PlayerEventType type)
+        {
+            events.push_back(PlayerEvent{ type });
+        }
+
+        void PushEvent(PlayerEvent event)
+        {
+            events.push_back(event);
+        }
+    };
+}

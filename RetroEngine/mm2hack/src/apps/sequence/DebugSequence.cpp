@@ -57,11 +57,11 @@ namespace mm2hack::apps::sequence
     {
         // Add more data to SaveData if needed. (Other managers, etc.)
         out.sequenceID = static_cast<int>(SequenceType::Debug);
-        return true;
+        return _sceneManager.SaveState(out);
     }
 
     bool DebugSequence::Load(const core::save::SaveData& in)
     {
-        return true;
+        return _sceneManager.LoadState(in);
     }
 }

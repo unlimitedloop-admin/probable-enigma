@@ -5,8 +5,8 @@
 #include <exception>
 #include "apps/runtime/GameContext.h"
 #include "apps/sequence/SequenceManager.h"
-#include "assembly/ISnapshotProvider.h"
 #include "assembly/FilteredJoystickInputProvider.h"
+#include "assembly/ISnapshotProvider.h"
 #include "assembly/StandardTimeController.h"
 #include "config/ConfigUIManager.h"
 #include "GameState.h"

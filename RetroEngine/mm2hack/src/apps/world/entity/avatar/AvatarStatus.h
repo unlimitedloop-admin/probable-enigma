@@ -26,6 +26,8 @@ namespace mm2hack::apps::world::entity::avatar
         Hovering,
         Landing,
         Laddering,
+        Sliding,
+        Dashing,
         // ... Add more statuses as needed ;)
     };
 
@@ -38,7 +40,7 @@ namespace mm2hack::apps::world::entity::avatar
 
     // Avatar animation tile enumeration
     // NOTE: 0-9
-    enum class AvatarAnimation : std::int8_t
+    enum class AvatarAnimation : std::int16_t
     {
         ToTheRight = 0,
         StandingA,
@@ -48,14 +50,25 @@ namespace mm2hack::apps::world::entity::avatar
         RunningB,
         RunningC,
         Airpause,
-        DamagedA,
-        DamagedB,
+        Sliding,
         Shooting = 10,
         LadderingA = 20,
         LadderingB,
         LadderTopA,
         LadderTopB,
+        DashStart,
+        Dashing,
         ToTheLeft = 40,
+        IntroDropEmpty = 160,
+        IntroDropA,
+        IntroDropB,
+        IntroDropC,
+        IntroDropD,
+        IntroDropE,
+        IntroDropF,
+        IntroDropG,
+        IntroDropH,
+        IntroDropI,
         // ... Add more animations as needed ;)
     };
 

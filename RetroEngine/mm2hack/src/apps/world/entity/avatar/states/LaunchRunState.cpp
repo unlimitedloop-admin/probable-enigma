@@ -18,49 +18,21 @@ namespace mm2hack::apps::world::entity::avatar::states
     {
         using namespace abilities;
 
-        // Branch to laddering state if ladder is detected.
-        if (TryEnterLadderFromGround(cx, in))
+        if (const auto next = UpdateGroundState(
+            cx, in, t, make_input_move_intent(in, t, Id())))
         {
-            //cx.animeStepper.reset();    // DELETE: This is done by the LadderingState::OnEnter().
-            return AvatarStatus::Laddering;
-        }
-        // ApplyGroundMove; AdjustVerticalSpeedForGravity; SweepVertical;
-        GroundPipeline(cx, in, t, MakeInputMoveIntent(in, t, Id()));
-
-        // Call after cx.texture is set; adds facing offset (0 right, 40 left for AvatarAnimation enums).
-        auto applyFacing = [&](void) noexcept
-            {
-                if (in->IsPressed(JPBTN::LEFT))  cx.facingLR = AvatarDirection::Left;
-                if (in->IsPressed(JPBTN::RIGHT)) cx.facingLR = AvatarDirection::Right;
-                FacingDirection(cx.texture, cx.facingLR);   // Set facing direction at 'cx.texture'.
-            };
-
-        if (!cx.onGround)
-        {
-            cx.animeStepper.reset();
-            cx.texture = static_cast<int>(STile::Airpause);
-            applyFacing();
-            return AvatarStatus::Hovering;
-        }
-
-        if (in->JustPressed(JPBTN::A) && DoJump(cx, t))
-        {
-            cx.texture = static_cast<int>(STile::Airpause);
-            applyFacing();
-            return AvatarStatus::Hovering;
+            return *next;
         }
 
         // Back to standing if no input.
         if (!in->IsPressed(JPBTN::LEFT) && !in->IsPressed(JPBTN::RIGHT))
         {
             cx.animeStepper.reset();
-            cx.texture = static_cast<int>(STile::StandingA);
-            applyFacing();
+            cx.basePose = static_cast<int>(STile::StandingA);
             return AvatarStatus::Standing;
         }
 
-        const bool bursted = StepLaunchRunAnim(cx, t);
-        applyFacing();  // Must be after setting cx.texture at StepLaunchRunAnim().
+        const bool bursted = step_launch_run_anim(cx, t);
         return bursted ? AvatarStatus::Running : AvatarStatus::LaunchRun;
     }
 }

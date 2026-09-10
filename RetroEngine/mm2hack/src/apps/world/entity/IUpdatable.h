@@ -8,12 +8,14 @@
 //==============================================================================
 #pragma once
 
+#include "apps/systems/view/ViewState.h"
+
 namespace mm2hack::apps::world::entity
 {
     // Interface for updatable entities
     struct IUpdatable
     {
         virtual ~IUpdatable() = default;
-        virtual void Update(double dt) = 0;
+        virtual void Update(const systems::view::ViewState* view, double dt) = 0;
     };
 }

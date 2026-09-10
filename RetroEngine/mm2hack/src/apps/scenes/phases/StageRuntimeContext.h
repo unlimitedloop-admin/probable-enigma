@@ -10,8 +10,10 @@
 
 #include <memory>
 #include <string>
+
 #include "apps/resources/bg/AddressScraper.h"
 #include "apps/resources/bg/MapPageCache.h"
+#include "apps/scenes/IStageAssetProvider.h"
 #include "apps/systems/physics/ILadderService.h"
 #include "apps/systems/physics/ITerrainProbe.h"
 #include "apps/systems/physics/ITileMapProvider.h"
@@ -19,39 +21,34 @@
 #include "apps/systems/scrolling/atomic/MapRenderer2D.h"
 #include "apps/systems/scrolling/atomic/ScraperScrollRuleProvider.h"
 #include "apps/systems/scrolling/atomic/ScrollController.h"
-#include "apps/world/entity/avatar/PlayerEntity.h"
+#include "apps/world/entity/EntityManager.h"
 #include "apps/world/stage/RoomGraphAdapter.h"
 #include "core/assembly/StateProvider.h"
 
 namespace mm2hack::apps::scenes::phases
 {
-    // TODO: Replace with your planned manager type (EntityManager / EntityWorld).
-    //class EntityManager;
-
+    // Container struct for stage runtime context, holding various systems and entities.
     struct StageRuntimeContext final
     {
-        core::assembly::StateProvider* input{ nullptr };    // Reference to the raw input provider
+        core::assembly::StateProvider* input{ nullptr };                                // Reference to the raw input provider
 
-        std::wstring area_key{};
+        std::wstring area_key{};                                                        // Current area key
 
-        // Keep these alive (rules/mapProvider/graph may depend on them).
-        std::shared_ptr<resources::bg::AddressScraper> scraper{};
-        std::shared_ptr<resources::bg::MapPageCache> page_source{};
+        std::shared_ptr<resources::bg::AddressScraper> scraper{};                       // Shared AddressScraper for map data
+        std::shared_ptr<resources::bg::MapPageCache> page_source{};                     // Shared MapPageCache for map data
+        std::unique_ptr<systems::physics::PageGridIndex> page_grid{};                   // Unique PageGridIndex for physics
+        std::unique_ptr<world::stage::RoomGraphAdapter> graph{};                        // Unique RoomGraphAdapter for stage graph
 
-        std::unique_ptr<systems::physics::PageGridIndex> page_grid{};
-        std::unique_ptr<world::stage::RoomGraphAdapter> graph{};
+        std::unique_ptr<systems::scrolling::atomic::MapRenderer2D> renderer{};          // Unique MapRenderer2D for scrolling
+        std::unique_ptr<systems::scrolling::atomic::ScraperScrollRuleProvider> rules{}; // Unique ScraperScrollRuleProvider for scrolling
+        std::unique_ptr<systems::scrolling::atomic::ScrollController> scroll{};         // Unique ScrollController for scrolling
 
-        std::unique_ptr<systems::scrolling::atomic::MapRenderer2D> renderer{};
-        std::unique_ptr<systems::scrolling::atomic::ScraperScrollRuleProvider> rules{};
-        std::unique_ptr<systems::scrolling::atomic::ScrollController> scroll{};
+        std::unique_ptr<systems::physics::ITileMapProvider> map_provider{};             // Unique ITileMapProvider for physics
+        std::unique_ptr<systems::physics::ITerrainProbe> terrain_probe{};               // Unique ITerrainProbe for physics
+        std::unique_ptr<systems::physics::ILadderService> ladder_service{};             // Unique ILadderService for physics
 
-        std::unique_ptr<systems::physics::ITileMapProvider> map_provider{};
-        std::unique_ptr<systems::physics::ITerrainProbe> terrain_probe{};
-        std::unique_ptr<systems::physics::ILadderService> ladder_service{};
+        std::unique_ptr<world::entity::EntityManager> entity_mgr{};                     // Unique EntityManager for entities
 
-        // TODO: move to EntityManager later.
-        std::unique_ptr<world::entity::avatar::PlayerEntity> player{};
-
-        //std::unique_ptr<EntityManager> entity_mgr{};
+        const scenes::IStageAssetProvider* asset_provider{ nullptr };                   // Reference to stage asset provider
     };
 }

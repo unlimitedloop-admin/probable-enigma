@@ -8,9 +8,10 @@
 //==============================================================================
 #pragma once
 
-#include "StarState.h"
-
 #include <string>
+
+#include "apps/rendering/sprite/SpriteManager.h"
+#include "StarState.h"
 
 namespace mm2hack::apps::vfx::stareffects
 {
@@ -22,7 +23,8 @@ namespace mm2hack::apps::vfx::stareffects
         FixedStar(const FixedStarState& s);
         ~FixedStar() = default;
 
-        void Draw() const;
+        void Draw(const rendering::sprite::SpriteManager& sprites,
+                  rendering::sprite::SpriteManager::Id sprite_id) const;
         FixedStarState ToState() const;
 
     private:

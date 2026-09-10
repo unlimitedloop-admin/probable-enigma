@@ -8,15 +8,20 @@
 //==============================================================================
 #pragma once
 
+#include <cstdint>
+#include <vector>
+
+#include "config/SystemConfig.h"
+
 namespace mm2hack::core::save
 {
     // SaveData is a structure that holds data for external data recording
     struct SaveData
     {
-        int sequenceID = 0;
-        int sceneID = 0;
-        int phaseID = 0;
-
-        // Add more field as needed of save data...
+        std::int32_t sequenceID = 0;
+        std::int32_t sceneID = -1;
+        std::vector<std::uint8_t> scenePayload;
+        std::uint64_t gameContentCompatibilityId =
+            config::SystemConfig::kGameContentCompatibilityId;
     };
 }

@@ -2,6 +2,8 @@
 
 #include "MapPageCache.h"
 
+#include <span>
+
 #include "AddressScraper.h"
 #include "apps/systems/scrolling/atomic/ScrollTypes.h"
 
@@ -41,15 +43,35 @@ namespace mm2hack::apps::resources::bg
     std::uint8_t MapPageCache::GetTile(std::size_t pageIndex, int tx, int ty) const
     {
         if (tx < 0 || ty < 0 || tx >= PageTiles::kW || ty >= PageTiles::kH) return 0;
-        auto it = _cache.find(pageIndex);
-        if (it == _cache.end())
+
+        const auto* page = findOrLoadPage_(pageIndex);
+        if (!page)
         {
-            const auto tiles = readTiles_(pageIndex);
-            it = _cache.emplace(pageIndex, tiles).first;
+            return 0;
         }
-        const auto& cells = it->second.cells;
+
         const int idx = ty * PageTiles::kW + tx;
-        return cells[idx];
+        return page->cells[idx];
+    }
+
+    bool MapPageCache::CopyPageTiles(
+        std::size_t page_index,
+        std::span<std::uint8_t> destination
+    ) const
+    {
+        if (destination.size() != PageTiles::kSize)
+        {
+            return false;
+        }
+
+        const auto* page = findOrLoadPage_(page_index);
+        if (!page)
+        {
+            return false;
+        }
+
+        std::copy(page->cells.begin(), page->cells.end(), destination.begin());
+        return true;
     }
 
     std::optional<ScrollKind> MapPageCache::ScrollTypeRight(std::size_t pageIndex) const
@@ -79,23 +101,42 @@ namespace mm2hack::apps::resources::bg
 
     std::optional<std::size_t> MapPageCache::NeighborRight(std::size_t pageIndex) const
     {
-        if (!_scraper) return std::nullopt;
-        return toOptIndex_(_scraper->getRightRoom(pageIndex));
+        if (!_scraper)
+        {
+            return std::nullopt;
+        }
+
+        return resolveRoomToPageIndex_(_scraper->getRightRoom(pageIndex));
     }
+
     std::optional<std::size_t> MapPageCache::NeighborLeft(std::size_t pageIndex) const
     {
-        if (!_scraper) return std::nullopt;
-        return toOptIndex_(_scraper->getLeftRoom(pageIndex));
+        if (!_scraper)
+        {
+            return std::nullopt;
+        }
+
+        return resolveRoomToPageIndex_(_scraper->getLeftRoom(pageIndex));
     }
+
     std::optional<std::size_t> MapPageCache::NeighborUp(std::size_t pageIndex) const
     {
-        if (!_scraper) return std::nullopt;
-        return toOptIndex_(_scraper->getOverRoom(pageIndex));
+        if (!_scraper)
+        {
+            return std::nullopt;
+        }
+
+        return resolveRoomToPageIndex_(_scraper->getOverRoom(pageIndex));
     }
+
     std::optional<std::size_t> MapPageCache::NeighborDown(std::size_t pageIndex) const
     {
-        if (!_scraper) return std::nullopt;
-        return toOptIndex_(_scraper->getUnderRoom(pageIndex));
+        if (!_scraper)
+        {
+            return std::nullopt;
+        }
+
+        return resolveRoomToPageIndex_(_scraper->getUnderRoom(pageIndex));
     }
 
     std::optional<std::size_t> MapPageCache::RoomToPageIndex(uint8_t room) const
@@ -135,5 +176,31 @@ namespace mm2hack::apps::resources::bg
             out.cells[i] = p[i];
         }
         return out;
+    }
+
+    const PageTiles* MapPageCache::findOrLoadPage_(std::size_t page_index) const
+    {
+        if (!_scraper || page_index >= _scraper->pageCount() || !_scraper->payloadPtr(page_index))
+        {
+            return nullptr;
+        }
+
+        auto it = _cache.find(page_index);
+        if (it == _cache.end())
+        {
+            it = _cache.emplace(page_index, readTiles_(page_index)).first;
+        }
+
+        return &it->second;
+    }
+
+    std::optional<std::size_t> MapPageCache::resolveRoomToPageIndex_(int16_t room_id) const
+    {
+        if (room_id < 0)
+        {
+            return std::nullopt;
+        }
+
+        return RoomToPageIndex(static_cast<std::uint8_t>(room_id));
     }
 }

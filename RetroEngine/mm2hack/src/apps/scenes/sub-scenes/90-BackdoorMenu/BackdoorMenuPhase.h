@@ -15,9 +15,11 @@
 #include <span>
 #include <string_view>
 #include <vector>
+
 #include "apps/ui/controls/MenuCursorController.h"
 #include "apps/vfx/cursor/TwinkleCursorAnimator.h"
 #include "BackdoorMenuCatalog.h"
+#include "core/save/StateIO.h"
 
 namespace mm2hack::apps::scenes
 {
@@ -32,6 +34,8 @@ namespace mm2hack::apps::scenes
             void RenderWorld() override;
             void RenderOverlay() override;
             BackdoorMenuPhaseId Id() const noexcept override;
+            bool Save(core::save::StateWriter& writer) const override;
+            bool Load(core::save::StateReader& reader) override;
 
         private:
             BackdoorMenu& owner;
@@ -54,6 +58,8 @@ namespace mm2hack::apps::scenes
             void RenderWorld() override;
             void RenderOverlay() override;
             BackdoorMenuPhaseId Id() const noexcept override;
+            bool Save(core::save::StateWriter& writer) const override;
+            bool Load(core::save::StateReader& reader) override;
 
         private:
             void DrawMenuItems() const;
@@ -80,12 +86,15 @@ namespace mm2hack::apps::scenes
             using CursorPointer = vfx::cursor::TwinkleCursorAnimator&;
 
         public:
+            explicit InsideMenuPhase(BackdoorMenu& owner);
             explicit InsideMenuPhase(BackdoorMenu& owner, MenuCursor cursorCtl, int topItemIndex);
 
             void Update() override;
             void RenderWorld() override;
             void RenderOverlay() override;
             BackdoorMenuPhaseId Id() const noexcept override;
+            bool Save(core::save::StateWriter& writer) const override;
+            bool Load(core::save::StateReader& reader) override;
 
         private:
             using DrawHandler = void (InsideMenuPhase::*)() const;

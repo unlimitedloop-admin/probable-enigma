@@ -9,9 +9,14 @@
 #pragma once
 
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <vector>
+
+#include "ApuVoice.h"
 #include "config/SystemConfig.h"
+#include "SePriority.h"
+#include "SeRestorePolicy.h"
 
 namespace mm2hack::apps::systems::audio
 {
@@ -20,6 +25,7 @@ namespace mm2hack::apps::systems::audio
     {
         std::wstring file;
         int volume = config::SystemConfig::kAudioMaxVolume; // Volume level (0-255)
+        ApuVoice voice = ApuVoice::Pulse1;
     };
 
     // Configuration structure for BGM, which includes multiple channels and loop points
@@ -34,13 +40,17 @@ namespace mm2hack::apps::systems::audio
     {
         std::wstring file;
         int volume = config::SystemConfig::kAudioMaxVolume; // Volume level (0-255)
-        int target_bgm_channels = -1; // Channel to restore BGM volume after SE playback, -1 means no specific channel
+        ApuVoice voice = ApuVoice::Pulse1;                  // Logical APU voice occupied by the SE stem
+        SePriority priority = SePriority::Normal;           // Priority of the SE
     };
 
     // Configuration structure for SE (Sound Effects), which includes the file and volume
     struct SeConfig
     {
         std::vector<SeChannelConfig> channels;  // SE channels configuration
+        double loopStart = 0.0;
+        double loopEnd = 0.0;
+        SeRestorePolicy restorePolicy = SeRestorePolicy::Transient;
     };
 
     // Audio configuration loader that reads BGM and SE configurations from a JSON file
@@ -49,6 +59,8 @@ namespace mm2hack::apps::systems::audio
     public:
         // Loads audio configurations from a JSON file
         bool LoadFromFile(const std::wstring& filepath);
+        // Parses audio configurations from UTF-8 JSON without accessing audio or files.
+        bool LoadFromJson(std::string_view source);
 
         const std::unordered_map<std::wstring, BgmConfig>& GetBgmConfigs() const { return _bgmConfigs; }
         const std::unordered_map<std::wstring, SeConfig>& GetSeConfigs() const { return _seConfigs; }

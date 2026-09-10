@@ -2,6 +2,8 @@
 
 #include "HoveringState.h"
 
+#include <cstdlib>
+
 #include "apps/systems/physics/ILadderService.h"
 #include "apps/systems/physics/ITerrainProbe.h"
 #include "apps/systems/physics/PageGridIndex.h"
@@ -10,6 +12,7 @@
 #include "apps/world/entity/avatar/abilities/MovementAbilities.h"
 #include "apps/world/entity/avatar/AvatarStatus.h"
 #include "apps/world/entity/avatar/PlayerContext.h"
+#include "apps/world/entity/avatar/PlayerFrameOutput.h"
 #include "apps/world/entity/avatar/PlayerParams.h"
 #include "core/assembly/StateProvider.h"
 #include "input/Jpbtn.h"
@@ -17,6 +20,11 @@
 namespace mm2hack::apps::world::entity::avatar::states
 {
     AvatarStatus HoveringState::Id() const noexcept { return AvatarStatus::Hovering; }
+
+    void HoveringState::OnEnter(PlayerContext& cx, StateProvider*, const PlayerTuning& t)
+    {
+        _dash_jump_active = std::abs(cx.vel.x) == t.dashJumpSpeed;
+    }
 
     AvatarStatus HoveringState::Update(PlayerContext& cx, StateProvider* in, const PlayerTuning& t, double /*dt*/)
     {
@@ -28,56 +36,46 @@ namespace mm2hack::apps::world::entity::avatar::states
         // Branch to laddering state if ladder is detected.
         if (tryEnterLadder_(cx, in, t))
         {
-            //cx.animeStepper.reset();    // DELETE: This is done by the LadderingState::OnEnter().
             return AvatarStatus::Laddering;
         }
-        // X-axis air movement.
-        auto intent = MakeAirMoveIntent(in, t);
+        // X-axis air movement. Dash-jump momentum continues until the player
+        // steers against it; ordinary airborne entry always uses normal control.
+        auto intent = make_air_move_intent(in, t);
+
+        if (_dash_jump_active)
+        {
+            const int momentum_direction = cx.vel.x < 0.0 ? -1 : +1;
+            if (intent.active && intent.dirSign != momentum_direction)
+            {
+                _dash_jump_active = false;
+            }
+            else
+            {
+                intent = AirMoveIntent{ momentum_direction, t.dashJumpSpeed, true };
+            }
+        }
 
         if (in->IsPressed(JPBTN::LEFT))  cx.facingLR = AvatarDirection::Left;
         if (in->IsPressed(JPBTN::RIGHT)) cx.facingLR = AvatarDirection::Right;
         cx.probes.swapFrontLR(cx, t.probeOffsets); // Update front/rear probes based on facing direction.
 
-        ApplyAirControl(cx, intent);
-        ApplyAirMove(cx, intent);
-
-        // ---- Fixed page scroll request by boundary crossing (NOT by hit) ----
-        // We base this on the movement that will actually happen this frame.
-        if (intent.active)
+        apply_air_control(cx, intent);
+        apply_air_move(cx, intent);
+        if (_dash_jump_active && std::abs(cx.vel.x) != t.dashJumpSpeed)
         {
-            constexpr double kTriggerGapPx = 14.0;
-            const double actualDx = intent.speed * intent.dirSign;
-            if (cx.pendingFixedScroll.available && actualDx > 0.0)
-            {
-                const double frontX = cx.probes.frontLine.middlePoint.x;
-                const double rightEdge = cx.vBounds.rightX;
-
-                if (rightEdge - frontX <= kTriggerGapPx)
-                {
-                    cx.pendingFixedScroll = { false, PageScroll::Dir::Right, 48.0 };
-                }
-            }
-            else if (cx.pendingFixedScroll.available && actualDx < 0.0)
-            {
-                const double frontX = cx.probes.frontLine.middlePoint.x;
-                const double leftEdge = cx.vBounds.leftX;
-
-                if (frontX - leftEdge <= kTriggerGapPx)
-                {
-                    cx.pendingFixedScroll = { false, PageScroll::Dir::Left, 48.0 };
-                }
-            }
+            _dash_jump_active = false;
         }
 
-        // Jump or falling [Yaxis] movement. (Common airborne behavior)
-        UpdateVerticalVelocity(cx, t, in->IsPressed(JPBTN::A));
+        try_request_horizontal_fixed_scroll(cx, cx.vel.x);
 
-        // Call after cx.texture is set; adds facing offset (0 right, 40 left for AvatarAnimation enums).
-        auto applyFacing = [&](void) noexcept
+        // Jump or falling [Yaxis] movement. (Common airborne behavior)
+        update_vertical_velocity(cx, t, in->IsPressed(JPBTN::A));
+
+        // Call after cx.basePose is set; adds facing offset (0 right, 40 left for AvatarAnimation enums).
+        auto updateFacing = [&](void) noexcept
             {
                 if (in->IsPressed(JPBTN::LEFT))  cx.facingLR = AvatarDirection::Left;
                 if (in->IsPressed(JPBTN::RIGHT)) cx.facingLR = AvatarDirection::Right;
-                FacingDirection(cx.texture, cx.facingLR);   // Set facing direction at 'cx.texture'.
             };
 
         // Y-axis air movement.
@@ -99,29 +97,36 @@ namespace mm2hack::apps::world::entity::avatar::states
 
         if (cx.justLanded)
         {
-            if (in->JustPressed(JPBTN::A))
+            // Landing consumes dash-jump momentum. An immediate buffered jump
+            // starts with the same horizontal control as an ordinary jump.
+            _dash_jump_active = false;
+            apply_air_move(cx, make_air_move_intent(in, t));
+
+            cx.output.PushEvent(PlayerEventType::Landed);
+
+            if (cx.jumpEdge)
             {
-                DoJump(cx, t);
-                cx.texture = static_cast<int>(STile::Airpause);
-                applyFacing();
+                do_jump(cx, t);
+                cx.basePose = static_cast<int>(STile::Airpause);
+                updateFacing();
                 return AvatarStatus::Hovering;
             }
             else if (in->IsPressed(JPBTN::LEFT) || in->IsPressed(JPBTN::RIGHT))
             {
-                cx.texture = static_cast<int>(STile::RunningA);
-                applyFacing();
+                cx.basePose = static_cast<int>(STile::RunningA);
+                updateFacing();
                 return AvatarStatus::Running;
             }
             else
             {
-                LandingAnim(cx, t);
-                applyFacing();
+                landing_anim(cx, t);
+                updateFacing();
                 return AvatarStatus::Landing;
             }
         }
 
-        cx.texture = static_cast<int>(STile::Airpause);
-        applyFacing();
+        cx.basePose = static_cast<int>(STile::Airpause);
+        updateFacing();
         return AvatarStatus::Hovering;
     }
 
@@ -147,21 +152,6 @@ namespace mm2hack::apps::world::entity::avatar::states
         }
 
         return false;
-    }
-
-    // Resolve vertical collision when a hit is reported by SweepVertical.
-    void HoveringState::resolveVerticalCollision_(PlayerContext& cx, const PlayerTuning& t, double origVelY, const apps::systems::physics::SweepVHit& hit) noexcept
-    {
-        cx.vel.y = hit.maxDistanceY;
-
-        // If hit the ceiling and "moving up (jumping)", replace with specified speed.
-        if (hit.kind == systems::physics::VHitKind::Ceiling && origVelY < 0.0)
-        {
-            cx.vel.y = 0.0;
-        }
-
-        // onGround is only for floor detection.
-        cx.onGround = (hit.kind == systems::physics::VHitKind::Floor);
     }
 
     void HoveringState::fixedScrollingY_(PlayerContext& cx) const noexcept

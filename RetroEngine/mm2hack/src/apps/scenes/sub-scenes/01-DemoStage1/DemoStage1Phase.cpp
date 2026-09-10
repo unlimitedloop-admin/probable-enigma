@@ -44,7 +44,7 @@ namespace mm2hack::apps::scenes
             _pageGrid->Build(*_graph, /*start*/ 0);
 
             _rules = std::make_unique<ScraperScrollRuleProvider>(pageSource);
-            _renderer = std::make_unique<MapRenderer2D>(resource, owner.GetMapName(), owner.GetMapBinaryPath(), kTilePx);
+            _renderer = std::make_unique<MapRenderer2D>(resource, owner.GetMapName(), pageSource, kTilePx);
 
             ScrollController::Params p;
             _scroll = std::make_unique<ScrollController>(*_rules, *_renderer, p);
@@ -52,13 +52,13 @@ namespace mm2hack::apps::scenes
             using Camera = systems::scrolling::atomic::Camera;
             _scroll->ObjectPos() = { Camera::kCenterX, Camera::kCenterY };
 
-            auto* bgMgr = &resource.GetBGTileManager();
+            auto& bgMgr = resource.GetBGTileManager();
             _mapProvider = std::make_unique<BGTileMapProvider>(bgMgr, pageSource);
             _terrainProbe = std::make_unique<TileQueryService>(*_mapProvider, *_graph, *_pageGrid, kTilePx);
             _ladderService = std::make_unique<LadderService>(*_terrainProbe);
 
             // TODO: Need to provide a vector member for entity. (or EntityManager?)
-            _player = std::make_unique<PlayerEntity>(owner.GetSpriteId());
+            _player = std::make_unique<PlayerEntity>(owner.GetSpriteId(), owner.GetSpriteAttackId());
             _player->SetTerrainProbe(_terrainProbe.get());
             _player->SetLadderService(_ladderService.get());
             _player->SetScrollContext(_rules.get(), _scroll->PageIndex());
@@ -104,7 +104,7 @@ namespace mm2hack::apps::scenes
                 if (!lock)
                 {
                     _player->SetInput(owner.Input());
-                    _player->Update(dt);
+                    _player->Update(&_scroll->GetView(), dt);
 
                     delta = _player->pos - prev_pos;
                 }

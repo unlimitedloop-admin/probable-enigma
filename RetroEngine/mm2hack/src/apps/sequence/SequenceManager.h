@@ -13,6 +13,11 @@
 #include "core/overlay/FeedbackOverlay.h"
 #include "ISequence.h"
 
+namespace mm2hack::core::save
+{
+    struct SaveData;
+}
+
 namespace mm2hack::apps::sequence
 {
     // Enumeration of different sequence types
@@ -47,8 +52,8 @@ namespace mm2hack::apps::sequence
         void StopCurrentSequence();
         // Reboots the current sequence, resetting it to its initial state
         void RebootCurrentSequence();
-        // Loads a specific sequence type, such as standard or debug, using when the loading save data
-        void LoadSequence(const SequenceType type);
+        // Validates a snapshot before replacing the current sequence.
+        bool LoadState(const core::save::SaveData& data);
 
         // Executes the current sequence, which is responsible for running the game logic
         void Update();
@@ -79,6 +84,8 @@ namespace mm2hack::apps::sequence
     private:
         SequenceManager() = default;
         ~SequenceManager() = default;
+
+        bool tryLoadValidatedSnapshot_(const core::save::SaveData& data) noexcept;
 
         const std::wstring kClassName{ L"SequenceManager" };
 

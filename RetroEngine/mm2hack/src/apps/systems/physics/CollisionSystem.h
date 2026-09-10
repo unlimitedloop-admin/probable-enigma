@@ -10,7 +10,7 @@
 
 #include <span>
 #include <string>
-#include "apps/foundation/math/CoordinateTypes.h"
+
 #include "CollisionLayer.h"
 
 namespace mm2hack::apps::systems::physics

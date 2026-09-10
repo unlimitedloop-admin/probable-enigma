@@ -15,7 +15,7 @@ namespace mm2hack::core::overlay
     void DebugHud::Draw() const
     {
         const auto& hud = config::ConfigUIManager::GetCurrentHudConfig();
-        if (!hud.showFps && !hud.showFrameTime)
+        if (!hud.showPlayerPosition && !hud.showFps && !hud.showFrameTime)
             return;
 
         const int x = 10;
@@ -56,7 +56,7 @@ namespace mm2hack::core::overlay
             using namespace utils;
 
             wchar_t buffer[64];
-            ::swprintf(buffer, 128, L"PageIndex = %d", _playerPositionContext.pageIndex);
+            ::swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"PageIndex = %d", _playerPositionContext.pageIndex);
             ::DxLib::DrawString(8, y, buffer, 0xFFFFFF00);
             y += 18;
             const std::wstring xstr = decode_floating_hex_number(_playerPositionContext.x);

@@ -2,6 +2,10 @@
 
 #include "SoundChannel.h"
 
+#include <algorithm>
+#include <cstdint>
+#include <string>
+
 namespace mm2hack::apps::systems::audio
 {
     SoundChannel::SoundChannel() = default;
@@ -23,6 +27,9 @@ namespace mm2hack::apps::systems::audio
             _handle = -1;
         }
         _handle = DxLib::LoadSoundMem(filepath.c_str());
+        _paused_position_milliseconds = 0;
+        _wasPaused = false;
+        //utils::debug_log(L"[SoundChannel] Load: path={}, handle={}", filepath, _handle);
         return _handle != -1;
     }
 
@@ -30,7 +37,9 @@ namespace mm2hack::apps::systems::audio
     {
         if (_handle != -1)
         {
+            _wasPaused = false;
             DxLib::PlaySoundMem(_handle, loop ? DX_PLAYTYPE_LOOP : DX_PLAYTYPE_BACK);
+            //utils::debug_log(L"[SoundChannel] Play: handle={}, loop={}", _handle, loop);
         }
     }
 
@@ -40,6 +49,8 @@ namespace mm2hack::apps::systems::audio
         {
             DxLib::StopSoundMem(_handle);
         }
+        _paused_position_milliseconds = 0;
+        _wasPaused = false;
     }
 
     void SoundChannel::Pause()
@@ -48,7 +59,7 @@ namespace mm2hack::apps::systems::audio
         {
             if (DxLib::CheckSoundMem(_handle) == 1)
             {
-                _pausedPos = DxLib::GetSoundCurrentPosition(_handle);
+                _paused_position_milliseconds = DxLib::GetSoundCurrentTime(_handle);
                 DxLib::StopSoundMem(_handle);
                 _wasPaused = true;
             }
@@ -63,7 +74,7 @@ namespace mm2hack::apps::systems::audio
     {
         if (_handle != -1 && _wasPaused)
         {
-            DxLib::SetSoundCurrentPosition(_pausedPos, _handle);
+            DxLib::SetSoundCurrentTime(_paused_position_milliseconds, _handle);
             DxLib::PlaySoundMem(_handle, loop ? DX_PLAYTYPE_LOOP : DX_PLAYTYPE_BACK, FALSE);
             _wasPaused = false;
         }
@@ -76,6 +87,7 @@ namespace mm2hack::apps::systems::audio
         {
             auto i = DxLib::ChangeVolumeSoundMem(_volume, _handle);
         }
+        //utils::debug_log(L"[SoundChannel] SetVolume: vol={}, handle={}", volume, _handle);
     }
 
     int SoundChannel::GetVolume() const
@@ -88,16 +100,18 @@ namespace mm2hack::apps::systems::audio
         return (_handle != -1 && DxLib::CheckSoundMem(_handle) == 1);
     }
 
-    LONGLONG SoundChannel::GetPosition() const
+    std::int64_t SoundChannel::GetPositionMilliseconds() const
     {
-        return (_handle != -1) ? DxLib::GetSoundCurrentPosition(_handle) : 0LL;
+        if (_handle == -1) return 0;
+        return _wasPaused ? _paused_position_milliseconds : DxLib::GetSoundCurrentTime(_handle);
     }
 
-    void SoundChannel::SetPosition(LONGLONG pos) const
+    void SoundChannel::SetPositionMilliseconds(std::int64_t position)
     {
-        if (_handle != -1)
+        if (_handle != -1 && position >= 0)
         {
-            DxLib::SetSoundCurrentPosition(pos, _handle);
+            _paused_position_milliseconds = position;
+            DxLib::SetSoundCurrentTime(position, _handle);
         }
     }
 

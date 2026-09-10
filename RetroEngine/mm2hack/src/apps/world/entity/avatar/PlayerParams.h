@@ -10,13 +10,14 @@
 
 #include <cstdint>
 
+#include "apps/foundation/math/CoordinateTypes.h"
+#include "AvatarStatus.h"
+
 namespace mm2hack::apps::world::entity::avatar
 {
     // Configuration for player probes offsets (All relative distances from the center)
     struct PlayerProbes
     {
-        //double frontLineOffsetXR    { 8.0 };        // X offset for front line probe (right facing)
-        //double frontLineOffsetXL    { -8.0 };       // X offset for front line probe (left facing)
         double frontLineOffsetX     { 8.0 };        // X offset for front line probe
         double rearLineOffsetX      { -8.0 };       // X offset for rear line probe
         double verticalTopOffsetY   { -14.0 };      // Y offset for top line probe
@@ -48,23 +49,73 @@ namespace mm2hack::apps::world::entity::avatar
         double steadyRun            { 0x01.60p0 };  // Normal run speed
         double haltSpeed            { 0x00.80p0 };  // Brake run speed (Fixed)
         double climbSpeed           { 0x00.C0p0 };  // Climbing speed on ladder
+        double slidingSpeed         { 0x02.80p0 };  // Sliding horizontal speed
+        std::uint8_t slidingFrames  { 20 };         // Default sliding duration
+        double dashStartSpeed       { 0x01.80p0 };  // Dash startup horizontal speed
+        double dashSpeed            { 0x03.00p0 };  // Dash horizontal speed
+        double dashJumpSpeed        { 0x02.E0p0 };  // Dash-jump horizontal speed
+        std::uint8_t dashStartFrames{ 4 };          // Dash startup duration
+        std::uint8_t dashFrames     { 24 };         // Total dash duration
 
         PlayerProbes probeOffsets;                  // Player probes offsets
     };
 
-    // Structure to represent ground movement intent, Pre-declare this data type for use with ApplyGroundMove
-    struct GroundMoveIntent
+    // Player physical environment
+    enum class PlayerEnvironment : std::uint8_t
     {
-        int dirSign{ 0 };     // -1 left, +1 right, 0 none
-        double speed{ 0.0 };  // absolute horizontal speed (>=0)
-        bool active{ false }; // should apply this frame?
+        Normal,
+        Underwater
     };
 
-    // Structure to represent air movement intent, Pre-declare this data type for use with ApplyAirControl
+    // Creates underwater tuning based on normal player parameters.
+    [[nodiscard]] inline PlayerTuning make_underwater_tuning(const PlayerTuning& normal) noexcept
+    {
+        PlayerTuning tuning = normal;
+
+        tuning.gravity     =  0x00.1Ep0;
+        tuning.jumpImpulse = -0x05.80p0;
+
+        return tuning;
+    }
+
+    // Structure to represent ground movement intent, Pre-declare this data type for use with apply_ground_move
+    struct GroundMoveIntent
+    {
+        int dirSign{ 0 };                           // -1 left, +1 right, 0 none
+        double speed{ 0.0 };                        // absolute horizontal speed (>=0)
+        bool active{ false };                       // should apply this frame?
+    };
+
+    // Structure to represent air movement intent, Pre-declare this data type for use with apply_air_control
     struct AirMoveIntent
     {
-        int dirSign{ 0 };     // -1 left, +1 right, 0 none
-        double speed{ 0.0 };  // absolute horizontal speed (>=0)
-        bool active{ false }; // should apply this frame?
+        int dirSign{ 0 };                           // -1 left, +1 right, 0 none
+        double speed{ 0.0 };                        // absolute horizontal speed (>=0)
+        bool active{ false };                       // should apply this frame?
+    };
+
+    // Intro drop phases
+    enum class IntroPhase
+    {
+        Falling,
+        Landing,
+        Done
+    };
+
+    // Intro drop state
+    struct IntroDropState
+    {
+        bool active{ false };                       // Is on stage sequence active
+        IntroPhase phase{ IntroPhase::Falling };    // Current phase of the intro
+        double timer{ 0.0 };                        // Timer for phase transitions
+        foundation::math::Vec2 offsetPos{};         // Starting position off stage
+        foundation::math::Vec2 destPos{};           // Target position to reach on stage
+        double dropDuration{ 0.5 };                 // Duration of the drop phase in seconds
+    };
+
+    struct IntroFrame
+    {
+        STile tile;                                 // Texture index for the frame
+        double duration;                            // Duration to display the frame
     };
 }

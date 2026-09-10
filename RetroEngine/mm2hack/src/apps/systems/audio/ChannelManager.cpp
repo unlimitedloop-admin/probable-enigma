@@ -17,7 +17,10 @@ namespace mm2hack::apps::systems::audio
     int ChannelManager::AddChannel(std::unique_ptr<ISoundChannel> channel)
     {
         _channels.push_back(std::move(channel));
-        return static_cast<int>(_channels.size() - 1);
+        int index = static_cast<int>(_channels.size() - 1);
+        int total = static_cast<int>(_channels.size());
+        //utils::debug_log(L"[ChannelManager] AddChannel: index={}, total={}", index, total);
+        return index;
     }
 
     bool ChannelManager::Load(int channelIndex, const std::wstring& filepath)
@@ -38,6 +41,18 @@ namespace mm2hack::apps::systems::audio
         _channels[channelIndex]->Stop();
     }
 
+    void ChannelManager::Pause(int channelIndex)
+    {
+        if (channelIndex < 0 || channelIndex >= GetChannelCount()) return;
+        _channels[channelIndex]->Pause();
+    }
+
+    void ChannelManager::Resume(int channelIndex, bool loop)
+    {
+        if (channelIndex < 0 || channelIndex >= GetChannelCount()) return;
+        _channels[channelIndex]->Resume(loop);
+    }
+
     void ChannelManager::SetVolume(int channelIndex, int volume)
     {
         if (channelIndex < 0 || channelIndex >= GetChannelCount()) return;
@@ -54,6 +69,18 @@ namespace mm2hack::apps::systems::audio
     {
         if (channelIndex < 0 || channelIndex >= GetChannelCount()) return false;
         return _channels[channelIndex]->IsPlaying();
+    }
+
+    std::int64_t ChannelManager::GetPositionMilliseconds(int channelIndex) const
+    {
+        if (channelIndex < 0 || channelIndex >= GetChannelCount()) return 0;
+        return _channels[channelIndex]->GetPositionMilliseconds();
+    }
+
+    void ChannelManager::SetPositionMilliseconds(int channelIndex, std::int64_t position)
+    {
+        if (channelIndex < 0 || channelIndex >= GetChannelCount() || position < 0) return;
+        _channels[channelIndex]->SetPositionMilliseconds(position);
     }
 
     void ChannelManager::StartFade(int channelIndex, int targetVolume, int durationFrames)

@@ -11,7 +11,7 @@
 #include "apps/world/entity/avatar/IPlayerState.h"
 
 #include <string>
-#include "apps/systems/physics/ITerrainProbe.h"
+
 #include "apps/world/entity/avatar/AvatarStatus.h"
 
 namespace mm2hack::apps::world::entity::avatar
@@ -27,29 +27,28 @@ namespace mm2hack::core::assembly
 
 namespace mm2hack::apps::world::entity::avatar::states
 {
-    using core::assembly::StateProvider;
-
     // Player state: Running (on ground, moving)
     class HoveringState final : public IPlayerState
     {
     public:
         // Get state ID
         AvatarStatus Id() const noexcept override;
+        void OnEnter(PlayerContext& cx, core::assembly::StateProvider* in, const PlayerTuning& t) override;
         // Update state and return next state ID
-        AvatarStatus Update(PlayerContext& cx, StateProvider* in, const PlayerTuning& t, double /*dt*/) override;
+        AvatarStatus Update(PlayerContext& cx, core::assembly::StateProvider* in, const PlayerTuning& t, double /*dt*/) override;
+        [[nodiscard]] bool DashJumpActive() const noexcept { return _dash_jump_active; }
+        void RestoreState(bool dash_jump_active) noexcept { _dash_jump_active = dash_jump_active; }
 
     private:
         // Try to enter laddering state
-        bool tryEnterLadder_(PlayerContext& cx, StateProvider* in, const PlayerTuning& t) const;
-
-        // Resolve vertical collision when SweepVertical reports a hit.
-        // origVelY: Vertical velocity before Sweep.
-        void resolveVerticalCollision_(PlayerContext& cx, const PlayerTuning& t, double origVelY, const ::mm2hack::apps::systems::physics::SweepVHit& hit) noexcept;
+        bool tryEnterLadder_(PlayerContext& cx, core::assembly::StateProvider* in, const PlayerTuning& t) const;
 
         // Handle fixed scrolling when moving down.
         void fixedScrollingY_(PlayerContext& cx) const noexcept;
 
     private:
         const std::wstring kClassName{ L"HoveringState" };
+
+        bool _dash_jump_active{ false };
     };
 }

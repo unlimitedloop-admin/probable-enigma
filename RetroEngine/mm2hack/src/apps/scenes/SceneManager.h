@@ -19,6 +19,11 @@ namespace mm2hack::apps::resources::parameters
     class Parameters;
 }
 
+namespace mm2hack::core::save
+{
+    struct SaveData;
+}
+
 namespace mm2hack::apps::scenes
 {
     class SceneChangeMediator;
@@ -52,6 +57,9 @@ namespace mm2hack::apps::scenes
         void RequestSceneChange(SceneID nextScene, const Parameters& params = {}) override;
         // Sets the mediator for scene changes
         void SetMediator(SceneChangeMediator* mediator) { _mediator = mediator; }
+        bool SaveState(core::save::SaveData& out) const;
+        static bool ValidateState(const core::save::SaveData& in);
+        bool LoadState(const core::save::SaveData& in);
 
     private:
         const std::wstring kClassName{ L"SceneManager" };

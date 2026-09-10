@@ -2,7 +2,6 @@
 
 #include "FixedScrollDriver.h"
 
-#include <algorithm>
 #include "Camera.h"
 #include "ScrollFreezeState.h"
 #include "ScrollNeighborResolver.h"

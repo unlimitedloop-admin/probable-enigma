@@ -1,31 +1,42 @@
 //==============================================================================
-// 
+//
 //  Project: mm2hack
 //  ScrollTypes.h
-// 
+//
 //  Optimized scrolling type definitions.
-// 
+//
 //==============================================================================
 #pragma once
+
+#include <cstdint>
 
 #include "apps/foundation/math/CoordinateTypes.h"
 
 namespace mm2hack::apps::systems::scrolling::atomic
 {
-    // Defines the type of scrolling behavior
-    enum class ScrollKind : int
+    // Defines the runtime scrolling behavior.
+    // Values intentionally match resources::bg::RoomScrollType (BD-005).
+    enum class ScrollKind : std::uint8_t
     {
-        None = 0x00,
-        FreeHorizontal = 0x01,  // Side free scroll
-        FixedPage = 0x02,       // Fixed page (animation)
-        FollowObject = 0x09,    // Object follow
-        Free8Way = 0x0A         // 8-direction scroll
+        None         = 0x00,
+        Free         = 0x01,
+        Page         = 0x02,
+        Auto         = 0x03,
+        ObjectFollow = 0x04,
+        EventDriven  = 0x05,
+        Loop         = 0x06
     };
 
-    // Represents the state of a page scroll animation
     struct PageScroll
     {
-        enum class Dir { None, Right, Left, Down, Up };
+        enum class Dir
+        {
+            None,
+            Right,
+            Left,
+            Down,
+            Up
+        };
 
         bool active{ false };
         Dir dir{ Dir::None };
@@ -36,22 +47,19 @@ namespace mm2hack::apps::systems::scrolling::atomic
         std::size_t to_index{ 0 };
     };
 
-    // Request for fixed page scroll
     struct FixedScrollRequest
     {
-        bool available{ false };        // Enabled when fixed-page scroll is possible
+        bool available{ false };
         PageScroll::Dir dir{ PageScroll::Dir::None };
-        double carryTotalPx{ 0.0 };     // Total distance to move the player during the whole fixed-scroll animation (world px).
+        double carryTotalPx{ 0.0 };
     };
 
-    // Scroll effect result
     struct ScrollEffect
     {
         bool fixedActive{ false };
-        foundation::math::Vec2 playerDelta{};   // apply to player.pos (world)
+        foundation::math::Vec2 playerDelta{};
     };
 
-    // Scroll mode enumeration
     enum class ScrollMode : int
     {
         None = 0x00,
@@ -61,7 +69,6 @@ namespace mm2hack::apps::systems::scrolling::atomic
         TargetFollow
     };
 
-    // View boundary representation
     struct ViewBounds
     {
         double leftX{};
@@ -70,7 +77,6 @@ namespace mm2hack::apps::systems::scrolling::atomic
         double bottomY{};
     };
 
-    // Using for fixed scroll request
     struct FixedScrollMeasure
     {
         using Vec2 = foundation::math::Vec2;
@@ -79,44 +85,58 @@ namespace mm2hack::apps::systems::scrolling::atomic
         Vec2 pageOriginPx{};
     };
 
-    // Helpers
-    inline constexpr bool IsHorizontal(PageScroll::Dir d) noexcept
+    [[nodiscard]] inline constexpr bool IsHorizontal(PageScroll::Dir dir) noexcept
     {
-        return d == PageScroll::Dir::Left || d == PageScroll::Dir::Right;
+        return dir == PageScroll::Dir::Left || dir == PageScroll::Dir::Right;
     }
 
-    inline constexpr bool IsVertical(PageScroll::Dir d) noexcept
+    [[nodiscard]] inline constexpr bool IsVertical(PageScroll::Dir dir) noexcept
     {
-        return d == PageScroll::Dir::Up || d == PageScroll::Dir::Down;
+        return dir == PageScroll::Dir::Up || dir == PageScroll::Dir::Down;
     }
 
-    inline constexpr int DirSignX(PageScroll::Dir d) noexcept
+    [[nodiscard]] inline constexpr int DirSignX(PageScroll::Dir dir) noexcept
     {
-        if (d == PageScroll::Dir::Right) return +1;
-        if (d == PageScroll::Dir::Left)  return -1;
+        if (dir == PageScroll::Dir::Right)
+        {
+            return +1;
+        }
+
+        if (dir == PageScroll::Dir::Left)
+        {
+            return -1;
+        }
+
         return 0;
     }
 
-    inline constexpr int DirSignY(PageScroll::Dir d) noexcept
+    [[nodiscard]] inline constexpr int DirSignY(PageScroll::Dir dir) noexcept
     {
-        if (d == PageScroll::Dir::Down) return +1;
-        if (d == PageScroll::Dir::Up)   return -1;
+        if (dir == PageScroll::Dir::Down)
+        {
+            return +1;
+        }
+
+        if (dir == PageScroll::Dir::Up)
+        {
+            return -1;
+        }
+
         return 0;
     }
 
-    inline constexpr double ClampNonNeg(double v) noexcept
+    [[nodiscard]] inline constexpr double ClampNonNeg(double value) noexcept
     {
-        return (v < 0.0) ? 0.0 : v;
+        return value < 0.0 ? 0.0 : value;
     }
 
-    // Check if the scroll kind allows free movement
-    inline constexpr bool IsAllowedFree(ScrollKind k) noexcept
+    [[nodiscard]] inline constexpr bool IsAllowedFree(ScrollKind kind) noexcept
     {
-        return (k == ScrollKind::FreeHorizontal) || (k == ScrollKind::FollowObject) || (k == ScrollKind::Free8Way);
+        return kind == ScrollKind::Free;
     }
 
-    inline constexpr bool IsFixedScroll(ScrollKind k) noexcept
+    [[nodiscard]] inline constexpr bool IsFixedScroll(ScrollKind kind) noexcept
     {
-        return (k == ScrollKind::FixedPage);
+        return kind == ScrollKind::Page;
     }
 }

@@ -3,7 +3,10 @@
 #include "BGTileManager.h"
 
 #include <iterator>
+#include <span>
 #include <string_view>
+#include "BGTileAnimator.h"
+#include "BGTilePalette.h"
 
 namespace mm2hack::apps::systems::physics
 {
@@ -43,17 +46,22 @@ namespace mm2hack::apps::rendering::bg
         _catalog.GetAtlas(id).DrawTile(_global_variant, tile_index, x, y);
     }
 
-    void BGTileManager::DrawTileVariantById(Id id, int variant, int tile_index, int x, int y) const noexcept
-    {
-        if (!_catalog.IsValid(id)) return;
-        _catalog.GetAtlas(id).DrawTile(variant, tile_index, x, y);
-    }
-
     void BGTileManager::SetMapSize(int width, int height)
     {
         _map_w = width;
         _map_h = height;
         _tile_map.assign(_map_w * _map_h, 0);
+    }
+
+    bool BGTileManager::SetMapTiles(std::span<const std::uint8_t> tiles)
+    {
+        if (tiles.size() != _tile_map.size())
+        {
+            return false;
+        }
+
+        std::copy(tiles.begin(), tiles.end(), _tile_map.begin());
+        return true;
     }
 
     void BGTileManager::LoadMapBinary(std::wstring_view map_file, int offset)
@@ -73,12 +81,6 @@ namespace mm2hack::apps::rendering::bg
         }
 
         _tile_map.assign(raw.begin() + offset, raw.begin() + offset + need);
-    }
-
-    void BGTileManager::SetTile(int x, int y, std::uint8_t id)
-    {
-        if (x < 0 || y < 0 || x >= _map_w || y >= _map_h) return;
-        _tile_map[y * _map_w + x] = id;
     }
 
     std::uint8_t BGTileManager::GetTile(int x, int y) const
@@ -132,6 +134,7 @@ namespace mm2hack::apps::rendering::bg
         }
         _tile_attr[tile_id] = attr;
     }
+
     TileAttribute BGTileManager::GetTileAttribute(int x, int y) const
     {
         if (x < 0 || y < 0 || x >= _map_w || y >= _map_h) { return TileAttribute(); }
@@ -148,6 +151,34 @@ namespace mm2hack::apps::rendering::bg
         return id < _tile_attr.size() ? _tile_attr[id] : TileAttribute();
     }
 
+    int BGTileManager::CreateTilePaletteVariantById(Id tileset_id, int tile_index, std::span<const BGPaletteColorMapping> mappings)
+    {
+        if (!_catalog.IsValid(tileset_id))
+        {
+            return -1;
+        }
+
+        auto& atlas = _catalog.GetAtlas(tileset_id);
+        return atlas.CreateTilePaletteVariant(tile_index, mappings);
+    }
+
+    int BGTileManager::CreateTilePaletteVariantByName(const std::wstring& tileset_name, int tile_index, std::span<const BGPaletteColorMapping> mappings)
+    {
+        const auto id = _catalog.TryGetId(tileset_name);
+
+        if (!id.has_value())
+        {
+            return -1;
+        }
+
+        return CreateTilePaletteVariantById(*id, tile_index, mappings);
+    }
+
+    void BGTileManager::SetTilePaletteAnimations(std::span<const BGPaletteAnimation> animations) noexcept
+    {
+        _tile_animator.SetPaletteAnimations(animations);
+    }
+
     void BGTileManager::DrawMapByName(const std::wstring& tileset_name, int tile_px_w, int tile_px_h, int offset_x, int offset_y) const
     {
         DrawMapById(_catalog.GetId(tileset_name), tile_px_w, tile_px_h, offset_x, offset_y);
@@ -162,16 +193,23 @@ namespace mm2hack::apps::rendering::bg
             for (int x = 0; x < _map_w; ++x)
             {
                 const int idx = y * _map_w + x;
-                const int tile_id = static_cast<int>(_tile_map[idx]);
-                atlas.DrawTile(_global_variant, tile_id, x * tile_px_w + offset_x, y * tile_px_h + offset_y);
+
+                const std::uint8_t source_tile = _tile_map[idx];
+                const std::uint8_t drawing_tile = _tile_animator.ResolveTile(source_tile);
+                const int palette_variant = _tile_animator.ResolvePaletteVariant(source_tile);
+                const int draw_x = x * tile_px_w + offset_x;
+                const int draw_y = y * tile_px_h + offset_y;
+
+                if (palette_variant >= 0)
+                {
+                    atlas.DrawTilePaletteVariant(static_cast<int>(drawing_tile), palette_variant, draw_x, draw_y);
+                }
+                else
+                {
+                    atlas.DrawTile(_global_variant, static_cast<int>(drawing_tile), draw_x, draw_y);
+                }
             }
         }
-    }
-
-    int BGTileManager::VariantCountByName(const std::wstring& tileset_name) const
-    {
-        if (auto id = _catalog.TryGetId(tileset_name)) return _catalog.GetAtlas(*id).VariantCount();
-        return 0;
     }
 
     int BGTileManager::VariantCountById(Id id) const
@@ -184,6 +222,17 @@ namespace mm2hack::apps::rendering::bg
     {
         const int mv = MaxVariant();
         _global_variant = std::max(0, std::min(v, mv));
+    }
+
+    void BGTileManager::SetTileAnimations(
+        std::span<const BGTileAnimation> animations) noexcept
+    {
+        _tile_animator.SetAnimations(animations);
+    }
+
+    void BGTileManager::UpdateTileAnimations() noexcept
+    {
+        _tile_animator.Update();
     }
 
 }

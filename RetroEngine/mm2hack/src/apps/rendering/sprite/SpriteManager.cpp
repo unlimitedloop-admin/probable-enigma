@@ -2,15 +2,20 @@
 
 #include "SpriteManager.h"
 
+#include <span>
 #include <string_view>
+
+#include "SpriteAtlas.h"
 
 namespace mm2hack::apps::rendering::sprite
 {
-    SpriteManager::Id SpriteManager::Load(const std::wstring& name, const std::wstring_view png_path, const std::wstring_view json_path)
+    SpriteManager::Id SpriteManager::Load(
+        const std::wstring& name, const std::wstring_view png_path,
+        const std::wstring_view json_path, bool* out_created)
     {
         const std::wstring png = std::wstring(png_path);
         const std::wstring json = std::wstring(json_path);
-        return _catalog.Load(name, png, json);
+        return _catalog.Load(name, png, json, out_created);
     }
 
     void SpriteManager::UseById(Id id, int frame, int x, int y) const noexcept
@@ -28,56 +33,32 @@ namespace mm2hack::apps::rendering::sprite
         atlas.Draw(variant, frame, x, y);
     }
 
-    void SpriteManager::UseByName(const std::wstring& name, int frame, int x, int y)
-    {
-        const Id id = cacheId_(name);
-        if (id == kInvalidId) { return; }
-        UseById(id, frame, x, y);
-    }
-
-    bool SpriteManager::ReplacePaletteColorByName(const std::wstring& name, int targetPaletteIndex, int sourcePaletteIndex, int variant)
-    {
-        if (auto it = _name_cache.find(name); it != _name_cache.end())
-        {
-            return _catalog.GetAtlas(it->second).ReplacePaletteColorIndex(variant, targetPaletteIndex, sourcePaletteIndex);
-        }
-        if (auto opt = _catalog.TryGetId(name))
-        {
-            _name_cache.emplace(name, *opt);
-            return _catalog.GetAtlas(*opt).ReplacePaletteColorIndex(variant, targetPaletteIndex, sourcePaletteIndex);
-        }
-        return false;
-    }
-
     bool SpriteManager::ReplacePaletteColorById(Id id, int targetPaletteIndex, int sourcePaletteIndex, int variant)
     {
         if (!_catalog.IsValid(id)) return false;
         return _catalog.GetAtlas(id).ReplacePaletteColorIndex(variant, targetPaletteIndex, sourcePaletteIndex);
     }
 
-    bool SpriteManager::ApplyRandomColorFilterByName(const std::wstring& name, int variant)
-    {
-        const Id id = cacheId_(name);
-        if (id == kInvalidId || !_catalog.IsValid(id)) return false;
-        return _catalog.GetAtlas(id).ApplyRandomHueToVariant(variant);
-    }
-
-    bool SpriteManager::ApplyRandomColorFilterById(Id id, int variant)
+    bool SpriteManager::ReplacePaletteColorsById(
+        Id id, std::span<const SpriteAtlas::PaletteColorMapping> mappings)
     {
         if (!_catalog.IsValid(id)) return false;
-        return _catalog.GetAtlas(id).ApplyRandomHueToVariant(variant);
+        return _catalog.GetAtlas(id).ReplacePaletteColors(mappings);
     }
 
-    bool SpriteManager::ApplyHSBFilterById(Id id, int variant, int hueAdd, int satAdd, int briAdd)
+    bool SpriteManager::ReplacePixelColorsById(
+        Id id,
+        std::span<const SpriteAtlas::PaletteColorMapping> mappings,
+        int variant)
     {
         if (!_catalog.IsValid(id)) return false;
-        return _catalog.GetAtlas(id).ApplyHSBToVariant(variant, hueAdd, satAdd, briAdd);
+        return _catalog.GetAtlas(id).ReplacePixelColors(variant, mappings);
     }
 
-    int SpriteManager::VariantCountByName(const std::wstring& sprite_name) const
+    bool SpriteManager::ApplyHueFilterById(Id id, int hue_add, int variant)
     {
-        if (auto id = _catalog.TryGetId(sprite_name)) return _catalog.GetAtlas(*id).VariantCount();
-        return 0;
+        if (!_catalog.IsValid(id)) return false;
+        return _catalog.GetAtlas(id).ApplyHSBToVariant(variant, hue_add, 0, 0);
     }
 
     int SpriteManager::VariantCountById(Id id) const
@@ -94,45 +75,12 @@ namespace mm2hack::apps::rendering::sprite
 
     void SpriteManager::ReleaseById(Id id)
     {
-        // drop any cached name entries pointing to this id
-        for (auto it = _name_cache.begin(); it != _name_cache.end();)
-        {
-            if (it->second == id) it = _name_cache.erase(it); else ++it;
-        }
         _catalog.Remove(id);
-    }
-
-    void SpriteManager::ReleaseByName(const std::wstring& name)
-    {
-        if (auto it = _name_cache.find(name); it != _name_cache.end())
-        {
-            _name_cache.erase(it);
-        }
-        if (auto opt = _catalog.TryGetId(name))
-        {
-            _catalog.Remove(*opt);
-        }
     }
 
     void SpriteManager::ReleaseAll()
     {
         _catalog.Clear();
-        _name_cache.clear();
         _global_variant = 0;
-    }
-
-    SpriteManager::Id SpriteManager::cacheId_(const std::wstring& name)
-    {
-        if (const auto it = _name_cache.find(name); it != _name_cache.end())
-        {
-            return it->second;
-        }
-        if (auto opt = _catalog.TryGetId(name))
-        {
-            const Id id = *opt;
-            _name_cache.emplace(name, id);
-            return id;
-        }
-        return kInvalidId;
     }
 }

@@ -107,12 +107,15 @@ namespace mm2hack::apps::scenes
         std::wstring GetMapBinaryPath() const { return std::wstring(kStageMapBinary); }
         // Get the sprite Id used in this scene
         SpriteManagerId GetSpriteId() const noexcept { return _spriteId; }
+        // Get the sprite Id used for attack animation in this scene
+        SpriteManagerId GetSpriteAttackId() const noexcept { return _spriteAttackId; }
         // Change child phase of the this scene
         void QueuePhase(std::unique_ptr<IDemoStage1Phase> next, PhaseFadePlan nextPlan);
 
         // === Save/Load state ===
-        void Save(std::ostream& out);
-        void Load(std::istream& in);
+        [[nodiscard]] bool CanSaveState() const noexcept override { return false; }
+        bool Save(std::ostream& out) const override;
+        bool Load(std::istream& in) override;
 
         // Access the fade controller for scene transitions
         PhaseFadeController& Fader() noexcept { return _fader; }
@@ -153,5 +156,6 @@ namespace mm2hack::apps::scenes
         StateProvider* _input{ nullptr };                               // Reference to the state provider
         BGTileManagerId _bgTileId{ static_cast<BGTileManagerId>(-1) };  // Background tile set Id
         SpriteManagerId _spriteId{ static_cast<SpriteManagerId>(-1) };  // Sprite set Id
+        SpriteManagerId _spriteAttackId{ static_cast<SpriteManagerId>(-1) }; // Sprite set Id for attack animation
     };
 }

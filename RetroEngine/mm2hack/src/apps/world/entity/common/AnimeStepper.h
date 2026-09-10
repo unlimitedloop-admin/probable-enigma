@@ -8,8 +8,24 @@
 //==============================================================================
 #pragma once
 
+#include <cstdint>
+
+#include "core/save/StateIO.h"
+
 namespace mm2hack::apps::world::entity::common
 {
+    struct AnimeStepperState final
+    {
+        std::int32_t tick{};
+        std::int32_t frame{};
+        std::int32_t loops{};
+
+        bool Save(core::save::StateWriter& writer) const;
+        bool Load(core::save::StateReader& reader);
+        [[nodiscard]] bool IsValid() const noexcept;
+    };
+
+    // The tick is counted, the frame is the weight, and it repeats for the specified number of loops as an animation counter
     struct AnimeStepper
     {
         int tick{ 0 };
@@ -50,14 +66,19 @@ namespace mm2hack::apps::world::entity::common
             loops = 0;
         }
 
+        // Reset only tick or frame
         void resetTick() noexcept
         {
             tick = 0;
         }
 
+        // Reset only frame
         void resetFrame() noexcept
         {
             frame = 0;
         }
+
+        [[nodiscard]] AnimeStepperState CaptureState() const noexcept;
+        bool RestoreState(const AnimeStepperState& state) noexcept;
     };
 }

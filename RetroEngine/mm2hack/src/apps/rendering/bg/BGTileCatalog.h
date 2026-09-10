@@ -9,13 +9,11 @@
 #pragma once
 
 #include <cstdint>
-#include <functional>
 #include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
 #include <unordered_map>
-#include <utility>
 #include <vector>
 #include "BGTileAtlas.h"
 
@@ -27,20 +25,12 @@ namespace mm2hack::apps::rendering::bg
     public:
         using Id = std::uint32_t;
 
-        struct Events
-        {
-            std::function<void(Id, const std::wstring&)> on_created{};   // after load
-            std::function<void(Id, const std::wstring&)> on_destroyed{}; // before remove
-        };
-
         BGTileCatalog() = default;
-        ~BGTileCatalog();
+        ~BGTileCatalog() = default;
         BGTileCatalog(const BGTileCatalog&) = delete;
         BGTileCatalog& operator=(const BGTileCatalog&) = delete;
         BGTileCatalog(BGTileCatalog&&) noexcept = default;
         BGTileCatalog& operator=(BGTileCatalog&&) noexcept = default;
-
-        void SetEvents(Events e) noexcept { _events = std::move(e); }
 
         // Load BG tileset from PNG+JSON
         Id Load(const std::wstring& name, std::wstring_view png_path, std::wstring_view json_path);
@@ -60,9 +50,6 @@ namespace mm2hack::apps::rendering::bg
         // Clear all
         void Clear();
 
-        // Count
-        [[nodiscard]] std::size_t Size() const noexcept { return _atlases.size(); }
-
         [[nodiscard]] int MaxVariantAcross() const noexcept;
 
     private:
@@ -76,6 +63,5 @@ namespace mm2hack::apps::rendering::bg
 
         std::unordered_map<std::wstring, Id> _name_to_id{};
         std::vector<std::unique_ptr<BGTileAtlas>> _atlases{}; // dense: index==Id
-        Events _events{};
     };
 }

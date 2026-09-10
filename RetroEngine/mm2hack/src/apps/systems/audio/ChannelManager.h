@@ -8,9 +8,11 @@
 //==============================================================================
 #pragma once
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
+
 #include "ISoundChannel.h"
 #include "SoundChannel.h"
 
@@ -31,12 +33,18 @@ namespace mm2hack::apps::systems::audio
         void Play(int channelIndex, bool loop = false);
         // Stop the sound in the specified channel
         void Stop(int channelIndex);
+        // Pause and resume the sound in the specified channel.
+        void Pause(int channelIndex);
+        void Resume(int channelIndex, bool loop);
         // Set volume for the specified channel (0-255)
         void SetVolume(int channelIndex, int volume);
         // Get current volume of the specified channel
         int GetVolume(int channelIndex) const;
         // Check if the specified channel is currently playing
         bool IsPlaying(int channelIndex) const;
+        // Get and set playback position in milliseconds.
+        std::int64_t GetPositionMilliseconds(int channelIndex) const;
+        void SetPositionMilliseconds(int channelIndex, std::int64_t position);
 
         // Start fade effect for the specified channel
         void StartFade(int channelIndex, int targetVolume, int durationFrames);

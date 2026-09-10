@@ -10,7 +10,9 @@
 
 #include <memory>
 #include <string>
+
 #include "apps/resources/ResourceManager.h"
+#include "apps/scenes/IStageAssetProvider.h"
 #include "core/assembly/StateProvider.h"
 #include "StageDefinition.h"
 #include "StageRuntimeContext.h"
@@ -23,7 +25,7 @@ namespace mm2hack::apps::scenes::phases
     {
         std::wstring map_name{};
         int tile_px{};
-        int player_sprite_id{}; // Adjust type to your SpriteManager::Id if needed.
+        const scenes::IStageAssetProvider* asset_provider{ nullptr };
     };
 
     // Builder for Action Stage Runtime Context
@@ -44,14 +46,22 @@ namespace mm2hack::apps::scenes::phases
             core::assembly::StateProvider& input,
             const StageDefinition& def,
             const ActionStageBuildConfig& config,
-            const std::wstring& area_key) const;
+            const std::wstring& area_key
+        ) const;
 
     private:
         const std::wstring kClassName{ L"ActionStageRuntimeBuilder" };
 
-        // Build core systems (map, scrolling, physics)
-        void buildCore_(StageRuntimeContext& ctx, ResourceManager& resource, const StageDefinition& def, const ActionStageBuildConfig& config) const;
-        // Build entities (player, enemies, items, etc.)
-        void buildEntities_(StageRuntimeContext& ctx, const StageDefinition& def, const ActionStageBuildConfig& config) const;
+        void buildCore_(
+            StageRuntimeContext& ctx,
+            ResourceManager& resource,
+            const StageDefinition& def,
+            const ActionStageBuildConfig& config
+        ) const;    // Build core systems (map, scrolling, physics)
+        void buildEntities_(
+            StageRuntimeContext& ctx,
+            const StageDefinition& def,
+            const ActionStageBuildConfig& config
+        ) const;    // Build entities (player, enemies, items, etc.)
     };
 }

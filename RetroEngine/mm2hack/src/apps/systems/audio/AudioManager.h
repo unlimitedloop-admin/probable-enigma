@@ -13,12 +13,15 @@
 #include <string>
 #include <string_view>
 #include <utility>
+
 #include "AudioConfigLoader.h"
 #include "AudioMixer.h"
 #include "BgmManager.h"
+#include "BgmTransportState.h"
 #include "ChannelManager.h"
 #include "config/SoundConfig.h"
 #include "SeManager.h"
+#include "SeTransportState.h"
 #include "SoundChannel.h"
 
 namespace mm2hack::apps::systems::audio
@@ -30,28 +33,49 @@ namespace mm2hack::apps::systems::audio
         AudioManager();
         ~AudioManager() = default;
 
+        // Initialize audio system with configuration file
         bool Initialize(const std::wstring& configPath);
+        // Initialize audio system with configuration file (wstring_view overload)
         bool Initialize(const std::wstring_view configPath);
 
-        // Controlling BGM
+        // ==== Controlling BGM ====
+        // Play the background music by name
         void PlayBgm(const std::wstring& name);
+        // Stop the background music
         void StopBgm();
+        // Fade out the background music over a specified number of frames
         void FadeOutBgm(int frames);
+        // Set the BGM volume (0-100)
         void SetBgmVolume(int volume);
 
-        // Controlling SE
+        // ==== Controlling SE ====
+        // Play the sound effect by name
         void PlaySe(const std::wstring& name);
+        // Stop the sound effect by name
+        void StopSe(const std::wstring& name);
+        // Set the SE volume (0-100)
         void SetSeVolume(int volume);
 
         // Master volume leveling
         void SetMasterVolume(int volume);
-
         // Mute for channels
         void MuteChannel(SoundChip chip, int index, bool mute);
 
-        // Pause / resume BGM and SE
+        // Output current BGM master volume to debug log
+        void OutputBGMMasterVolume();
+
+        // Pause a all sounds
         void Pause();
+        // Resume a all sounds
         void Resume();
+        // Capture, validate, and restore logical BGM transport state.
+        bool CaptureBgmState(BgmTransportState& state) const;
+        bool ValidateBgmState(const BgmTransportState& state) const;
+        bool RestoreBgmState(const BgmTransportState& state);
+        // Capture, validate, and restore configured continuous SE instances.
+        bool CaptureSeState(SeTransportState& state) const;
+        bool ValidateSeState(const SeTransportState& state) const;
+        bool RestoreSeState(const SeTransportState& state);
 
         // Enable / disable all sounds
         void SetEnabled(bool enabled);
@@ -77,16 +101,14 @@ namespace mm2hack::apps::systems::audio
     private:
         const std::wstring kClassName{ L"AudioManager" };
 
-        // Sound engine components
-        ChannelManager _bgmChannels;
-        ChannelManager _seChannels;
-        BgmManager _bgmManager;
-        SeManager _seManager;
-        AudioMixer _mixer;
-
-        AudioConfigLoader _config;
-        bool _enabled = true;
-
+        // ==== Sound engine components ====
+        ChannelManager _bgmChannels;                        // BGM channel manager
+        BgmManager _bgmManager;                             // BGM manager
+        SeManager _seManager;                               // SE manager
+        AudioMixer _mixer;                                  // Audio mixer
+        AudioConfigLoader _config;                          // Audio configuration loader
         std::set<std::pair<SoundChip, int>> _mutedChannels; // Set of muted channels (chip, index)
+
+        bool _enabled = true;
     };
 }

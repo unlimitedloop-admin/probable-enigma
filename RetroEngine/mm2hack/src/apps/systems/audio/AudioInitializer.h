@@ -9,17 +9,20 @@
 #pragma once
 
 #include <string>
-#include "BgmManager.h"
-#include "ChannelManager.h"
-#include "SeManager.h"
 
 namespace mm2hack::apps::systems::audio
 {
+    class BgmManager;
+    class SeManager;
+
     // AudioInitializer is responsible for initializing audio systems
     class AudioInitializer
     {
     public:
-        static bool InitializeAudio(const std::wstring& configPath, BgmManager& bgmManager, SeManager& seManager, ChannelManager& bgmChannels, ChannelManager& seChannels);
+        static bool InitializeAudio(
+            const std::wstring& configPath,
+            BgmManager& bgmManager,
+            SeManager& seManager);
 
     private:
         const std::wstring kClassName{ L"AudioInitializer" };

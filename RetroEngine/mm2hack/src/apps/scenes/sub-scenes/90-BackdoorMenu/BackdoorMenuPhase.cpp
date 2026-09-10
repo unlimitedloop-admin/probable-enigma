@@ -3,12 +3,14 @@
 #include "BackdoorMenuPhase.h"
 
 #include <span>
+
 #include "apps/resources/parameters/Parameters.h"
 #include "apps/scenes/PhaseFadeController.h"
 #include "apps/ui/controls/MenuCursorController.h"
 #include "BackdoorMenu.h"
 #include "BackdoorMenuCatalog.h"
 #include "core/assembly/StateProvider.h"
+#include "core/save/StateIO.h"
 #include "input/Jpbtn.h"
 
 namespace mm2hack::apps::scenes
@@ -63,6 +65,16 @@ namespace mm2hack::apps::scenes
             return BackdoorMenuPhaseId::Credit;
         }
 
+        bool CreditPhase::Save(core::save::StateWriter& writer) const
+        {
+            return writer.Good();
+        }
+
+        bool CreditPhase::Load(core::save::StateReader& reader)
+        {
+            return reader.Good();
+        }
+
         //==============================================================================
         //
         //  TopMenuPhase
@@ -115,6 +127,24 @@ namespace mm2hack::apps::scenes
             return BackdoorMenuPhaseId::TopMenu;
         }
 
+        bool TopMenuPhase::Save(core::save::StateWriter& writer) const
+        {
+            return writer.WriteI32(cursorCtl_.Index());
+        }
+
+        bool TopMenuPhase::Load(core::save::StateReader& reader)
+        {
+            std::int32_t cursor{};
+            if (!reader.ReadI32(cursor) || cursor < 0 ||
+                cursor >= static_cast<std::int32_t>(kTopMenuTitles.size()))
+            {
+                return false;
+            }
+            cursorCtl_.SetIndex(cursor);
+            cursorPos_ = cursorCtl_.Index();
+            return true;
+        }
+
         void TopMenuPhase::DrawMenuItems() const
         {
             auto& fonts = owner.Resource()->GetFontTileManager();
@@ -132,6 +162,11 @@ namespace mm2hack::apps::scenes
         //  InsideMenuPhase
         //
         //==============================================================================
+        InsideMenuPhase::InsideMenuPhase(BackdoorMenu& owner)
+            : InsideMenuPhase(owner, MenuCursor{ {16, 16, 10}, static_cast<int>(kTopMenuTitles.size()) }, 0)
+        {
+        }
+
         InsideMenuPhase::InsideMenuPhase(BackdoorMenu& owner, MenuCursor cursorCtl, int topItemIndex)
             : owner(owner), cursorCtl_(cursorCtl), cursorAnim_(owner.Cursor()), topItemIndex_(topItemIndex)
         {
@@ -216,6 +251,97 @@ namespace mm2hack::apps::scenes
 
         BackdoorMenuPhaseId InsideMenuPhase::Id() const noexcept { return BackdoorMenuPhaseId::InsideMenu; }
 
+        bool InsideMenuPhase::Save(core::save::StateWriter& writer) const
+        {
+            constexpr std::uint32_t kMaximumCrumbs = 1;
+            if (insideStack_.size() > kMaximumCrumbs) return false;
+
+            if (!writer.WriteI32(topItemIndex_) ||
+                !writer.WriteI32(cursorCtl_.Index()) ||
+                !writer.WriteU32(static_cast<std::uint32_t>(defaultBack_)) ||
+                !writer.WriteI32(roomNo_) ||
+                !writer.WriteU32(roomEdit_.active ? 1U : 0U) ||
+                !writer.WriteI32(roomEdit_.digit) ||
+                !writer.WriteI32(roomEdit_.blink) ||
+                !writer.WriteI32(roomEdit_.snapshot) ||
+                !writer.WriteU32(static_cast<std::uint32_t>(insideStack_.size())))
+            {
+                return false;
+            }
+
+            for (const auto& crumb : insideStack_)
+            {
+                if (!writer.WriteI32(crumb.subId) || !writer.WriteI32(crumb.cursor)) return false;
+            }
+            return true;
+        }
+
+        bool InsideMenuPhase::Load(core::save::StateReader& reader)
+        {
+            constexpr std::uint32_t kMaximumCrumbs = 1;
+            std::int32_t top_item{};
+            std::int32_t cursor{};
+            std::uint32_t back_behavior{};
+            std::int32_t room_no{};
+            std::uint32_t room_edit_active{};
+            std::int32_t room_edit_digit{};
+            std::int32_t room_edit_blink{};
+            std::int32_t room_edit_snapshot{};
+            std::uint32_t crumb_count{};
+
+            if (!reader.ReadI32(top_item) || !reader.ReadI32(cursor) ||
+                !reader.ReadU32(back_behavior) || !reader.ReadI32(room_no) ||
+                !reader.ReadU32(room_edit_active) || !reader.ReadI32(room_edit_digit) ||
+                !reader.ReadI32(room_edit_blink) || !reader.ReadI32(room_edit_snapshot) ||
+                !reader.ReadU32(crumb_count) ||
+                top_item < 0 || top_item >= static_cast<std::int32_t>(kTopMenuTitles.size()) ||
+                cursor < 0 || back_behavior > static_cast<std::uint32_t>(BackBehavior::ToTop) ||
+                room_no < 0 || room_no > 99 || room_edit_active > 1 ||
+                room_edit_digit < 0 || room_edit_digit > 1 || room_edit_blink < 0 ||
+                room_edit_snapshot < 0 || room_edit_snapshot > 99 ||
+                crumb_count > kMaximumCrumbs)
+            {
+                return false;
+            }
+
+            std::vector<Crumb> crumbs;
+            crumbs.reserve(crumb_count);
+            for (std::uint32_t i = 0; i < crumb_count; ++i)
+            {
+                std::int32_t sub_id{};
+                std::int32_t crumb_cursor{};
+                if (!reader.ReadI32(sub_id) || !reader.ReadI32(crumb_cursor) ||
+                    sub_id < 0 || sub_id > 1 || crumb_cursor < 0 || crumb_cursor > 1)
+                {
+                    return false;
+                }
+                crumbs.push_back(Crumb{ sub_id, crumb_cursor });
+            }
+
+            if ((!crumbs.empty() && top_item != 3) ||
+                (room_edit_active != 0 && (top_item != 3 || crumbs.size() != 1)))
+            {
+                return false;
+            }
+
+            topItemIndex_ = top_item;
+            defaultBack_ = static_cast<BackBehavior>(back_behavior);
+            roomNo_ = room_no;
+            roomEdit_ = RoomEditState{
+                room_edit_active != 0,
+                room_edit_digit,
+                room_edit_blink,
+                room_edit_snapshot
+            };
+            insideStack_ = std::move(crumbs);
+            BuildPageModel_();
+            ApplyPageLayout_();
+            if (cursor >= cursorCtl_.ItemCount()) return false;
+            cursorCtl_.SetIndex(cursor);
+            cursorPos_ = cursorCtl_.Index();
+            return true;
+        }
+
         void InsideMenuPhase::BuildPageModel_()
         {
             page_ = {};
@@ -245,7 +371,7 @@ namespace mm2hack::apps::scenes
                 break;
             }
 
-            // TODO: Add other inside menu pages
+            // HACK: Add other inside menu pages
 
             case 7: // RESET PARAMETER
                 page_.cursorX = 16; page_.firstY = 16; page_.lineH = 10;
@@ -415,6 +541,7 @@ namespace mm2hack::apps::scenes
 
                     resources::parameters::Parameters p;
                     p = p.With<int>(L"RoomNo", roomNo_);
+                    p = p.With<std::wstring>(L"bgm_key", L"demo_stage_2_bgm");  // HACK: Select BGM for demo stage
                     owner.SetNextScene(GetSceneIDForJumpParameter(insideStack_[0].subId), p);
                 }
             }

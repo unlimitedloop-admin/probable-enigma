@@ -1,24 +1,33 @@
 #include "pch.h"
 
-#include <string_view>
-#include "AudioInitializer.h"
 #include "AudioManager.h"
+
+#include <string_view>
+
+#include "ApuVoice.h"
+#include "AudioInitializer.h"
+#include "BgmTransportState.h"
 #include "ChannelManager.h"
 #include "config/SoundConfig.h"
+#include "SeTransportState.h"
 #include "SoundChannel.h"
+#include "utils/output_debug.h"
 
 namespace mm2hack::apps::systems::audio
 {
     AudioManager::AudioManager()
-        : _bgmChannels(5), _seChannels(8),
-        _bgmManager(_bgmChannels), _seManager(_bgmChannels, 8),
+        : _bgmChannels(static_cast<int>(kApuVoiceCount)),
+        _bgmManager(_bgmChannels), _seManager(),
         _mixer(_bgmManager, _seManager)
     {
+        // Link BGM manager with SE manager.
+        _bgmManager.SetSeManager(&_seManager);
+        _seManager.SetBgmManager(&_bgmManager);
     }
 
     bool AudioManager::Initialize(const std::wstring& configPath)
     {
-        return AudioInitializer::InitializeAudio(configPath, _bgmManager, _seManager, _bgmChannels, _seChannels);
+        return AudioInitializer::InitializeAudio(configPath, _bgmManager, _seManager);
     }
 
     bool AudioManager::Initialize(const std::wstring_view configPath)
@@ -51,6 +60,11 @@ namespace mm2hack::apps::systems::audio
         _seManager.PlaySe(name);
     }
 
+    void AudioManager::StopSe(const std::wstring& name)
+    {
+        _seManager.StopSe(name);
+    }
+
     void AudioManager::SetSeVolume(int volume)
     {
         _mixer.SetSeVolume(toDxVolume_(volume));
@@ -59,6 +73,15 @@ namespace mm2hack::apps::systems::audio
     void AudioManager::SetMasterVolume(int volume)
     {
         _mixer.SetMasterVolume(toDxVolume_(volume));
+    }
+
+    void AudioManager::OutputBGMMasterVolume()
+    {
+        for (int i = 0; i < _bgmChannels.GetChannelCount(); ++i)
+        {
+            int vol = _bgmChannels.GetVolume(i);
+            utils::debug_log(L"[AudioManager] BGM Channel {} Master Volume: {}", i, vol);
+        }
     }
 
     void AudioManager::MuteChannel(SoundChip chip, int index, bool mute)
@@ -81,6 +104,36 @@ namespace mm2hack::apps::systems::audio
         _seManager.Resume();
     }
 
+    bool AudioManager::CaptureBgmState(BgmTransportState& state) const
+    {
+        return _bgmManager.CaptureState(state);
+    }
+
+    bool AudioManager::ValidateBgmState(const BgmTransportState& state) const
+    {
+        return _bgmManager.ValidateState(state);
+    }
+
+    bool AudioManager::RestoreBgmState(const BgmTransportState& state)
+    {
+        return _bgmManager.RestoreState(state);
+    }
+
+    bool AudioManager::CaptureSeState(SeTransportState& state) const
+    {
+        return _seManager.CaptureState(state);
+    }
+
+    bool AudioManager::ValidateSeState(const SeTransportState& state) const
+    {
+        return _seManager.ValidateState(state);
+    }
+
+    bool AudioManager::RestoreSeState(const SeTransportState& state)
+    {
+        return _seManager.RestoreState(state);
+    }
+
     void AudioManager::SetEnabled(bool enabled)
     {
         _mixer.SetEnabled(enabled);
@@ -96,17 +149,14 @@ namespace mm2hack::apps::systems::audio
 
     void AudioManager::Update()
     {
-        _bgmManager.Update();
         _seManager.Update();
+        _bgmManager.Update();
     }
 
     void AudioManager::Release()
     {
-        _bgmManager.Stop();
-        _seManager.StopAll();
-
-        _bgmChannels.Clear();
-        _seChannels.Clear();
+        _bgmManager.Release();
+        _seManager.Release();
     }
 
     int AudioManager::toDxVolume_(int uiVolume)

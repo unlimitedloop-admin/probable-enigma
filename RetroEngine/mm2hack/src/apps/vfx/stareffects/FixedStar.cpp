@@ -2,8 +2,7 @@
 
 #include "FixedStar.h"
 
-#include "apps/runtime/GameContext.h"
-#include "Star.h"
+#include "apps/rendering/sprite/SpriteManager.h"
 #include "StarState.h"
 
 namespace mm2hack::apps::vfx::stareffects
@@ -16,11 +15,10 @@ namespace mm2hack::apps::vfx::stareffects
     {
     }
 
-    void FixedStar::Draw() const
+    void FixedStar::Draw(const rendering::sprite::SpriteManager& sprites,
+                         rendering::sprite::SpriteManager::Id sprite_id) const
     {
-        auto& context = runtime::GameContext::GetInstance();
-        auto& sprites = context.GetResourceManager().GetSpriteManager();
-        sprites.UseByName(std::wstring(kStarSpriteName), _tileIndex, static_cast<int>(_x), static_cast<int>(_y));
+        sprites.UseById(sprite_id, _tileIndex, static_cast<int>(_x), static_cast<int>(_y));
     }
 
     FixedStarState FixedStar::ToState() const

@@ -8,9 +8,9 @@
 //==============================================================================
 #pragma once
 
-#include <functional>
 #include <optional>
 #include <queue>
+#include <type_traits>
 #include <unordered_map>
 
 #include "apps/foundation/math/CoordinateTypes.h"

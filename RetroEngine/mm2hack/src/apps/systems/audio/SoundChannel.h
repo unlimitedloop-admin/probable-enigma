@@ -10,8 +10,9 @@
 
 #include "ISoundChannel.h"
 
+#include <cstdint>
 #include <string>
-#include <Windows.h>
+
 #include "config/SystemConfig.h"
 
 namespace mm2hack::apps::systems::audio
@@ -47,10 +48,9 @@ namespace mm2hack::apps::systems::audio
         int  GetVolume() const override;
         // Check if the sound is playing
         bool IsPlaying() const override;
-        // Get the current position in the sound (in frames)
-        LONGLONG GetPosition() const;
-        // Set the current position in the sound (in frames)
-        void SetPosition(LONGLONG pos) const;
+        // Get and set the logical playback position in milliseconds.
+        std::int64_t GetPositionMilliseconds() const override;
+        void SetPositionMilliseconds(std::int64_t position) override;
 
         // Start fade (change to targetVolume over durationFrames)
         void StartFade(int targetVolume, int durationFrames) override;
@@ -71,7 +71,7 @@ namespace mm2hack::apps::systems::audio
 
         int _handle = -1;
         int _volume = MAX_VOLUME;
-        LONGLONG _pausedPos = 0;
+        std::int64_t _paused_position_milliseconds = 0;
         bool _wasPaused = false;
 
         // Additional fade control variables

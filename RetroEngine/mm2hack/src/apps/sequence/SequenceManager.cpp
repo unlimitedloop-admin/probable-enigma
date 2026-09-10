@@ -3,11 +3,13 @@
 #include "SequenceManager.h"
 
 #include "apps/runtime/GameContext.h"
+#include "apps/scenes/SceneManager.h"
 #include "core/GameState.h"
 #include "core/GameStateManager.h"
 #include "core/overlay/DebugHud.h"
 #include "core/overlay/InputConfigOverlay.h"
 #include "core/overlay/PauseManager.h"
+#include "core/save/SaveData.h"
 #include "DebugSequence.h"
 #include "StandardSequence.h"
 #include "test/TestSequence.h"
@@ -71,20 +73,57 @@ namespace mm2hack::apps::sequence
         }
     }
 
-    void SequenceManager::LoadSequence(const SequenceType type)
+    bool SequenceManager::LoadState(const core::save::SaveData& data)
     {
-        utils::debug_log(L"Load sequence from sav file.");
-
-        switch (type)
+        const auto requested_type = static_cast<SequenceType>(data.sequenceID);
+        if (requested_type != SequenceType::Standard && requested_type != SequenceType::Debug)
         {
-        case SequenceType::Standard:
-            StartStandardSequence();
-            break;
-        case SequenceType::Debug:
-            StartDebugSequence();
-            break;
-        default:
-            break;
+            return false;
+        }
+        // No Standard-sequence scene currently publishes a snapshot schema.
+        if (requested_type == SequenceType::Standard)
+        {
+            return false;
+        }
+
+        if (!scenes::SceneManager::ValidateState(data))
+        {
+            return false;
+        }
+
+        if (tryLoadValidatedSnapshot_(data)) return true;
+
+        Release();
+        utils::debug_log(L"Validated state could not be applied to the rebuilt runtime.");
+        return false;
+    }
+
+    bool SequenceManager::tryLoadValidatedSnapshot_(const core::save::SaveData& data) noexcept
+    {
+        try
+        {
+            const auto requested_type = static_cast<SequenceType>(data.sequenceID);
+            if (requested_type != _sequenceType || !_currentSequence)
+            {
+                switch (requested_type)
+                {
+                case SequenceType::Standard:
+                    StartStandardSequence();
+                    break;
+                case SequenceType::Debug:
+                    StartDebugSequence();
+                    break;
+                default:
+                    return false;
+                }
+            }
+
+            return _currentSequence != nullptr && _sequenceType == requested_type &&
+                _currentSequence->Load(data);
+        }
+        catch (...)
+        {
+            return false;
         }
     }
 

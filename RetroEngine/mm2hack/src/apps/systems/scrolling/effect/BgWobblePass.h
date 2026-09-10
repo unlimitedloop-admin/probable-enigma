@@ -8,6 +8,7 @@
 //==============================================================================
 #pragma once
 
+#include <string>
 #include "BgWobble2D.h"
 
 namespace mm2hack::apps::systems::scrolling::effect

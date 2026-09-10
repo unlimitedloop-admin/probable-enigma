@@ -10,6 +10,7 @@
 #include "apps/systems/scrolling/atomic/Camera.h"
 #include "apps/systems/scrolling/atomic/ScrollController.h"
 #include "apps/world/entity/avatar/PlayerEntity.h"
+#include "apps/world/entity/EntityManager.h"
 #include "apps/world/stage/RoomGraphAdapter.h"
 #include "config/SystemConfig.h"
 #include "core/assembly/StateProvider.h"
@@ -36,7 +37,12 @@ namespace mm2hack::apps::scenes::phases
         return ctx;
     }
 
-    void ActionStageRuntimeBuilder::buildCore_(StageRuntimeContext& ctx, ResourceManager& resource, const StageDefinition& def, const ActionStageBuildConfig& config) const
+    void ActionStageRuntimeBuilder::buildCore_(
+        StageRuntimeContext& ctx,
+        ResourceManager& resource,
+        const StageDefinition& def,
+        const ActionStageBuildConfig& config
+    ) const
     {
         using resources::bg::AddressScraper;
         using resources::bg::MapPageCache;
@@ -70,11 +76,11 @@ namespace mm2hack::apps::scenes::phases
         ctx.renderer = std::make_unique<MapRenderer2D>(
             resource,
             config.map_name,
-            def.map_binary_path,
+            ctx.page_source,
             config.tile_px
         );
 
-        ScrollController::Params p{};
+        ScrollController::Params p{};   // Use default params
         ctx.scroll = std::make_unique<ScrollController>(*ctx.rules, *ctx.renderer, p);
         ctx.scroll->SetPageIndex(static_cast<std::size_t>(def.start_page_index));
         ctx.scroll->ObjectPos() = {
@@ -83,7 +89,7 @@ namespace mm2hack::apps::scenes::phases
         };
 
         // 4) Tile map provider / terrain probe / ladder
-        ctx.map_provider = std::make_unique<rendering::bg::BGTileMapProvider>(bg_mgr, ctx.page_source);
+        ctx.map_provider = std::make_unique<rendering::bg::BGTileMapProvider>(*bg_mgr, ctx.page_source);
 
         ctx.terrain_probe = std::make_unique<systems::physics::TileQueryService>(
             *ctx.map_provider,
@@ -95,17 +101,33 @@ namespace mm2hack::apps::scenes::phases
         ctx.ladder_service = std::make_unique<systems::physics::LadderService>(*ctx.terrain_probe);
     }
 
-    void ActionStageRuntimeBuilder::buildEntities_(StageRuntimeContext& ctx, const StageDefinition& def, const ActionStageBuildConfig& config) const
+    void ActionStageRuntimeBuilder::buildEntities_(
+        StageRuntimeContext& ctx,
+        const StageDefinition& def,
+        const ActionStageBuildConfig& config
+    ) const
     {
+        using world::entity::EntityManager;
         using world::entity::avatar::PlayerEntity;
 
-        // TODO: directly create player here (will migrate to EntityManager later)
-        ctx.player = std::make_unique<PlayerEntity>(config.player_sprite_id);
+        ctx.asset_provider = config.asset_provider;
+        ctx.entity_mgr = std::make_unique<EntityManager>();
 
-        ctx.player->SetTerrainProbe(ctx.terrain_probe.get());
-        ctx.player->SetLadderService(ctx.ladder_service.get());
-        ctx.player->SetScrollContext(ctx.rules.get(), ctx.scroll->PageIndex());
+        const auto player_sprite = ctx.asset_provider->PlayerSprite();
+        const auto player_charge_level1_sprite = ctx.asset_provider->PlayerChargeLevel1Sprite();
+        const auto player_charge_level2_sprite = ctx.asset_provider->PlayerChargeLevel2Sprite();
+        const auto player_attack_sprite = ctx.asset_provider->PlayerAttackSprite();
+        const auto effects_sprite = ctx.asset_provider->EffectsSprite();
+        auto* player = &ctx.entity_mgr->Spawn<PlayerEntity>(
+            player_sprite,
+            player_attack_sprite,
+            effects_sprite,
+            player_charge_level1_sprite,
+            player_charge_level2_sprite);
 
+        player->SetTerrainProbe(ctx.terrain_probe.get());
+        player->SetLadderService(ctx.ladder_service.get());
+        player->SetScrollContext(ctx.rules.get(), ctx.scroll->PageIndex());
         // Convert local start pos -> world pos on start page
         // NOTE: function name in your code is ToWorldPosOnPage(...)
         if (ctx.page_grid)
@@ -113,18 +135,18 @@ namespace mm2hack::apps::scenes::phases
             const int page = static_cast<int>(ctx.scroll->PageIndex());
             if (const auto world_pos = ctx.page_grid->ToWorldPosOnPage(page, def.start_local_pos))
             {
-                ctx.player->pos = *world_pos;
+                player->pos = *world_pos;
             }
             else
             {
-                ctx.player->pos = def.start_local_pos; // fallback
+                player->pos = def.start_local_pos; // fallback
             }
         }
         else
         {
-            ctx.player->pos = def.start_local_pos; // fallback
+            player->pos = def.start_local_pos; // fallback
         }
 
-        ctx.player->texture = 1;
+        player->texture = 0;
     }
 }

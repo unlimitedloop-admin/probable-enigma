@@ -11,9 +11,9 @@
 #include "apps/systems/physics/ITerrainProbe.h"
 
 #include <array>
-#include <cstdlib>
 #include <optional>
 #include <string>
+
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/systems/physics/ITileMapProvider.h"
 #include "apps/world/entity/avatar/AvatarStatus.h"

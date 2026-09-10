@@ -2,21 +2,34 @@
 
 #include "MapRenderer2D.h"
 
+#include "apps/resources/bg/IMapPageSource.h"
 #include "apps/resources/ResourceManager.h"
 #include "ScrollTypes.h"
 
 namespace mm2hack::apps::systems::scrolling::atomic
 {
-    static inline int PageBase(int page_index)
-    {
-        using conf = config::SystemConfig;
-        return page_index * conf::kMapBinaryUnitPageSize + conf::kMapBinaryHeaderSize;
-    }
-
     void MapRenderer2D::DrawPage(std::size_t page_index, int dx, int dy)
     {
+        if (!_page_source)
+        {
+            return;
+        }
+
+        constexpr std::size_t kPageTileCount =
+            static_cast<std::size_t>(conf::kTileCountX * conf::kTileCountY);
+        std::array<std::uint8_t, kPageTileCount> page_tiles{};
+
+        if (!_page_source->CopyPageTiles(page_index, page_tiles))
+        {
+            return;
+        }
+
         auto& bg = _res_mgr.GetBGTileManager();
-        bg.LoadMapBinary(_map_bin_path, PageBase(static_cast<int>(page_index)));
+        if (!bg.SetMapTiles(page_tiles))
+        {
+            return;
+        }
+
         bg.DrawMapByName(_map_name, conf::kTileSizeWidth, conf::kTileSizeHeight, dx, dy);
     }
 

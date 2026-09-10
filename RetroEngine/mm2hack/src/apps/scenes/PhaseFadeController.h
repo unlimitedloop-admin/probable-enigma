@@ -48,6 +48,9 @@ namespace mm2hack::apps::scenes
         void Update(ResourceManager& res);
         // Request fade-out (only effective when in Interactive state)
         void RequestFadeOut(ResourceManager& res);
+        // Restore a stable, fully visible phase after loading a snapshot captured
+        // at an interactive frame boundary.
+        void RestoreInteractive(ResourceManager& res);
 
         // ----- Getters -----
         [[nodiscard]] inline bool InputEnabled() const noexcept { return _state == State::Interactive; }

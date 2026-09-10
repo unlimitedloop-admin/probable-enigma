@@ -11,10 +11,10 @@
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/systems/physics/ILadderService.h"
 #include "apps/systems/scrolling/atomic/IScrollRuleProvider.h"
-#include "apps/systems/scrolling/atomic/ScrollController.h"
 #include "apps/systems/scrolling/atomic/ScrollTypes.h"
 #include "apps/world/entity/common/AnimeStepper.h"
 #include "AvatarStatus.h"
+#include "PlayerFrameOutput.h"
 
 namespace mm2hack::apps::systems::physics
 {
@@ -25,7 +25,6 @@ namespace mm2hack::apps::systems::physics
 namespace mm2hack::apps::world::entity::avatar
 {
     using common::AnimeStepper;
-    using foundation::math::RectF;
     using foundation::math::Vec2;
     using systems::physics::ILadderService;
     using systems::physics::ITerrainProbe;
@@ -45,7 +44,6 @@ namespace mm2hack::apps::world::entity::avatar
     // Context passed to player state handlers
     struct PlayerContext
     {
-        // Needed status for avatar state updates
         Vec2& pos;                                          // x/y position
         Vec2& vel;                                          // x/y velocity
         bool& onGround;                                     // Is the avatar on the ground?
@@ -53,22 +51,37 @@ namespace mm2hack::apps::world::entity::avatar
         bool isHitCeiling{ false };                         // Is the avatar hitting the ceiling?
         const bool prevOnGround{ false };                   // Was the avatar on the ground previous frame?
         AvatarDirection& facingLR;                          // avatar facing direction (-1: left, +1: right)
-        int& texture;                                       // tile index for rendering
+        int basePose{ 0 };                                 // Base pose for the avatar
+        int textureAdd{ 0 };                                // Texture index addition for rendering
 
         AnimeStepper& animeStepper;                         // Animation counter (local)
         Probes& probes;                                     // All probes
         Probes& prelimProbes;                               // Preliminary probes before movement
-        RectF bounds;                                       // Get bounding box for convenience
         Vec2 pageOriginPx;                                  // Current page origin in world px
 
         const ITerrainProbe* terrain;                       // Look up interface for terrain probing
         ILadderService* ladder{ nullptr };                  // Laddering service module
+        bool lockClimbMove{ false };                        // Lock climbing movement (for laddering state)
 
         WorldBounds vBounds;                                // VRAM area boundaries
         const IScrollRuleProvider* scrollRules{ nullptr };  // Scroll rule provider
         std::size_t scrollPageIndex{ 0 };                   // Current page index for scrolling
 
         FixedScrollRequest pendingFixedScroll{};            // Pending fixed scroll request
+
+        // Jump button edge for this state Update() call. Equivalent to StateProvider::JustPressed(JPBTN::A)
+        // in every normal case; while underwater physics-skip is active, PlayerEntity latches a press that
+        // landed on a skipped tick and reports it here on the next tick that actually runs, so a jump input
+        // is never silently dropped by the skip gate. States should read this instead of calling
+        // in->JustPressed(JPBTN::A) directly.
+        bool jumpEdge{ false };
+
+        // Dash button edge for this state Update() call. As with jumpEdge,
+        // presses that occur on an underwater physics-skip tick are latched by
+        // PlayerEntity and delivered on the next locomotion update.
+        bool dashEdge{ false };
+
+        PlayerFrameOutput& output;                           // Events and commands emitted by state processing
     };
 
     // Simplified context for animation abilities
@@ -76,6 +89,13 @@ namespace mm2hack::apps::world::entity::avatar
     {
         AnimeStepper& animeStepper;                         // Animation counter (local)
         AvatarDirection& facingLR;                          // avatar facing direction (-1: left, +1: right)
-        int& texture;                                       // tile index for rendering
+        int& basePose;                                     // Base pose for rendering
+        int& textureAdd;                                    // Texture index addition for rendering
+    };
+
+    // Extended context for entity-level data struct (snapshots)
+    struct ExPlayerContextForEntity
+    {
+        bool canSpawnProjectile{ true };                    // Whether the player can spawn projectiles now
     };
 }

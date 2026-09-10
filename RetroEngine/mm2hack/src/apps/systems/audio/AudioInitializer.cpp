@@ -2,14 +2,18 @@
 
 #include "AudioInitializer.h"
 
+#include "ApuVoice.h"
 #include "AudioConfigLoader.h"
 #include "BgmManager.h"
-#include "ChannelManager.h"
 #include "SeManager.h"
+#include "SePriority.h"
 
 namespace mm2hack::apps::systems::audio
 {
-    bool AudioInitializer::InitializeAudio(const std::wstring& configPath, BgmManager& bgmManager, SeManager& seManager, ChannelManager& bgmChannels, ChannelManager& seChannels)
+    bool AudioInitializer::InitializeAudio(
+        const std::wstring& configPath,
+        BgmManager& bgmManager,
+        SeManager& seManager)
     {
         AudioConfigLoader loader;
         if (!loader.LoadFromFile(configPath))
@@ -22,20 +26,17 @@ namespace mm2hack::apps::systems::audio
         {
             std::vector<std::wstring> filepaths;
             std::vector<int> volumes;
+            std::vector<ApuVoice> voices;
             for (const auto& ch : config.channels)
             {
                 filepaths.push_back(ch.file);
                 volumes.push_back(ch.volume);
+                voices.push_back(ch.voice);
             }
-            bgmManager.RegisterBgm(name, filepaths, volumes, config.loopStart, config.loopEnd);
-
-            // Initial volume settings.
-            for (size_t i = 0; i < config.channels.size(); ++i)
+            if (!bgmManager.RegisterBgm(
+                name, filepaths, volumes, voices, config.loopStart, config.loopEnd))
             {
-                if (i < static_cast<size_t>(bgmChannels.GetChannelCount()))
-                {
-                    bgmChannels.SetVolume(static_cast<int>(i), config.channels[i].volume);
-                }
+                return false;
             }
         }
 
@@ -44,22 +45,26 @@ namespace mm2hack::apps::systems::audio
         {
             std::vector<std::wstring> filepaths;
             std::vector<int> volumes;
-            std::vector<int> targetBgmChannels;
+            std::vector<ApuVoice> voices;
+            std::vector<SePriority> priorities;
             for (const auto& ch : config.channels)
             {
                 filepaths.push_back(ch.file);
                 volumes.push_back(ch.volume);
-                targetBgmChannels.push_back(ch.target_bgm_channels);
+                voices.push_back(ch.voice);
+                priorities.push_back(ch.priority);
             }
-            seManager.LoadSe(name, filepaths, volumes, targetBgmChannels);
-
-            // Initial volume settings.
-            for (size_t i = 0; i < config.channels.size(); ++i)
+            if (!seManager.LoadSe(
+                name,
+                filepaths,
+                volumes,
+                voices,
+                priorities,
+                config.loopStart,
+                config.loopEnd,
+                config.restorePolicy))
             {
-                if (i < static_cast<size_t>(seChannels.GetChannelCount()))
-                {
-                    seChannels.SetVolume(static_cast<int>(i), config.channels[i].volume);
-                }
+                return false;
             }
         }
 

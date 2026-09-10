@@ -9,6 +9,7 @@
 #pragma once
 
 #include <string>
+
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "ScrollTypes.h"
 
@@ -41,6 +42,7 @@ namespace mm2hack::apps::systems::scrolling::atomic
 
         // Set scroll speed (px/frame)
         void SetSpeed(double px_per_frame) noexcept { _pg.speed = px_per_frame; }
+        void RestoreState(const PageScroll& state) noexcept { _pg = state; }
 
     private:
         const std::wstring kClassName{ L"PageScrollAnimator" };

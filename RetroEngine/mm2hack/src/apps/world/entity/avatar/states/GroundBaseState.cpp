@@ -3,12 +3,10 @@
 #include "GroundBaseState.h"
 
 #include <cstdlib>
+
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/systems/physics/ILadderService.h"
 #include "apps/systems/physics/ITerrainProbe.h"
-#include "apps/systems/physics/PageGridIndex.h"
-#include "apps/systems/scrolling/atomic/ScrollController.h"
-#include "apps/systems/scrolling/atomic/ScrollTypes.h"
 #include "apps/world/entity/avatar/abilities/MovementAbilities.h"
 #include "apps/world/entity/avatar/AvatarStatus.h"
 #include "apps/world/entity/avatar/PlayerContext.h"
@@ -18,12 +16,69 @@
 
 namespace mm2hack::apps::world::entity::avatar::states
 {
-    void GroundBaseState::GroundPipeline(PlayerContext& cx, StateProvider* in, const PlayerTuning& t, GroundMoveIntent intent)
+    std::optional<AvatarStatus> GroundBaseState::UpdateGroundState(
+        PlayerContext& cx,
+        StateProvider* in,
+        const PlayerTuning& t,
+        GroundMoveIntent intent)
     {
         using namespace abilities;
-        using namespace systems::scrolling::atomic;
-        using PageDir = PageScroll::Dir;
-        using PageGridIndex = systems::physics::PageGridIndex;
+
+        if (tryEnterDashing_(cx))
+        {
+            return AvatarStatus::Dashing;
+        }
+
+        if (tryEnterLadderFromGround_(cx, in))
+        {
+            return AvatarStatus::Laddering;
+        }
+
+        groundPipeline_(cx, in, t, intent);
+
+        if (!cx.onGround)
+        {
+            cx.animeStepper.reset();
+            cx.basePose = static_cast<int>(STile::Airpause);
+            return AvatarStatus::Hovering;
+        }
+
+        if (cx.jumpEdge && do_jump(cx, t))
+        {
+            cx.basePose = static_cast<int>(STile::Airpause);
+            return AvatarStatus::Hovering;
+        }
+
+        return std::nullopt;
+    }
+
+    void GroundBaseState::UpdateFacing(AnimeContext& ax, StateProvider* in) const noexcept
+    {
+        if (in->IsPressed(JPBTN::LEFT))
+        {
+            ax.facingLR = AvatarDirection::Left;
+        }
+        if (in->IsPressed(JPBTN::RIGHT))
+        {
+            ax.facingLR = AvatarDirection::Right;
+        }
+    }
+
+    bool GroundBaseState::tryEnterDashing_(PlayerContext& cx) const
+    {
+        const bool triggered = cx.onGround && cx.dashEdge;
+        if (triggered)
+        {
+            // A locomotion transition is committed after this frame's state
+            // update. Do not apply a residual landing velocity in the meantime.
+            cx.vel.y = 0.0;
+        }
+        return triggered;
+    }
+
+    void GroundBaseState::groundPipeline_(PlayerContext& cx, StateProvider* in, const PlayerTuning& t, GroundMoveIntent intent)
+    {
+        using namespace abilities;
 
         // Update facing.
         if (in->IsPressed(JPBTN::LEFT)) { cx.facingLR = AvatarDirection::Left; }
@@ -35,9 +90,6 @@ namespace mm2hack::apps::world::entity::avatar::states
         // X-axis ground movement. Check horizontal collisions.
         const double dx = intent.speed * static_cast<double>(intent.dirSign);
 
-        // Save the front-probe X BEFORE movement for boundary-cross detection (world space). (Unused?)
-        //const double prevFrontX = cx.probes.frontLine.middlePoint.x;
-
         auto hHit = cx.terrain->SweepHorizontal(cx.probes, dx);
         if (hHit.hit)
         {
@@ -45,57 +97,12 @@ namespace mm2hack::apps::world::entity::avatar::states
         }
 
         // Apply velocity based on updated intent.
-        ApplyGroundMove(cx, intent);
+        apply_ground_move(cx, intent);
 
-        // ---- Fixed page scroll request by boundary crossing (NOT by hit) ----
-        // We base this on the movement that will actually happen this frame.
-        if (intent.active)
-        {
-            constexpr double kTriggerGapPx = 14.0;
-
-            // actual movement direction for this frame
-            const double actualDx = intent.speed * static_cast<double>(intent.dirSign);
-
-            if (cx.pendingFixedScroll.available && actualDx > 0.0)
-            {
-                // world pos.s
-                const double frontX = cx.probes.frontLine.middlePoint.x;
-                const double rightEdge = cx.vBounds.rightX;
-
-                // only when the probe reaches near the edge
-                if ((rightEdge - frontX) <= kTriggerGapPx)
-                {
-                    // only if the neighbor is FixedPage
-                    if (cx.scrollRules && IsFixedScroll(cx.scrollRules->RightType(cx.scrollPageIndex)))
-                    {
-                        FixedScrollRequest req{};
-                        req.dir = PageScroll::Dir::Right;
-                        req.carryTotalPx = 48.0;
-                        cx.pendingFixedScroll = req;
-                    }
-                }
-            }
-            else if (cx.pendingFixedScroll.available && actualDx < 0.0)
-            {
-                // world pos.
-                const double frontX = cx.probes.frontLine.middlePoint.x;
-                const double leftEdge = cx.vBounds.leftX;
-
-                if ((frontX - leftEdge) <= kTriggerGapPx)
-                {
-                    if (cx.scrollRules && IsFixedScroll(cx.scrollRules->LeftType(cx.scrollPageIndex)))
-                    {
-                        FixedScrollRequest req{};
-                        req.dir = PageScroll::Dir::Left;
-                        req.carryTotalPx = 48.0;
-                        cx.pendingFixedScroll = req;
-                    }
-                }
-            }
-        }
+        try_request_horizontal_fixed_scroll(cx, cx.vel.x);
 
         // Y-axis vertical speed preparation.
-        AdjustVerticalSpeedForGravity(cx, t);
+        adjust_vertical_speed_for_gravity(cx, t);
         
         // Update onGround status. check vertical collisions.
         auto vHit = cx.terrain->SweepVertical(cx.probes, cx.vel);
@@ -111,7 +118,7 @@ namespace mm2hack::apps::world::entity::avatar::states
         cx.justLanded = (!cx.prevOnGround && cx.onGround);
     }
 
-    bool GroundBaseState::TryEnterLadderFromGround(PlayerContext& cx, StateProvider* in) const
+    bool GroundBaseState::tryEnterLadderFromGround_(PlayerContext& cx, StateProvider* in) const
     {
         if (cx.ladder == nullptr)
         {

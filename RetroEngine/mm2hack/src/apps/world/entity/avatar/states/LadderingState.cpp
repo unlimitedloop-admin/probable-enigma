@@ -3,6 +3,7 @@
 #include "LadderingState.h"
 
 #include <cmath>
+
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/systems/physics/ILadderService.h"
 #include "apps/systems/physics/ITerrainProbe.h"
@@ -41,7 +42,12 @@ namespace mm2hack::apps::world::entity::avatar::states
         }
         snapToLadderCenter_(cx, t); // Align avatar's X-position to ladder center on entry.
 
-        cx.texture = static_cast<int>(STile::LadderingA);
+        // FromTopDown applies its entry velocity in the transition frame, before
+        // LadderingState::Update() runs for the first time. Request fixed scrolling
+        // here so that the entry movement cannot cross into the next page first.
+        checkFixedScrollRequest_(cx, cx.vel.y);
+
+        cx.basePose = static_cast<int>(STile::LadderingA);
         cx.animeStepper.reset();
         cx.ladder->setEntryKind(LadderEntryKind::None);
     }
@@ -60,50 +66,20 @@ namespace mm2hack::apps::world::entity::avatar::states
         const bool up = in->IsPressed(JPBTN::UP);
         const bool down = in->IsPressed(JPBTN::DOWN);
 
-        const auto fixedScrollLk = [&]()
-            {
-                using conf = config::SystemConfig;
-                const double actualDy = cx.vel.y;
-                if (cx.pendingFixedScroll.available && actualDy != 0.0)
-                {
-                    const int page_w = conf::kTileCountX * conf::kTileSize;
-                    const int page_h = conf::kTileCountY * conf::kTileSize;
-
-                    // World Y of the probes before and after movement.
-                    const double probePrevWorldY = cx.prelimProbes.behindGround.middlePoint.y;
-                    const double probeCurrWorldY = cx.probes.behindGround.middlePoint.y + actualDy;
-
-                    const auto origin = cx.pageOriginPx;
-                    const double prevLocalY = probePrevWorldY - origin.y;
-                    const double currLocalY = probeCurrWorldY - origin.y;
-
-                    if (actualDy < 0.0)
-                    {
-                        // Up: cross local 0
-                        if (prevLocalY >= 0.0 && currLocalY < 0.0)
-                        {
-                            FixedScrollRequest req{};
-                            req.dir = PageScroll::Dir::Up;
-                            req.carryTotalPx = 0x06.00p0;
-                            cx.pendingFixedScroll = req;
-                        }
-                    }
-                    else if (actualDy > 0.0)
-                    {
-                        // Down: cross local 240
-                        if (prevLocalY < static_cast<double>(page_h) && currLocalY >= static_cast<double>(page_h))
-                        {
-                            FixedScrollRequest req{};
-                            req.dir = PageScroll::Dir::Down;
-                            req.carryTotalPx = 0x01.00p0;
-                            cx.pendingFixedScroll = req;
-                        }
-                    }
-                }
-            };
+        const double intendedDy =
+            (up && !down) ? -t.climbSpeed :
+            (down && !up) ? +t.climbSpeed :
+                            0.0;
 
         // Always snap X to ladder center (warp is allowed)
         snapToLadderCenter_(cx, t);
+
+        // Check the page transition before losing the ladder. Attack actions lock
+        // climbing movement, so only movement that can actually occur is considered.
+        if (!cx.lockClimbMove)
+        {
+            checkFixedScrollRequest_(cx, intendedDy);
+        }
 
         // If ladder lost: fall
         if (!isOnLadder_(cx, t))
@@ -115,9 +91,13 @@ namespace mm2hack::apps::world::entity::avatar::states
         cx.vel.x = 0.0;
         cx.vel.y = 0.0;
 
-        if (up && !down)
+        if (cx.lockClimbMove)
         {
-            cx.vel.y = -t.climbSpeed;
+            cx.vel.y = 0.0;
+        }
+        else if (up && !down)
+        {
+            cx.vel.y = intendedDy;
             auto vHit = cx.terrain->SweepVertical(cx.probes, cx.vel);
             if (vHit.hit && vHit.kind == systems::physics::VHitKind::Ceiling)
             {
@@ -126,12 +106,12 @@ namespace mm2hack::apps::world::entity::avatar::states
             }
             else
             {
-                fixedScrollLk();    // Handle fixed scrolling when climbing up
+                // Movement is allowed; fixed-scroll request is evaluated below.
             }
         }
         else if (down && !up)
         {
-            cx.vel.y = +t.climbSpeed;
+            cx.vel.y = intendedDy;
             auto vHit = cx.terrain->SweepVertical(cx.probes, cx.vel);
             if (vHit.hit && vHit.kind == systems::physics::VHitKind::Floor)
             {
@@ -145,30 +125,30 @@ namespace mm2hack::apps::world::entity::avatar::states
             }
             else
             {
-                fixedScrollLk();    // Handle fixed scrolling when climbing down
+                // Movement is allowed; fixed-scroll request is evaluated below.
             }
         }
         // !up && !down -> vel.y = 0.0, and 
         else
         {
             cx.vel.y = 0.0;
-            // Jump -> Hovering (use existing DoJump)
-            if (in->JustPressed(JPBTN::A))
+            // Jump -> Hovering (use existing do_jump)
+            if (cx.jumpEdge)
             {
-                UpdateVerticalVelocity(cx, t, false);   // Start falling
+                update_vertical_velocity(cx, t, false);   // Start falling
                 return AvatarStatus::Hovering;
             }
         }
 
         // Rising to ground at ladder top (original-like rule)
-        if (up && shouldRisingToGround_(cx))
+        if (!cx.lockClimbMove && up && shouldRisingToGround_(cx))
         {
             doRisingToGround_(cx);
             return AvatarStatus::Standing;
         }
 
         auto [input, isTopAttrEmpty] = computeInputAndTopEmpty_(cx, in);
-        LadderingAnim(cx, input, isTopAttrEmpty);
+        laddering_anim(cx, input, isTopAttrEmpty);
         return AvatarStatus::Laddering;
     }
 
@@ -176,7 +156,7 @@ namespace mm2hack::apps::world::entity::avatar::states
     {
         using namespace abilities;
 
-        LadderingAnim(ax);  // Not move on its own.
+        laddering_anim(ax);  // Not move on its own.
     }
 
     bool LadderingState::isOnLadder_(const PlayerContext& cx, const PlayerTuning& t) const noexcept
@@ -251,8 +231,8 @@ namespace mm2hack::apps::world::entity::avatar::states
         cx.onGround = true;
         cx.justLanded = true;
 
-        cx.facingLR = OppositeFacingDirection(cx.facingLR);
-        cx.texture = static_cast<int>(STile::StandingA) + FacingDirection(cx.texture, cx.facingLR);
+        cx.facingLR = opposite_facing_direction(cx.facingLR);
+        cx.basePose = static_cast<int>(STile::StandingA);
     }
 
     void LadderingState::buildGrabCandidates_(Vec2 out[9], const PlayerContext& cx, const PlayerTuning& t) const noexcept
@@ -285,5 +265,61 @@ namespace mm2hack::apps::world::entity::avatar::states
         const int input = (up && !down) ? -1 : ((down && !up) ? +1 : 0);
 
         return { input, isTopAttrEmpty };
+    }
+
+    void LadderingState::checkFixedScrollRequest_(PlayerContext& cx, const double intendedDy) const noexcept
+    {
+        using conf = config::SystemConfig;
+        using systems::scrolling::atomic::FixedScrollRequest;
+        using systems::scrolling::atomic::PageScroll;
+
+        // Fixed-page scroll is available only while the player belongs
+        // to the currently displayed page.
+        if (!cx.pendingFixedScroll.available)
+        {
+            return;
+        }
+
+        const double pageHeight = static_cast<double>(conf::kTileCountY * conf::kTileSize);
+
+        //--------------------------------------------------------------------------
+        // Upward fixed scroll
+        //--------------------------------------------------------------------------
+
+        // Use the upper-side probe as the trigger reference.
+        // intendedDy is added so that the position after this frame's movement
+        // is evaluated rather than only the current position.
+        const double nextUpperWorldY = cx.probes.behindGround.middlePoint.y + intendedDy;
+
+        const double nextUpperLocalY = nextUpperWorldY - cx.pageOriginPx.y;
+
+        if (intendedDy < 0.0 && nextUpperLocalY < 0.0)
+        {
+            FixedScrollRequest request{};
+            request.dir = PageScroll::Dir::Up;
+            request.carryTotalPx = 0x09.00p0;
+
+            cx.pendingFixedScroll = request;
+            return;
+        }
+
+        //--------------------------------------------------------------------------
+        // Downward fixed scroll
+        //--------------------------------------------------------------------------
+
+        // The behind-ground probe is offset upward, so use the player's position
+        // for the lower page boundary.
+        const double nextPlayerWorldY = cx.pos.y + intendedDy;
+
+        const double nextPlayerLocalY = nextPlayerWorldY - cx.pageOriginPx.y;
+
+        if (intendedDy > 0.0 && nextPlayerLocalY >= pageHeight)
+        {
+            FixedScrollRequest request{};
+            request.dir = PageScroll::Dir::Down;
+            request.carryTotalPx = 0x07.00p0;
+
+            cx.pendingFixedScroll = request;
+        }
     }
 }

@@ -9,6 +9,7 @@
 #pragma once
 
 #include <optional>
+
 #include "apps/foundation/math/CoordinateTypes.h"
 
 namespace mm2hack::apps::systems::physics

@@ -8,11 +8,15 @@
 //==============================================================================
 #pragma once
 
+#include <cstdint>
+#include <optional>
 #include <string>
+
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/systems/view/ViewState.h"
 #include "Camera.h"
 #include "config/SystemConfig.h"
+#include "core/save/StateIO.h"
 #include "FixedScrollDriver.h"
 #include "FreeScrollDriver.h"
 #include "IScrollRuleProvider.h"
@@ -25,6 +29,26 @@
 namespace mm2hack::apps::systems::scrolling::atomic
 {
     using foundation::math::kEps;
+
+    struct ScrollControllerState final
+    {
+        ScrollMode mode{ ScrollMode::PlayerFollow };
+        std::uint32_t page_index{};
+        foundation::math::Vec2 view_world{};
+        foundation::math::Vec2 object_pos{};
+        foundation::math::Vec2 target_pos{};
+        double camera_x{};
+        double camera_y{};
+        PageScroll animator{};
+        std::optional<FixedScrollRequest> pending{};
+        double carry_total_px{};
+        std::int32_t freeze_frames{};
+        std::optional<PageScroll> freeze_draw{};
+
+        bool Save(core::save::StateWriter& writer) const;
+        bool Load(core::save::StateReader& reader);
+        [[nodiscard]] bool IsValid() const noexcept;
+    };
 
     // 2D difference representation
     struct Diff2
@@ -99,6 +123,9 @@ namespace mm2hack::apps::systems::scrolling::atomic
         const PageScrollAnimator& Animator() const noexcept { return _anim; }
         const IScrollRuleProvider* Rules() const noexcept { return &_rules; }
         const apps::systems::view::ViewState& GetView() const noexcept { return _viewState; }
+
+        [[nodiscard]] ScrollControllerState CaptureState() const noexcept;
+        bool RestoreState(const ScrollControllerState& state) noexcept;
 
     private:
         void updateViewState_();                                    // Update view state representation

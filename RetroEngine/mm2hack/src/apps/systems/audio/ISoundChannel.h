@@ -8,6 +8,7 @@
 //==============================================================================
 #pragma once
 
+#include <cstdint>
 #include <string>
 
 namespace mm2hack::apps::systems::audio
@@ -34,6 +35,9 @@ namespace mm2hack::apps::systems::audio
         virtual int GetVolume() const = 0;
         // Check if the sound is playing
         virtual bool IsPlaying() const = 0;
+        // Get and set the logical playback position in milliseconds.
+        virtual std::int64_t GetPositionMilliseconds() const = 0;
+        virtual void SetPositionMilliseconds(std::int64_t position) = 0;
         // Start fade (change to targetVolume over durationFrames)
         virtual void StartFade(int targetVolume, int durationFrames) = 0;
         // Update every frame (for fade processing, etc.)

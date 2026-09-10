@@ -14,9 +14,11 @@
 #include <memory>
 #include <ostream>
 #include <string>
+
 #include "apps/scenes/PhaseFadeController.h"
 #include "apps/vfx/cursor/TwinkleCursorAnimator.h"
 #include "apps/vfx/stareffects/BgStarField.h"
+#include "core/save/StateIO.h"
 
 namespace mm2hack::apps
 {
@@ -68,6 +70,8 @@ namespace mm2hack::apps::scenes
         virtual void RenderOverlay() = 0;
         // Get owner phase id
         virtual BackdoorMenuPhaseId Id() const noexcept = 0;
+        virtual bool Save(core::save::StateWriter& writer) const = 0;
+        virtual bool Load(core::save::StateReader& reader) = 0;
     };
 
     // Backdoor menu for debugging purposes only (A list of selectable scenes)
@@ -94,8 +98,10 @@ namespace mm2hack::apps::scenes
         void QueuePhase(std::unique_ptr<IBackdoorMenuPhase> next, PhaseFadePlan nextPlan);
 
         // === Save/Load state ===
-        void Save(std::ostream& out);
-        void Load(std::istream& in);
+        [[nodiscard]] bool CanSaveState() const noexcept override;
+        bool Save(std::ostream& out) const override;
+        static bool ValidateState(std::istream& in);
+        bool Load(std::istream& in) override;
 
         // === Getters for internal components ===
         auto& Cursor() noexcept { return _cursor; }
