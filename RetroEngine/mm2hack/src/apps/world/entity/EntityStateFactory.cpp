@@ -12,6 +12,7 @@
 #include "apps/world/entity/effects/ProjectileEntity.h"
 #include "apps/world/entity/effects/SlidingDustEffectEntity.h"
 #include "apps/world/entity/effects/SplashEffectEntity.h"
+#include "apps/world/entity/hazards/BreakableBlockEntity.h"
 #include "core/save/StateIO.h"
 #include "EntityBase.h"
 #include "EntityManager.h"
@@ -88,6 +89,19 @@ namespace mm2hack::apps::world::entity
         {
             return id != static_cast<rendering::sprite::SpriteManager::Id>(-1);
         }
+
+        bool ParseBreakableBlock(const EntityStateRecord& record, hazards::BreakableBlockEntityState& state)
+        {
+            if (record.component_version != hazards::BreakableBlockEntity::kStateVersion)
+            {
+                return false;
+            }
+            return ParseState(record, state,
+                [](hazards::BreakableBlockEntityState& value, core::save::StateReader& reader)
+                {
+                    return value.Load(reader);
+                });
+        }
     }
 
     bool EntityStateFactory::ValidateRecord(const EntityStateRecord& record)
@@ -130,6 +144,11 @@ namespace mm2hack::apps::world::entity
                 effects::SplashEffectEntity::kStateVersion,
                 effects::SplashEffectEntity::kTotalTicks,
                 state);
+        }
+        case EntityTypeId::BreakableBlock:
+        {
+            hazards::BreakableBlockEntityState state{};
+            return ParseBreakableBlock(record, state);
         }
         default:
             return false;
@@ -225,6 +244,18 @@ namespace mm2hack::apps::world::entity
                 return nullptr;
             }
             return std::make_unique<effects::SplashEffectEntity>(state, sprite_id);
+        }
+        case EntityTypeId::BreakableBlock:
+        {
+            hazards::BreakableBlockEntityState state{};
+            // Reuses the shared effects sprite sheet for now (same as Projectile/SplashEffect);
+            // give it a dedicated IStageAssetProvider accessor once real level art exists.
+            const auto sprite_id = _assets.EffectsSprite();
+            if (!ParseBreakableBlock(record, state) || !IsValidSpriteId(sprite_id))
+            {
+                return nullptr;
+            }
+            return std::make_unique<hazards::BreakableBlockEntity>(state, sprite_id);
         }
         default:
             return nullptr;

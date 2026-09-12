@@ -5,6 +5,7 @@
 #include <limits>
 #include <span>
 
+#include "apps/systems/physics/ICollider.h"
 #include "apps/systems/view/RenderContext.h"
 #include "apps/systems/view/ViewState.h"
 #include "core/save/StateIO.h"
@@ -21,7 +22,7 @@ namespace mm2hack::apps::world::entity
 
         bool IsKnownEntityType(EntityTypeId type) noexcept
         {
-            return type >= EntityTypeId::Player && type <= EntityTypeId::SplashEffect;
+            return type >= EntityTypeId::Player && type <= EntityTypeId::BreakableBlock;
         }
     }
 
@@ -212,6 +213,24 @@ namespace mm2hack::apps::world::entity
             }
 
             e->Render(ctx);
+        }
+    }
+
+    void EntityManager::CollectColliders(std::vector<systems::physics::ICollider*>& out) const
+    {
+        out.clear();
+        out.reserve(_entities.size());
+        for (const auto& e : _entities)
+        {
+            if (!e || !e->IsAlive())
+            {
+                continue;
+            }
+
+            if (auto* c = dynamic_cast<systems::physics::ICollider*>(e.get()))
+            {
+                out.push_back(c);
+            }
         }
     }
 

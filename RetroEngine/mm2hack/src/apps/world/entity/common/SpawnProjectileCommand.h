@@ -37,5 +37,8 @@ namespace mm2hack::apps::world::entity::common
         double animFps{ 0.0 };                                              // Animation speed (frames per second)
 
         double lifeSec{ 1.0 };                                              // Lifetime of the projectile in seconds
+
+        int power{ 1 };                                                     // Attack power (damage) carried on contact
+        foundation::math::Vec2 hitHalfSize{ 2.0, 2.0 };                     // Half-size of the attack hit judgement box (independent of the sprite's draw size)
     };
 }

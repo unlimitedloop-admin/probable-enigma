@@ -14,6 +14,7 @@
 #include "apps/resources/bg/AddressScraper.h"
 #include "apps/resources/bg/MapPageCache.h"
 #include "apps/scenes/IStageAssetProvider.h"
+#include "apps/systems/physics/CollisionSystem.h"
 #include "apps/systems/physics/ILadderService.h"
 #include "apps/systems/physics/ITerrainProbe.h"
 #include "apps/systems/physics/ITileMapProvider.h"
@@ -48,6 +49,7 @@ namespace mm2hack::apps::scenes::phases
         std::unique_ptr<systems::physics::ILadderService> ladder_service{};             // Unique ILadderService for physics
 
         std::unique_ptr<world::entity::EntityManager> entity_mgr{};                     // Unique EntityManager for entities
+        systems::physics::CollisionSystem collision{};                                  // Entity-vs-entity collision resolver (default matrix)
 
         const scenes::IStageAssetProvider* asset_provider{ nullptr };                   // Reference to stage asset provider
     };

@@ -28,7 +28,10 @@ namespace mm2hack::apps::world::entity::effects
             writer.WriteF64(animation_fps) &&
             writer.WriteF64(lifetime_seconds) &&
             writer.WriteF64(age_seconds) &&
-            writer.WriteU32(elapsed_ticks);
+            writer.WriteU32(elapsed_ticks) &&
+            writer.WriteI32(power) &&
+            writer.WriteF64(hit_half_size.x) &&
+            writer.WriteF64(hit_half_size.y);
     }
 
     bool ProjectileEntityState::Load(core::save::StateReader& reader)
@@ -44,7 +47,10 @@ namespace mm2hack::apps::world::entity::effects
             !reader.ReadF64(loaded.animation_fps) ||
             !reader.ReadF64(loaded.lifetime_seconds) ||
             !reader.ReadF64(loaded.age_seconds) ||
-            !reader.ReadU32(loaded.elapsed_ticks))
+            !reader.ReadU32(loaded.elapsed_ticks) ||
+            !reader.ReadI32(loaded.power) ||
+            !reader.ReadF64(loaded.hit_half_size.x) ||
+            !reader.ReadF64(loaded.hit_half_size.y))
         {
             return false;
         }
@@ -61,6 +67,7 @@ namespace mm2hack::apps::world::entity::effects
     bool ProjectileEntityState::IsValid() const noexcept
     {
         constexpr double kMaximumDurationSeconds = 3'600.0;
+        constexpr double kMaximumHitHalfSize = 256.0;
         return kinematic.IsValid() &&
             draw_layer >= systems::view::Layer::Background &&
             draw_layer <= systems::view::Layer::Overlay &&
@@ -72,7 +79,10 @@ namespace mm2hack::apps::world::entity::effects
             std::isfinite(lifetime_seconds) && lifetime_seconds >= 0.0 &&
             lifetime_seconds <= kMaximumDurationSeconds &&
             std::isfinite(age_seconds) && age_seconds >= 0.0 &&
-            age_seconds <= kMaximumDurationSeconds;
+            age_seconds <= kMaximumDurationSeconds &&
+            power >= 0 && power <= 1'000 &&
+            std::isfinite(hit_half_size.x) && hit_half_size.x > 0.0 && hit_half_size.x <= kMaximumHitHalfSize &&
+            std::isfinite(hit_half_size.y) && hit_half_size.y > 0.0 && hit_half_size.y <= kMaximumHitHalfSize;
     }
 
     ProjectileEntity::ProjectileEntity(const common::SpawnProjectileCommand& cmd)
@@ -91,6 +101,9 @@ namespace mm2hack::apps::world::entity::effects
         _age_sec = 0.0;
 
         _half = foundation::math::Vec2{ 16.0, 16.0 };   // Assuming an average size; adjust as needed.
+
+        _power = cmd.power;
+        _hit_half_size = cmd.hitHalfSize;
     }
 
     ProjectileEntity::ProjectileEntity(
@@ -119,6 +132,8 @@ namespace mm2hack::apps::world::entity::effects
             .lifetime_seconds = _life_sec,
             .age_seconds = _age_sec,
             .elapsed_ticks = _elapsed_ticks,
+            .power = _power,
+            .hit_half_size = _hit_half_size,
         };
     }
 
@@ -136,6 +151,8 @@ namespace mm2hack::apps::world::entity::effects
         _life_sec = state.lifetime_seconds;
         _age_sec = state.age_seconds;
         _elapsed_ticks = state.elapsed_ticks;
+        _power = state.power;
+        _hit_half_size = state.hit_half_size;
         return true;
     }
 
@@ -174,6 +191,30 @@ namespace mm2hack::apps::world::entity::effects
         {
             Kill();
         }
+    }
+
+    ProjectileEntity::RectF ProjectileEntity::Bounds() const
+    {
+        // Deliberately independent of _half (the sprite's draw footprint): the
+        // attack hit judgement box is its own, generally smaller, concept.
+        return { pos.x - _hit_half_size.x, pos.y - _hit_half_size.y,
+                 _hit_half_size.x * 2.0, _hit_half_size.y * 2.0 };
+    }
+
+    void ProjectileEntity::OnTileCollision(const Vec2& normal, TileAttribute attr)
+    {
+        // TODO: Projectiles don't interact with terrain yet (no wall-hit despawn/spark).
+        (void)normal;
+        (void)attr;
+    }
+
+    void ProjectileEntity::OnEntityCollision(IEntity& other)
+    {
+        // Any collidable partner reaching here has already passed the CollisionMatrix
+        // filter (Enemy/Trap for the ProjectilePlayer layer), so a single shot is
+        // consumed on any qualifying hit -- matches the original Rock Buster behavior.
+        (void)other;
+        Kill();
     }
 
     void ProjectileEntity::Render(RenderContext& ctx)

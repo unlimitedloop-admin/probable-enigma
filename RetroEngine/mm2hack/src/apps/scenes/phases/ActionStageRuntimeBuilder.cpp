@@ -11,6 +11,7 @@
 #include "apps/systems/scrolling/atomic/ScrollController.h"
 #include "apps/world/entity/avatar/PlayerEntity.h"
 #include "apps/world/entity/EntityManager.h"
+#include "apps/world/entity/hazards/BreakableBlockEntity.h"
 #include "apps/world/stage/RoomGraphAdapter.h"
 #include "config/SystemConfig.h"
 #include "core/assembly/StateProvider.h"
@@ -148,5 +149,16 @@ namespace mm2hack::apps::scenes::phases
         }
 
         player->texture = 0;
+
+        // TODO(hit-detection verification): temporary hardcoded placement to verify
+        // ProjectileEntity/BreakableBlockEntity collision end-to-end before real
+        // level-object placement (or enemies) exist. Remove/replace once that lands.
+        using world::entity::hazards::BreakableBlockEntity;
+        ctx.entity_mgr->Spawn<BreakableBlockEntity>(
+            foundation::math::Vec2{ player->pos.x + 48.0, player->pos.y },
+            effects_sprite,
+            /* base_texture */ 0,
+            /* max_hp */ 2,
+            foundation::math::Vec2{ 8.0, 8.0 });
     }
 }

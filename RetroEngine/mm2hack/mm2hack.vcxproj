@@ -253,6 +253,7 @@
     <ClCompile Include="src\apps\world\entity\avatar\states\SlidingState.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\states\StandingState.cpp" />
     <ClCompile Include="src\apps\world\entity\effects\ProjectileEntity.cpp" />
+    <ClCompile Include="src\apps\world\entity\hazards\BreakableBlockEntity.cpp" />
     <ClCompile Include="src\apps\world\entity\effects\SplashEffectEntity.cpp" />
     <ClCompile Include="src\apps\world\entity\effects\SlidingDustEffectEntity.cpp" />
     <ClCompile Include="src\apps\world\entity\effects\ChargeEffectEntity.cpp" />
@@ -393,6 +394,8 @@
     <ClInclude Include="src\apps\world\entity\avatar\states\StandingState.h" />
     <ClInclude Include="src\apps\world\entity\common\AnimeStepper.h" />
     <ClInclude Include="src\apps\world\entity\effects\ProjectileEntity.h" />
+    <ClInclude Include="src\apps\world\entity\hazards\BreakableBlockEntity.h" />
+    <ClInclude Include="src\apps\systems\physics\IAttackInfo.h" />
     <ClInclude Include="src\apps\world\entity\effects\SplashEffectEntity.h" />
     <ClInclude Include="src\apps\world\entity\EntityBase.h" />
     <ClInclude Include="src\apps\world\entity\EntityStateFactory.h" />

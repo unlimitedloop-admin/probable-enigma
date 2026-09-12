@@ -4,6 +4,7 @@
 
 #include <cmath>
 #include <cstdlib>
+#include <vector>
 
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/rendering/sprite/SpriteManager.h"
@@ -12,6 +13,7 @@
 #include "apps/scenes/PhaseFadeController.h"
 #include "apps/systems/audio/AudioManager.h"
 #include "apps/systems/audio/SeTransportState.h"
+#include "apps/systems/physics/ICollider.h"
 #include "apps/systems/scrolling/atomic/ScrollController.h"
 #include "apps/systems/view/RenderContext.h"
 #include "apps/world/entity/avatar/AvatarStatus.h"
@@ -586,6 +588,12 @@ namespace mm2hack::apps::scenes::phases
 
                 _ctx->entity_mgr->UpdateAll(&_ctx->scroll->GetView(), dt);
                 consumePlayerOutput_(*player);
+
+                // Entity-vs-entity hit detection (projectiles vs enemies/traps, player vs
+                // items/traps, etc.). Runs after positions are finalized for this tick.
+                std::vector<systems::physics::ICollider*> colliders;
+                _ctx->entity_mgr->CollectColliders(colliders);
+                _ctx->collision.ResolveEntities(colliders);
 
                 delta = player->pos - prev_pos;
             }

@@ -80,6 +80,15 @@ namespace mm2hack::apps::world::entity::avatar::states
         double projectileAnimFps{ 12.0 };
         double projectileLifeSec{ -1.0 };
 
+        // Attack power and hit judgement box per charge level (placeholders; tune to taste).
+        // The charged shot intentionally carries more power and a wider hit box than the normal shot.
+        int normalPower{ 1 };
+        int chargeLevel1Power{ 2 };
+        int chargeLevel2Power{ 3 };
+        foundation::math::Vec2 normalHitHalfSize{ 2.0, 2.0 };
+        foundation::math::Vec2 chargeLevel1HitHalfSize{ 5.0, 5.0 };
+        foundation::math::Vec2 chargeLevel2HitHalfSize{ 7.0, 7.0 };
+
         // Attack timing
         double attackDurationSec{ 0.18 };
         std::uint32_t level1ChargeFrames{ 20 };

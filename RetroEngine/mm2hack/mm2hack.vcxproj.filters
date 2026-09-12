@@ -105,6 +105,7 @@
     <ClCompile Include="src\apps\world\entity\avatar\PlayerEnvironmentController.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\PlayerStateMachine.cpp" />
     <ClCompile Include="src\apps\world\entity\effects\ProjectileEntity.cpp" />
+    <ClCompile Include="src\apps\world\entity\hazards\BreakableBlockEntity.cpp" />
     <ClCompile Include="src\apps\world\entity\effects\SplashEffectEntity.cpp" />
     <ClCompile Include="src\apps\world\entity\effects\SlidingDustEffectEntity.cpp" />
     <ClCompile Include="src\apps\world\entity\effects\ChargeEffectEntity.cpp" />
@@ -315,6 +316,8 @@
     <ClInclude Include="src\apps\world\entity\avatar\PlayerEnvironmentController.h" />
     <ClInclude Include="src\apps\world\entity\avatar\PlayerStateMachine.h" />
     <ClInclude Include="src\apps\world\entity\effects\ProjectileEntity.h" />
+    <ClInclude Include="src\apps\world\entity\hazards\BreakableBlockEntity.h" />
+    <ClInclude Include="src\apps\systems\physics\IAttackInfo.h" />
     <ClInclude Include="src\apps\world\entity\effects\SplashEffectEntity.h" />
     <ClInclude Include="src\apps\world\entity\avatar\AvatarStatus.h" />
     <ClInclude Include="src\apps\world\entity\avatar\PlayerParams.h" />

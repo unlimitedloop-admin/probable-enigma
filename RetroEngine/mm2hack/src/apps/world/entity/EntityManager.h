@@ -21,6 +21,11 @@
 #include "core/save/StateIO.h"
 #include "IEntity.h"
 
+namespace mm2hack::apps::systems::physics
+{
+    struct ICollider;
+}
+
 namespace mm2hack::apps::world::entity
 {
     class EntityStateFactory;
@@ -70,6 +75,10 @@ namespace mm2hack::apps::world::entity
 
         // Renders entities for the specified layer
         void RenderLayer(systems::view::RenderContext& ctx, systems::view::Layer layer);
+
+        // Collects raw ICollider* for every currently alive entity that implements it
+        // (via dynamic_cast). Pointers are only valid until the next UpdateAll()/Clear() call.
+        void CollectColliders(std::vector<systems::physics::ICollider*>& out) const;
 
         // Removes all entities immediately
         void Clear() noexcept;

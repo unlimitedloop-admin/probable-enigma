@@ -25,7 +25,8 @@ namespace mm2hack::apps::world::entity
         Projectile = 2,
         ChargeEffect = 3,
         SlidingDustEffect = 4,
-        SplashEffect = 5
+        SplashEffect = 5,
+        BreakableBlock = 6
     };
 
     // Base interface for all entities
