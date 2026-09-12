@@ -1,0 +1,113 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - develop
+      - master
+  pull_request:
+    branches:
+      - develop
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DXLIB_ARCHIVE_NAME: DxLib_VC3_24f.zip
+  DXLIB_ARCHIVE_URL: https://ftp.vector.co.jp/77/63/2590/DxLib_VC3_24f.zip
+  DXLIB_SHA256: 82FDE04562E4A5128710BB95AD8A73DCA708A9E080439ACC14D8E1AD5A095675
+  SOLUTION_PATH: RetroEngine\RetroEngine.sln
+
+jobs:
+  build-and-test:
+    name: Build and test (x64)
+    runs-on: windows-2025-vs2026
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Cache DxLib archive
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}\dxlib-cache
+          key: dxlib-${{ runner.os }}-3.24f-${{ env.DXLIB_SHA256 }}
+
+      - name: Prepare DxLib 3.24f
+        shell: pwsh
+        run: |
+          $archiveDirectory = Join-Path $env:RUNNER_TEMP 'dxlib-cache'
+          $archivePath = Join-Path $archiveDirectory $env:DXLIB_ARCHIVE_NAME
+          $extractPath = Join-Path $env:RUNNER_TEMP 'dxlib'
+
+          New-Item -ItemType Directory -Force -Path $archiveDirectory | Out-Null
+
+          if (-not (Test-Path -LiteralPath $archivePath -PathType Leaf)) {
+              Invoke-WebRequest -Uri $env:DXLIB_ARCHIVE_URL -OutFile $archivePath
+          }
+
+          $actualHash = (Get-FileHash -LiteralPath $archivePath -Algorithm SHA256).Hash
+          if ($actualHash -ne $env:DXLIB_SHA256) {
+              throw "DxLib archive hash mismatch. Expected $env:DXLIB_SHA256, but got $actualHash."
+          }
+
+          Expand-Archive -LiteralPath $archivePath -DestinationPath $extractPath -Force
+
+          $dxLibHeaders = @(
+              Get-ChildItem -LiteralPath $extractPath -Recurse -File -Filter 'DxLib.h'
+          )
+          if ($dxLibHeaders.Count -ne 1) {
+              throw "Expected exactly one DxLib.h, but found $($dxLibHeaders.Count)."
+          }
+
+          $dxLibDirectory = $dxLibHeaders[0].Directory.FullName
+          "DXLIB_DIR=$dxLibDirectory" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Add MSBuild to PATH
+        uses: microsoft/setup-msbuild@v3
+        with:
+          msbuild-architecture: x64
+
+      - name: Build Debug x64
+        shell: pwsh
+        run: >-
+          msbuild $env:SOLUTION_PATH
+          /t:Build
+          /m
+          /v:minimal
+          /p:Configuration=Debug
+          /p:Platform=x64
+          "/p:DxLibDir=$env:DXLIB_DIR"
+
+      - name: Run save-state tests
+        shell: pwsh
+        run: |
+          $executablePath = Join-Path $env:GITHUB_WORKSPACE 'RetroEngine\mm2hack\bin\x64\Debug\mm2hack.exe'
+          $process = Start-Process `
+              -FilePath $executablePath `
+              -ArgumentList '--state-tests' `
+              -NoNewWindow `
+              -PassThru `
+              -Wait
+
+          if ($process.ExitCode -ne 0) {
+              throw "Save-state tests failed with exit code $($process.ExitCode)."
+          }
+
+      - name: Build Release x64
+        shell: pwsh
+        run: >-
+          msbuild $env:SOLUTION_PATH
+          /t:Build
+          /m
+          /v:minimal
+          /p:Configuration=Release
+          /p:Platform=x64
+          "/p:DxLibDir=$env:DXLIB_DIR"
