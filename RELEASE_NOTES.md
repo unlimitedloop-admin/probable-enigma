@@ -57,7 +57,7 @@
 - Stage completion triggers, item acquisition, and enemy-damage handling are not yet implemented.
 
 ### Checksums
-- 4C88E1A810F3331245C80CBF2E545B2BB5E40C5482044BAE705BE79BB05C8109  *probable-enigma_mm2hack_demo_v002.zip
+- 897373FD764E38004F7BFDF6711C4D72780C2F1B1DCBD326AAB620716C4BD342  *probable-enigma_mm2hack_demo_v002.zip
 
 ---
 
