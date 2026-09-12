@@ -1,0 +1,198 @@
+//==============================================================================
+// 
+//  Project: mm2hack
+//  BackdoorMenuPhase.h
+// 
+//  Child scenes for BackdoorMenu scene.
+// 
+//==============================================================================
+#pragma once
+
+#include "BackdoorMenu.h"
+
+#include <array>
+#include <optional>
+#include <span>
+#include <string_view>
+#include <vector>
+
+#include "apps/ui/controls/MenuCursorController.h"
+#include "apps/vfx/cursor/TwinkleCursorAnimator.h"
+#include "BackdoorMenuCatalog.h"
+#include "core/save/StateIO.h"
+
+namespace mm2hack::apps::scenes
+{
+    namespace BackdoorMenu_
+    {
+        // Credit phase - initial phase showing credits and waiting for user input
+        class CreditPhase : public IBackdoorMenuPhase
+        {
+        public:
+            explicit CreditPhase(BackdoorMenu& owner) : owner(owner) {}
+            void Update() override;
+            void RenderWorld() override;
+            void RenderOverlay() override;
+            BackdoorMenuPhaseId Id() const noexcept override;
+            bool Save(core::save::StateWriter& writer) const override;
+            bool Load(core::save::StateReader& reader) override;
+
+        private:
+            BackdoorMenu& owner;
+        };
+
+        // Top menu phase - displays a menu for selecting each scene in the mm2hack
+        class TopMenuPhase : public IBackdoorMenuPhase
+        {
+            using MenuCursor = ui::controls::MenuCursorController;
+            using CursorPointer = vfx::cursor::TwinkleCursorAnimator&;
+
+        public:
+            explicit TopMenuPhase(BackdoorMenu& owner) : owner(owner), cursorAnim_(owner.Cursor()) {}
+            explicit TopMenuPhase(BackdoorMenu& owner, int cursorPos) : owner(owner), cursorPos_(cursorPos), cursorAnim_(owner.Cursor())
+            {
+                cursorCtl_.SetIndex(cursorPos_);    // case when coming from InsideMenuPhase
+            }
+
+            void Update() override;
+            void RenderWorld() override;
+            void RenderOverlay() override;
+            BackdoorMenuPhaseId Id() const noexcept override;
+            bool Save(core::save::StateWriter& writer) const override;
+            bool Load(core::save::StateReader& reader) override;
+
+        private:
+            void DrawMenuItems() const;
+
+        private:
+            BackdoorMenu& owner;
+            int cursorPos_{ 0 };
+            MenuCursor cursorCtl_{ {16, 16, 10}, static_cast<int>(kTopMenuTitles.size()) };
+            CursorPointer cursorAnim_;
+        };
+
+        static consteval std::size_t TopItemCount() noexcept { return kTopMenuTitles.size(); }
+
+        enum class BackBehavior : unsigned char
+        {
+            Step = 0,   // one step back to the previous menu
+            ToTop,      // back to the top menu
+        };
+
+        // Inside menu phase - displays detailed options for the selected top menu item
+        class InsideMenuPhase : public IBackdoorMenuPhase
+        {
+            using MenuCursor = ui::controls::MenuCursorController;
+            using CursorPointer = vfx::cursor::TwinkleCursorAnimator&;
+
+        public:
+            explicit InsideMenuPhase(BackdoorMenu& owner);
+            explicit InsideMenuPhase(BackdoorMenu& owner, MenuCursor cursorCtl, int topItemIndex);
+
+            void Update() override;
+            void RenderWorld() override;
+            void RenderOverlay() override;
+            BackdoorMenuPhaseId Id() const noexcept override;
+            bool Save(core::save::StateWriter& writer) const override;
+            bool Load(core::save::StateReader& reader) override;
+
+        private:
+            using DrawHandler = void (InsideMenuPhase::*)() const;
+            using ActHandler = void (InsideMenuPhase::*)() noexcept;
+
+            struct MenuEntry
+            {
+                std::wstring_view label;
+                bool selectable;
+                ActHandler onActivate;
+                int advanceLines;       // Next entry is this many lines below (for spacing)
+                std::optional<int> enterSubId;
+            };
+
+            struct Page
+            {
+                int cursorX{ 16 };
+                int firstY{ 16 };
+                int lineH{ 10 };
+                std::vector<MenuEntry> entries;
+                std::vector<int>       selectableRows;  // Indices of selectable entries
+                std::vector<int>       rowYs;           // Y positions of all entries
+            };
+
+            struct Crumb
+            {
+                int subId;
+                int cursor;
+            };
+
+            struct RoomEditState
+            {
+                bool active{ false };
+                int digit{ 1 };      // 1=ones, 0=tens
+                int blink{ 0 };
+                int snapshot{ 0 };
+            };
+
+            // InsideMenu page metadata for each top menu item
+            void CompleteArsenalDisplay_() const;
+            void ParameterConfigurationDisplay_() const;
+            void ViewerModeDisplay_() const;
+            void StagesDisplay_() const;
+            void RegularBootDisplay_() const;
+            void SoundTestModeDisplay_() const;
+            void SpriteTestDisplay_() const;
+            void ResetParameterDisplay_() const;
+
+            // NOTE: These must match the order of kTopMenuTitles
+            static constexpr std::array<DrawHandler, TopItemCount()> kDrawHandlers{
+                &InsideMenuPhase::CompleteArsenalDisplay_,
+                &InsideMenuPhase::ParameterConfigurationDisplay_,
+                &InsideMenuPhase::ViewerModeDisplay_,
+                &InsideMenuPhase::StagesDisplay_,
+                &InsideMenuPhase::RegularBootDisplay_,
+                &InsideMenuPhase::SoundTestModeDisplay_,
+                &InsideMenuPhase::SpriteTestDisplay_,
+                &InsideMenuPhase::ResetParameterDisplay_
+            };
+
+            // Page construction and reflection
+            void BuildPageModel_();
+            void ApplyPageLayout_();
+
+            // Input actions
+            void ActivateCurrent_() noexcept; // A/START
+            void GoBackToTop_() noexcept;     // B/BACK or deciding on BACK item
+
+            // Action resolvers
+            static ActHandler ResolveAction_(Action a) noexcept;
+            void AppendEntriesFrom_(std::span<const InsideMenuItemDesc> src);
+
+            // Navigation handlers
+            void NavigateInto_(int subId);
+            void NavigateBack_(BackBehavior mode) noexcept;
+            void BackOne_() noexcept;
+            void BackToTop_() noexcept;
+            void JumpToScene_() noexcept;
+
+            // Room edit handlers
+            void EnterRoomEdit_() noexcept;
+            void UpdateRoomEdit_() noexcept;
+            void DrawRoomLineOverlay_() const;
+            bool ValidateRoom_(int no) const noexcept;
+
+        private:
+            BackdoorMenu& owner;
+            
+            int cursorPos_{ 0 };                                // Selection index (index of selectableRows)
+            int topItemIndex_{ 0 };                             // Top menu item index
+            std::vector<Crumb> insideStack_;                    // Stack of inside menu crumbs for navigation
+
+            BackBehavior defaultBack_{ BackBehavior::Step };    // Behavior when page requests back navigation
+            MenuCursor cursorCtl_{ {16, 16, 10}, 1 };           // Will be configured per page
+            CursorPointer cursorAnim_;                          // Cursor animator reference
+            Page page_;                                         // Current page data
+            RoomEditState roomEdit_;                            // Room edit mode state
+            int roomNo_{ 0 };                                   // Stage edit room number
+        };
+    }
+}

@@ -1,0 +1,252 @@
+#include "pch.h"
+
+#include "SpriteAtlas.h"
+
+#include <cmath>
+#include <span>
+
+#include "apps/foundation/NES/NESPalette.h"
+
+namespace mm2hack::apps::rendering::sprite
+{
+    SpriteAtlas::SpriteAtlas(DivSettings div,
+                             int soft_image_handle, std::vector<std::vector<int>> graphs_by_variant) noexcept
+        : _div(div)
+        , _soft_image(soft_image_handle)
+        , _graphs_by_variant(std::move(graphs_by_variant))
+    {
+    }
+
+    SpriteAtlas::~SpriteAtlas()
+    {
+        dispose_();
+    }
+
+    SpriteAtlas::SpriteAtlas(SpriteAtlas&& other) noexcept
+        : _div(other._div)
+        , _soft_image(other._soft_image)
+        , _graphs_by_variant(std::move(other._graphs_by_variant))
+    {
+        other._soft_image = -1;
+    }
+
+    SpriteAtlas& SpriteAtlas::operator=(SpriteAtlas&& other) noexcept
+    {
+        if (this != &other)
+        {
+            dispose_();
+            _div = other._div;
+            _soft_image = other._soft_image;
+            _graphs_by_variant = std::move(other._graphs_by_variant);
+            other._soft_image = -1;
+        }
+        return *this;
+    }
+
+    void SpriteAtlas::Draw(int variant, int frame, int x, int y) const noexcept
+    {
+        if (variant < 0 || variant >= static_cast<int>(_graphs_by_variant.size()))
+        {
+            return;
+        }
+
+        const auto& frames = _graphs_by_variant[static_cast<std::size_t>(variant)];
+        if (frame < 0 || frame >= static_cast<int>(frames.size()))
+        {
+            return;
+        }
+
+        const int handle = frames[static_cast<std::size_t>(frame)];
+        if (handle != -1)
+        {
+            ::DxLib::DrawGraph(x, y, handle, TRUE);
+        }
+    }
+
+    bool SpriteAtlas::ReplacePaletteColorIndex(int variant, int targetPaletteIndex, int sourcePaletteIndex) noexcept
+    {
+        using foundation::NES::NESPalette;
+
+        constexpr auto ToU8 = [](int value) noexcept -> unsigned char
+            {
+                return static_cast<unsigned char>(value);
+            };
+
+        const auto& c = NESPalette::GetColor(targetPaletteIndex);
+        return ReplacePaletteColorRGB(variant, ToU8(c.red), ToU8(c.green), ToU8(c.blue), sourcePaletteIndex);
+    }
+
+    bool SpriteAtlas::ReplacePaletteColorRGB(int variant,
+                                             unsigned char r, unsigned char g, unsigned char b,
+                                             int sourcePaletteIndex) noexcept
+    {
+        if (_soft_image == -1) return false;
+
+        // Replace the color in the soft image's palette.
+        if (::DxLib::SetPaletteSoftImage(_soft_image, sourcePaletteIndex, r, g, b, 255) != 0)
+        {
+            return false;
+        }
+        // Rebuild the variant's graphs from the updated soft image.
+        return rebuildVariantFromSoftImage_(variant);
+    }
+
+    bool SpriteAtlas::ReplacePaletteColors(
+        std::span<const PaletteColorMapping> mappings) noexcept
+    {
+        using foundation::NES::NESPalette;
+
+        if (_soft_image == -1) return false;
+        for (const auto& mapping : mappings)
+        {
+            const auto& color = NESPalette::GetColor(mapping.target_palette_index);
+            if (::DxLib::SetPaletteSoftImage(
+                _soft_image, mapping.source_palette_index,
+                static_cast<unsigned char>(color.red),
+                static_cast<unsigned char>(color.green),
+                static_cast<unsigned char>(color.blue), 255) != 0)
+            {
+                return false;
+            }
+        }
+
+        const int variant_count = VariantCount();
+        const int max_variant = std::max(variant_count - 1, 1);
+        for (int variant = 0; variant < variant_count; ++variant)
+        {
+            if (!rebuildVariantFromSoftImage_(variant)) return false;
+
+            const int brightness = -static_cast<int>(std::lround(
+                (variant / static_cast<float>(max_variant)) * 255.0f));
+            if (brightness == 0) continue;
+
+            for (const int handle : _graphs_by_variant[static_cast<std::size_t>(variant)])
+            {
+                if (handle != -1)
+                {
+                    ::DxLib::GraphFilter(
+                        handle, DX_GRAPH_FILTER_HSB, 0, 0, 0, brightness);
+                }
+            }
+        }
+        return true;
+    }
+
+    bool SpriteAtlas::ReplacePixelColors(
+        int variant,
+        std::span<const PaletteColorMapping> mappings) noexcept
+    {
+        if (_soft_image == -1) return false;
+        if (mappings.empty()) return true;
+
+        struct RGBMapping final
+        {
+            foundation::NES::NESPalette::RGB source{};
+            foundation::NES::NESPalette::RGB target{};
+        };
+
+        std::vector<RGBMapping> rgb_mappings;
+        rgb_mappings.reserve(mappings.size());
+        for (const auto& mapping : mappings)
+        {
+            rgb_mappings.push_back(RGBMapping{
+                foundation::NES::NESPalette::GetColor(mapping.source_palette_index),
+                foundation::NES::NESPalette::GetColor(mapping.target_palette_index)
+            });
+        }
+
+        int width = 0;
+        int height = 0;
+        if (::DxLib::GetSoftImageSize(_soft_image, &width, &height) != 0) return false;
+
+        for (int y = 0; y < height; ++y)
+        {
+            for (int x = 0; x < width; ++x)
+            {
+                int r = 0;
+                int g = 0;
+                int b = 0;
+                int a = 0;
+                if (::DxLib::GetPixelSoftImage(_soft_image, x, y, &r, &g, &b, &a) != 0) return false;
+
+                for (const auto& mapping : rgb_mappings)
+                {
+                    if (r != mapping.source.red || g != mapping.source.green || b != mapping.source.blue) continue;
+
+                    if (::DxLib::DrawPixelSoftImage(
+                        _soft_image, x, y, mapping.target.red, mapping.target.green, mapping.target.blue, a) != 0)
+                    {
+                        return false;
+                    }
+                    break;
+                }
+            }
+        }
+
+        return rebuildVariantFromSoftImage_(variant);
+    }
+
+    bool SpriteAtlas::ApplyHSBToVariant(int variant, int hueAdd, int satAdd, int briAdd) noexcept
+    {
+        if (variant < 0 || variant >= static_cast<int>(_graphs_by_variant.size()))
+            return false;
+
+        auto& frames = _graphs_by_variant[static_cast<std::size_t>(variant)];
+        if (frames.empty()) return false;
+
+        for (int h : frames)
+        {
+            if (h != -1)
+            {
+                // Apply HSB filter to the graph
+                ::DxLib::GraphFilter(h, DX_GRAPH_FILTER_HSB, 0, hueAdd, satAdd, briAdd);
+            }
+        }
+        return true;
+    }
+
+    bool SpriteAtlas::rebuildVariantFromSoftImage_(int variant) noexcept
+    {
+        if (_soft_image == -1 || variant < 0) return false;
+
+        const int total = _div.tiles_x * _div.tiles_y;
+        std::vector<int> new_frames(static_cast<std::size_t>(total), -1);
+
+        const int res = ::DxLib::CreateDivGraphFromSoftImage(
+            _soft_image, total, _div.tiles_x, _div.tiles_y, _div.tile_w, _div.tile_h, new_frames.data());
+        if (res != 0) return false;
+
+        if (variant >= static_cast<int>(_graphs_by_variant.size()))
+        {
+            _graphs_by_variant.resize(static_cast<std::size_t>(variant) + 1);
+        }
+        for (int h : _graphs_by_variant[static_cast<std::size_t>(variant)])
+        {
+            if (h != -1) ::DxLib::DeleteGraph(h);
+        }
+        _graphs_by_variant[static_cast<std::size_t>(variant)] = std::move(new_frames);
+        return true;
+    }
+
+    void SpriteAtlas::dispose_() noexcept
+    {
+        for (auto& frames : _graphs_by_variant)
+        {
+            for (int h : frames)
+            {
+                if (h != -1)
+                {
+                    ::DxLib::DeleteGraph(h);
+                }
+            }
+            frames.clear();
+        }
+        _graphs_by_variant.clear();
+
+        if (_soft_image != -1)
+        {
+            ::DxLib::DeleteSoftImage(_soft_image);
+            _soft_image = -1;
+        }
+    }
+}

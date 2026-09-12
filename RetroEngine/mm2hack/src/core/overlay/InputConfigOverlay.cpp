@@ -2,8 +2,7 @@
 
 #include "InputConfigOverlay.h"
 
-#include <cstdint>
-#include "apps/deal/GameContext.h"
+#include "apps/runtime/GameContext.h"
 #include "config/ConfigUIManager.h"
 #include "core/GameState.h"
 #include "core/GameStateManager.h"
@@ -53,7 +52,7 @@ namespace mm2hack::core::overlay
         _target = &target;
         _steps = std::move(steps);
         _index = 0;
-        _captureKind = apps::deal::GameContext::GetInstance().Joystick().ActiveDevice();
+        _captureKind = apps::runtime::GameContext::GetInstance().Joystick().ActiveDevice();
 
         if (_steps.empty())
         {
@@ -76,23 +75,31 @@ namespace mm2hack::core::overlay
     {
         if (_state == CaptureState::Hidden) return;
 
-        if (_state == CaptureState::Cancelled) { Finish(false); return; }
+        if (_state == CaptureState::Cancelled)
+        {
+            Finish(false);
+            return;
+        }
 
         if (CheckHitKey(KEY_INPUT_ESCAPE))
         {
-            _state = CaptureState::Cancelled; return;
+            _state = CaptureState::Cancelled;
+            return;
         }
         if (_state == CaptureState::Listening && CheckHitKey(KEY_INPUT_BACK))
         {
-            _target->UnsetBinding(_steps[_index].jpbtn); advance(); return;
+            _target->UnsetBinding(_steps[_index].jpbtn);
+            advance_();
+            return;
         }
         if (_state == CaptureState::Listening && CheckHitKey(KEY_INPUT_RETURN))
         {
-            advance(); return;
+            advance_();
+            return;
         }
 
         using enum CaptureState;
-        auto& jm = apps::deal::GameContext::GetInstance().Joystick();
+        auto& jm = apps::runtime::GameContext::GetInstance().Joystick();
         switch (_state)
         {
         case Intro:
@@ -110,7 +117,7 @@ namespace mm2hack::core::overlay
         case Listening:
             if (auto evt = jm.PollFirstRawChange(_analogThreshold, _captureKind))
             {
-                adoptBinding(*evt);    // Assign to KeyBinding.
+                adoptBinding_(*evt);    // Assign to KeyBinding.
                 _state = Confirm;
                 _confirmElapsedSec = 0.0f;
                 _confirmQuietSec = 0.0f;
@@ -125,7 +132,7 @@ namespace mm2hack::core::overlay
 
             if (shownEnough && quietEnough)
             {
-                advance();  // Go to next step.
+                advance_();  // Go to next step.
             }
             break;
         }
@@ -140,7 +147,7 @@ namespace mm2hack::core::overlay
             break;
         }
 
-        render();
+        render_();
     }
 
     void InputConfigOverlay::Finish(bool committed)
@@ -148,7 +155,7 @@ namespace mm2hack::core::overlay
         // Whether to save or not, enable saveOnCancel if you want to save when canceled.
         if (committed /*|| saveOnCancel*/)
         {
-            auto& jm = apps::deal::GameContext::GetInstance().Joystick();
+            auto& jm = apps::runtime::GameContext::GetInstance().Joystick();
             config::ConfigUIManager::SaveInputDeviceConfig(jm.GetKeyBinding(), jm.ActiveDevice());
         }
 
@@ -156,7 +163,7 @@ namespace mm2hack::core::overlay
         core::GameStateManager::GetInstance().SetState(core::GameState::Running);
     }
 
-    void InputConfigOverlay::render() const
+    void InputConfigOverlay::render_() const
     {
         using conf = config::SystemConfig;
         auto viewerRate = core::winapi::WindowManager::GetInstance().GetViewerRate();
@@ -189,19 +196,19 @@ namespace mm2hack::core::overlay
         // Draw current binding list and adoption rules in the top right, device name in the bottom left (omitted).
     }
 
-    void InputConfigOverlay::advance()
+    void InputConfigOverlay::advance_()
     {
         if (++_index >= _steps.size())
         {
             _state = CaptureState::Completed;
             return;
         }
-        onStepEntered();
+        onStepEntered_();
         _state = CaptureState::Quiescent;
         _stateStart = std::chrono::steady_clock::now();
     }
 
-    void InputConfigOverlay::adoptBinding(const input::RawInputEvent& e)
+    void InputConfigOverlay::adoptBinding_(const input::RawInputEvent& e)
     {
         using namespace input;
 
@@ -223,7 +230,7 @@ namespace mm2hack::core::overlay
         // NOTE: If you assign the same token to multiple buttons, you need to add logic here to unbind the existing assignment.
     }
 
-    void InputConfigOverlay::onStepEntered()
+    void InputConfigOverlay::onStepEntered_()
     {
         using namespace input;
 
@@ -231,13 +238,13 @@ namespace mm2hack::core::overlay
         if (_captureKind == Device::DirectInput)
         {
             const auto jp = _steps[_index].jpbtn;
-            auto& JM = apps::deal::GameContext::GetInstance().Joystick();
+            auto& JM = apps::runtime::GameContext::GetInstance().Joystick();
             switch (jp)
             {
-            case mm2hack::JPBTN::UP:
-            case mm2hack::JPBTN::DOWN:
-            case mm2hack::JPBTN::LEFT:
-            case mm2hack::JPBTN::RIGHT:
+            case JPBTN::UP:
+            case JPBTN::DOWN:
+            case JPBTN::LEFT:
+            case JPBTN::RIGHT:
                 JM.SetDirectInputCaptureGroup(AxisGroup::Left);
                 break;
             default:

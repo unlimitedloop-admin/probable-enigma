@@ -2,23 +2,37 @@
 
 #include "DebugSequence.h"
 
-#include "apps/NES/NESPalette.h"
+#include "apps/foundation/NES/NESPalette.h"
+#include "apps/resources/parameters/Parameters.h"
+#include "apps/scenes/IBaseScene.h"
 #include "apps/scenes/SceneManager.h"
 #include "core/save/SaveData.h"
-#include "SequenceType.h"
+#include "SequenceManager.h"
 
 namespace mm2hack::apps::sequence
 {
     DebugSequence::DebugSequence()
     {
-        // Initialize the sequence, load resources, etc.
-        NES::NESPalette::SetBackgroundFor(config::SystemConfig::kMakeSeqPaletteIndex);
+        using SceneID = scenes::SceneID;
+
+        // Initialize the sequence, checks whether the resource can be loaded, etc.
+        _sceneChanger.RegisterListener(&_sceneManager);
+        _sceneManager.SetMediator(&_sceneChanger);
+
+        // NOTE: LaunchingGame -> BackdoorMenu
+        resources::parameters::Parameters params;
+        params = params.With<SceneID>(L"Subsequent", SceneID::BackdoorMenu);
+        _sceneChanger.RequestChange(SceneID::LaunchingGame, params);
+
+        // Load the default background color for the NES palette.
+        foundation::NES::NESPalette::SetBackgroundFor(config::SystemConfig::kMakeSeqPaletteIndex);
     }
 
     DebugSequence::~DebugSequence()
     {
         // Clean up resources, finalize the sequence, etc.
-        NES::NESPalette::SetBackgroundFor(config::SystemConfig::kDefaultNESPaletteIndex);
+        _sceneManager.Release();
+        foundation::NES::NESPalette::SetBackgroundFor(config::SystemConfig::kDefaultNESPaletteIndex);
     }
 
     void DebugSequence::Execute()
@@ -39,20 +53,15 @@ namespace mm2hack::apps::sequence
         _sceneManager.RenderOverlay();
     }
 
-    scenes::SceneManager* DebugSequence::GetSceneManager()
-    {
-        return &_sceneManager;
-    }
-
     bool DebugSequence::Save(core::save::SaveData& out) const
     {
         // Add more data to SaveData if needed. (Other managers, etc.)
         out.sequenceID = static_cast<int>(SequenceType::Debug);
-        return true;
+        return _sceneManager.SaveState(out);
     }
 
     bool DebugSequence::Load(const core::save::SaveData& in)
     {
-        return true;
+        return _sceneManager.LoadState(in);
     }
 }

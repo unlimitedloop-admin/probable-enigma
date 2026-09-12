@@ -2,7 +2,6 @@
 
 #include "DirectInputProvider.h"
 
-#include <cstdint>
 #include "C16ButtonState.h"
 #include "di/DirectInputToken.h"
 #include "Jpbtn.h"

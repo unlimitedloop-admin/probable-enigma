@@ -12,10 +12,22 @@
 #include <string>
 #include "core/overlay/FeedbackOverlay.h"
 #include "ISequence.h"
-#include "SequenceType.h"
+
+namespace mm2hack::core::save
+{
+    struct SaveData;
+}
 
 namespace mm2hack::apps::sequence
 {
+    // Enumeration of different sequence types
+    enum class SequenceType
+    {
+        None,
+        Standard,
+        Debug
+    };
+
     // SequenceManager is a singleton class that manages the current sequence
     class SequenceManager final
     {
@@ -40,8 +52,8 @@ namespace mm2hack::apps::sequence
         void StopCurrentSequence();
         // Reboots the current sequence, resetting it to its initial state
         void RebootCurrentSequence();
-        // Loads a specific sequence type, such as standard or debug, using when the loading save data
-        void LoadSequence(const SequenceType type);
+        // Validates a snapshot before replacing the current sequence.
+        bool LoadState(const core::save::SaveData& data);
 
         // Executes the current sequence, which is responsible for running the game logic
         void Update();
@@ -72,6 +84,10 @@ namespace mm2hack::apps::sequence
     private:
         SequenceManager() = default;
         ~SequenceManager() = default;
+
+        bool tryLoadValidatedSnapshot_(const core::save::SaveData& data) noexcept;
+
+        const std::wstring kClassName{ L"SequenceManager" };
 
         std::unique_ptr<ISequence> _currentSequence = nullptr;  // Pointer to the current sequence object
         SequenceType _sequenceType = SequenceType::None;        // Current sequence type, indicating the mode of the game

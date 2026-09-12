@@ -8,6 +8,8 @@
 //==============================================================================
 #pragma once
 
+#include <string>
+
 namespace mm2hack::core::assembly
 {
     // A class to manage screenshot functionality
@@ -24,5 +26,8 @@ namespace mm2hack::core::assembly
 
         // Capture the current screen and save it as a PNG file
         static void CaptureToPng();
+
+    private:
+        inline static const std::wstring kClassName{ L"ScreenshotManager" };
     };
 }

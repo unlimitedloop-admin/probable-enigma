@@ -2,9 +2,7 @@
 
 #include "RawInputPoller.h"
 
-#include <cstdint>
 #include <cstdlib>
-#include <optional>
 #include "JoystickManager.h"
 #include "KeyToken.h"
 #include "RawInputEvent.h"
@@ -21,18 +19,18 @@ namespace mm2hack::input
         const Device kind = only.value_or(activeKind);
 
         if (kind == Device::Keyboard)
-            return PollKeyboardRawChange();
+            return pollKeyboardRawChange_();
 
         if (kind == Device::XInput)
-            return PollXInputRawChange(deadzone);
+            return pollXInputRawChange_(deadzone);
 
         if (kind == Device::DirectInput)
-            return PollDirectInputRawChange(deadzone, diCaptureGroup);
+            return pollDirectInputRawChange_(deadzone, diCaptureGroup);
 
         return std::nullopt;
     }
 
-    std::optional<RawInputEvent> RawInputPoller::PollKeyboardRawChange()
+    std::optional<RawInputEvent> RawInputPoller::pollKeyboardRawChange_()
     {
         for (int vk = 0; vk < 256; ++vk)
         {
@@ -44,7 +42,7 @@ namespace mm2hack::input
         return std::nullopt;
     }
 
-    std::optional<RawInputEvent> RawInputPoller::PollXInputRawChange(float deadzone)
+    std::optional<RawInputEvent> RawInputPoller::pollXInputRawChange_(float deadzone)
     {
         XINPUT_STATE st{};
         if (GetJoypadXInputState(DX_INPUT_KEY_PAD1, &st) != 0) return std::nullopt;
@@ -69,7 +67,7 @@ namespace mm2hack::input
         return std::nullopt;
     }
 
-    std::optional<RawInputEvent> RawInputPoller::PollDirectInputRawChange(float deadzone, AxisGroup diCaptureGroup)
+    std::optional<RawInputEvent> RawInputPoller::pollDirectInputRawChange_(float deadzone, AxisGroup diCaptureGroup)
     {
         DINPUT_JOYSTATE st{};
         if (GetJoypadDirectInputState(DX_INPUT_KEY_PAD1, &st) != 0) return std::nullopt;

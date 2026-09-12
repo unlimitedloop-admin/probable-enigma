@@ -2,7 +2,6 @@
 
 #include "StandardTimeController.h"
 
-#include <cstdint>
 #include <cstdlib>
 #include "core/overlay/PauseManager.h"
 #include "ITimeController.h"

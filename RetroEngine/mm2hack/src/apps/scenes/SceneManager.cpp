@@ -2,12 +2,15 @@
 
 #include "SceneManager.h"
 
-#include <utility>
-#include "apps/parameters/Parameters.h"
+#include <string_view>
+
+#include "apps/runtime/GameContext.h"
 #include "core/overlay/PauseManager.h"
+#include "core/save/SaveData.h"
 #include "IBaseScene.h"
 #include "SceneFactory.h"
-#include "SceneID.h"
+#include "sub-scenes/02-DemoStage2/DemoStage2.h"
+#include "sub-scenes/90-BackdoorMenu/BackdoorMenu.h"
 
 namespace mm2hack::apps::scenes
 {
@@ -16,7 +19,8 @@ namespace mm2hack::apps::scenes
         using namespace core::overlay;
         if (_currentScene)
         {
-            if (!PauseManager::IsPaused())
+            auto& time = runtime::GameContext::GetInstance().Time();
+            if (!PauseManager::IsPaused() || (time.DeltaSeconds() > 0.0))   // No-op if paused and not stepping one frame
             {
                 _currentScene->Update();        // !Execute the main game logic.
             }
@@ -38,7 +42,6 @@ namespace mm2hack::apps::scenes
 
     void SceneManager::RenderOverlay()
     {
-        using namespace core::overlay;
         if (_currentScene)
         {
             // It's drawn after RenderWorld, so it appears on top of everything else.
@@ -60,22 +63,88 @@ namespace mm2hack::apps::scenes
         return -1;
     }
 
-    void SceneManager::RequestSceneChange(SceneID nextScene, const parameters::Parameters& params)
+    bool SceneManager::SaveState(core::save::SaveData& out) const
     {
-        auto next = SceneFactory::CreateScene(nextScene);
-        if (next)
+        if (!_currentScene || !_currentScene->CanSaveState())
         {
-            next->Initialize(params);
-            ChangeScene(std::move(next));
+            return false;
         }
+
+        std::ostringstream payload(std::ios::out | std::ios::binary);
+        if (!_currentScene->Save(payload) || !payload.good())
+        {
+            return false;
+        }
+
+        const std::string bytes = payload.str();
+        out.sceneID = static_cast<std::int32_t>(_currentScene->GetSceneID());
+        out.scenePayload.assign(bytes.begin(), bytes.end());
+        return true;
     }
 
-    void SceneManager::ChangeScene(std::unique_ptr<IBaseScene> newScene)
+    bool SceneManager::LoadState(const core::save::SaveData& in)
     {
+        const auto scene_id = static_cast<SceneID>(in.sceneID);
+        if (scene_id == SceneID::None)
+        {
+            return false;
+        }
+
+        if (!_currentScene || _currentScene->GetSceneID() != scene_id)
+        {
+            RequestSceneChange(scene_id, {});
+        }
+        if (!_currentScene || _currentScene->GetSceneID() != scene_id)
+        {
+            return false;
+        }
+
+        const std::string bytes(in.scenePayload.begin(), in.scenePayload.end());
+        std::istringstream payload(bytes, std::ios::in | std::ios::binary);
+        if (!_currentScene->Load(payload))
+        {
+            return false;
+        }
+        return payload.peek() == std::char_traits<char>::eof();
+    }
+
+    bool SceneManager::ValidateState(const core::save::SaveData& in)
+    {
+        const auto scene_id = static_cast<SceneID>(in.sceneID);
+        const std::string bytes(in.scenePayload.begin(), in.scenePayload.end());
+        std::istringstream payload(bytes, std::ios::in | std::ios::binary);
+
+        bool valid = false;
+        switch (scene_id)
+        {
+        case SceneID::BackdoorMenu:
+            valid = BackdoorMenu::ValidateState(payload);
+            break;
+        case SceneID::DemoStage2:
+            valid = DemoStage2::ValidateState(payload);
+            break;
+        default:
+            return false;
+        }
+        return valid && payload.peek() == std::char_traits<char>::eof();
+    }
+
+    void SceneManager::RequestSceneChange(SceneID nextScene, const Parameters& params)
+    {
+        // Create the next scene instance using the SceneFactory.
+        auto next = SceneFactory::CreateScene(nextScene, _mediator);
+        if (!next)
+        {
+            return;
+        }
+
+        // Finalize the current scene before switching to the next one.
         if (_currentScene)
         {
             _currentScene->Finalize();
         }
-        _currentScene = std::move(newScene);
+
+        next->Initialize(params);
+        _currentScene = std::move(next);
     }
 }

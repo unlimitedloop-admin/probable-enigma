@@ -1,0 +1,152 @@
+//==============================================================================
+// 
+//  Project: mm2hack
+//  AbstractActionPhase.h
+// 
+//  Abstract action stage module that manages runtime context and stage script.
+// 
+//==============================================================================
+#pragma once
+
+#include "IPhase.h"
+
+#include <cstdint>
+#include <memory>
+#include <string>
+
+#include "apps/foundation/math/CoordinateTypes.h"
+#include "apps/systems/scrolling/atomic/ScrollController.h"
+#include "apps/ui/productions/StageIntroUI.h"
+#include "apps/world/entity/avatar/PlayerFrameOutput.h"
+#include "core/save/StateIO.h"
+#include "IPhaseHost.h"
+#include "PhaseResult.h"
+#include "StageRuntimeContext.h"
+
+namespace mm2hack::apps::resources::parameters
+{
+    class Parameters;
+}
+
+namespace mm2hack::apps::world::entity::avatar
+{
+    class PlayerEntity;
+}
+
+namespace mm2hack::apps::world::entity
+{
+    struct EntityManagerState;
+}
+
+namespace mm2hack::apps::systems::audio
+{
+    struct SeTransportState;
+}
+
+namespace mm2hack::apps::scenes::phases
+{
+    class IStageScript;
+
+    // States within the action phase
+    enum class ActionPhaseState : std::uint8_t
+    {
+        Intro,  // avatar character warp animation, and more
+        Active  // main gameplay state
+    };
+
+    enum class ActionIntroStep : std::uint8_t
+    {
+        Standby,
+        ReadyBlink,
+        WarpIn,
+        Done
+    };
+
+    struct AbstractActionPhaseState final
+    {
+        ActionPhaseState phase{ ActionPhaseState::Intro };
+        ActionIntroStep intro_step{ ActionIntroStep::Standby };
+        double intro_timer{};
+        bool entered{};
+        bool operate{};
+        foundation::math::Vec2 player_previous_position{};
+        ui::productions::StageIntroUIState ready_ui{};
+        systems::scrolling::atomic::ScrollControllerState scroll{};
+
+        bool Save(core::save::StateWriter& writer) const;
+        bool Load(core::save::StateReader& reader);
+        [[nodiscard]] bool IsValid() const noexcept;
+    };
+
+    // Abstract action phase that manages the runtime context and stage script
+    class AbstractActionPhase final : public IPhase
+    {
+        using Vec2 = foundation::math::Vec2;
+
+    public:
+        AbstractActionPhase(std::unique_ptr<StageRuntimeContext> ctx, IStageScript* script, IPhaseHost& host) noexcept;
+        ~AbstractActionPhase() override;
+
+        AbstractActionPhase(const AbstractActionPhase&) = delete;
+        AbstractActionPhase& operator=(const AbstractActionPhase&) = delete;
+
+        // Sets up the phase with given parameters
+        void Initialize(const resources::parameters::Parameters& params) override;
+        // Updates the phase and returns the result
+        PhaseResult Update() override;
+        // Renders the world elements
+        void RenderWorld() override;
+        // Renders the overlay elements
+        void RenderOverlay() override;
+        // Enables or disables the operate phase
+        void SetEnableOperatePhase(bool enable) override;
+        // Gets whether the operate phase is enabled
+        bool GetEnableOperatePhase() const override { return _operate; }
+        [[nodiscard]] bool CanCaptureState() const noexcept;
+        [[nodiscard]] bool CaptureState(AbstractActionPhaseState& state) const noexcept;
+        bool CaptureEntityState(world::entity::EntityManagerState& state) const;
+        bool RestoreScrollState(const AbstractActionPhaseState& state) noexcept;
+        bool RestoreEntityState(
+            const world::entity::EntityManagerState& state,
+            const AbstractActionPhaseState& phase_state);
+        bool RestoreRuntimeState(const AbstractActionPhaseState& state) noexcept;
+        bool RestoreState(const AbstractActionPhaseState& state) noexcept;
+        void RestoreChargePresentationState(
+            const systems::audio::SeTransportState& se_state) noexcept;
+
+    private:
+        void updateIntro_();                                // Handles the intro state update
+        void updateActive_();                               // Handles the active state update
+        void consumePlayerOutput_(world::entity::avatar::PlayerEntity& player); // Handles player events and spawn commands
+        void updateChargePresentation_(
+            const world::entity::avatar::PlayerEntity& player,
+            const world::entity::avatar::ChargeStatus& charge);
+
+    private:
+        const std::wstring kClassName{ L"AbstractActionPhase" };
+
+        struct IntroSequence
+        {
+            ActionIntroStep step{ ActionIntroStep::Standby };
+            double    timer{ 0.0 };
+        } _intro{};                                         // Intro sequence state
+
+        std::unique_ptr<StageRuntimeContext> _ctx{};        // Runtime context for the stage
+        std::wstring _bgm_key{};                            // Current BGM key
+        IStageScript* _script{};                            // Optional stage script for custom behavior
+        IPhaseHost* _host{};                                // Host for phase transitions
+        bool _entered{ false };                             // Indicates if the phase has been entered
+        bool _operate{ false };                             // Indicates if the operate phase is enabled (Disable at fade-in and fade-out)
+        bool _charge_sound_playing{ false };                // Temporary B-hold charge sound playback state
+        world::entity::avatar::ChargePhase _charge_phase{ world::entity::avatar::ChargePhase::Idle };
+
+        Vec2 _player_prev_pos{};                            // Previous player position, scrolling-player sync use
+        ActionPhaseState _state{ ActionPhaseState::Intro }; // Current state of the action phase
+        ui::productions::StageIntroUI _ready_ui{};          // UI for the intro sequence
+
+        // ======== debug info ========
+        int _page_index_debug{ 0 };
+        double _player_pos_x_debug{ 0 };
+        double _player_pos_y_debug{ 0 };
+    };
+}

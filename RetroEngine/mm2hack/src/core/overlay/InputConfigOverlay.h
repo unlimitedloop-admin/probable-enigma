@@ -11,6 +11,7 @@
 #include <chrono>
 #include <cstdint>
 #include <optional>
+#include <string>
 #include <vector>
 #include "input/Jpbtn.h"
 #include "input/KeyBinding.h"
@@ -19,7 +20,16 @@
 
 namespace mm2hack::core::overlay
 {
-    enum class CaptureState : uint8_t { Hidden, Intro, Quiescent, Listening, Confirm, Completed, Cancelled };
+    enum class CaptureState : uint8_t
+    {
+        Hidden,
+        Intro,
+        Quiescent,
+        Listening,
+        Confirm,
+        Completed,
+        Cancelled
+    };
 
     // A step in the input configuration process
     struct CaptureStep
@@ -80,10 +90,13 @@ namespace mm2hack::core::overlay
         ~InputConfigOverlay() = default;
 
         // Rendering and internal logic
-        void render() const;
-        void advance();
-        void adoptBinding(const input::RawInputEvent& e);
-        void onStepEntered();
+        void render_() const;
+        void advance_();
+        void adoptBinding_(const input::RawInputEvent& e);
+        void onStepEntered_();
+
+    private:
+        const std::wstring kClassName{ L"InputConfigOverlay" };
 
         input::KeyBinding* _target{ nullptr };
         std::vector<CaptureStep> _steps;
@@ -93,10 +106,11 @@ namespace mm2hack::core::overlay
 
         std::optional<input::RawInputEvent> _candidate;
         std::chrono::steady_clock::time_point _stateStart{};
-        int _requiredQuiescentMs{ 150 };   // Quiescent time before accepting input
-        float _analogThreshold{ 0.5f };    // Analog input threshold
-        bool _allowMultiple{ false };      // Allow multiple bindings
+        int _requiredQuiescentMs{ 150 };    // Quiescent time before accepting input
+        float _analogThreshold{ 0.5f };     // Analog input threshold
+        bool _allowMultiple{ false };       // Allow multiple bindings
 
+        // Confirmation timing
         float _confirmElapsedSec{ 0.0f };
         float _confirmQuietSec{ 0.0f };
         int _confirmMinShowMs{ 250 };

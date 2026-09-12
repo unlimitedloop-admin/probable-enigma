@@ -7,7 +7,7 @@
 #include <iterator>
 #include <limits>
 #include "../resource.h"
-#include "apps/NES/NESPalette.h"
+#include "apps/foundation/NES/NESPalette.h"
 #include "config/ConfigUIManager.h"
 #include "config/EnvironmentConfig.h"
 #include "config/GraphicsConfig.h"
@@ -17,9 +17,6 @@
 #include "core/GameStateManager.h"
 #include "core/ui/GraphicsSettingsUI.h"
 #include "core/ui/SettingsWindow.h"
-#include "exceptions/CoreException.h"
-#include "exceptions/ErrorHandler.h"
-#include "exceptions/ErrorLevel.h"
 #include "utils/LogWriter.h"
 #include "utils/string_converter.h"
 #include "WindowContext.h"
@@ -67,10 +64,11 @@ namespace mm2hack::core::winapi
         using namespace exceptions;
         using namespace utils;
         using conf = config::SystemConfig;
+        using NESPal = apps::foundation::NES::NESPalette;
 
-        auto reportInitError = [](const std::wstring& message) -> bool
+        auto reportInitError = [&](const std::wstring& message) -> bool
             {
-                ErrorHandler::Handle(message, L"WindowManager", L"Initialize", ErrorLevel::Error);
+                ErrorHandler::Handle(message, kClassName, L"Initialize", ErrorLevel::Error);
                 return false;
             };
 
@@ -80,53 +78,50 @@ namespace mm2hack::core::winapi
             return reportInitError(L"Window title is empty.");
         }
         _windowTitle = windowTitle;
-        _viewerRate = LoadViewerRate();
-        _vSync = LoadVSync();
+        _viewerRate = loadViewerRate_();
+        _vSync = loadVSync_();
 
         if (EnvironmentConfig::GetBool(L"OUTPUT_LOG_ENABLE"))
         {
             LogWriter::Initialize(conf::kLogFilePath);
-            DxLib::SetApplicationLogSaveDirectory(conf::kLogFilePath.c_str());
-            DxLib::SetApplicationLogFileName(conf::kDxLibLogFileName.c_str());
-            DxLib::SetOutApplicationLogValidFlag(TRUE);
+            ::DxLib::SetApplicationLogSaveDirectory(conf::kLogFilePath.c_str());
+            ::DxLib::SetApplicationLogFileName(conf::kDxLibLogFileName.c_str());
+            ::DxLib::SetOutApplicationLogValidFlag(TRUE);
         }
         else
         {
-            DxLib::SetOutApplicationLogValidFlag(FALSE);
+            ::DxLib::SetOutApplicationLogValidFlag(FALSE);
         }
 
         const BOOL isAlwaysRun = EnvironmentConfig::GetBool(L"WINDOW_ALWAYS_RUN_ENABLE") ? TRUE : FALSE;
 
         // Create the main window.
-        if (DxLib::SetDoubleStartValidFlag(FALSE) != 0 ||
-            DxLib::SetWaitVSyncFlag(FALSE) != 0 ||
-            DxLib::SetAlwaysRunFlag(isAlwaysRun) != 0 ||
-            DxLib::SetUseASyncChangeWindowModeFunction(FALSE, nullptr, nullptr) != 0 ||
-            DxLib::SetWindowUserCloseEnableFlag(TRUE) != 0 ||
-            DxLib::SetDxLibEndPostQuitMessageFlag(TRUE) != 0 ||
-            DxLib::ChangeWindowMode(TRUE) != DX_CHANGESCREEN_OK ||
-            DxLib::SetGraphMode(
+        if (::DxLib::SetDoubleStartValidFlag(FALSE) != 0 ||
+            ::DxLib::SetWaitVSyncFlag(FALSE) != 0 ||
+            ::DxLib::SetAlwaysRunFlag(isAlwaysRun) != 0 ||
+            ::DxLib::SetUseASyncChangeWindowModeFunction(FALSE, nullptr, nullptr) != 0 ||
+            ::DxLib::SetWindowUserCloseEnableFlag(TRUE) != 0 ||
+            ::DxLib::SetDxLibEndPostQuitMessageFlag(TRUE) != 0 ||
+            ::DxLib::ChangeWindowMode(TRUE) != DX_CHANGESCREEN_OK ||
+            ::DxLib::SetGraphMode(
                 static_cast<int>(conf::kScreenWidth * conf::kScreenScaleMax),
                 static_cast<int>(conf::kScreenHeight * conf::kScreenScaleMax),
                 conf::kScreenColorDepth) != 0 ||
-            DxLib::SetWindowSizeChangeEnableFlag(FALSE, FALSE) != 0 ||
-            DxLib::SetWindowSize(
+            ::DxLib::SetWindowSizeChangeEnableFlag(FALSE, FALSE) != 0 ||
+            ::DxLib::SetWindowSize(
                 static_cast<int>(conf::kScreenWidth * _viewerRate),
                 static_cast<int>(conf::kScreenHeight * _viewerRate)) != 0 ||
-            DxLib::SetWindowSizeExtendRate(1.0f) != 0 ||
-            DxLib::SetMainWindowText(_windowTitle.c_str()) != 0 ||
-            DxLib::SetWindowIconID(IDI_WNDICON) != 0 ||
-            DxLib::LoadMenuResource(IDR_MAINMENU) != 0 ||
-            DxLib::SetWindowInitPosition(0, 0) != 0)
+            ::DxLib::SetWindowSizeExtendRate(1.0f) != 0 ||
+            ::DxLib::SetMainWindowText(_windowTitle.c_str()) != 0 ||
+            ::DxLib::SetWindowIconID(IDI_WNDICON) != 0 ||
+            ::DxLib::LoadMenuResource(IDR_MAINMENU) != 0 ||
+            ::DxLib::SetWindowInitPosition(0, 0) != 0)
         {
             return reportInitError(L"Failed to initialize the window.");
         }
 
-        InitializeMenuOnStartup();
-        UpdateMenuBarState();
-
         // DxLib initialization.
-        if (DxLib::DxLib_Init() == -1)
+        if (::DxLib::DxLib_Init() == -1)
         {
             return reportInitError(L"Failed to initialize DxLib.");
         }
@@ -138,31 +133,34 @@ namespace mm2hack::core::winapi
         InitCommonControlsEx(&iccex);
         ui::SettingsWindow::RegisterWindowClass(hInstance);
 
-        _mainWindowHandle = DxLib::GetMainWindowHandle();
+        _mainWindowHandle = ::DxLib::GetMainWindowHandle();
         if (_mainWindowHandle == nullptr)
         {
-            DxLib::DxLib_End();
+            ::DxLib::DxLib_End();
             return reportInitError(L"Unable to obtain window handle.");
         }
+
+        InitializeMenuOnStartup();
+        UpdateMenuBarState();
 
         _dxLibWnd = reinterpret_cast<WNDPROC>(GetWindowLongPtr(_mainWindowHandle, GWLP_WNDPROC));
         SetWindowLongPtr(_mainWindowHandle, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WindowProc));
 
         // Set the background color using NES palette
-        if (!apps::NES::NESPalette::LoadPaletteFromFile(conf::kNESPaletteFilepath))
+        if (!NESPal::LoadPaletteFromFile(conf::kNESPaletteFilepath))
         {
             // If palette loading fails, handle the error
-            DxLib::DxLib_End();
+            ::DxLib::DxLib_End();
             return reportInitError(L"Failed to load NES palette.");
         }
-        apps::NES::NESPalette::SetBackgroundFor(conf::kDefaultNESPaletteIndex);
-        DxLib::ChangeFont(L"Segoe UI");
+        NESPal::SetBackgroundFor(conf::kDefaultNESPaletteIndex);
+        ::DxLib::ChangeFont(L"Segoe UI");
 
-        _screenHandle = DxLib::MakeScreen(conf::kScreenWidth, conf::kScreenHeight, FALSE);  // Create a screen for drawing
+        _screenHandle = ::DxLib::MakeScreen(conf::kScreenWidth, conf::kScreenHeight, FALSE);  // Create a screen for drawing
         if (_screenHandle == -1)
         {
-            DxLib::DxLib_End();
-            return reportInitError(L"The SetDrawScreen(DX_SCREEN_BACK) function failed.");
+            ::DxLib::DxLib_End();
+            return reportInitError(L"Make back screen for drawing failed.");
         }
 
         // Load the HUD configuration from the ini file.
@@ -171,7 +169,7 @@ namespace mm2hack::core::winapi
 
         // Synchronize various settings and menu bar status, etc...
         PostMessage(_mainWindowHandle, WM_USER_CREATE, 0, 0);
-        SyncWindowSizeMenuCheck(_viewerRate);
+        syncWindowSizeMenuCheck_(_viewerRate);
 
         return true;
     }
@@ -191,7 +189,7 @@ namespace mm2hack::core::winapi
 
     void WindowManager::Shutdown()
     {
-        DxLib::DxLib_End();
+        ::DxLib::DxLib_End();
         _hInstance = nullptr;
         _mainWindowHandle = nullptr;
         _windowTitle.clear();
@@ -232,7 +230,7 @@ namespace mm2hack::core::winapi
             SetWindowPos(hWnd, nullptr, 0, 0, windowW, windowH, SWP_NOMOVE | SWP_NOZORDER);
         }
         _viewerRate = viewerRate;
-        SyncWindowSizeMenuCheck(viewerRate);
+        syncWindowSizeMenuCheck_(viewerRate);
 
         return true;
     }
@@ -252,7 +250,7 @@ namespace mm2hack::core::winapi
         HMENU hMenu = GetMenu(_mainWindowHandle);
         if (!hMenu) return;
 
-        if (!IsDebugMode())
+        if (!isDebugMode_())
         {
             // Debug(&D) is the 3rd command on the menu.
             RemoveMenu(hMenu, 3, MF_BYPOSITION);
@@ -289,7 +287,7 @@ namespace mm2hack::core::winapi
 
     bool WindowManager::IsMainWindowActive()
     {
-        return static_cast<bool>(DxLib::GetWindowActiveFlag());
+        return static_cast<bool>(::DxLib::GetWindowActiveFlag());
     }
 
     int WindowManager::GetScreenHandle() const
@@ -311,9 +309,11 @@ namespace mm2hack::core::winapi
     {
         using namespace exceptions;
 
+        auto& wm = WindowManager::GetInstance();
+
         auto ForwardToDefaultProc = [&]() -> LRESULT
             {
-                auto dxWndProc = WindowManager::GetInstance().GetDxLibWnd();
+                auto dxWndProc = wm.GetDxLibWnd();
                 return dxWndProc != nullptr
                     ? CallWindowProc(dxWndProc, hwnd, message, wParam, lParam)
                     : DefWindowProc(hwnd, message, wParam, lParam);
@@ -356,18 +356,24 @@ namespace mm2hack::core::winapi
         }
         catch (const std::exception& e)
         {
-            ErrorHandler::Handle(utils::utf8_to_wstring(e.what()), L"WindowManager", L"WindowProc", ErrorLevel::FatalError);
+            ErrorHandler::Handle(utils::utf8_to_wstring(e.what()), wm.GetClassName2(), L"WindowProc", ErrorLevel::FatalError);
             return ForwardToDefaultProc();
         }
     }
 
-    bool WindowManager::IsDebugMode() const
+    bool WindowManager::isDebugMode_() const
     {
-        return (lstrcmp(GetCommandLine(), L"debug") == 0) ||
-            config::EnvironmentConfig::GetBool(L"MM2HACK_DEBUG", false);
+        // Check if "debug" argument is passed in the command line
+        const std::wstring cmdLine = GetCommandLine();
+        const bool hasDebugArg = cmdLine.find(L"debug") != std::wstring::npos;
+        
+        // Check environment configuration
+        const bool envDebug = config::EnvironmentConfig::GetBool(L"MM2HACK_DEBUG", false);
+        
+        return hasDebugArg || envDebug;
     }
 
-    float WindowManager::LoadViewerRate() const
+    float WindowManager::loadViewerRate_() const
     {
         using namespace config;
         using namespace core::ui;
@@ -382,7 +388,7 @@ namespace mm2hack::core::winapi
         return viewerRate;
     }
 
-    bool WindowManager::LoadVSync() const
+    bool WindowManager::loadVSync_() const
     {
         using namespace config;
         bool vsync = false;
@@ -395,7 +401,7 @@ namespace mm2hack::core::winapi
         return vsync;
     }
 
-    void WindowManager::SyncWindowSizeMenuCheck(float viewerRate) const
+    void WindowManager::syncWindowSizeMenuCheck_(float viewerRate) const
     {
         const auto& hwnd = WindowManager::GetInstance().GetMainWindowHandle();
         HMENU hMenu = ::GetMenu(hwnd);

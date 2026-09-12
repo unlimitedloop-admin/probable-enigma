@@ -1,0 +1,218 @@
+//==============================================================================
+// 
+//  Project: mm2hack
+//  PlayerEntity.h
+// 
+//  The one player character controlling all actions.
+// 
+//==============================================================================
+#pragma once
+
+#include "apps/systems/physics/ICollider.h"
+#include "apps/world/entity/EntityBase.h"
+
+#include <array>
+#include <cstdint>
+#include <memory>
+#include <optional>
+#include <string>
+
+#include "apps/foundation/math/CoordinateTypes.h"
+#include "apps/rendering/sprite/SpriteManager.h"
+#include "apps/systems/physics/CollisionLayer.h"
+#include "apps/systems/physics/ILadderService.h"
+#include "apps/systems/physics/ITerrainProbe.h"
+#include "apps/systems/physics/PageGridIndex.h"
+#include "apps/systems/physics/Probes.h"
+#include "apps/systems/physics/TileAttribute.h"
+#include "apps/systems/scrolling/atomic/IScrollRuleProvider.h"
+#include "apps/systems/scrolling/atomic/ScrollTypes.h"
+#include "apps/systems/view/RenderContext.h"
+#include "apps/systems/view/ViewState.h"
+#include "apps/world/entity/common/AnimeStepper.h"
+#include "apps/world/entity/IEntity.h"
+#include "AvatarStatus.h"
+#include "core/save/StateIO.h"
+#include "PlayerContext.h"
+#include "PlayerEntityState.h"
+#include "PlayerEnvironmentController.h"
+#include "PlayerFrameOutput.h"
+#include "PlayerParams.h"
+#include "PlayerStateMachine.h"
+#include "states/AttackActionState.h"
+
+namespace mm2hack::core::assembly
+{
+    class StateProvider;
+}
+
+namespace mm2hack::apps::world::entity::avatar
+{
+    // User player character entity
+    class PlayerEntity final : public EntityBase, public systems::physics::ICollider
+    {
+        using AnimeStepper              = common::AnimeStepper;
+        using RectF                     = foundation::math::RectF;
+        using Vec2                      = foundation::math::Vec2;
+        using CollisionLayer            = systems::physics::CollisionLayer;
+        using ILadderService            = systems::physics::ILadderService;
+        using ITerrainProbe             = systems::physics::ITerrainProbe;
+        using TileAttribute             = systems::physics::TileAttribute;
+        using PageGridIndex             = systems::physics::PageGridIndex;
+        using Probes                    = systems::physics::Probes;
+        using IScrollRuleProvider       = systems::scrolling::atomic::IScrollRuleProvider;
+        using LayerView                 = systems::view::Layer;
+        using RenderContext             = systems::view::RenderContext;
+        using StateProvider             = core::assembly::StateProvider;
+
+        using SpriteManagerId           = rendering::sprite::SpriteManager::Id;
+
+    public:
+        using ScrollDir                 = systems::scrolling::atomic::PageScroll::Dir;
+        static constexpr std::uint16_t kStateVersion{ 1 };
+
+        PlayerEntity(
+            SpriteManagerId id,
+            SpriteManagerId weaponId,
+            SpriteManagerId effectsId = static_cast<SpriteManagerId>(-1),
+            SpriteManagerId chargeLevel1Id = static_cast<SpriteManagerId>(-1),
+            SpriteManagerId chargeLevel2Id = static_cast<SpriteManagerId>(-1));
+
+        // Main action updates (IUpdatable)
+        void Update(const systems::view::ViewState* view, double dt) override;
+        // Drawing layer (IRenderable)
+        LayerView DrawLayer() const noexcept override;
+        // Rendering (IRenderable)
+        void Render(RenderContext& ctx) override;
+        // Is on alive? (IEntity)
+        bool IsAlive() const noexcept override;
+        // Kill (IEntity)
+        void Kill() noexcept override;
+        [[nodiscard]] EntityTypeId StateTypeId() const noexcept override { return EntityTypeId::Player; }
+        [[nodiscard]] std::uint16_t StateComponentVersion() const noexcept override { return kStateVersion; }
+        bool SaveState(core::save::StateWriter& writer) const override;
+        [[nodiscard]] bool CanCaptureState() const noexcept;
+        [[nodiscard]] PlayerEntityState CaptureState() const noexcept;
+        bool RestoreState(const PlayerEntityState& state) noexcept;
+        [[nodiscard]] const ChargeStatus& ChargeState() const noexcept { return _charge_status; }
+        // Bounding box (ICollider)
+        RectF Bounds() const override;
+        // Is collidable? (ICollider)
+        bool IsCollidable() const noexcept override;
+        // Collision layer (ICollider)
+        CollisionLayer Layer() const noexcept override;
+        // Collision reactions (ICollider)
+        void OnTileCollision(const Vec2& normal, TileAttribute attr) override;
+        // Entity collision reaction (ICollider)
+        void OnEntityCollision(IEntity& other) override;
+
+        // Return the owner entity
+        IEntity& OwnerEntity() noexcept override;
+        const IEntity& OwnerEntity() const noexcept override;
+
+        // Animation tick
+        void TickAnimation(double dt);
+        // Start intro drop state
+        void BeginIntroDrop();
+        // Update intro drop animation
+        void UpdateIntroAnimation(double dt);
+        // Check if intro animation is finished
+        bool IsIntroFinished() const noexcept;
+
+        // Set collidable
+        void SetCollidable(bool v) noexcept;
+
+        // Set/Get view boundaries
+        void SetViewBounds(const systems::scrolling::atomic::ViewBounds& b) noexcept;
+        const WorldBounds& ViewBounds() const noexcept { return _v_bounds; }
+
+        // ===== dependency injection & configuration =====
+        void SetInput(StateProvider* in) { _input = in; }
+        void SetTuning(const PlayerTuning& t);
+        void SetPageOriginPx(const Vec2& p) noexcept { _page_origin_px = p; }
+        void SetTerrainProbe(ITerrainProbe* p) noexcept { _terrain_probe = p; }
+        void SetLadderService(ILadderService* s) { _ladder_service = s; }
+        void SetScrollContext(const IScrollRuleProvider* rules, std::size_t pageIndex);
+        void SetScrollRuleProvider(const IScrollRuleProvider* rules) noexcept { _scroll_rules = rules; }
+        void SetEntityContext(const ExPlayerContextForEntity& cx) noexcept { _entityContext = cx; }
+
+        // Get scrolling request (if any) and consume it
+        [[nodiscard]] std::optional<FixedScrollRequest> ConsumeScrollRequest() noexcept;
+
+        // Parameter that acts as a dedicated flag for fixed page scrolling.
+        void SetFixedPageScrollAvailable(bool v) noexcept { _fixed_scroll_available = v; }
+        // Take all events and commands emitted since the previous call
+        [[nodiscard]] PlayerFrameOutput TakeFrameOutput() noexcept;
+
+        // ===== public parameters =====
+        bool onGround{ false };                                     // Is on the ground?
+        AvatarDirection facingLR{ AvatarDirection::Right };         // Player direction: -1: left, +1: right
+        int texture{ 0 };                                           // baseTexture + attackTexture
+        int baseTexture{ 0 };                                       // Base texture index (without animation offset)
+        int attackTexture{ 0 };                                     // Current attack texture (for rock buster drawing)
+
+    private:
+        PlayerContext makeContext_();                               // Build the context used during this update
+        [[nodiscard]] PlayerEnvironmentUpdate processEnvironment_(); // Update environment and transition effects
+        void updateActions_(PlayerContext& cx, const PlayerTuning& tuning, bool skipPhysics, double dt); // Update locomotion and attack actions
+        void applyContext_(const PlayerContext& cx, bool skipPhysics); // Apply context results to the entity
+        void resolvePostMovement_(PlayerContext& cx);               // Resolve overlaps and velocity after movement
+        void updateIntroFalling_(double dt);                        // Update intro falling animation
+        void updateIntroLanding_(double dt);                        // Update intro landing animation
+
+        void composeFinalTexture_() noexcept;                       // Set current avatar tile number
+        void refreshProbes_(PlayerContext& cx) noexcept;            // Refresh collision all probes
+
+        void requestScroll_(FixedScrollRequest req) noexcept;       // Request fixed page scrolling
+        [[nodiscard]] SpriteManagerId renderSpriteId_() const noexcept;
+
+    private:
+        const std::wstring kClassName{ L"PlayerEntity" };
+
+        static constexpr std::array<IntroFrame, 9> kLandingFrames
+        {
+            IntroFrame{ STile::IntroDropA, 5.0 / 60.0 },
+            IntroFrame{ STile::IntroDropB, 5.0 / 60.0 },
+            IntroFrame{ STile::IntroDropC, 5.0 / 60.0 },
+            IntroFrame{ STile::IntroDropD, 5.0 / 60.0 },
+            IntroFrame{ STile::IntroDropE, 5.0 / 60.0 },
+            IntroFrame{ STile::IntroDropF, 16.0 / 60.0 },
+            IntroFrame{ STile::IntroDropG, 4.0 / 60.0 },
+            IntroFrame{ STile::IntroDropH, 3.0 / 60.0 },
+            IntroFrame{ STile::IntroDropI, 13.0 / 60.0 }
+        };                                                          // Landing animation frames in the intro drop sequence
+
+        SpriteManagerId _id{};                                      // Sprite Id
+        SpriteManagerId _effects_id{};                              // Effect sprite Id
+        SpriteManagerId _charge_level1_id{ static_cast<SpriteManagerId>(-1) };
+        SpriteManagerId _charge_level2_id{ static_cast<SpriteManagerId>(-1) };
+        Vec2 _half{};                                               // Half-size of the bounding box
+        bool _collidable{ true };                                   // Whether collision is enabled
+        PlayerStateMachine _state_machine{};                        // Locomotion state ownership and transitions
+        std::unique_ptr<states::AttackActionState> _attackAction{}; // Attack action state handler
+        states::RockBusterDrawInfo _rock_buster{};                  // Rock Buster drawing info
+
+        StateProvider* _input{};                                    // Player input snapshot (This is separate from core::assembly::InputSnapshot)
+        PlayerEnvironmentController _environment_controller{};      // Environment detection and physics tuning
+        IntroDropState _intro_states{};                             // Appearing the player on stage parameters
+        states::AttackTuning _attack_tuning{};                      // Attack action tuning parameters
+        AnimeStepper _anime_stepper{};                              // Animation stepper
+        Probes _probes{ _half };                                    // Collision probes
+        const ITerrainProbe* _terrain_probe{ nullptr };             // Terrain probe
+        ILadderService* _ladder_service{ nullptr };                 // Laddering action service
+        bool _jump_buffered{ false };                               // Jump edge latched across an underwater skip-physics tick (see PlayerContext::jumpEdge)
+        bool _dash_buffered{ false };                               // Dash edge latched across an underwater skip-physics tick (see PlayerContext::dashEdge)
+
+        WorldBounds _v_bounds{};                                    // View boundaries
+
+        Vec2 _page_origin_px{};                                     // Current page origin in world px
+        const IScrollRuleProvider* _scroll_rules{ nullptr };        // Scroll rule provider
+        std::size_t _scroll_page_index{ 0 };                        // Current page index for scrolling
+        std::optional<FixedScrollRequest> _pending_scroll_req{};    // Pending fixed scroll request
+        bool _fixed_scroll_available{ false };                      // Is fixed-page scrolling available?
+
+        ExPlayerContextForEntity _entityContext{};                  // Extended context for entity-level data
+        PlayerFrameOutput _frame_output{};                          // Pending events and entity spawn commands
+        ChargeStatus _charge_status{};                              // Current charge presentation state
+    };
+}

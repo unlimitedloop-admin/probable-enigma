@@ -8,13 +8,10 @@
 #include <d3d9.h>
 #include <d3d9caps.h>
 #include <d3d9types.h>
-#include <sysinfoapi.h>
 #include <VersionHelpers.h>
 #include "config/EnvironmentConfig.h"
-#include "exceptions/ErrorHandler.h"
-#include "exceptions/ErrorLevel.h"
 #include "winapi/WindowManager.h"
-
+#include "Windows.h"
 
 namespace mm2hack::core
 {

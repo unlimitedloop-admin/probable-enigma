@@ -2,7 +2,6 @@
 
 #include "KeyBinding.h"
 
-#include <array>
 #include <cstdint>
 #include "DefaultKeyArray.h"
 #include "Jpbtn.h"

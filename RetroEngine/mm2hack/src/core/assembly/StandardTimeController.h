@@ -11,6 +11,7 @@
 #include "ITimeController.h"
 
 #include <cstdint>
+#include <string>
 #include "utils/Fps.h"
 
 namespace mm2hack::core::assembly
@@ -65,6 +66,8 @@ namespace mm2hack::core::assembly
         [[nodiscard]] std::uint64_t GetPlayFrameCounter() const noexcept override;
 
     private:
+        const std::wstring kClassName{ L"StandardTimeController" };
+
         mm2hack::utils::Fps* _fps;                  // External Fps pointer
         bool _callWait;                             // Call wait in BeginFrame
         bool _followFps{ false };                   // Synchronize target FPS with fixed delta time

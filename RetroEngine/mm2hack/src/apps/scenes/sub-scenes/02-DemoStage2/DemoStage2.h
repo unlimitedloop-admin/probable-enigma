@@ -1,0 +1,152 @@
+//==============================================================================
+// 
+//  Project: mm2hack
+//  DemoStage2.h
+// 
+//  Scene ID - 02 Demo stage 2 scene implemented with abstract action scene.
+// 
+//==============================================================================
+#pragma once
+
+#include "apps/scenes/IBaseScene.h"
+#include "apps/scenes/phases/IPhaseHost.h"
+
+#include <array>
+#include <istream>
+#include <memory>
+#include <ostream>
+#include <string>
+#include <string_view>
+
+#include "apps/rendering/bg/BGTileAnimator.h"
+#include "apps/rendering/bg/BGTileManager.h"
+#include "apps/rendering/sprite/SpriteManager.h"
+#include "apps/resources/assets/StageSpriteBank.h"
+#include "apps/resources/ResourceManager.h"
+#include "apps/scenes/IStageAssetProvider.h"
+#include "apps/scenes/PhaseFadeController.h"
+#include "apps/scenes/phases/ActionStageRuntimeBuilder.h"
+#include "apps/scenes/phases/IPhase.h"
+#include "apps/scenes/phases/IStageScript.h"
+#include "apps/scenes/SceneChangeMediator.h"
+#include "apps/world/entity/enemy/lists/EnemyLists.h"
+#include "core/assembly/StateProvider.h"
+
+namespace mm2hack::apps::resources::parameters
+{
+    class Parameters;
+}
+
+namespace mm2hack::apps::scenes
+{
+    // Demo stage scene (ID: 02)
+    class DemoStage2 final : public IBaseScene, public phases::IPhaseHost, public IStageAssetProvider
+    {
+        using BGTileManager     = rendering::bg::BGTileManager;
+        using BGTileManagerId   = rendering::bg::BGTileManager::Id;
+        using SpriteManagerId   = rendering::sprite::SpriteManager::Id;
+        using Parameters        = resources::parameters::Parameters;
+
+    public:
+        explicit DemoStage2(SceneChangeMediator* mediator);
+        ~DemoStage2() override;
+
+        // === IBaseScene implementations ===
+        // Main update loop
+        void Update() override;
+        // Render world elements
+        void RenderWorld() override;
+        // Render overlay elements
+        void RenderOverlay() override;
+        // Scene identification
+        SceneID GetSceneID() const override { return SceneID::DemoStage2; }
+        // Get the scene name (i.e. class name)
+        std::wstring GetSceneName() const override { return kClassName; }
+
+        // === IPhaseHost implementations ===
+        // Request a phase transition
+        void RequestTransition(const std::wstring& next_key, const PhaseFadePlan& plan, const Parameters& params) override;
+
+        // === IStageAssetProvider implementations ===
+        SpriteManagerId PlayerSprite() const noexcept override { return _spriteBank.player; }
+        SpriteManagerId PlayerChargeLevel1Sprite() const noexcept override { return _spriteBank.player_charge_level1; }
+        SpriteManagerId PlayerChargeLevel2Sprite() const noexcept override { return _spriteBank.player_charge_level2; }
+        SpriteManagerId PlayerAttackSprite() const noexcept override { return _spriteBank.player_attack; }
+        SpriteManagerId EffectsSprite() const noexcept override { return _spriteBank.effects; }
+        SpriteManagerId SlidingDustEffectSprite() const noexcept override { return _spriteBank.sliding_dust_effect; }
+        SpriteManagerId ChargeEffectSprite() const noexcept override { return _spriteBank.charge_effect; }
+        bool TryEnemySprite(world::entity::enemy::EnemyKind kind, SpriteManagerId& out) const noexcept override;
+
+        // === DemoStage2 specific ===
+        // Queue a new phase to transition to
+        void QueuePhase(std::unique_ptr<phases::IPhase> next, PhaseFadePlan nextPlan);
+        // Get the current room page index
+        int GetCurrentRoomPageIndex() const { return _roomState.pageIndex; }
+        // Get the map name used in this scene
+        std::wstring GetMapName() const { return kMapName; }
+        // Get the map binary path used in this scene
+        std::wstring GetMapBinaryPath() const { return std::wstring(kStageMapBinary); }
+
+        // === Save/Load state ===
+        // Save the current state to an output stream
+        [[nodiscard]] bool CanSaveState() const noexcept override;
+        bool Save(std::ostream& out) const override;
+        // Validate a serialized state without touching live scene resources
+        static bool ValidateState(std::istream& in);
+        // Load the state from an input stream
+        bool Load(std::istream& in) override;
+
+    private:
+        void onEnter_(const Parameters& params) override;               // Scene enter hook
+        void onExit_() override;                                        // Scene exit hook
+
+        bool initializeResources_(const Parameters& params);            // Initialize resources needed for the scene
+        bool loadStage_(BGTileManager& bgTileManager);                  // Load the stage map and tile attributes
+        bool loadAssets_();                                             // Load stage sprite assets (player, enemies, effects...)
+        bool initializeAnimationBG_(BGTileManager& bgTileManager);      // Initialize background tile animations
+
+        void applyPendingPhaseIfReady_();                               // Apply pending phase if fader is ready
+        void dispatchTransition_(
+            const std::wstring& next_key,
+            const PhaseFadePlan& plan, const Parameters& params);       // Dispatch phase transition request
+
+    private:
+        const std::wstring kClassName{ L"DemoStage2" };
+
+        const std::wstring kMapName{ L"SAMPLESTAGE2" };
+        const std::wstring_view kStageMapBinary{ L"assets\\_exams\\bg\\SAMPLESTAGE2.bin" };
+        // HACK: The stage definition file is not used in this implementation, but it is kept here for reference.
+        const std::wstring_view kStageObjectDefine{ L"assets\\_exams\\bg\\SAMPLESTAGE2.def" };
+
+        struct RoomState
+        {
+            int pageIndex{ 0 };
+            int tileW{ 8 };   // in tiles
+            int tileH{ 8 };   // in tiles
+        } _roomState;                                                   // Current room state is used to track room/page info
+
+        SceneChangeMediator* _mediator{ nullptr };                      // Mediator for scene changes
+
+        std::unique_ptr<phases::IPhase> _phase{};                       // Current active phase
+        std::unique_ptr<phases::IPhase> _pendingPhase{};                // Pending phase to switch to
+        PhaseFadePlan _pendingPlan{};                                   // Fade plan for the pending phase
+
+        PhaseFadeController _fader{};                                   // Fade controller for transitions
+        const int _fadeDurationFrames{ 16 };                            // Duration of fade in frames
+
+        SceneID _nextScene{ SceneID::None };                            // Next scene to switch to
+        Parameters _nextParams{};                                       // Reserve the parameters for the next scene
+
+        core::assembly::StateProvider* _input{};                        // Input state provider
+        resources::ResourceManager* _resource{};                        // Resource manager
+        phases::ActionStageRuntimeBuilder _actionBuilder{};             // Builder for action stage runtime
+        std::unique_ptr<phases::IStageScript> _stageScript{};           // Stage script
+
+        BGTileManagerId _bgTileId{ static_cast<BGTileManagerId>(-1) };  // Background tile set Id
+
+        std::array<std::array<rendering::bg::BGPaletteAnimationFrame, 3>, 8> _glow_animation_frames{};
+        std::array<rendering::bg::BGPaletteAnimation, 8> _palette_animations{};
+
+        resources::assets::StageSpriteBank _spriteBank{};               // Stage sprite ID set
+    };
+}

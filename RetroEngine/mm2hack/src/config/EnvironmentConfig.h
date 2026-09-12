@@ -34,6 +34,8 @@ namespace mm2hack::config
         static bool GetBool(const std::wstring& key, bool defaultValue = false);
 
     private:
+        static inline const std::wstring kClassName{ L"EnvironmentConfig" };
+
         static std::unordered_map<std::wstring, std::wstring> _values;      // Stores key-value pairs from the configuration file
         static std::wstring Trim(const std::wstring& str);
     };

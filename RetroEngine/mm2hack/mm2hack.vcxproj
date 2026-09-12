@@ -29,26 +29,26 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -73,7 +73,9 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="mm2hack.props" />
   </ImportGroup>
-  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Label="UserMacros">
+    <DxLibDir Condition="'$(DxLibDir)' == ''">D:\Lib\DxLib_VC\Include</DxLibDir>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <TargetName>$(ProjectName)_x86</TargetName>
   </PropertyGroup>
@@ -87,7 +89,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)src\;D:\Lib\DxLib_VC\Include\;$(ProjectDir)src\libs\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)src\;$(DxLibDir);$(ProjectDir)src\libs\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -98,7 +100,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>D:\Lib\DxLib_VC\Include\</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(DxLibDir)</AdditionalLibraryDirectories>
       <AdditionalDependencies>d3d9.lib;Comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -111,7 +113,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)src\;D:\Lib\DxLib_VC\Include\;$(ProjectDir)src\libs\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)src\;$(DxLibDir);$(ProjectDir)src\libs\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -122,7 +124,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>D:\Lib\DxLib_VC\Include\</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(DxLibDir)</AdditionalLibraryDirectories>
       <AdditionalDependencies>d3d9.lib;Comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -133,7 +135,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)src\;D:\Lib\DxLib_VC\Include\;$(ProjectDir)src\libs\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)src\;$(DxLibDir);$(ProjectDir)src\libs\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -144,7 +146,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>D:\Lib\DxLib_VC\Include\</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(DxLibDir)</AdditionalLibraryDirectories>
       <AdditionalDependencies>d3d9.lib;Comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -157,7 +159,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)src\;D:\Lib\DxLib_VC\Include\;$(ProjectDir)src\libs\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)src\;$(DxLibDir);$(ProjectDir)src\libs\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -168,31 +170,98 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>D:\Lib\DxLib_VC\Include\</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(DxLibDir)</AdditionalLibraryDirectories>
       <AdditionalDependencies>d3d9.lib;Comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\apps\audio\AudioConfigLoader.cpp" />
-    <ClCompile Include="src\apps\audio\AudioInitializer.cpp" />
-    <ClCompile Include="src\apps\audio\AudioManager.cpp" />
-    <ClCompile Include="src\apps\audio\AudioMixer.cpp" />
-    <ClCompile Include="src\apps\audio\BgmManager.cpp" />
-    <ClCompile Include="src\apps\audio\ChannelManager.cpp" />
-    <ClCompile Include="src\apps\audio\SeManager.cpp" />
-    <ClCompile Include="src\apps\audio\SoundChannel.cpp" />
-    <ClCompile Include="src\apps\deal\GameContext.cpp" />
-    <ClCompile Include="src\apps\graphics\BGTileManager.cpp" />
-    <ClCompile Include="src\apps\graphics\SpriteManager.cpp" />
-    <ClCompile Include="src\apps\NES\NESPalette.cpp" />
+    <ClCompile Include="src\apps\rendering\bg\BGTileMapProvider.cpp" />
+    <ClCompile Include="src\apps\scenes\phases\AbstractActionPhase.cpp" />
+    <ClCompile Include="src\apps\scenes\phases\ActionStageRuntimeBuilder.cpp" />
+    <ClCompile Include="src\apps\scenes\sub-scenes\02-DemoStage2\DemoStage2.cpp" />
+    <ClCompile Include="src\apps\systems\physics\CollisionLayer.cpp" />
+    <ClCompile Include="src\apps\systems\physics\CollisionSystem.cpp" />
+    <ClCompile Include="src\apps\systems\physics\TileQueryService.cpp" />
+    <ClCompile Include="src\apps\systems\scrolling\atomic\FixedScrollDriver.cpp" />
+    <ClCompile Include="src\apps\systems\scrolling\atomic\FreeScrollDriver.cpp" />
+    <ClCompile Include="src\apps\systems\scrolling\atomic\MapRenderer2D.cpp" />
+    <ClCompile Include="src\apps\systems\scrolling\atomic\PageScrollAnimator.cpp" />
+    <ClCompile Include="src\apps\systems\scrolling\atomic\ScraperScrollRuleProvider.cpp" />
+    <ClCompile Include="src\apps\systems\scrolling\atomic\ScrollController.cpp" />
+    <ClCompile Include="src\apps\systems\scrolling\atomic\ScrollFreezeState.cpp" />
+    <ClCompile Include="src\apps\systems\scrolling\atomic\ScrollNeighborResolver.cpp" />
+    <ClCompile Include="src\apps\systems\scrolling\effect\BgWobble2D.cpp" />
+    <ClCompile Include="src\apps\systems\scrolling\effect\BgWobblePass.cpp" />
+    <ClCompile Include="src\apps\systems\audio\AudioConfigLoader.cpp" />
+    <ClCompile Include="src\apps\systems\audio\AudioInitializer.cpp" />
+    <ClCompile Include="src\apps\systems\audio\AudioManager.cpp" />
+    <ClCompile Include="src\apps\systems\audio\AudioMixer.cpp" />
+    <ClCompile Include="src\apps\systems\audio\ApuVoiceArbiter.cpp" />
+    <ClCompile Include="src\apps\systems\audio\BgmManager.cpp" />
+    <ClCompile Include="src\apps\systems\audio\BgmTransportState.cpp" />
+    <ClCompile Include="src\apps\systems\audio\ChannelManager.cpp" />
+    <ClCompile Include="src\apps\systems\audio\SeManager.cpp" />
+    <ClCompile Include="src\apps\systems\audio\SeTransportState.cpp" />
+    <ClCompile Include="src\apps\systems\audio\SoundChannel.cpp" />
+    <ClCompile Include="src\apps\runtime\GameContext.cpp" />
+    <ClCompile Include="src\apps\resources\bg\AddressScraper.cpp" />
+    <ClCompile Include="src\apps\resources\bg\BGRoomBank.cpp" />
+    <ClCompile Include="src\apps\rendering\bg\BGTileAtlas.cpp" />
+    <ClCompile Include="src\apps\rendering\bg\BGTileCatalog.cpp" />
+    <ClCompile Include="src\apps\rendering\bg\BGTileManager.cpp" />
+    <ClCompile Include="src\apps\rendering\common\DividedGraphLoader.cpp" />
+    <ClCompile Include="src\apps\resources\bg\MapPageCache.cpp" />
+    <ClCompile Include="src\apps\rendering\effects\FadeIOTexture.cpp" />
+    <ClCompile Include="src\apps\rendering\fonts\FontTileManager.cpp" />
+    <ClCompile Include="src\apps\rendering\sprite\SpriteAtlas.cpp" />
+    <ClCompile Include="src\apps\rendering\sprite\SpriteCatalog.cpp" />
+    <ClCompile Include="src\apps\rendering\sprite\SpriteManager.cpp" />
+    <ClCompile Include="src\apps\foundation\NES\NESPalette.cpp" />
+    <ClCompile Include="src\apps\scenes\PhaseFadeController.cpp" />
     <ClCompile Include="src\apps\scenes\SceneChangeMediator.cpp" />
     <ClCompile Include="src\apps\scenes\SceneFactory.cpp" />
     <ClCompile Include="src\apps\scenes\SceneManager.cpp" />
+    <ClCompile Include="src\apps\scenes\sub-scenes\01-DemoStage1\DemoStage1.cpp" />
+    <ClCompile Include="src\apps\scenes\sub-scenes\01-DemoStage1\DemoStage1Phase.cpp" />
+    <ClCompile Include="src\apps\scenes\sub-scenes\90-BackdoorMenu\BackdoorMenu.cpp" />
+    <ClCompile Include="src\apps\scenes\sub-scenes\90-BackdoorMenu\BackdoorMenuPhase.cpp" />
     <ClCompile Include="src\apps\scenes\sub-scenes\LaunchingGame.cpp" />
     <ClCompile Include="src\apps\sequence\DebugSequence.cpp" />
     <ClCompile Include="src\apps\sequence\SequenceManager.cpp" />
     <ClCompile Include="src\apps\sequence\StandardSequence.cpp" />
-    <ClCompile Include="src\apps\supervisor\ResourceManager.cpp" />
+    <ClCompile Include="src\apps\resources\ResourceManager.cpp" />
+    <ClCompile Include="src\apps\ui\productions\StageIntroUI.cpp" />
+    <ClCompile Include="src\apps\vfx\cursor\TwinkleCursorAnimator.cpp" />
+    <ClCompile Include="src\apps\vfx\stareffects\BgStarField.cpp" />
+    <ClCompile Include="src\apps\vfx\stareffects\FixedStar.cpp" />
+    <ClCompile Include="src\apps\vfx\stareffects\ShootingStar.cpp" />
+    <ClCompile Include="src\apps\vfx\stareffects\Star.cpp" />
+    <ClCompile Include="src\apps\systems\physics\LadderService.cpp" />
+    <ClCompile Include="src\apps\world\entity\avatar\PlayerEntity.cpp" />
+    <ClCompile Include="src\apps\world\entity\avatar\PlayerEntityState.cpp" />
+    <ClCompile Include="src\apps\world\entity\avatar\PlayerEnvironmentController.cpp" />
+    <ClCompile Include="src\apps\world\entity\avatar\PlayerStateMachine.cpp" />
+    <ClCompile Include="src\apps\world\entity\avatar\states\AttackActionState.cpp" />
+    <ClCompile Include="src\apps\world\entity\avatar\states\BrakeRunState.cpp" />
+    <ClCompile Include="src\apps\world\entity\avatar\states\DashingState.cpp" />
+    <ClCompile Include="src\apps\world\entity\avatar\states\GroundBaseState.cpp" />
+    <ClCompile Include="src\apps\world\entity\avatar\states\HoveringState.cpp" />
+    <ClCompile Include="src\apps\world\entity\avatar\states\LadderingState.cpp" />
+    <ClCompile Include="src\apps\world\entity\avatar\states\LandingState.cpp" />
+    <ClCompile Include="src\apps\world\entity\avatar\states\LaunchRunState.cpp" />
+    <ClCompile Include="src\apps\world\entity\avatar\states\RunningState.cpp" />
+    <ClCompile Include="src\apps\world\entity\avatar\states\SlidingState.cpp" />
+    <ClCompile Include="src\apps\world\entity\avatar\states\StandingState.cpp" />
+    <ClCompile Include="src\apps\world\entity\effects\ProjectileEntity.cpp" />
+    <ClCompile Include="src\apps\world\entity\effects\SplashEffectEntity.cpp" />
+    <ClCompile Include="src\apps\world\entity\effects\SlidingDustEffectEntity.cpp" />
+    <ClCompile Include="src\apps\world\entity\effects\ChargeEffectEntity.cpp" />
+    <ClCompile Include="src\apps\world\entity\EntityManager.cpp" />
+    <ClCompile Include="src\apps\world\entity\EntityBase.cpp" />
+    <ClCompile Include="src\apps\world\entity\EntityStateFactory.cpp" />
+    <ClCompile Include="src\apps\world\entity\common\AnimeStepper.cpp" />
+    <ClCompile Include="src\apps\world\entity\common\FrameGate.cpp" />
+    <ClCompile Include="src\apps\world\stage\RoomGraphAdapter.cpp" />
     <ClCompile Include="src\config\ConfigUIManager.cpp" />
     <ClCompile Include="src\config\EnvironmentConfig.cpp" />
     <ClCompile Include="src\config\SystemConfig.cpp" />
@@ -238,53 +307,178 @@
     <ClCompile Include="src\test\driver\001\PressKeyCommand.cpp" />
     <ClCompile Include="src\test\driver\002\DrawGraph.cpp" />
     <ClCompile Include="src\test\driver\003\SoundTest.cpp" />
+    <ClCompile Include="src\test\driver\004\OuterSpaceBG.cpp" />
+    <ClCompile Include="src\test\driver\005\LissajousCurveBG.cpp" />
+    <ClCompile Include="src\test\SaveStateTests.cpp" />
     <ClCompile Include="src\test\TestSequence.cpp" />
+    <ClCompile Include="src\utils\decimal_decoder.cpp" />
     <ClCompile Include="src\utils\Fps.cpp" />
     <ClCompile Include="src\utils\LogWriter.cpp" />
     <ClCompile Include="src\utils\output_debug.cpp" />
     <ClCompile Include="src\utils\string_converter.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="assets\exams\bg\demostage1tiles.json" />
+    <None Include="src\config\AssetsPortfolio.def" />
     <None Include="mm2hack.props" />
     <None Include="mm2hack.env" />
+    <None Include="src\config\PropertiesPortfolio.def" />
     <None Include="src\resources\exams\bg\SAMPLESTAGE1.bin" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
-    <ClInclude Include="src\apps\audio\AudioConfigLoader.h" />
-    <ClInclude Include="src\apps\audio\AudioInitializer.h" />
-    <ClInclude Include="src\apps\audio\AudioManager.h" />
-    <ClInclude Include="src\apps\audio\AudioMixer.h" />
-    <ClInclude Include="src\apps\audio\BgmManager.h" />
-    <ClInclude Include="src\apps\audio\ChannelManager.h" />
-    <ClInclude Include="src\apps\audio\ISoundChannel.h" />
-    <ClInclude Include="src\apps\audio\SeManager.h" />
-    <ClInclude Include="src\apps\audio\SoundChannel.h" />
-    <ClInclude Include="src\apps\deal\GameContext.h" />
-    <ClInclude Include="src\apps\deal\IGameContext.h" />
-    <ClInclude Include="src\apps\graphics\BGTileManager.h" />
-    <ClInclude Include="src\apps\graphics\ITextureObject.h" />
-    <ClInclude Include="src\apps\graphics\SpriteManager.h" />
-    <ClInclude Include="src\apps\NES\NESPalette.h" />
-    <ClInclude Include="src\apps\parameters\Parameters.h" />
+    <ClInclude Include="src\apps\rendering\bg\BGTileAnimator.h" />
+    <ClInclude Include="src\apps\rendering\bg\BGTileMapProvider.h" />
+    <ClInclude Include="src\apps\rendering\bg\BGTilePalette.h" />
+    <ClInclude Include="src\apps\resources\assets\StageSpriteBank.h" />
+    <ClInclude Include="src\apps\resources\bg\BGPageHeader.h" />
+    <ClInclude Include="src\apps\resources\bg\IMapPageSource.h" />
+    <ClInclude Include="src\apps\resources\stages\StageTileAnimations.h" />
+    <ClInclude Include="src\apps\resources\stages\StageTileAttributes.h" />
+    <ClInclude Include="src\apps\scenes\IStageAssetProvider.h" />
+    <ClInclude Include="src\apps\ui\productions\StageIntroUI.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\abilities\RockBusterOffsetTable.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\states\AttackActionState.h" />
+    <ClInclude Include="src\apps\world\entity\common\FrameGate.h" />
+    <ClInclude Include="src\apps\world\entity\common\SpawnProjectileCommand.h" />
+    <ClInclude Include="src\apps\world\entity\common\SpawnSplashEffectCommand.h" />
+    <ClInclude Include="src\apps\world\entity\common\SpawnSlidingDustEffectCommand.h" />
+    <ClInclude Include="src\apps\world\entity\common\SpawnChargeEffectCommand.h" />
+    <ClInclude Include="src\apps\world\entity\effects\SlidingDustEffectEntity.h" />
+    <ClInclude Include="src\apps\world\entity\effects\ChargeEffectEntity.h" />
+    <ClInclude Include="src\apps\world\entity\enemy\lists\EnemyLists.h" />
+    <ClInclude Include="src\apps\world\entity\EntityManager.h" />
+    <ClInclude Include="src\core\assembly\FilteredJoystickInputProvider.h" />
+    <ClInclude Include="src\apps\scenes\phases\AbstractActionPhase.h" />
+    <ClInclude Include="src\apps\scenes\phases\ActionStageRuntimeBuilder.h" />
+    <ClInclude Include="src\apps\scenes\phases\IPhase.h" />
+    <ClInclude Include="src\apps\scenes\phases\IPhaseHost.h" />
+    <ClInclude Include="src\apps\scenes\phases\IStageScript.h" />
+    <ClInclude Include="src\apps\scenes\phases\PhaseResult.h" />
+    <ClInclude Include="src\apps\scenes\phases\StageDefinition.h" />
+    <ClInclude Include="src\apps\scenes\phases\StageRuntimeContext.h" />
+    <ClInclude Include="src\apps\scenes\sub-scenes\02-DemoStage2\DemoStage2.h" />
+    <ClInclude Include="src\apps\systems\physics\ITerrainProbe.h" />
+    <ClInclude Include="src\apps\systems\physics\PageGridIndex.h" />
+    <ClInclude Include="src\apps\systems\physics\Probes.h" />
+    <ClInclude Include="src\apps\systems\physics\CollisionLayer.h" />
+    <ClInclude Include="src\apps\systems\physics\CollisionSystem.h" />
+    <ClInclude Include="src\apps\systems\physics\ICollider.h" />
+    <ClInclude Include="src\apps\systems\physics\ITileMapProvider.h" />
+    <ClInclude Include="src\apps\systems\physics\TileAttribute.h" />
+    <ClInclude Include="src\apps\systems\physics\TileQueryService.h" />
+    <ClInclude Include="src\apps\systems\scrolling\atomic\Camera.h" />
+    <ClInclude Include="src\apps\systems\scrolling\atomic\FixedScrollDriver.h" />
+    <ClInclude Include="src\apps\systems\scrolling\atomic\FreeScrollDriver.h" />
+    <ClInclude Include="src\apps\systems\scrolling\atomic\ScrollFreezeState.h" />
+    <ClInclude Include="src\apps\systems\scrolling\atomic\ScrollNeighborResolver.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\abilities\AnimationAbilities.h" />
+    <ClInclude Include="src\apps\systems\physics\LadderService.h" />
+    <ClInclude Include="src\apps\systems\physics\ILadderService.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\abilities\MovementAbilities.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\AvatarStatus.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\IPlayerState.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\PlayerContext.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\PlayerFrameOutput.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\PlayerParams.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\states\BrakeRunState.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\states\DashingState.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\states\GroundBaseState.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\states\HoveringState.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\states\LadderingState.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\states\LandingState.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\states\LaunchRunState.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\states\RunningState.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\states\SlidingState.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\states\StandingState.h" />
+    <ClInclude Include="src\apps\world\entity\common\AnimeStepper.h" />
+    <ClInclude Include="src\apps\world\entity\effects\ProjectileEntity.h" />
+    <ClInclude Include="src\apps\world\entity\effects\SplashEffectEntity.h" />
+    <ClInclude Include="src\apps\world\entity\EntityBase.h" />
+    <ClInclude Include="src\apps\world\entity\EntityStateFactory.h" />
+    <ClInclude Include="src\apps\world\entity\IEntity.h" />
+    <ClInclude Include="src\apps\world\entity\IRenderable.h" />
+    <ClInclude Include="src\apps\world\entity\IUpdatable.h" />
+    <ClInclude Include="src\apps\systems\view\RenderContext.h" />
+    <ClInclude Include="src\apps\systems\scrolling\atomic\IScrollRuleProvider.h" />
+    <ClInclude Include="src\apps\systems\scrolling\atomic\MapRenderer2D.h" />
+    <ClInclude Include="src\apps\systems\scrolling\atomic\PageScrollAnimator.h" />
+    <ClInclude Include="src\apps\systems\scrolling\atomic\ScraperScrollRuleProvider.h" />
+    <ClInclude Include="src\apps\systems\scrolling\atomic\ScrollController.h" />
+    <ClInclude Include="src\apps\systems\scrolling\atomic\ScrollTypes.h" />
+    <ClInclude Include="src\apps\systems\scrolling\effect\BgWobble2D.h" />
+    <ClInclude Include="src\apps\systems\scrolling\effect\BgWobblePass.h" />
+    <ClInclude Include="src\apps\resources\bg\MapPageCache.h" />
+    <ClInclude Include="src\apps\ui\controls\MenuCursorController.h" />
+    <ClInclude Include="src\apps\systems\audio\AudioConfigLoader.h" />
+    <ClInclude Include="src\apps\systems\audio\AudioInitializer.h" />
+    <ClInclude Include="src\apps\systems\audio\AudioManager.h" />
+    <ClInclude Include="src\apps\systems\audio\AudioMixer.h" />
+    <ClInclude Include="src\apps\systems\audio\ApuVoice.h" />
+    <ClInclude Include="src\apps\systems\audio\ApuVoiceArbiter.h" />
+    <ClInclude Include="src\apps\systems\audio\BgmManager.h" />
+    <ClInclude Include="src\apps\systems\audio\BgmTransportState.h" />
+    <ClInclude Include="src\apps\systems\audio\ChannelManager.h" />
+    <ClInclude Include="src\apps\systems\audio\ISoundChannel.h" />
+    <ClInclude Include="src\apps\systems\audio\SeManager.h" />
+    <ClInclude Include="src\apps\systems\audio\SePriority.h" />
+    <ClInclude Include="src\apps\systems\audio\SeRestorePolicy.h" />
+    <ClInclude Include="src\apps\systems\audio\SeTransportState.h" />
+    <ClInclude Include="src\apps\systems\audio\SoundChannel.h" />
+    <ClInclude Include="src\apps\runtime\GameContext.h" />
+    <ClInclude Include="src\apps\runtime\IGameContext.h" />
+    <ClInclude Include="src\apps\resources\bg\AddressScraper.h" />
+    <ClInclude Include="src\apps\resources\bg\BGRoomBank.h" />
+    <ClInclude Include="src\apps\rendering\bg\BGTileAtlas.h" />
+    <ClInclude Include="src\apps\rendering\bg\BGTileCatalog.h" />
+    <ClInclude Include="src\apps\rendering\bg\BGTileManager.h" />
+    <ClInclude Include="src\apps\rendering\common\DividedGraphLoader.h" />
+    <ClInclude Include="src\apps\world\stage\RoomGraphAdapter.h" />
+    <ClInclude Include="src\apps\rendering\effects\FadeIOTexture.h" />
+    <ClInclude Include="src\apps\rendering\fonts\FontTileManager.h" />
+    <ClInclude Include="src\apps\rendering\sprite\SpriteAtlas.h" />
+    <ClInclude Include="src\apps\rendering\sprite\SpriteCatalog.h" />
+    <ClInclude Include="src\apps\rendering\sprite\SpriteManager.h" />
+    <ClInclude Include="src\apps\foundation\math\CoordinateTypes.h" />
+    <ClInclude Include="src\apps\systems\view\ViewState.h" />
+    <ClInclude Include="src\apps\foundation\NES\NESPalette.h" />
+    <ClInclude Include="src\apps\resources\parameters\Parameters.h" />
     <ClInclude Include="src\apps\scenes\IBaseScene.h" />
     <ClInclude Include="src\apps\scenes\ISceneChangedListener.h" />
+    <ClInclude Include="src\apps\scenes\PhaseFadeController.h" />
     <ClInclude Include="src\apps\scenes\SceneChangeMediator.h" />
     <ClInclude Include="src\apps\scenes\SceneFactory.h" />
-    <ClInclude Include="src\apps\scenes\SceneID.h" />
     <ClInclude Include="src\apps\scenes\SceneManager.h" />
+    <ClInclude Include="src\apps\scenes\sub-scenes\01-DemoStage1\DemoStage1.h" />
+    <ClInclude Include="src\apps\scenes\sub-scenes\01-DemoStage1\DemoStage1Phase.h" />
+    <ClInclude Include="src\apps\scenes\sub-scenes\90-BackdoorMenu\BackdoorMenu.h" />
+    <ClInclude Include="src\apps\scenes\sub-scenes\90-BackdoorMenu\BackdoorMenuCatalog.h" />
+    <ClInclude Include="src\apps\scenes\sub-scenes\90-BackdoorMenu\BackdoorMenuPhase.h" />
     <ClInclude Include="src\apps\scenes\sub-scenes\LaunchingGame.h" />
     <ClInclude Include="src\apps\sequence\DebugSequence.h" />
     <ClInclude Include="src\apps\sequence\ISequence.h" />
     <ClInclude Include="src\apps\sequence\SequenceManager.h" />
-    <ClInclude Include="src\apps\sequence\SequenceType.h" />
     <ClInclude Include="src\apps\sequence\StandardSequence.h" />
-    <ClInclude Include="src\apps\supervisor\ResourceManager.h" />
+    <ClInclude Include="src\apps\resources\ResourceFadeBindings.h" />
+    <ClInclude Include="src\apps\resources\ResourceManager.h" />
+    <ClInclude Include="src\apps\vfx\cursor\TwinkleCursorAnimator.h" />
+    <ClInclude Include="src\apps\vfx\stareffects\BgStarField.h" />
+    <ClInclude Include="src\apps\vfx\stareffects\FixedStar.h" />
+    <ClInclude Include="src\apps\vfx\stareffects\ShootingStar.h" />
+    <ClInclude Include="src\apps\vfx\stareffects\Star.h" />
+    <ClInclude Include="src\apps\vfx\stareffects\StarState.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\PlayerEntity.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\PlayerEntityState.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\PlayerEnvironmentController.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\PlayerStateMachine.h" />
+    <ClInclude Include="src\config\AssetPaths.h" />
     <ClInclude Include="src\config\ConfigUIManager.h" />
     <ClInclude Include="src\config\EnvironmentConfig.h" />
+    <ClInclude Include="src\config\GameAssets.h" />
     <ClInclude Include="src\config\GraphicsConfig.h" />
     <ClInclude Include="src\config\HudConfig.h" />
     <ClInclude Include="src\config\InputLoadResult.h" />
+    <ClInclude Include="src\config\PathDefsJsonProps.h" />
     <ClInclude Include="src\config\SoundConfig.h" />
     <ClInclude Include="src\config\SystemConfig.h" />
     <ClInclude Include="src\core\assembly\IInputBackend.h" />
@@ -316,6 +510,7 @@
     <ClInclude Include="src\core\overlay\InputConfigOverlay.h" />
     <ClInclude Include="src\core\overlay\PauseManager.h" />
     <ClInclude Include="src\core\save\SaveData.h" />
+    <ClInclude Include="src\core\save\StateIO.h" />
     <ClInclude Include="src\core\save\SaveSystem.h" />
     <ClInclude Include="src\core\ui\CheatCodeInjectionUI.h" />
     <ClInclude Include="src\core\ui\CommonUIStyle.h" />
@@ -346,11 +541,15 @@
     <ClInclude Include="src\input\xi\XInputToken.h" />
     <ClInclude Include="src\libs\json.hpp" />
     <ClInclude Include="src\pch.h" />
+    <ClInclude Include="src\test\SaveStateTests.h" />
     <ClInclude Include="src\test\driver\001\PressKeyCommand.h" />
     <ClInclude Include="src\test\driver\002\DrawGraph.h" />
     <ClInclude Include="src\test\driver\003\SoundTest.h" />
+    <ClInclude Include="src\test\driver\004\OuterSpaceBG.h" />
+    <ClInclude Include="src\test\driver\005\LissajousCurveBG.h" />
     <ClInclude Include="src\test\driver\ITestDriver.h" />
     <ClInclude Include="src\test\TestSequence.h" />
+    <ClInclude Include="src\utils\decimal_decoder.h" />
     <ClInclude Include="src\utils\Fps.h" />
     <ClInclude Include="src\utils\FpsManager.h" />
     <ClInclude Include="src\utils\LogWriter.h" />

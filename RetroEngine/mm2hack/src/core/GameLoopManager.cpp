@@ -3,15 +3,12 @@
 #include "GameLoopManager.h"
 
 #include <exception>
-#include "apps/deal/GameContext.h"
+#include "apps/runtime/GameContext.h"
 #include "apps/sequence/SequenceManager.h"
+#include "assembly/FilteredJoystickInputProvider.h"
 #include "assembly/ISnapshotProvider.h"
-#include "assembly/JoystickInputProviderAdapter.h"
 #include "assembly/StandardTimeController.h"
 #include "config/ConfigUIManager.h"
-#include "exceptions/CoreException.h"
-#include "exceptions/ErrorHandler.h"
-#include "exceptions/ErrorLevel.h"
 #include "GameState.h"
 #include "GameStateManager.h"
 #include "overlay/PauseManager.h"
@@ -30,6 +27,7 @@ namespace mm2hack::core
         _vSync(context.vSync)
     {
         using namespace assembly;
+        using namespace config;
 
         // Set up time controller.
         auto& fps = utils::FpsManager::GetInstance();
@@ -37,14 +35,14 @@ namespace mm2hack::core
         _time->EnableFollowFps(false);  // Disable follow FPS by default.
 
         // Initialize game context and load input-device(joycard) configuration.
-        auto& gcInstance = apps::deal::GameContext::GetInstance();
+        auto& gcInstance = apps::runtime::GameContext::GetInstance();
         gcInstance.Initialize();
         auto& jm = gcInstance.Joystick();
-        config::ConfigUIManager::LoadInputConfigIfMatches(jm.GetKeyBinding(), jm.ActiveDevice());
+        ConfigUIManager::LoadInputConfigIfMatches(jm.GetKeyBinding(), jm.ActiveDevice());
 
         // Take over to the GameContext services (time controller, input state provider, snapshot provider).
         auto time = std::make_unique<StandardTimeController>(/*fps=*/nullptr, /*callWait=*/false);
-        auto input = std::make_unique<JoystickInputProviderAdapter>(jm);
+        auto input = std::make_unique<FilteredJoystickInputProvider>(jm);
         ISnapshotProvider* snapshot = nullptr;
         gcInstance.AttachServices(time.get(), input.get(), snapshot);
 
@@ -60,45 +58,49 @@ namespace mm2hack::core
         using namespace overlay;
         using namespace utils;
 
-        ScopeGuard finally([]
-            {
-                auto& seq = apps::sequence::SequenceManager::GetInstance();
-                seq.Release();
-                auto& ctx = apps::deal::GameContext::GetInstance();
-                ctx.Shutdown();
-            });
-
         // Load graphics configuration and apply FPS limit if changed.
         auto& fps = FpsManager::GetInstance();
         auto& seq = apps::sequence::SequenceManager::GetInstance();
 
+        ScopeGuard finally([&seq]
+            {
+                seq.Release();
+                auto& ctx = apps::runtime::GameContext::GetInstance();
+                ctx.Shutdown();
+            });
+
         try
         {
-            while (!DxLib::ProcessMessage() && !DxLib::SetDrawScreen(_screenHandle) && !DxLib::ClearDrawScreen())
+            while (!::DxLib::ProcessMessage() && !::DxLib::SetDrawScreen(_screenHandle) && !::DxLib::ClearDrawScreen())
             {
                 _time->BeginFrame();    // Defines delta time for this frame.
 
-                auto destW = static_cast<int>(config::SystemConfig::kScreenWidth * _viewerRate);
-                auto destH = static_cast<int>(config::SystemConfig::kScreenHeight * _viewerRate);
+                auto destW = static_cast<int>(SystemConfig::kScreenWidth * _viewerRate);
+                auto destH = static_cast<int>(SystemConfig::kScreenHeight * _viewerRate);
 
                 // If the game is paused, we skip the update logic.
                 PauseManager::SetPaused(GameStateManager::GetInstance().Is(GameState::Paused));
 
-                // Update the main sequence.
-                seq.Update();   // !Go game logic update.
-                // Render the game content.
-                seq.RenderWorld(_screenHandle, destW, destH);
-                // Render the overlay content (e.g., HUD, debug information).
-                seq.RenderOverlay(destW, destH);
+                // --- Go game update & rendering ---
+                seq.Update();                                   // Update the main sequence.
+                seq.RenderWorld(_screenHandle, destW, destH);   // Render the game content, and extended rate scaling.
+                seq.RenderOverlay(destW, destH);                // Render the overlay content (e.g., HUD, debug information).
+
                 // Render the input configuration overlay if active.
                 seq.HandleJpbtnConfigMode(static_cast<double>(_time->DeltaSeconds()));
 
                 // Pace & Flip the screen.
-                fps.Wait();
                 // VSync control = pseudo FPS with monitor refresh rate.
-                if (_vSync) DxLib::WaitVSync(1);
+                if (_vSync)
+                {
+                    ::DxLib::WaitVSync(1);
+                }
+                else
+                {
+                    fps.Wait();
+                }
                 // Screen flip to present the rendered frame of the back buffer.
-                DxLib::ScreenFlip();
+                ::DxLib::ScreenFlip();
 
                 _time->EndFrame();      // End of frame processing.
             }
@@ -109,7 +111,7 @@ namespace mm2hack::core
         }
         catch (const std::exception& e)
         {
-            ErrorHandler::Handle(utf8_to_wstring(e.what()), L"GameLoopManager", L"Run", ErrorLevel::FatalError);
+            ErrorHandler::Handle(utf8_to_wstring(e.what()), kClassName, L"Run", ErrorLevel::FatalError);
         }
     }
 }

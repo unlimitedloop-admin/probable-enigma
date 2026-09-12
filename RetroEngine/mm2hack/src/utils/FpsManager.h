@@ -8,6 +8,7 @@
 //==============================================================================
 #pragma once
 
+#include <string>
 #include "Fps.h"
 
 namespace mm2hack::utils
@@ -31,5 +32,8 @@ namespace mm2hack::utils
     private:
         FpsManager() = default;
         ~FpsManager() = default;
+
+    private:
+        const std::wstring kClassName{ L"FpsManager" };
     };
 }

@@ -40,7 +40,7 @@ namespace mm2hack::core::ui
             110, 17, 150, 100,
             _parent, nullptr, GetModuleHandle(nullptr), nullptr);
         uiStyle.ApplyUIFont(_combo_resolution);
-        AddResolutionOptions();
+        addResolutionOptions_();
 
         // VSync CheckBox
         _check_vsync = CreateWindowEx(0, L"BUTTON", L"VSync Enabled?",
@@ -61,12 +61,12 @@ namespace mm2hack::core::ui
             110, 97, 120, 210,
             _parent, nullptr, GetModuleHandle(nullptr), nullptr);
         uiStyle.ApplyUIFont(_combo_framerate);
-        AddFramerateOptions();
+        addFramerateOptions_();
 
-        LoadSettings();
+        loadSettings_();
     }
 
-    void GraphicsSettingsUI::AddResolutionOptions() const
+    void GraphicsSettingsUI::addResolutionOptions_() const
     {
         for (const auto& option : kResolutionOptions)
         {
@@ -75,7 +75,7 @@ namespace mm2hack::core::ui
         SendMessage(_combo_resolution, CB_SETCURSEL, 0, 0);
     }
 
-    void GraphicsSettingsUI::AddFramerateOptions() const
+    void GraphicsSettingsUI::addFramerateOptions_() const
     {
         for (const auto& option : kFramerateOptions)
         {
@@ -111,7 +111,7 @@ namespace mm2hack::core::ui
         utils::FpsManager::GetInstance().SetTargetFps(fpsToSet);
     }
 
-    void GraphicsSettingsUI::LoadSettings()
+    void GraphicsSettingsUI::loadSettings_()
     {
         using namespace config;
 
@@ -163,8 +163,8 @@ namespace mm2hack::core::ui
                 if (0 <= idx && idx < size) return idx;
 
                 constexpr int kDefaultFps = SystemConfig::kTargetFps;
-                int mapped = MapFpsToIndex(kDefaultFps);
-                if (mapped < 0) mapped = MapFpsToNearestIndex(kDefaultFps);
+                int mapped = mapFpsToIndex_(kDefaultFps);
+                if (mapped < 0) mapped = mapFpsToNearestIndex_(kDefaultFps);
                 return mapped;
             };
 
@@ -172,7 +172,7 @@ namespace mm2hack::core::ui
         SendMessage(_combo_framerate, CB_SETCURSEL, fpsIndex, 0);
     }
 
-    int GraphicsSettingsUI::MapFpsToIndex(int fps) noexcept
+    int GraphicsSettingsUI::mapFpsToIndex_(int fps) noexcept
     {
         for (int i = 0; i < static_cast<int>(std::size(kFramerateOptions)); ++i)
         {
@@ -181,12 +181,12 @@ namespace mm2hack::core::ui
         return -1;
     }
 
-    int GraphicsSettingsUI::MapFpsToNearestIndex(int fps) noexcept
+    int GraphicsSettingsUI::mapFpsToNearestIndex_(int fps) noexcept
     {
         if (fps <= 0)
         {
             // "not restricted" i.e. "0".
-            return MapFpsToIndex(0);
+            return mapFpsToIndex_(0);
         }
         int bestIdx = 0;
         int bestDiff = std::numeric_limits<int>::max();

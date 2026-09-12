@@ -2,7 +2,6 @@
 
 #include "JoystickManager.h"
 
-#include <optional>
 #include "C16ButtonState.h"
 #include "DirectInputProvider.h"
 #include "IInputProvider.h"
@@ -18,12 +17,12 @@ namespace mm2hack::input
 {
     JoystickManager::JoystickManager()
     {
-        if (CheckXInputAvailable())
+        if (checkXInputAvailable_())
         {
             _provider = std::make_unique<XInputProvider>(_binding);
             _activeKind = Device::XInput;
         }
-        else if (CheckDirectInputAvailable())
+        else if (checkDirectInputAvailable_())
         {
             _provider = std::make_unique<DirectInputProvider>(_binding);
             _activeKind = Device::DirectInput;
@@ -62,7 +61,7 @@ namespace mm2hack::input
         return RawInputPoller::PollFirstRawChange(deadzone, only, _activeKind, _diCaptureGroup);
     }
 
-    bool JoystickManager::CheckXInputAvailable()
+    bool JoystickManager::checkXInputAvailable_()
     {
         XINPUT_STATE state{};
         if (GetJoypadXInputState(DX_INPUT_KEY_PAD1, &state) != 0)
@@ -72,7 +71,7 @@ namespace mm2hack::input
         return true;
     }
 
-    bool JoystickManager::CheckDirectInputAvailable()
+    bool JoystickManager::checkDirectInputAvailable_()
     {
         DINPUT_JOYSTATE state{};
         if (GetJoypadDirectInputState(DX_INPUT_KEY_PAD1, &state) != 0)

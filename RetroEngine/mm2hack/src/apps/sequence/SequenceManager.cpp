@@ -2,14 +2,15 @@
 
 #include "SequenceManager.h"
 
-#include "apps/deal/GameContext.h"
+#include "apps/runtime/GameContext.h"
+#include "apps/scenes/SceneManager.h"
 #include "core/GameState.h"
 #include "core/GameStateManager.h"
 #include "core/overlay/DebugHud.h"
 #include "core/overlay/InputConfigOverlay.h"
 #include "core/overlay/PauseManager.h"
+#include "core/save/SaveData.h"
 #include "DebugSequence.h"
-#include "SequenceType.h"
 #include "StandardSequence.h"
 #include "test/TestSequence.h"
 #include "utils/output_debug.h"
@@ -72,27 +73,64 @@ namespace mm2hack::apps::sequence
         }
     }
 
-    void SequenceManager::LoadSequence(const SequenceType type)
+    bool SequenceManager::LoadState(const core::save::SaveData& data)
     {
-        utils::debug_log(L"Load sequence from sav file.");
-
-        switch (type)
+        const auto requested_type = static_cast<SequenceType>(data.sequenceID);
+        if (requested_type != SequenceType::Standard && requested_type != SequenceType::Debug)
         {
-        case SequenceType::Standard:
-            StartStandardSequence();
-            break;
-        case SequenceType::Debug:
-            StartDebugSequence();
-            break;
-        default:
-            break;
+            return false;
+        }
+        // No Standard-sequence scene currently publishes a snapshot schema.
+        if (requested_type == SequenceType::Standard)
+        {
+            return false;
+        }
+
+        if (!scenes::SceneManager::ValidateState(data))
+        {
+            return false;
+        }
+
+        if (tryLoadValidatedSnapshot_(data)) return true;
+
+        Release();
+        utils::debug_log(L"Validated state could not be applied to the rebuilt runtime.");
+        return false;
+    }
+
+    bool SequenceManager::tryLoadValidatedSnapshot_(const core::save::SaveData& data) noexcept
+    {
+        try
+        {
+            const auto requested_type = static_cast<SequenceType>(data.sequenceID);
+            if (requested_type != _sequenceType || !_currentSequence)
+            {
+                switch (requested_type)
+                {
+                case SequenceType::Standard:
+                    StartStandardSequence();
+                    break;
+                case SequenceType::Debug:
+                    StartDebugSequence();
+                    break;
+                default:
+                    return false;
+                }
+            }
+
+            return _currentSequence != nullptr && _sequenceType == requested_type &&
+                _currentSequence->Load(data);
+        }
+        catch (...)
+        {
+            return false;
         }
     }
 
     void SequenceManager::Update()
     {
         using namespace core;
-        using namespace deal;
+        using namespace runtime;
 
         if (_currentSequence)
         {
@@ -106,11 +144,14 @@ namespace mm2hack::apps::sequence
             if (shouldAdvance)
             {
                 auto& input = GameContext::GetInstance().Input();
+                // Update the joystick state.
+                input.UpdateJoystick();
                 // Advance the input state for this frame.
                 input.BeginTick(time.FrameCounter());
-                
-                _currentSequence->Execute();    // !Execute the main game logic.
-                
+
+                // !Execute the main game logic.
+                _currentSequence->Execute();
+
                 // Finalize the input state for this frame.
                 input.EndTick();
                 // Increment the play frame counter if the game is running. (use in HUD overlays)
@@ -126,17 +167,19 @@ namespace mm2hack::apps::sequence
 
         if (_currentSequence)
         {
+            // Render the world content. (scenes, models, effects, etc.)
             _currentSequence->RenderWorld();
         }
 
         if (PauseManager::IsPaused())
         {
+            // Draw the pause overlay if the game is paused.
             PauseManager::DrawOverlay();
         }
 
         // Scale what we draw to fit the viewer rate.
-        DxLib::SetDrawScreen(DX_SCREEN_BACK);
-        DxLib::DrawExtendGraph(0, 0, destW, destH, screenHandle, FALSE);
+        ::DxLib::SetDrawScreen(DX_SCREEN_BACK);
+        ::DxLib::DrawExtendGraph(0, 0, destW, destH, screenHandle, FALSE);
     }
 
     void SequenceManager::RenderOverlay(int destW, int destH)
@@ -158,7 +201,7 @@ namespace mm2hack::apps::sequence
             _currentSequence.reset();
             _sequenceType = SequenceType::None;
 
-            if (auto* time = deal::GameContext::GetInstance().TryTime())
+            if (auto* time = runtime::GameContext::GetInstance().TryTime())
             {
                 time->ResetPlayFrameCounter();
             }
@@ -167,7 +210,7 @@ namespace mm2hack::apps::sequence
 
     void SequenceManager::HandleJpbtnConfigMode(double dt)
     {
-        using namespace apps::deal;
+        using namespace apps::runtime;
         using namespace core;
         // If we are in JPBTN configuration mode, update the joystick manager and tick the input config overlay.
         if (GameStateManager::GetInstance().Is(GameState::JpbtnConfig))

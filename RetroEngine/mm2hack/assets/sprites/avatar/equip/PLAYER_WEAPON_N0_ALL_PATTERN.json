@@ -1,0 +1,9 @@
+{
+    "Loader": {
+        "tileWidth": 16,
+        "tileHeight": 16,
+        "tilesX": 8,
+        "tilesY": 8,
+        "paletteVariants": 4
+    }
+}

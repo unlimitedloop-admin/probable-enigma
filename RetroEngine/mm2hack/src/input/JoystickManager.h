@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include <string>
 #include "C16ButtonState.h"
 #include "IInputProvider.h"
 #include "InputFrame.h"
@@ -21,6 +22,7 @@
 
 namespace mm2hack::input
 {
+    // DirectInput controller stick capture group (layout)
     enum class AxisGroup : uint8_t { Any, Left, Right };
 
     // Manages key input devices, specifically joystick input (Keyboards and Gamepads)
@@ -56,14 +58,17 @@ namespace mm2hack::input
         Device ActiveDevice() const noexcept { return _activeKind; }
 
     private:
+        bool checkXInputAvailable_();                   // Check if XInput is available
+        bool checkDirectInputAvailable_();              // Check if DirectInput is available
+
+    private:
+        const std::wstring kClassName{ L"JoystickManager" };
+
         std::unique_ptr<IInputProvider> _provider;      // Pointer to the input provider
         C16ButtonState _button_state;                   // Current state of all buttons
         KeyBinding _binding;                            // Key binding configuration
 
         AxisGroup _diCaptureGroup{ AxisGroup::Left };   // DirectInput axis capture group
         Device _activeKind{ Device::Keyboard };         // Currently active input device kind
-
-        bool CheckXInputAvailable();                    // Check if XInput is available
-        bool CheckDirectInputAvailable();               // Check if DirectInput is available
     };
 }

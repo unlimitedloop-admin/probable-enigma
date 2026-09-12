@@ -109,7 +109,7 @@ namespace mm2hack::core::ui
         uiStyle.ApplyUIFont(_btn_down);
 
         // --- Cheater listView ---
-        CreateListView();
+        createListView_();
 
         // --- Show status ---
         _status_text = CreateWindowEx(0, L"STATIC", L"Ready.",
@@ -119,91 +119,7 @@ namespace mm2hack::core::ui
         uiStyle.ApplyUIFont(_status_text);
 
         LoadFromConfig();
-        RebuildListView();
-    }
-
-    void CheatCodeInjectionUI::CreateListView()
-    {
-        ui::CommonUIStyle uiStyle;
-
-        _list_codes = CreateWindowEx(WS_EX_CLIENTEDGE, WC_LISTVIEWW, L"",
-            WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SINGLESEL,
-            20, 90, 810, 330, _parent, reinterpret_cast<HMENU>(static_cast<INT_PTR>(IDC_LIST_CODES)),
-            GetHinst(), nullptr);
-        uiStyle.ApplyUIFont(_list_codes);
-
-        ListView_SetExtendedListViewStyle(_list_codes,
-            LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES | LVS_EX_CHECKBOXES | LVS_EX_LABELTIP);
-
-        InsertListViewColumns();
-    }
-
-    void CheatCodeInjectionUI::InsertListViewColumns() const
-    {
-        LVCOLUMNW col{};
-        col.mask = LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
-
-        col.cx = 50;  col.pszText = const_cast<wchar_t*>(L"Enabled");   col.iSubItem = 0;
-        ListView_InsertColumn(_list_codes, 0, &col);
-
-        col.cx = 220; col.pszText = const_cast<wchar_t*>(L"Label/Code"); col.iSubItem = 1;
-        ListView_InsertColumn(_list_codes, 1, &col);
-
-        col.cx = 90;  col.pszText = const_cast<wchar_t*>(L"Type"); col.iSubItem = 2;
-        ListView_InsertColumn(_list_codes, 2, &col);
-
-        col.cx = 70;  col.pszText = const_cast<wchar_t*>(L"Freeze"); col.iSubItem = 3;
-        ListView_InsertColumn(_list_codes, 3, &col);
-
-        col.cx = 360; col.pszText = const_cast<wchar_t*>(L"Code String"); col.iSubItem = 4;
-        ListView_InsertColumn(_list_codes, 4, &col);
-    }
-
-    void CheatCodeInjectionUI::RebuildListView()
-    {
-        ListView_DeleteAllItems(_list_codes);
-
-        for (size_t i = 0; i < _rows.size(); ++i)
-        {
-            InsertListViewRow(i, _rows[i]);
-        }
-        SyncCheckStatesToListView();
-    }
-
-    void CheatCodeInjectionUI::InsertListViewRow(size_t index, const CheatRow& row) const
-    {
-        LVITEMW item{};
-        item.mask = LVIF_TEXT;
-        item.iItem = static_cast<int>(index);
-        item.iSubItem = 1;
-        std::wstring label = row.label.empty() ? row.code : row.label;
-        item.pszText = const_cast<wchar_t*>(label.c_str());
-        int idx = ListView_InsertItem(_list_codes, &item);
-
-        ListView_SetItemText(_list_codes, idx, 2, const_cast<wchar_t*>(row.type.c_str()));
-        ListView_SetItemText(_list_codes, idx, 3, const_cast<wchar_t*>(row.freeze ? L"Yes" : L"No"));
-        ListView_SetItemText(_list_codes, idx, 4, const_cast<wchar_t*>(row.code.c_str()));
-    }
-
-    int CheatCodeInjectionUI::GetSelectedIndex() const
-    {
-        return ListView_GetNextItem(_list_codes, -1, LVNI_SELECTED);
-    }
-
-    void CheatCodeInjectionUI::SyncCheckStatesFromListView()
-    {
-        for (int i = 0; i < static_cast<int>(_rows.size()); ++i)
-        {
-            _rows[static_cast<size_t>(i)].enabled = ListView_GetCheckState(_list_codes, i) != FALSE;
-        }
-    }
-
-    void CheatCodeInjectionUI::SyncCheckStatesToListView()
-    {
-        for (int i = 0; i < static_cast<int>(_rows.size()); ++i)
-        {
-            ListView_SetCheckState(_list_codes, i, _rows[static_cast<size_t>(i)].enabled ? TRUE : FALSE);
-        }
+        rebuildListView_();
     }
 
     bool CheatCodeInjectionUI::HandleCommand(WPARAM wparam, LPARAM /*lparam*/)
@@ -216,19 +132,19 @@ namespace mm2hack::core::ui
             switch (id)
             {
             case IDC_BTN_ADD:
-                AddFromEdit(); return true;
+                addFromEdit_(); return true;
             case IDC_BTN_REMOVE:
-                RemoveSelected(); return true;
+                removeSelected_(); return true;
             case IDC_BTN_CLEAR:
-                ClearAll(); return true;
+                clearAll_(); return true;
             case IDC_BTN_ALL_ON:
-                SetAllEnabled(true); return true;
+                setAllEnabled_(true); return true;
             case IDC_BTN_ALL_OFF:
-                SetAllEnabled(false); return true;
+                setAllEnabled_(false); return true;
             case IDC_BTN_UP:
-                MoveSelectedUp(); return true;
+                moveSelectedUp_(); return true;
             case IDC_BTN_DOWN:
-                MoveSelectedDown(); return true;
+                moveSelectedDown_(); return true;
             default:
                 break;
             }
@@ -244,93 +160,13 @@ namespace mm2hack::core::ui
             switch (hdr->code)
             {
             case LVN_ITEMCHANGED:
-                SyncCheckStatesFromListView();
+                syncCheckStatesFromListView_();
                 return true;
             default:
                 break;
             }
         }
         return false;
-    }
-
-    void CheatCodeInjectionUI::AddFromEdit()
-    {
-        std::wstring code = Trim(GetWindowTextWString(_edit_code));
-        if (code.empty())
-        {
-            UpdateStatus(L"Cannot add empty code.");
-            return;
-        }
-
-        // Add "freeze" if the checkbox is checked and not already present.
-        if (Button_GetCheck(_check_freeze) && !ContainsFreeze(code))
-        {
-            code += L" freeze";
-        }
-
-        CheatRow row{};
-        row.code = code;
-        row.type = GuessType(code);
-        row.freeze = ContainsFreeze(code);
-        row.label = GuessLabel(code);
-        row.enabled = true;
-
-        _rows.push_back(std::move(row));
-        RebuildListView();
-        UpdateStatus(L"Added successfully.");
-
-        SetWindowText(_edit_code, L"");
-        SetFocus(_edit_code);
-    }
-
-    void CheatCodeInjectionUI::RemoveSelected()
-    {
-        const int sel = GetSelectedIndex();
-        if (sel < 0)
-        {
-            UpdateStatus(L"Cannot remove: No item selected.");
-            return;
-        }
-        _rows.erase(_rows.begin() + sel);
-        RebuildListView();
-        UpdateStatus(L"Removed successfully.");
-    }
-
-    void CheatCodeInjectionUI::ClearAll()
-    {
-        _rows.clear();
-        RebuildListView();
-        UpdateStatus(L"Cleared all.");
-    }
-
-    void CheatCodeInjectionUI::MoveSelectedUp()
-    {
-        const int sel = GetSelectedIndex();
-        if (sel <= 0) { return; }
-        std::swap(_rows[sel], _rows[sel - 1]);
-        RebuildListView();
-        ListView_SetItemState(_list_codes, sel - 1, LVIS_SELECTED | LVIS_FOCUSED, LVIS_SELECTED | LVIS_FOCUSED);
-    }
-
-    void CheatCodeInjectionUI::MoveSelectedDown()
-    {
-        const int sel = GetSelectedIndex();
-        if (sel < 0 || sel >= static_cast<int>(_rows.size()) - 1) { return; }
-        std::swap(_rows[sel], _rows[sel + 1]);
-        RebuildListView();
-        ListView_SetItemState(_list_codes, sel + 1, LVIS_SELECTED | LVIS_FOCUSED, LVIS_SELECTED | LVIS_FOCUSED);
-    }
-
-    void CheatCodeInjectionUI::SetAllEnabled(bool enabled)
-    {
-        for (auto& r : _rows) { r.enabled = enabled; }
-        SyncCheckStatesToListView();
-        UpdateStatus(enabled ? L"Enabled all." : L"Disabled all.");
-    }
-
-    void CheatCodeInjectionUI::UpdateStatus(const std::wstring& text) const
-    {
-        SetWindowText(_status_text, text.c_str());
     }
 
     std::vector<std::wstring> CheatCodeInjectionUI::GetCodes() const
@@ -353,19 +189,182 @@ namespace mm2hack::core::ui
 
     void CheatCodeInjectionUI::LoadFromConfig()
     {
-        // TODO: Construct _rows from INI/JSON
+        // HACK: Construct _rows from INI/JSON
         // Ex: _rows = config::ConfigUIManager::LoadCheatCodes();
     }
 
     void CheatCodeInjectionUI::SaveToConfig() const
     {
-        // TODO: Save for current _rows to INI/JSON
+        // HACK: Save for current _rows to INI/JSON
         // Ex: config::ConfigUIManager::SaveCheatCodes(_rows);
     }
 
-    // ---- String Utilities (frame)---------------------------------------------
+    void CheatCodeInjectionUI::createListView_()
+    {
+        ui::CommonUIStyle uiStyle;
 
-    std::wstring CheatCodeInjectionUI::GuessType(const std::wstring& code)
+        _list_codes = CreateWindowEx(WS_EX_CLIENTEDGE, WC_LISTVIEWW, L"",
+            WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SINGLESEL,
+            20, 90, 810, 330, _parent, reinterpret_cast<HMENU>(static_cast<INT_PTR>(IDC_LIST_CODES)),
+            GetHinst(), nullptr);
+        uiStyle.ApplyUIFont(_list_codes);
+
+        ListView_SetExtendedListViewStyle(_list_codes,
+            LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES | LVS_EX_CHECKBOXES | LVS_EX_LABELTIP);
+
+        insertListViewColumns_();
+    }
+
+    void CheatCodeInjectionUI::insertListViewColumns_() const
+    {
+        LVCOLUMNW col{};
+        col.mask = LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
+
+        col.cx = 50;  col.pszText = const_cast<wchar_t*>(L"Enabled");   col.iSubItem = 0;
+        ListView_InsertColumn(_list_codes, 0, &col);
+
+        col.cx = 220; col.pszText = const_cast<wchar_t*>(L"Label/Code"); col.iSubItem = 1;
+        ListView_InsertColumn(_list_codes, 1, &col);
+
+        col.cx = 90;  col.pszText = const_cast<wchar_t*>(L"Type"); col.iSubItem = 2;
+        ListView_InsertColumn(_list_codes, 2, &col);
+
+        col.cx = 70;  col.pszText = const_cast<wchar_t*>(L"Freeze"); col.iSubItem = 3;
+        ListView_InsertColumn(_list_codes, 3, &col);
+
+        col.cx = 360; col.pszText = const_cast<wchar_t*>(L"Code String"); col.iSubItem = 4;
+        ListView_InsertColumn(_list_codes, 4, &col);
+    }
+
+    void CheatCodeInjectionUI::rebuildListView_()
+    {
+        ListView_DeleteAllItems(_list_codes);
+
+        for (size_t i = 0; i < _rows.size(); ++i)
+        {
+            insertListViewRow_(i, _rows[i]);
+        }
+        syncCheckStatesToListView_();
+    }
+
+    void CheatCodeInjectionUI::insertListViewRow_(size_t index, const CheatRow& row) const
+    {
+        LVITEMW item{};
+        item.mask = LVIF_TEXT;
+        item.iItem = static_cast<int>(index);
+        item.iSubItem = 1;
+        std::wstring label = row.label.empty() ? row.code : row.label;
+        item.pszText = const_cast<wchar_t*>(label.c_str());
+        int idx = ListView_InsertItem(_list_codes, &item);
+
+        ListView_SetItemText(_list_codes, idx, 2, const_cast<wchar_t*>(row.type.c_str()));
+        ListView_SetItemText(_list_codes, idx, 3, const_cast<wchar_t*>(row.freeze ? L"Yes" : L"No"));
+        ListView_SetItemText(_list_codes, idx, 4, const_cast<wchar_t*>(row.code.c_str()));
+    }
+
+    int CheatCodeInjectionUI::getSelectedIndex_() const
+    {
+        return ListView_GetNextItem(_list_codes, -1, LVNI_SELECTED);
+    }
+
+    void CheatCodeInjectionUI::syncCheckStatesFromListView_()
+    {
+        for (int i = 0; i < static_cast<int>(_rows.size()); ++i)
+        {
+            _rows[static_cast<size_t>(i)].enabled = ListView_GetCheckState(_list_codes, i) != FALSE;
+        }
+    }
+
+    void CheatCodeInjectionUI::syncCheckStatesToListView_()
+    {
+        for (int i = 0; i < static_cast<int>(_rows.size()); ++i)
+        {
+            ListView_SetCheckState(_list_codes, i, _rows[static_cast<size_t>(i)].enabled ? TRUE : FALSE);
+        }
+    }
+
+    void CheatCodeInjectionUI::addFromEdit_()
+    {
+        std::wstring code = trim_(GetWindowTextWString(_edit_code));
+        if (code.empty())
+        {
+            updateStatus_(L"Cannot add empty code.");
+            return;
+        }
+
+        // Add "freeze" if the checkbox is checked and not already present.
+        if (Button_GetCheck(_check_freeze) && !containsFreeze_(code))
+        {
+            code += L" freeze";
+        }
+
+        CheatRow row{};
+        row.code = code;
+        row.type = guessType_(code);
+        row.freeze = containsFreeze_(code);
+        row.label = guessLabel_(code);
+        row.enabled = true;
+
+        _rows.push_back(std::move(row));
+        rebuildListView_();
+        updateStatus_(L"Added successfully.");
+
+        SetWindowText(_edit_code, L"");
+        SetFocus(_edit_code);
+    }
+
+    void CheatCodeInjectionUI::removeSelected_()
+    {
+        const int sel = getSelectedIndex_();
+        if (sel < 0)
+        {
+            updateStatus_(L"Cannot remove: No item selected.");
+            return;
+        }
+        _rows.erase(_rows.begin() + sel);
+        rebuildListView_();
+        updateStatus_(L"Removed successfully.");
+    }
+
+    void CheatCodeInjectionUI::clearAll_()
+    {
+        _rows.clear();
+        rebuildListView_();
+        updateStatus_(L"Cleared all.");
+    }
+
+    void CheatCodeInjectionUI::moveSelectedUp_()
+    {
+        const int sel = getSelectedIndex_();
+        if (sel <= 0) { return; }
+        std::swap(_rows[sel], _rows[sel - 1]);
+        rebuildListView_();
+        ListView_SetItemState(_list_codes, sel - 1, LVIS_SELECTED | LVIS_FOCUSED, LVIS_SELECTED | LVIS_FOCUSED);
+    }
+
+    void CheatCodeInjectionUI::moveSelectedDown_()
+    {
+        const int sel = getSelectedIndex_();
+        if (sel < 0 || sel >= static_cast<int>(_rows.size()) - 1) { return; }
+        std::swap(_rows[sel], _rows[sel + 1]);
+        rebuildListView_();
+        ListView_SetItemState(_list_codes, sel + 1, LVIS_SELECTED | LVIS_FOCUSED, LVIS_SELECTED | LVIS_FOCUSED);
+    }
+
+    void CheatCodeInjectionUI::setAllEnabled_(bool enabled)
+    {
+        for (auto& r : _rows) { r.enabled = enabled; }
+        syncCheckStatesToListView_();
+        updateStatus_(enabled ? L"Enabled all." : L"Disabled all.");
+    }
+
+    void CheatCodeInjectionUI::updateStatus_(const std::wstring& text) const
+    {
+        SetWindowText(_status_text, text.c_str());
+    }
+
+    // ---- String Utilities (frame)---------------------------------------------
+    std::wstring CheatCodeInjectionUI::guessType_(const std::wstring& code)
     {
         // Rules: Input starting with "PAR" is "PAR", otherwise "Symbolic".
         if (code.size() >= 3)
@@ -375,30 +374,30 @@ namespace mm2hack::core::ui
         return L"Symbolic";
     }
 
-    std::wstring CheatCodeInjectionUI::GuessLabel(const std::wstring& code)
+    std::wstring CheatCodeInjectionUI::guessLabel_(const std::wstring& code)
     {
         // Find "player.invincible=1 freeze" for get "player.invincible".
         auto posEq = code.find(L'=');
         if (posEq != std::wstring::npos)
         {
-            return Trim(code.substr(0, posEq));
+            return trim_(code.substr(0, posEq));
         }
         // PAR 00A123:FF for get 00A123
         auto posPar = code.find(L"PAR ");
         auto posColon = code.find(L':');
         if (posPar == 0 && posColon != std::wstring::npos && posColon > 4)
         {
-            return Trim(code.substr(4, posColon - 4));
+            return trim_(code.substr(4, posColon - 4));
         }
         return L"";
     }
 
-    bool CheatCodeInjectionUI::ContainsFreeze(const std::wstring& code)
+    bool CheatCodeInjectionUI::containsFreeze_(const std::wstring& code)
     {
         return code.find(L"freeze") != std::wstring::npos || code.find(L"FREEZE") != std::wstring::npos;
     }
 
-    std::wstring CheatCodeInjectionUI::Trim(const std::wstring& s)
+    std::wstring CheatCodeInjectionUI::trim_(const std::wstring& s)
     {
         size_t a = 0, b = s.size();
         while (a < b && iswspace(s[a])) ++a;

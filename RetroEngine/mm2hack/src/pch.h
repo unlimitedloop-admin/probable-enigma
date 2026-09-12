@@ -11,14 +11,18 @@
 // C++ Standard Library
 // ==========================
 #include <algorithm>
+#include <array>
 #include <chrono>
+#include <cstdint>
 #include <deque>
 #include <fstream>
 #include <map>
 #include <memory>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 // ==========================
@@ -30,3 +34,10 @@
 // Common Libraries
 // ==========================
 #include "config/SystemConfig.h"
+
+// ==========================
+// Exception throwing macro
+// ==========================
+#include "exceptions/CoreException.h"
+#include "exceptions/ErrorHandler.h"
+#include "exceptions/ErrorLevel.h"

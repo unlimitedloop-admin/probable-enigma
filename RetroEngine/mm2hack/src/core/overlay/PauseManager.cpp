@@ -25,10 +25,10 @@ namespace mm2hack::core::overlay
         int w = conf::kScreenWidth;
         int h = conf::kScreenHeight;
 
-        DxLib::SetDrawBlendMode(DX_BLENDMODE_ALPHA, 128);
-        DxLib::DrawBox(0, 0, w, h, DxLib::GetColor(0, 0, 0), TRUE);
-        DxLib::SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
+        ::DxLib::SetDrawBlendMode(DX_BLENDMODE_ALPHA, 128);
+        ::DxLib::DrawBox(0, 0, w, h, ::DxLib::GetColor(0, 0, 0), TRUE);
+        ::DxLib::SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
 
-        DxLib::DrawString(w / 2 - 40, h / 2 - 8, L"PAUSED", DxLib::GetColor(255, 255, 255));
+        ::DxLib::DrawString(w / 2 - 40, h / 2 - 8, L"PAUSED", ::DxLib::GetColor(255, 255, 255));
     }
 }

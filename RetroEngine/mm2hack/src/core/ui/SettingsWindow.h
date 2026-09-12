@@ -9,7 +9,7 @@
 #pragma once
 
 #include <memory>
-#include <windows.h>
+#include <Windows.h>
 #include "CheatCodeInjectionUI.h"
 #include "CommonUIStyle.h"
 #include "GraphicsSettingsUI.h"
@@ -28,6 +28,7 @@ namespace mm2hack::core::ui
             Cheats
         };
 
+        // Layout properties for each settings tab
         static constexpr SettingTabLayout kWindowProps[] = {
             { L"Graphics", 350, 320,  80, 240, 170, 240, 240, 240 },
             { L"Sound",    400, 380, 130, 300, 220, 300, 290, 300 },
@@ -38,21 +39,23 @@ namespace mm2hack::core::ui
         static void OpenTab(HWND parent, Tab tab);
 
     private:
-        static constexpr LPCWSTR kClassName = L"SettingsWindowClass";
+        static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+        void applySettings_();
+        void applySoundToAudio_();
+        void setHandle_(HWND hwnd);
+        void createContent_(Tab tab);
+        static SettingsWindow* getThis_(HWND hwnd);
+
+    private:
+        inline static constexpr LPCWSTR kClassName{ L"SettingsWindowClass" };
+
         static HWND _hwnd;
         static Tab _current_tab;
         std::unique_ptr<CheatCodeInjectionUI> _cheat_ui;
         std::unique_ptr<GraphicsSettingsUI> _graphics_ui;
         std::unique_ptr<SoundSettingsUI> _sound_ui;
         bool _is_closing{ false };
-
-        static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-
-        void ApplySettings();
-        void ApplySoundToAudio();
-        void SetHandle(HWND hwnd);
-        void CreateContent(Tab tab);
-        static SettingsWindow* GetThis(HWND hwnd);
 
         static std::unique_ptr<SettingsWindow> _instance;   // Just to own the instance
     };

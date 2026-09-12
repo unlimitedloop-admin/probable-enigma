@@ -11,6 +11,7 @@
 #include <array>
 #include <cstdint>
 #include <DxLib.h>
+#include "di/DirectInputToken.h"
 #include "JpBtn.h"
 
 namespace mm2hack::input
@@ -61,11 +62,14 @@ namespace mm2hack::input
 
     inline constexpr std::array<uint16_t, JPBTN_COUNT> GetDefaultDirectInputArray()
     {
+        using namespace di;
+        constexpr uint8_t kDefaultAxisThreshold = 8;
+
         return {
-            static_cast<uint16_t>(-1),      // UP: for POV
-            static_cast<uint16_t>(-1),      // DOWN
-            static_cast<uint16_t>(-1),      // LEFT
-            static_cast<uint16_t>(-1),      // RIGHT
+            MakeAxis(AX_Y, true, kDefaultAxisThreshold),   // UP: Y- or POV up
+            MakeAxis(AX_Y, false, kDefaultAxisThreshold),  // DOWN: Y+ or POV down
+            MakeAxis(AX_X, true, kDefaultAxisThreshold),   // LEFT: X- or POV left
+            MakeAxis(AX_X, false, kDefaultAxisThreshold),  // RIGHT: X+ or POV right
             0,                              // A
             1,                              // B
             3,                              // X
@@ -79,6 +83,6 @@ namespace mm2hack::input
             13,                             // LTHUMB
             14                              // RTHUMB
         };
-        // NOTE: Buttons are 0-based indices. Axes and POVs are handled separately.
+        // NOTE: Buttons are 0-based indices. X/Y axis bindings fall back to POV input.
     }
 }

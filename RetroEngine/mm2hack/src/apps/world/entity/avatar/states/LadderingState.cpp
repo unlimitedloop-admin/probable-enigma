@@ -1,0 +1,325 @@
+#include "pch.h"
+
+#include "LadderingState.h"
+
+#include <cmath>
+
+#include "apps/foundation/math/CoordinateTypes.h"
+#include "apps/systems/physics/ILadderService.h"
+#include "apps/systems/physics/ITerrainProbe.h"
+#include "apps/systems/physics/Probes.h"
+#include "apps/systems/physics/TileAttribute.h"
+#include "apps/systems/scrolling/atomic/ScrollTypes.h"
+#include "apps/world/entity/avatar/abilities/AnimationAbilities.h"
+#include "apps/world/entity/avatar/abilities/MovementAbilities.h"
+#include "apps/world/entity/avatar/AvatarStatus.h"
+#include "apps/world/entity/avatar/PlayerContext.h"
+#include "apps/world/entity/avatar/PlayerParams.h"
+#include "core/assembly/StateProvider.h"
+#include "input/Jpbtn.h"
+
+
+namespace mm2hack::apps::world::entity::avatar::states
+{
+    using systems::physics::TileAttribute;
+    using systems::physics::LadderEntryKind;
+
+    AvatarStatus LadderingState::Id() const noexcept { return AvatarStatus::Laddering; }
+
+    void LadderingState::OnEnter(PlayerContext& cx, StateProvider* in, const PlayerTuning& t)
+    {
+        cx.onGround = false;
+        cx.justLanded = false;
+
+        cx.vel.x = 0.0;
+        if (cx.ladder != nullptr && cx.ladder->getEntryKind() == LadderEntryKind::FromTopDown)
+        {
+            cx.vel.y = 0x0F.00p0;   // Start climbing down when entering from the top.
+        }
+        else
+        {
+            cx.vel.y = 0.0;         // No vertical movement on normal entry (from sides)
+        }
+        snapToLadderCenter_(cx, t); // Align avatar's X-position to ladder center on entry.
+
+        // FromTopDown applies its entry velocity in the transition frame, before
+        // LadderingState::Update() runs for the first time. Request fixed scrolling
+        // here so that the entry movement cannot cross into the next page first.
+        checkFixedScrollRequest_(cx, cx.vel.y);
+
+        cx.basePose = static_cast<int>(STile::LadderingA);
+        cx.animeStepper.reset();
+        cx.ladder->setEntryKind(LadderEntryKind::None);
+    }
+
+    void LadderingState::OnExit(PlayerContext& cx, StateProvider* in, const PlayerTuning& t)
+    {
+        cx.animeStepper.reset();
+        cx.vel.x = 0.0;
+    }
+
+    AvatarStatus LadderingState::Update(PlayerContext& cx, StateProvider* in, const PlayerTuning& t, double /*dt*/)
+    {
+        using namespace abilities;
+        using namespace systems::scrolling::atomic;
+        // Climb movement
+        const bool up = in->IsPressed(JPBTN::UP);
+        const bool down = in->IsPressed(JPBTN::DOWN);
+
+        const double intendedDy =
+            (up && !down) ? -t.climbSpeed :
+            (down && !up) ? +t.climbSpeed :
+                            0.0;
+
+        // Always snap X to ladder center (warp is allowed)
+        snapToLadderCenter_(cx, t);
+
+        // Check the page transition before losing the ladder. Attack actions lock
+        // climbing movement, so only movement that can actually occur is considered.
+        if (!cx.lockClimbMove)
+        {
+            checkFixedScrollRequest_(cx, intendedDy);
+        }
+
+        // If ladder lost: fall
+        if (!isOnLadder_(cx, t))
+        {
+            cx.onGround = false;
+            return AvatarStatus::Hovering;
+        }
+
+        cx.vel.x = 0.0;
+        cx.vel.y = 0.0;
+
+        if (cx.lockClimbMove)
+        {
+            cx.vel.y = 0.0;
+        }
+        else if (up && !down)
+        {
+            cx.vel.y = intendedDy;
+            auto vHit = cx.terrain->SweepVertical(cx.probes, cx.vel);
+            if (vHit.hit && vHit.kind == systems::physics::VHitKind::Ceiling)
+            {
+                // Stop at ceiling. 
+                cx.vel.y = 0.0;
+            }
+            else
+            {
+                // Movement is allowed; fixed-scroll request is evaluated below.
+            }
+        }
+        else if (down && !up)
+        {
+            cx.vel.y = intendedDy;
+            auto vHit = cx.terrain->SweepVertical(cx.probes, cx.vel);
+            if (vHit.hit && vHit.kind == systems::physics::VHitKind::Floor)
+            {
+                // Stop at floor
+                cx.vel.y = vHit.maxDistanceY;
+
+                // If you want: transition to Standing when trying to go down but floor blocks
+                cx.onGround = true;
+                cx.justLanded = true;
+                return AvatarStatus::Standing;
+            }
+            else
+            {
+                // Movement is allowed; fixed-scroll request is evaluated below.
+            }
+        }
+        // !up && !down -> vel.y = 0.0, and 
+        else
+        {
+            cx.vel.y = 0.0;
+            // Jump -> Hovering (use existing do_jump)
+            if (cx.jumpEdge)
+            {
+                update_vertical_velocity(cx, t, false);   // Start falling
+                return AvatarStatus::Hovering;
+            }
+        }
+
+        // Rising to ground at ladder top (original-like rule)
+        if (!cx.lockClimbMove && up && shouldRisingToGround_(cx))
+        {
+            doRisingToGround_(cx);
+            return AvatarStatus::Standing;
+        }
+
+        auto [input, isTopAttrEmpty] = computeInputAndTopEmpty_(cx, in);
+        laddering_anim(cx, input, isTopAttrEmpty);
+        return AvatarStatus::Laddering;
+    }
+
+    void LadderingState::TickAnimationOnly(AnimeContext& ax, StateProvider* in, const PlayerTuning& t, double dt)
+    {
+        using namespace abilities;
+
+        laddering_anim(ax);  // Not move on its own.
+    }
+
+    bool LadderingState::isOnLadder_(const PlayerContext& cx, const PlayerTuning& t) const noexcept
+    {
+        if (cx.ladder == nullptr)
+        {
+            return false;
+        }
+
+        Vec2 candidates[9]{};
+        buildGrabCandidates_(candidates, cx, t);
+
+        for (const auto& p : candidates)
+        {
+            if (cx.ladder->CanGrabAt(p))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    void LadderingState::snapToLadderCenter_(PlayerContext& cx, const PlayerTuning& t) const noexcept
+    {
+        if (cx.ladder == nullptr)
+        {
+            return;
+        }
+
+        Vec2 candidates[9]{};
+        buildGrabCandidates_(candidates, cx, t);
+
+        for (const auto& p : candidates)
+        {
+            const auto centerPos = cx.ladder->TryGetCenterXAt(p);
+            if (centerPos.has_value())
+            {
+                cx.pos.x = centerPos->x;
+                return;
+            }
+        }
+    }
+
+    bool LadderingState::shouldRisingToGround_(const PlayerContext& cx) const
+    {
+        using namespace systems::physics;
+        // Condition:
+        // behind.middle == Empty AND behind.bottom == Laddering
+        const auto& b = cx.probes.behindGround;
+
+        const auto midAttr = cx.terrain->AttributeAt(b.middlePoint);
+        const auto btmAttr = cx.terrain->AttributeAt(b.bottomPoint);
+
+        return (Has(midAttr, TileAttribute::Empty) && (Has(btmAttr, TileAttribute::Ladder)));
+    }
+
+    void LadderingState::doRisingToGround_(PlayerContext& cx) const
+    {
+        using namespace abilities;
+        const double y = cx.pos.y;
+
+        const double moveY =
+            std::floor((y + 9.0) / config::SystemConfig::kTileSize + 1.0) * config::SystemConfig::kTileSize - 8.0;
+
+        // Directly set position to avoid overshooting.
+        cx.pos.y = moveY - 17.0;
+
+        cx.vel.x = 0.0;
+        cx.vel.y = 0.0;
+
+        cx.onGround = true;
+        cx.justLanded = true;
+
+        cx.facingLR = opposite_facing_direction(cx.facingLR);
+        cx.basePose = static_cast<int>(STile::StandingA);
+    }
+
+    void LadderingState::buildGrabCandidates_(Vec2 out[9], const PlayerContext& cx, const PlayerTuning& t) const noexcept
+    {
+        const auto& b = cx.probes.behindGround;
+
+        // Testing check minimum epsilon.
+        const double eps = kSnapEpsBase;
+
+        out[0] = b.topPoint;
+        out[1] = b.middlePoint;
+        out[2] = b.bottomPoint;
+
+        out[3] = Vec2{ b.topPoint.x,    b.topPoint.y + eps };
+        out[4] = Vec2{ b.middlePoint.x, b.middlePoint.y + eps };
+        out[5] = Vec2{ b.bottomPoint.x, b.bottomPoint.y + eps };
+
+        out[6] = Vec2{ b.topPoint.x,    b.topPoint.y - eps };
+        out[7] = Vec2{ b.middlePoint.x, b.middlePoint.y - eps };
+        out[8] = Vec2{ b.bottomPoint.x, b.bottomPoint.y - eps };
+    }
+
+    std::pair<int, bool> LadderingState::computeInputAndTopEmpty_(const PlayerContext& cx, StateProvider* in) const noexcept
+    {
+        const bool up = in->IsPressed(JPBTN::UP);
+        const bool down = in->IsPressed(JPBTN::DOWN);
+
+        auto topAttr = cx.terrain->AttributeAt(cx.probes.behindGround.topPoint);
+        const bool isTopAttrEmpty = Has(topAttr, TileAttribute::Empty);
+        const int input = (up && !down) ? -1 : ((down && !up) ? +1 : 0);
+
+        return { input, isTopAttrEmpty };
+    }
+
+    void LadderingState::checkFixedScrollRequest_(PlayerContext& cx, const double intendedDy) const noexcept
+    {
+        using conf = config::SystemConfig;
+        using systems::scrolling::atomic::FixedScrollRequest;
+        using systems::scrolling::atomic::PageScroll;
+
+        // Fixed-page scroll is available only while the player belongs
+        // to the currently displayed page.
+        if (!cx.pendingFixedScroll.available)
+        {
+            return;
+        }
+
+        const double pageHeight = static_cast<double>(conf::kTileCountY * conf::kTileSize);
+
+        //--------------------------------------------------------------------------
+        // Upward fixed scroll
+        //--------------------------------------------------------------------------
+
+        // Use the upper-side probe as the trigger reference.
+        // intendedDy is added so that the position after this frame's movement
+        // is evaluated rather than only the current position.
+        const double nextUpperWorldY = cx.probes.behindGround.middlePoint.y + intendedDy;
+
+        const double nextUpperLocalY = nextUpperWorldY - cx.pageOriginPx.y;
+
+        if (intendedDy < 0.0 && nextUpperLocalY < 0.0)
+        {
+            FixedScrollRequest request{};
+            request.dir = PageScroll::Dir::Up;
+            request.carryTotalPx = 0x09.00p0;
+
+            cx.pendingFixedScroll = request;
+            return;
+        }
+
+        //--------------------------------------------------------------------------
+        // Downward fixed scroll
+        //--------------------------------------------------------------------------
+
+        // The behind-ground probe is offset upward, so use the player's position
+        // for the lower page boundary.
+        const double nextPlayerWorldY = cx.pos.y + intendedDy;
+
+        const double nextPlayerLocalY = nextPlayerWorldY - cx.pageOriginPx.y;
+
+        if (intendedDy > 0.0 && nextPlayerLocalY >= pageHeight)
+        {
+            FixedScrollRequest request{};
+            request.dir = PageScroll::Dir::Down;
+            request.carryTotalPx = 0x07.00p0;
+
+            cx.pendingFixedScroll = request;
+        }
+    }
+}

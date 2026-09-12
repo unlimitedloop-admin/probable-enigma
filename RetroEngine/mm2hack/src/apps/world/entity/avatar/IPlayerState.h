@@ -1,0 +1,43 @@
+//==============================================================================
+// 
+//  Project: mm2hack
+//  IPlayerState.h
+// 
+//  Interface for player state behavior.
+// 
+//==============================================================================
+#pragma once
+
+#include "AvatarStatus.h"
+#include "PlayerContext.h"
+#include "PlayerParams.h"
+
+namespace mm2hack::apps::world::entity::avatar
+{
+    struct PlayerContext;
+}
+
+namespace mm2hack::core::assembly
+{
+    class StateProvider;
+}
+
+namespace mm2hack::apps::world::entity::avatar
+{
+    using core::assembly::StateProvider;
+
+    // Interface for take on player state behavior
+    class IPlayerState
+    {
+    public:
+        virtual ~IPlayerState() = default;
+        virtual AvatarStatus Id() const noexcept = 0;
+        virtual void OnEnter(PlayerContext&, StateProvider*, const PlayerTuning&) {}
+        virtual void OnExit(PlayerContext&, StateProvider*, const PlayerTuning&) {}
+        // Update and return the **next state ID** (same ID if continuing)
+        virtual AvatarStatus Update(PlayerContext&, StateProvider*, const PlayerTuning&, double dt) = 0;
+
+        // Animation only tick (separate from Update, default: no-op)
+        virtual void TickAnimationOnly(AnimeContext& ax, StateProvider*, const PlayerTuning& t, double dt) { (void)ax; (void)t; (void)dt; }
+    };
+}

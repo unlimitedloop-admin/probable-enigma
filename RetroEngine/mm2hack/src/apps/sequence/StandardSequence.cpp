@@ -2,28 +2,37 @@
 
 #include "StandardSequence.h"
 
-#include "apps/NES/NESPalette.h"
-#include "apps/scenes/SceneChangeMediator.h"
-#include "apps/scenes/SceneID.h"
+#include "apps/foundation/NES/NESPalette.h"
+#include "apps/resources/parameters/Parameters.h"
+#include "apps/scenes/IBaseScene.h"
 #include "apps/scenes/SceneManager.h"
 #include "core/save/SaveData.h"
-#include "SequenceType.h"
+#include "SequenceManager.h"
 
 namespace mm2hack::apps::sequence
 {
     StandardSequence::StandardSequence()
     {
+        using SceneID = scenes::SceneID;
+
+        // Initialize the sequence, checks whether the resource can be loaded, etc.
         _sceneChanger.RegisterListener(&_sceneManager);
-        // NOTE: This defines the first scene to be executed.
-        _sceneChanger.RequestChange(scenes::SceneID::LaunchingGame);
+        _sceneManager.SetMediator(&_sceneChanger);
+
+        // NOTE: LaunchingGame -> Opening
+        resources::parameters::Parameters params;
+        params = params.With<SceneID>(L"Subsequent", SceneID::Opening);
+        _sceneChanger.RequestChange(SceneID::LaunchingGame, params);
+
         // Load the default background color for the NES palette.
-        NES::NESPalette::SetBackgroundFor(config::SystemConfig::kMakeSeqPaletteIndex);
+        foundation::NES::NESPalette::SetBackgroundFor(config::SystemConfig::kMakeSeqPaletteIndex);
     }
 
     StandardSequence::~StandardSequence()
     {
+        // Clean up resources, finalize the sequence, etc.
         _sceneManager.Release();
-        NES::NESPalette::SetBackgroundFor(config::SystemConfig::kDefaultNESPaletteIndex);
+        foundation::NES::NESPalette::SetBackgroundFor(config::SystemConfig::kDefaultNESPaletteIndex);
     }
 
     void StandardSequence::Execute()
@@ -44,20 +53,15 @@ namespace mm2hack::apps::sequence
         _sceneManager.RenderOverlay();
     }
 
-    scenes::SceneManager* StandardSequence::GetSceneManager()
-    {
-        return &_sceneManager;
-    }
-
     bool StandardSequence::Save(core::save::SaveData& out) const
     {
         // Add more data to SaveData if needed. (Other managers, etc.)
         out.sequenceID = static_cast<int>(SequenceType::Standard);
-        return true;
+        return _sceneManager.SaveState(out);
     }
 
     bool StandardSequence::Load(const core::save::SaveData& in)
     {
-        return true;
+        return _sceneManager.LoadState(in);
     }
 }

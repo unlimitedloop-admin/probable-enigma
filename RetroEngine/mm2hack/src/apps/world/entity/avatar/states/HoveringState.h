@@ -1,0 +1,54 @@
+//==============================================================================
+// 
+//  Project: mm2hack
+//  HoveringState.h
+// 
+//  Operation for the "Hovering" avatar state.
+// 
+//==============================================================================
+#pragma once
+
+#include "apps/world/entity/avatar/IPlayerState.h"
+
+#include <string>
+
+#include "apps/world/entity/avatar/AvatarStatus.h"
+
+namespace mm2hack::apps::world::entity::avatar
+{
+    struct PlayerContext;
+    struct PlayerTuning;
+}
+
+namespace mm2hack::core::assembly
+{
+    class StateProvider;
+}
+
+namespace mm2hack::apps::world::entity::avatar::states
+{
+    // Player state: Running (on ground, moving)
+    class HoveringState final : public IPlayerState
+    {
+    public:
+        // Get state ID
+        AvatarStatus Id() const noexcept override;
+        void OnEnter(PlayerContext& cx, core::assembly::StateProvider* in, const PlayerTuning& t) override;
+        // Update state and return next state ID
+        AvatarStatus Update(PlayerContext& cx, core::assembly::StateProvider* in, const PlayerTuning& t, double /*dt*/) override;
+        [[nodiscard]] bool DashJumpActive() const noexcept { return _dash_jump_active; }
+        void RestoreState(bool dash_jump_active) noexcept { _dash_jump_active = dash_jump_active; }
+
+    private:
+        // Try to enter laddering state
+        bool tryEnterLadder_(PlayerContext& cx, core::assembly::StateProvider* in, const PlayerTuning& t) const;
+
+        // Handle fixed scrolling when moving down.
+        void fixedScrollingY_(PlayerContext& cx) const noexcept;
+
+    private:
+        const std::wstring kClassName{ L"HoveringState" };
+
+        bool _dash_jump_active{ false };
+    };
+}

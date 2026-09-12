@@ -10,9 +10,6 @@
 
 namespace mm2hack::core::cheats
 {
-    using std::unique_ptr;
-    using std::make_unique;
-
     CheatManager::CheatManager(ICheatMemoryMap& memory_map)
         : _memory_map(memory_map)
     {
@@ -59,14 +56,14 @@ namespace mm2hack::core::cheats
                 return false;
             }
 
-            unique_ptr<ICheatEffect> eff;
+            std::unique_ptr<ICheatEffect> eff;
             if (patch.freeze)
             {
-                eff = make_unique<FreezePatchEffect>(loc, patch.value, patch.compare, patch.label);
+                eff = std::make_unique<FreezePatchEffect>(loc, patch.value, patch.compare, patch.label);
             }
             else
             {
-                eff = make_unique<OnceWriteEffect>(loc, patch.value, patch.compare, patch.label);
+                eff = std::make_unique<OnceWriteEffect>(loc, patch.value, patch.compare, patch.label);
             }
 
             CheatEntry entry{};

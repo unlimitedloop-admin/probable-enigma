@@ -1,0 +1,191 @@
+//==============================================================================
+//
+//  Project: mm2hack
+//  BGTileAnimator.h
+//
+//  Resolves animated BG tile indices from frame-based animation definitions.
+//
+//==============================================================================
+#pragma once
+
+#include <cstdint>
+#include <span>
+#include "core/save/StateIO.h"
+
+namespace mm2hack::apps::rendering::bg
+{
+    struct BGTileAnimatorState final
+    {
+        std::uint32_t frame_counter{};
+
+        bool Save(core::save::StateWriter& writer) const
+        {
+            return writer.WriteU32(frame_counter);
+        }
+
+        bool Load(core::save::StateReader& reader)
+        {
+            return reader.ReadU32(frame_counter);
+        }
+    };
+
+    // Single frame of a BG tile animation
+    struct BGTileAnimationFrame
+    {
+        std::uint8_t tileId{ 0 };
+        std::uint16_t durationFrames{ 1 };
+    };
+
+    // Animation definition associated with one logical source tile
+    struct BGTileAnimation
+    {
+        std::uint8_t sourceTile{ 0 };
+        std::span<const BGTileAnimationFrame> frames{};
+    };
+
+    // Single frame of a BG palette animation
+    struct BGPaletteAnimationFrame
+    {
+        int paletteVariant{ 0 };
+        std::uint16_t durationFrames{ 1 };
+    };
+
+    // Palette animation associated with one logical source tile
+    struct BGPaletteAnimation
+    {
+        std::uint8_t sourceTile{ 0 };
+        std::span<const BGPaletteAnimationFrame> frames{};
+    };
+
+    // Resolves logical BG tiles to animated drawing tiles
+    class BGTileAnimator
+    {
+    public:
+        BGTileAnimator() noexcept = default;
+
+        // Sets animation definitions
+        void SetAnimations(std::span<const BGTileAnimation> animations) noexcept
+        {
+            _animations = animations;
+            _frame_counter = 0;
+        }
+
+        // Advances animation by one game frame
+        void Update() noexcept
+        {
+            ++_frame_counter;
+        }
+
+        // Resolves a logical source tile into the current drawing tile [e.g., animated tile]
+        [[nodiscard]] std::uint8_t ResolveTile(std::uint8_t source_tile) const noexcept
+        {
+            for (const auto& animation : _animations)
+            {
+                if (animation.sourceTile != source_tile ||
+                    animation.frames.empty())
+                {
+                    continue;
+                }
+
+                std::uint32_t total_frames = 0;
+
+                for (const auto& frame : animation.frames)
+                {
+                    total_frames += frame.durationFrames;
+                }
+
+                if (total_frames == 0)
+                {
+                    return source_tile;
+                }
+
+                const std::uint32_t local_frame =
+                    _frame_counter % total_frames;
+
+                std::uint32_t accumulated = 0;
+
+                for (const auto& frame : animation.frames)
+                {
+                    accumulated += frame.durationFrames;
+
+                    if (local_frame < accumulated)
+                    {
+                        return frame.tileId;
+                    }
+                }
+            }
+
+            return source_tile;
+        }
+
+        // Sets palette animation definitions
+        void SetPaletteAnimations(std::span<const BGPaletteAnimation> animations) noexcept
+        {
+            _palette_animations = animations;
+        }
+
+        // Resolves the local palette variant for a logical source tile.
+        // Returns -1 when the tile has no palette animation.
+        [[nodiscard]] int ResolvePaletteVariant(std::uint8_t source_tile) const noexcept
+        {
+            for (const auto& animation : _palette_animations)
+            {
+                if (animation.sourceTile != source_tile ||
+                    animation.frames.empty())
+                {
+                    continue;
+                }
+
+                std::uint32_t total_frames = 0;
+
+                for (const auto& frame : animation.frames)
+                {
+                    total_frames += frame.durationFrames;
+                }
+
+                if (total_frames == 0)
+                {
+                    return -1;
+                }
+
+                const std::uint32_t local_frame =
+                    _frame_counter % total_frames;
+
+                std::uint32_t accumulated = 0;
+
+                for (const auto& frame : animation.frames)
+                {
+                    accumulated += frame.durationFrames;
+
+                    if (local_frame < accumulated)
+                    {
+                        return frame.paletteVariant;
+                    }
+                }
+            }
+
+            return -1;
+        }
+
+        // Resets animation timing
+        void Reset() noexcept
+        {
+            _frame_counter = 0;
+        }
+
+        [[nodiscard]] BGTileAnimatorState CaptureState() const noexcept
+        {
+            return BGTileAnimatorState{ _frame_counter };
+        }
+
+        void RestoreState(const BGTileAnimatorState& state) noexcept
+        {
+            _frame_counter = state.frame_counter;
+        }
+
+    private:
+        std::span<const BGTileAnimation> _animations{};
+        std::span<const BGPaletteAnimation> _palette_animations{};
+        std::uint32_t _frame_counter{ 0 };
+    };
+}

@@ -1,0 +1,189 @@
+//==============================================================================
+// 
+//  Project: mm2hack
+//  MovementAbilities.h
+// 
+//  Movement abilities for the avatar entity.
+// 
+//==============================================================================
+#pragma once
+
+#include <cstdlib>
+
+#include "apps/foundation/math/CoordinateTypes.h"
+#include "apps/systems/physics/ITerrainProbe.h"
+#include "apps/systems/scrolling/atomic/ScrollTypes.h"
+#include "apps/world/entity/avatar/AvatarStatus.h"
+#include "apps/world/entity/avatar/PlayerContext.h"
+#include "apps/world/entity/avatar/PlayerParams.h"
+#include "config/SystemConfig.h"
+#include "core/assembly/StateProvider.h"
+#include "input/Jpbtn.h"
+
+namespace mm2hack::apps::world::entity::avatar::abilities
+{
+    using foundation::math::Vec2;
+
+    // Request a horizontal fixed-page scroll from the movement that will
+    // actually be applied this frame.
+    inline void try_request_horizontal_fixed_scroll(PlayerContext& cx, double actualDx)
+    {
+        using namespace systems::scrolling::atomic;
+
+        if (!cx.pendingFixedScroll.available || actualDx == 0.0 || cx.scrollRules == nullptr)
+        {
+            return;
+        }
+
+        constexpr double kTriggerGapPx = 14.0;
+        constexpr double kCarryTotalPx = 48.0;
+
+        if (actualDx > 0.0)
+        {
+            const double frontX = cx.probes.frontLine.middlePoint.x;
+            if ((cx.vBounds.rightX - frontX) <= kTriggerGapPx &&
+                IsFixedScroll(cx.scrollRules->RightType(cx.scrollPageIndex)))
+            {
+                cx.pendingFixedScroll = { false, PageScroll::Dir::Right, kCarryTotalPx };
+            }
+        }
+        else
+        {
+            const double frontX = cx.probes.frontLine.middlePoint.x;
+            if ((frontX - cx.vBounds.leftX) <= kTriggerGapPx &&
+                IsFixedScroll(cx.scrollRules->LeftType(cx.scrollPageIndex)))
+            {
+                cx.pendingFixedScroll = { false, PageScroll::Dir::Left, kCarryTotalPx };
+            }
+        }
+    }
+
+    // Create GroundMoveIntent based on input and PlayerTuning
+    inline GroundMoveIntent make_input_move_intent(StateProvider* in, const PlayerTuning& t, AvatarStatus st)
+    {
+        const bool left = in->IsPressed(JPBTN::LEFT);
+        const bool right = in->IsPressed(JPBTN::RIGHT);
+
+        if (!(left ^ right))
+        {
+            return {}; // active=false
+        }
+
+        const int sign = left ? -1 : +1;
+
+        double spd = 0.0;
+        switch (st)
+        {
+        case AvatarStatus::Standing:
+        case AvatarStatus::LaunchRun: spd = t.momentumStart; break;
+        case AvatarStatus::Running:   spd = t.steadyRun;     break;
+        default:                      spd = 0.0;             break;
+        }
+
+        return GroundMoveIntent{ sign, spd, spd > 0.0 };
+    }
+
+    // Create GroundMoveIntent based on PlayerContext and PlayerTuning (Intended for use only with BrakeRun)
+    inline GroundMoveIntent make_brake_run_intent(const PlayerContext& cx, const PlayerTuning& t)
+    {
+        const int sign = (cx.facingLR == AvatarDirection::Left) ? -1 : +1;
+        return GroundMoveIntent{ sign, t.haltSpeed, t.haltSpeed > 0.0 };
+    }
+
+    // Create AirMoveIntent based on input and PlayerTuning (Intended for use with air behavior)
+    inline AirMoveIntent make_air_move_intent(StateProvider* in, const PlayerTuning& t)
+    {
+        const bool left = in->IsPressed(JPBTN::LEFT);
+        const bool right = in->IsPressed(JPBTN::RIGHT);
+
+        if (left ^ right)
+        {
+            return AirMoveIntent{ left ? -1 : +1, t.airStrafeVelocity, t.airStrafeVelocity > 0.0 };
+        }
+
+        return AirMoveIntent{ 0, 0.0, false };
+    }
+
+    // *apply_ground_move; X-axis movement for ground
+    inline void apply_ground_move(PlayerContext& cx, const GroundMoveIntent& intent)
+    {
+        cx.vel.x = (intent.active) ? intent.speed * static_cast<double>(intent.dirSign) : 0.0;
+    }
+
+    // *apply_air_move; X-axis movement for air
+    inline void apply_air_move(PlayerContext& cx, const AirMoveIntent& intent)
+    {
+        cx.vel.x = (intent.active) ? intent.speed * static_cast<double>(intent.dirSign) : 0.0;
+    }
+
+    inline void subject_to_gravity_on_ground(PlayerContext& cx, const PlayerTuning& t)
+    {
+        cx.vel.y = t.gravity;
+    }
+
+    inline void set_jump_velocity(Vec2& vel, double impulse)
+    {
+        vel.y = impulse;
+    }
+
+    // *StartJump; sets vertical speed for jump
+    inline bool do_jump(PlayerContext& cx, const PlayerTuning& t)
+    {
+        double kEps = config::SystemConfig::kEpsilon;   // 1/256
+
+        cx.animeStepper.reset();
+        if (cx.terrain->SweepVertical(cx.probes, Vec2{ 0.0, -kEps }).hit)
+        {
+            // Cannot jump if there is a ceiling right above.
+            return false;
+        }
+        // Add jump impulse.
+        set_jump_velocity(cx.vel, t.jumpImpulse);
+        return true;
+    }
+
+    // *UpdateAirHorizontalVelocity; X-axis movement for air (do not decelerate in air)
+    inline void apply_air_control(PlayerContext& cx, AirMoveIntent& intent)
+    {
+        if (!intent.active)
+        {
+            return;
+        }
+
+        const double dx = intent.speed * static_cast<double>(intent.dirSign);
+        const auto hit = cx.terrain->SweepHorizontal(cx.probes, dx, true);
+        if (hit.hit)
+        {
+            intent.speed = std::abs(hit.maxDistanceX);
+        }
+    }
+
+    inline void apply_gravity(Vec2& vel, double g, double terminal)
+    {
+        vel.y += g;
+        if (vel.y > terminal) vel.y = terminal; // The max speed when falling (upper limit).
+    }
+
+    // *ApplyVerticalPhysics; Updates vertical velocity for jump and fall; applies gravity or jump cut as needed
+    inline void update_vertical_velocity(PlayerContext& cx, const PlayerTuning& t, bool isJump)
+    {
+        // Timing of falling while floating.
+        if (isJump || cx.vel.y >= t.fallingThreshold)
+        {
+            apply_gravity(cx.vel, t.gravity, t.terminalVelocity);
+        }
+        else    // Stopped jumping midway, start falling faster.
+        {
+            // NOTE:
+            // Sets a downward velocity lower than the jump threshold to prevent mid-air jumps,
+            // maintaining realistic physics after jump cut.
+            cx.vel.y = t.jumpCutVelocity;
+        }
+    }
+
+    // *apply_gravityIfGrounded; otherwise preserve vertical speed
+    inline void adjust_vertical_speed_for_gravity(PlayerContext& cx, const PlayerTuning& t)
+    {
+        subject_to_gravity_on_ground(cx, t);
+    }
+}

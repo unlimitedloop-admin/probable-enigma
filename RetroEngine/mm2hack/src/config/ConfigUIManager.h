@@ -21,6 +21,9 @@ namespace mm2hack::config
     // ConfigUIManager is responsible for saving and loading the application settings to/from an INI file
     class ConfigUIManager final
     {
+        using Device = input::Device;
+        using KeyBinding = input::KeyBinding;
+
     public:
         ConfigUIManager() = delete;
         ~ConfigUIManager() = delete;
@@ -31,9 +34,9 @@ namespace mm2hack::config
         // This class is not copyable or movable (static class)
 
         // Save/Load input device configuration to/from the INI file
-        static void SaveInputDeviceConfig(const input::KeyBinding& binding, input::Device provider);
-        static input::Device LoadInputDeviceConfig(input::KeyBinding& binding);
-        static InputLoadResult LoadInputConfigIfMatches(input::KeyBinding& binding, input::Device detected);
+        static void SaveInputDeviceConfig(const KeyBinding& binding, Device provider);
+        static Device LoadInputDeviceConfig(KeyBinding& binding);
+        static InputLoadResult LoadInputConfigIfMatches(KeyBinding& binding, Device detected);
 
         // Save/Load graphics configuration to/from the INI file
         static void SaveGraphicsConfig(const GraphicsConfig& config);
@@ -52,8 +55,13 @@ namespace mm2hack::config
         static void SetCurrentHudConfig(const HudConfig& config);
 
     private:
-        static HudConfig _cachedHudConfig;  // Cached HUD configuration to avoid repeated file I/O.
+        static std::wstring getIniPath_();      // Get the path to the INI file
 
-        static std::wstring GetIniPath();
+    private:
+        inline static const std::wstring kClassName{ L"ConfigUIManager" };
+
+        static HudConfig _cachedHudConfig;      // Cached HUD configuration to avoid repeated file I/O.
+        inline static const std::wstring
+            _kIniFileName{ L"./settings.ini" }; // Name of the INI file
     };
 }

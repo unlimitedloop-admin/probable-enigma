@@ -2,7 +2,6 @@
 
 #include "XInputProvider.h"
 
-#include <cstdint>
 #include "C16ButtonState.h"
 #include "Jpbtn.h"
 #include "KeyToken.h"

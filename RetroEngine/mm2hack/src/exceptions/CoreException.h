@@ -38,7 +38,6 @@ namespace mm2hack::exceptions
         {
         }
 
-
         const std::wstring& GetKlassName() const { return _className; }
         const std::wstring& GetMethodName() const { return _methodName; }
         const ErrorLevel& GetErrorLevel() const { return _errorLevel; }
@@ -52,7 +51,7 @@ namespace mm2hack::exceptions
         const char* _file = "";
         int _line = 0;
     };
-
+}
 
 #define THROW_EXCEPTION(msg, klass) \
         throw mm2hack::exceptions::CoreException((msg), (klass), __func__, mm2hack::exceptions::ErrorLevel::Error, __FILE__, __LINE__)
@@ -60,5 +59,3 @@ namespace mm2hack::exceptions
 // Macro to throw an exception with class and method information
 #define THROW_EXCEPTION_EX(msg, klass, errlvl) \
         throw mm2hack::exceptions::CoreException((msg), (klass), __func__, (errlvl), __FILE__, __LINE__)
-
-}

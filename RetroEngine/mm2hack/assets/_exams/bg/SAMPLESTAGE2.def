@@ -1,0 +1,75 @@
+{
+  "version": "1.0",
+  "stage": {
+    "id": 0,
+    "name": "SAMPLESTAGE2"
+  },
+  "nodes": [
+    {
+      "roomId": 0,
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "enabled": true,
+      "remarks": "Z:1\u3068\u306E\u30EB\u30FC\u30D7\u5206\u5C90\u70B9"
+    },
+    {
+      "roomId": 1,
+      "x": 1,
+      "y": 0,
+      "z": 0,
+      "enabled": true
+    },
+    {
+      "roomId": 2,
+      "x": 2,
+      "y": 0,
+      "z": 0,
+      "enabled": true
+    },
+    {
+      "roomId": 3,
+      "x": 3,
+      "y": 0,
+      "z": 0,
+      "enabled": true
+    },
+    {
+      "roomId": 4,
+      "x": 3,
+      "y": 1,
+      "z": 0,
+      "enabled": true
+    },
+    {
+      "roomId": 5,
+      "x": 3,
+      "y": 2,
+      "z": 0,
+      "enabled": true,
+      "remarks": "\u6D41\u6C34\u30A2\u30CB\u30E1\u30FC\u30B7\u30E7\u30F3"
+    },
+    {
+      "roomId": 6,
+      "x": 3,
+      "y": 2,
+      "z": 0,
+      "enabled": true
+    },
+    {
+      "roomId": 7,
+      "x": 3,
+      "y": 2,
+      "z": 0,
+      "enabled": true
+    },
+    {
+      "roomId": 8,
+      "x": 3,
+      "y": 2,
+      "z": 0,
+      "enabled": true,
+      "remarks": "\u4E0A\u306E\u53F0\u306B\u4F55\u304B\u306E\u30A2\u30A4\u30C6\u30E0\u3092\u914D\u7F6E"
+    }
+  ]
+}
