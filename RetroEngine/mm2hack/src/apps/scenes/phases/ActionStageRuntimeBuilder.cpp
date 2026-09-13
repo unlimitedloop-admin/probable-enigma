@@ -4,6 +4,7 @@
 
 #include "apps/rendering/bg/BGTileMapProvider.h"
 #include "apps/resources/ResourceManager.h"
+#include "apps/systems/combat/DamageTable.h"
 #include "apps/systems/physics/LadderService.h"
 #include "apps/systems/physics/PageGridIndex.h"
 #include "apps/systems/physics/TileQueryService.h"
@@ -154,11 +155,27 @@ namespace mm2hack::apps::scenes::phases
         // ProjectileEntity/BreakableBlockEntity collision end-to-end before real
         // level-object placement (or enemies) exist. Remove/replace once that lands.
         using world::entity::hazards::BreakableBlockEntity;
+        using systems::combat::DamageTable;
+        const auto block_tileset_id = ctx.asset_provider->BgTilesetId();
+        // Both PlayerEntity::pos and BreakableBlockEntity's spawn_pos are center-based
+        // (see their Bounds()/Render()). But the player's *resting-on-ground* Y is NOT
+        // pos.y + PlayerEntity's half-height (16px) -- it's governed by the ground probe
+        // the landing sweep snaps to tile boundaries with (Probes::refreshAll(),
+        // PlayerParams::PlayerProbes::groundLineOffsetY), which sits only 9px below
+        // pos.y, not 16px. So on flat ground: pos.y + kPlayerGroundProbeOffsetY == a
+        // tile-aligned floor line. Shift the block down by
+        // (kPlayerGroundProbeOffsetY - blockHalfHeight) so its bottom edge lands on
+        // that same line.
+        constexpr double kPlayerGroundProbeOffsetY = 9.0; // mirrors PlayerProbes::groundLineOffsetY
+        constexpr double kBlockHalfHeight = 8.0;
         ctx.entity_mgr->Spawn<BreakableBlockEntity>(
-            foundation::math::Vec2{ player->pos.x + 48.0, player->pos.y },
-            effects_sprite,
-            /* base_texture */ 0,
+            foundation::math::Vec2{
+                player->pos.x + 48.0,
+                player->pos.y + (kPlayerGroundProbeOffsetY - kBlockHalfHeight) },
+            block_tileset_id,
+            /* tile_index */ 76,
             /* max_hp */ 2,
-            foundation::math::Vec2{ 8.0, 8.0 });
+            foundation::math::Vec2{ kBlockHalfHeight, kBlockHalfHeight },
+            /* resistances */ DamageTable::Neutral());
     }
 }

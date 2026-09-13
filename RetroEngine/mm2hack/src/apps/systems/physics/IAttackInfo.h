@@ -8,6 +8,8 @@
 //==============================================================================
 #pragma once
 
+#include "WeaponId.h"
+
 namespace mm2hack::apps::systems::physics
 {
     // Implemented by colliders that deal damage on contact (player projectiles,
@@ -19,7 +21,11 @@ namespace mm2hack::apps::systems::physics
     {
         virtual ~IAttackInfo() = default;
 
-        // Damage/attack power carried by this collider.
+        // Damage/attack power carried by this collider (before the receiver's
+        // per-weapon resistance is applied -- see combat::DamageTable).
         [[nodiscard]] virtual int AttackPower() const noexcept = 0;
+
+        // Which weapon this attack originated from, for resistance lookups.
+        [[nodiscard]] virtual WeaponId Weapon() const noexcept = 0;
     };
 }

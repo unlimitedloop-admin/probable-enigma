@@ -5,7 +5,7 @@
 #include <cmath>
 
 #include "apps/foundation/math/CoordinateTypes.h"
-#include "apps/rendering/sprite/SpriteManager.h"
+#include "apps/rendering/bg/BGTileManager.h"
 #include "apps/runtime/GameContext.h"
 #include "apps/systems/physics/IAttackInfo.h"
 #include "apps/systems/view/RenderContext.h"
@@ -21,9 +21,8 @@ namespace mm2hack::apps::world::entity::hazards
     bool BreakableBlockEntityState::Save(core::save::StateWriter& writer) const
     {
         return IsValid() && kinematic.Save(writer) &&
-            writer.WriteI32(base_texture) &&
-            writer.WriteI32(max_hp) &&
-            writer.WriteI32(hp) &&
+            writer.WriteI32(tile_index) &&
+            health.Save(writer) &&
             writer.WriteF64(half_size.x) &&
             writer.WriteF64(half_size.y);
     }
@@ -32,9 +31,8 @@ namespace mm2hack::apps::world::entity::hazards
     {
         BreakableBlockEntityState loaded{};
         if (!loaded.kinematic.Load(reader) ||
-            !reader.ReadI32(loaded.base_texture) ||
-            !reader.ReadI32(loaded.max_hp) ||
-            !reader.ReadI32(loaded.hp) ||
+            !reader.ReadI32(loaded.tile_index) ||
+            !loaded.health.Load(reader) ||
             !reader.ReadF64(loaded.half_size.x) ||
             !reader.ReadF64(loaded.half_size.y))
         {
@@ -52,30 +50,32 @@ namespace mm2hack::apps::world::entity::hazards
     {
         constexpr double kMaximumHalfSize = 256.0;
         return kinematic.IsValid() &&
-            base_texture >= 0 && base_texture <= 65'535 &&
-            max_hp >= 1 && max_hp <= 1'000 &&
-            hp >= 1 && hp <= max_hp &&
+            tile_index >= 0 && tile_index <= 65'535 &&
+            health.IsValid() &&
             std::isfinite(half_size.x) && half_size.x > 0.0 && half_size.x <= kMaximumHalfSize &&
             std::isfinite(half_size.y) && half_size.y > 0.0 && half_size.y <= kMaximumHalfSize;
     }
 
     BreakableBlockEntity::BreakableBlockEntity(
         Vec2 spawn_pos,
-        rendering::sprite::SpriteManager::Id sprite_id,
-        int base_texture,
+        rendering::bg::BGTileManager::Id tileset_id,
+        int tile_index,
         int max_hp,
-        Vec2 half_size)
-        : _id(sprite_id), _base_texture(base_texture), _half(half_size),
-          _max_hp(std::max(1, max_hp)), _hp(std::max(1, max_hp))
+        Vec2 half_size,
+        DamageTable resistances)
+        : _tileset_id(tileset_id), _tile_index(tile_index), _half(half_size),
+          _health(max_hp, resistances)
     {
         pos = spawn_pos;
     }
 
     BreakableBlockEntity::BreakableBlockEntity(
         const BreakableBlockEntityState& state,
-        rendering::sprite::SpriteManager::Id sprite_id)
-        : _id(sprite_id)
+        rendering::bg::BGTileManager::Id tileset_id,
+        DamageTable resistances)
+        : _tileset_id(tileset_id)
     {
+        _health = systems::combat::HealthComponent{ state.health.max_hp, resistances };
         RestoreState(state);
     }
 
@@ -88,22 +88,20 @@ namespace mm2hack::apps::world::entity::hazards
     {
         return BreakableBlockEntityState{
             .kinematic = CaptureKinematicState(),
-            .base_texture = _base_texture,
-            .max_hp = _max_hp,
-            .hp = _hp,
+            .tile_index = _tile_index,
+            .health = _health.CaptureState(),
             .half_size = _half,
         };
     }
 
     bool BreakableBlockEntity::RestoreState(const BreakableBlockEntityState& state) noexcept
     {
-        if (!state.IsValid() || !RestoreKinematicState(state.kinematic))
+        if (!state.IsValid() || !RestoreKinematicState(state.kinematic) ||
+            !_health.RestoreState(state.health, _health.Resistances()))
         {
             return false;
         }
-        _base_texture = state.base_texture;
-        _max_hp = state.max_hp;
-        _hp = state.hp;
+        _tile_index = state.tile_index;
         _half = state.half_size;
         return true;
     }
@@ -132,7 +130,7 @@ namespace mm2hack::apps::world::entity::hazards
         const int y = static_cast<int>(pos.y - view.viewWorldY - _half.y);
 
         auto& res = runtime::GameContext::GetInstance().GetResourceManager();
-        res.GetSpriteManager().UseById(_id, _base_texture, x, y);
+        res.GetBGTileManager().DrawTileById(_tileset_id, _tile_index, x, y);
     }
 
     BreakableBlockEntity::RectF BreakableBlockEntity::Bounds() const
@@ -157,11 +155,15 @@ namespace mm2hack::apps::world::entity::hazards
             return;
         }
 
-        _hp -= attack->AttackPower();
-        if (_hp <= 0)
+        if (ApplyAttack(*attack))
         {
             // TODO: spawn a destruction effect once one exists.
             Kill();
         }
+    }
+
+    bool BreakableBlockEntity::ApplyAttack(const systems::physics::IAttackInfo& attack) noexcept
+    {
+        return _health.ApplyAttack(attack);
     }
 }

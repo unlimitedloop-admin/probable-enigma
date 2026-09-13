@@ -59,6 +59,7 @@ namespace mm2hack::test
     namespace
     {
         using apps::foundation::math::Vec2;
+        using apps::scenes::BGTileManagerId;
         using apps::scenes::SceneID;
         using apps::scenes::SpriteManagerId;
         using apps::systems::audio::ApuVoice;
@@ -388,6 +389,7 @@ namespace mm2hack::test
             SpriteManagerId EffectsSprite() const noexcept override { return 5; }
             SpriteManagerId SlidingDustEffectSprite() const noexcept override { return 6; }
             SpriteManagerId ChargeEffectSprite() const noexcept override { return 7; }
+            BGTileManagerId BgTilesetId() const noexcept override { return 8; }
             bool TryEnemySprite(
                 apps::world::entity::enemy::EnemyKind kind,
                 SpriteManagerId& out) const noexcept override

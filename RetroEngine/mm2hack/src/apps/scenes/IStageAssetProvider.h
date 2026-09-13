@@ -8,12 +8,14 @@
 //==============================================================================
 #pragma once
 
+#include "apps/rendering/bg/BGTileManager.h"
 #include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/world/entity/enemy/lists/EnemyLists.h"
 
 namespace mm2hack::apps::scenes
 {
     using SpriteManagerId = rendering::sprite::SpriteManager::Id;
+    using BGTileManagerId = rendering::bg::BGTileManager::Id;
 
     // Interface for providing stage asset IDs
     struct IStageAssetProvider
@@ -29,5 +31,9 @@ namespace mm2hack::apps::scenes
         virtual SpriteManagerId ChargeEffectSprite() const noexcept = 0;
 
         virtual bool TryEnemySprite(world::entity::enemy::EnemyKind kind, SpriteManagerId& out) const noexcept = 0;
+
+        // The stage's own BG tileset -- lets world objects (breakable blocks, etc.)
+        // render using the same tile art as the background instead of a sprite sheet.
+        virtual BGTileManagerId BgTilesetId() const noexcept = 0;
     };
 }

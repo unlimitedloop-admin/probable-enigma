@@ -4,6 +4,7 @@
 
 #include <string_view>
 
+#include "apps/rendering/bg/BGTileManager.h"
 #include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/scenes/IStageAssetProvider.h"
 #include "apps/world/entity/avatar/PlayerEntity.h"
@@ -88,6 +89,11 @@ namespace mm2hack::apps::world::entity
         bool IsValidSpriteId(rendering::sprite::SpriteManager::Id id) noexcept
         {
             return id != static_cast<rendering::sprite::SpriteManager::Id>(-1);
+        }
+
+        bool IsValidTilesetId(rendering::bg::BGTileManager::Id id) noexcept
+        {
+            return id != static_cast<rendering::bg::BGTileManager::Id>(-1);
         }
 
         bool ParseBreakableBlock(const EntityStateRecord& record, hazards::BreakableBlockEntityState& state)
@@ -248,14 +254,14 @@ namespace mm2hack::apps::world::entity
         case EntityTypeId::BreakableBlock:
         {
             hazards::BreakableBlockEntityState state{};
-            // Reuses the shared effects sprite sheet for now (same as Projectile/SplashEffect);
-            // give it a dedicated IStageAssetProvider accessor once real level art exists.
-            const auto sprite_id = _assets.EffectsSprite();
-            if (!ParseBreakableBlock(record, state) || !IsValidSpriteId(sprite_id))
+            // Draws from the stage's own BG tileset so the block matches the
+            // surrounding level art.
+            const auto tileset_id = _assets.BgTilesetId();
+            if (!ParseBreakableBlock(record, state) || !IsValidTilesetId(tileset_id))
             {
                 return nullptr;
             }
-            return std::make_unique<hazards::BreakableBlockEntity>(state, sprite_id);
+            return std::make_unique<hazards::BreakableBlockEntity>(state, tileset_id);
         }
         default:
             return nullptr;

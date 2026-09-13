@@ -85,6 +85,8 @@ namespace mm2hack::apps::world::entity::effects
 
         // IAttackInfo
         [[nodiscard]] int AttackPower() const noexcept override { return _power; }
+        // A charged shot is still the Buster -- charge level only changes AttackPower().
+        [[nodiscard]] systems::physics::WeaponId Weapon() const noexcept override { return systems::physics::WeaponId::Buster; }
 
     private:
         systems::view::Layer _draw_layer{ systems::view::Layer::Actors }; // Drawing layer

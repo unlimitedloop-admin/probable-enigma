@@ -76,6 +76,7 @@ namespace mm2hack::apps::scenes
         SpriteManagerId SlidingDustEffectSprite() const noexcept override { return _spriteBank.sliding_dust_effect; }
         SpriteManagerId ChargeEffectSprite() const noexcept override { return _spriteBank.charge_effect; }
         bool TryEnemySprite(world::entity::enemy::EnemyKind kind, SpriteManagerId& out) const noexcept override;
+        BGTileManagerId BgTilesetId() const noexcept override { return _bgTileId; }
 
         // === DemoStage2 specific ===
         // Queue a new phase to transition to

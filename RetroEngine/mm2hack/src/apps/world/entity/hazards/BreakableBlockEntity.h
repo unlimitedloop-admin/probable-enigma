@@ -14,7 +14,10 @@
 #include <cstdint>
 
 #include "apps/foundation/math/CoordinateTypes.h"
-#include "apps/rendering/sprite/SpriteManager.h"
+#include "apps/rendering/bg/BGTileManager.h"
+#include "apps/systems/combat/DamageTable.h"
+#include "apps/systems/combat/HealthComponent.h"
+#include "apps/systems/combat/IDamageable.h"
 #include "apps/systems/physics/CollisionLayer.h"
 #include "apps/systems/physics/ICollider.h"
 #include "apps/systems/physics/TileAttribute.h"
@@ -28,9 +31,8 @@ namespace mm2hack::apps::world::entity::hazards
     struct BreakableBlockEntityState final
     {
         EntityKinematicState kinematic{};
-        std::int32_t base_texture{};
-        std::int32_t max_hp{ 1 };
-        std::int32_t hp{ 1 };
+        std::int32_t tile_index{};
+        systems::combat::HealthComponentState health{};
         foundation::math::Vec2 half_size{ 8.0, 8.0 };
 
         bool Save(core::save::StateWriter& writer) const;
@@ -39,28 +41,40 @@ namespace mm2hack::apps::world::entity::hazards
     };
 
     // Entity representing a destructible block (verification object for hit detection).
-    class BreakableBlockEntity final : public EntityBase, public systems::physics::ICollider
+    class BreakableBlockEntity final :
+        public EntityBase,
+        public systems::physics::ICollider,
+        public systems::combat::IDamageable
     {
         // NOTE: no `Layer` alias here -- it would collide with ICollider::Layer() below.
         using RectF = foundation::math::RectF;
         using Vec2 = foundation::math::Vec2;
         using CollisionLayer = systems::physics::CollisionLayer;
         using TileAttribute = systems::physics::TileAttribute;
+        using DamageTable = systems::combat::DamageTable;
 
     public:
         static constexpr std::uint16_t kStateVersion{ 1 };
 
-        // Fresh placement (level/test spawn)
+        // Fresh placement (level/test spawn). `tileset_id` is the BG tileset to draw
+        // from (typically the stage's own tileset, so the block matches the
+        // surrounding art), `tile_index` the tile within it. `resistances` defaults
+        // to full damage from every weapon; pass a tuned table for objects that
+        // should resist (or be immune to) specific weapons.
         BreakableBlockEntity(
             Vec2 spawn_pos,
-            rendering::sprite::SpriteManager::Id sprite_id,
-            int base_texture,
+            rendering::bg::BGTileManager::Id tileset_id,
+            int tile_index,
             int max_hp,
-            Vec2 half_size);
-        // Reconstruction from saved state
+            Vec2 half_size,
+            DamageTable resistances = DamageTable::Neutral());
+        // Reconstruction from saved state. `tileset_id`/`resistances` come from the
+        // level's spawn parameters, same as tile_index/half_size would for a real
+        // level format -- they are not part of the saved bytes.
         BreakableBlockEntity(
             const BreakableBlockEntityState& state,
-            rendering::sprite::SpriteManager::Id sprite_id);
+            rendering::bg::BGTileManager::Id tileset_id,
+            DamageTable resistances = DamageTable::Neutral());
 
         // Get drawing layer (IRenderable)
         systems::view::Layer DrawLayer() const noexcept override;
@@ -83,11 +97,16 @@ namespace mm2hack::apps::world::entity::hazards
         void OnTileCollision(const Vec2& normal, TileAttribute attr) override { (void)normal; (void)attr; }
         void OnEntityCollision(IEntity& other) override;
 
+        // IDamageable
+        bool ApplyAttack(const systems::physics::IAttackInfo& attack) noexcept override;
+        [[nodiscard]] int CurrentHP() const noexcept override { return _health.CurrentHP(); }
+        [[nodiscard]] int MaxHP() const noexcept override { return _health.MaxHP(); }
+        [[nodiscard]] bool IsDead() const noexcept override { return _health.IsDead(); }
+
     private:
-        rendering::sprite::SpriteManager::Id _id{};    // Object sprite id
-        int _base_texture{ 0 };                        // Base texture index
-        Vec2 _half{ 8.0, 8.0 };                        // Half-size (used for both drawing and hit judgement)
-        int _max_hp{ 1 };                              // Max HP (kept for save validity / future cracked-look stages)
-        int _hp{ 1 };                                  // Remaining HP
+        rendering::bg::BGTileManager::Id _tileset_id{}; // BG tileset to draw from
+        int _tile_index{ 0 };                           // Tile index within the tileset
+        Vec2 _half{ 8.0, 8.0 };                         // Half-size (used for both drawing and hit judgement)
+        systems::combat::HealthComponent _health{};     // HP + per-weapon resistance
     };
 }
