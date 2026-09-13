@@ -18,6 +18,30 @@ namespace mm2hack::apps::world::entity::effects
     using systems::view::RenderContext;
     using systems::view::ViewState;
 
+    namespace
+    {
+        // Render-only centering half-size, derived from the actual footprint each
+        // visual draws (PLAYER_WEAPON_N0_ALL_PATTERN's tiles are 16x16px each) --
+        // NOT the hit judgement box (see _hit_half_size/Bounds()). Getting this
+        // wrong doesn't affect collision, only where the sprite is drawn relative
+        // to pos: too large a half-size here shifts the visible sprite away from
+        // its true (collision-accurate) position, making contact look like it
+        // happens too early/too close for a shot travelling toward that side.
+        foundation::math::Vec2 RenderHalfSizeForVisual(common::ProjectileVisual visual) noexcept
+        {
+            switch (visual)
+            {
+            case common::ProjectileVisual::ChargeLevel1:
+                return { 16.0, 8.0 };   // two 16x16 tiles side by side (32x16)
+            case common::ProjectileVisual::ChargeLevel2:
+                return { 16.0, 16.0 };  // 2x2 grid of 16x16 tiles (32x32)
+            case common::ProjectileVisual::Normal:
+            default:
+                return { 8.0, 8.0 };    // single 16x16 tile
+            }
+        }
+    }
+
     bool ProjectileEntityState::Save(core::save::StateWriter& writer) const
     {
         return IsValid() && kinematic.Save(writer) &&
@@ -100,7 +124,7 @@ namespace mm2hack::apps::world::entity::effects
         _life_sec = std::max(0.0, cmd.lifeSec);
         _age_sec = 0.0;
 
-        _half = foundation::math::Vec2{ 16.0, 16.0 };   // Assuming an average size; adjust as needed.
+        _half = RenderHalfSizeForVisual(_visual);
 
         _power = cmd.power;
         _hit_half_size = cmd.hitHalfSize;
@@ -111,8 +135,8 @@ namespace mm2hack::apps::world::entity::effects
         rendering::sprite::SpriteManager::Id sprite_id)
         : _id(sprite_id)
     {
-        _half = foundation::math::Vec2{ 16.0, 16.0 };
         RestoreState(state);
+        _half = RenderHalfSizeForVisual(_visual);
     }
 
     bool ProjectileEntity::SaveState(core::save::StateWriter& writer) const

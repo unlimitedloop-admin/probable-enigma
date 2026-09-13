@@ -72,8 +72,20 @@ namespace mm2hack::apps::world::entity::avatar::states
         double projectileSpeedPxPerSec{ 240.0 };
         double chargeLevel1SpeedPxPerSec{ 300.0 };
         double chargeLevel2SpeedPxPerSec{ 360.0 };
-        foundation::math::Vec2 projectileSpawnOffsetPxRight{ 32.0, 5.0 };
-        foundation::math::Vec2 projectileSpawnOffsetPxLeft{ -16.0, 5.0 };
+        // Y was 5.0 for both, tuned back when ProjectileEntity's render half-size
+        // was a flat {16,16} guess (drawing 8px too high). Now that the render
+        // half-size matches each visual's real footprint (ProjectileEntity.cpp),
+        // that accidental compensation is gone, so Y is nudged by the same 8px
+        // to keep the on-screen muzzle position where it was.
+        foundation::math::Vec2 projectileSpawnOffsetPxRight{ 32.0, -3.0 };
+        foundation::math::Vec2 projectileSpawnOffsetPxLeft{ -16.0, -3.0 };
+
+        // ChargeLevel2 is drawn as a 32x32 block, vertically centered on the
+        // player rather than at the muzzle -- see ProjectileEntity::Render()'s
+        // ChargeLevel2 branch (_half.y=16, then a further kCenterOffsetY=-8).
+        // Working through that math, spawnPos.y - 8 lands the block's own
+        // vertical center, so +8 here makes it equal the player's pos.y.
+        double chargeLevel2SpawnOffsetPxY{ 5.0 };
 
         int rockBusterTexture{ 0 };
         int projectileAnimFrames{ 1 };

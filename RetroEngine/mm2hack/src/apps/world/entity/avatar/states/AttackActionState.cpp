@@ -134,7 +134,13 @@ namespace mm2hack::apps::world::entity::avatar::states
             result.spawnProjectile->animFps = tuning.projectileAnimFps;
             result.spawnProjectile->lifeSec = tuning.projectileLifeSec;
 
-            const auto offset = is_left ? tuning.projectileSpawnOffsetPxLeft : tuning.projectileSpawnOffsetPxRight;
+            auto offset = is_left ? tuning.projectileSpawnOffsetPxLeft : tuning.projectileSpawnOffsetPxRight;
+            if (_requested_visual == common::ProjectileVisual::ChargeLevel2)
+            {
+                // Centered on the player vertically instead of at the muzzle -- see
+                // AttackTuning::chargeLevel2SpawnOffsetPxY for the derivation.
+                offset.y = tuning.chargeLevel2SpawnOffsetPxY;
+            }
             result.spawnProjectile->spawnPos = cx.pos + offset;
             const double dir = static_cast<double>(cx.facingLR);
             double speed = tuning.projectileSpeedPxPerSec;
