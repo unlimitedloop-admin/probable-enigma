@@ -132,6 +132,10 @@ namespace mm2hack::apps::scenes::phases
         // run against it (i.e. any combat::IDamageable that just hit 0 HP).
         void spawnDestructionEffectsForTheDead_(
             const std::vector<systems::physics::ICollider*>& colliders);
+        // Detects the scroll-lock rising/falling edge and, once per edge: clears
+        // every transient effect entity and pauses SE (rising), or resumes SE
+        // (falling). No-op mid-lock or mid-unlock.
+        void handleScrollLockTransition_(bool locked_now);
 
     private:
         const std::wstring kClassName{ L"AbstractActionPhase" };
@@ -149,6 +153,7 @@ namespace mm2hack::apps::scenes::phases
         bool _entered{ false };                             // Indicates if the phase has been entered
         bool _operate{ false };                             // Indicates if the operate phase is enabled (Disable at fade-in and fade-out)
         bool _charge_sound_playing{ false };                // Temporary B-hold charge sound playback state
+        bool _scroll_was_locked{ false };                   // Previous frame's IsScrollLocked(), for edge detection
         world::entity::avatar::ChargePhase _charge_phase{ world::entity::avatar::ChargePhase::Idle };
 
         Vec2 _player_prev_pos{};                            // Previous player position, scrolling-player sync use

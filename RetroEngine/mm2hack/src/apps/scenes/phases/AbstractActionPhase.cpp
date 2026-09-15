@@ -266,6 +266,10 @@ namespace mm2hack::apps::scenes::phases
         // the player's next frame output instead of serializing channel state.
         _charge_sound_playing = false;
         _charge_phase = world::entity::avatar::ChargePhase::Idle;
+        // Sync to the just-restored scroll state (RestoreScrollState() already ran)
+        // so the next tick doesn't see a spurious lock edge and re-clear effects /
+        // re-pause SE that were never touched this session.
+        _scroll_was_locked = _ctx->scroll->IsScrollLocked();
         return true;
     }
 
@@ -559,6 +563,7 @@ namespace mm2hack::apps::scenes::phases
         Vec2 delta{ 0, 0 };
 
         const bool lock = _ctx->scroll->IsScrollLocked();
+        handleScrollLockTransition_(lock);
 
         /* Entity Updates */
         auto* player = _ctx->entity_mgr->FindFirst<avatar::PlayerEntity>();
@@ -727,6 +732,41 @@ namespace mm2hack::apps::scenes::phases
                     .baseTexture = 0,
                 });
             audio.PlaySe(L"enemy_small_explosion");
+        }
+    }
+
+    void AbstractActionPhase::handleScrollLockTransition_(bool locked_now)
+    {
+        if (locked_now == _scroll_was_locked)
+        {
+            return;
+        }
+        _scroll_was_locked = locked_now;
+
+        auto& audio = runtime::GameContext::GetInstance().GetResourceManager().GetAudioManager();
+
+        if (locked_now)
+        {
+            // Page-scroll transition just started: drop every transient effect --
+            // including a Rock Buster shot that wandered off-screen -- but leave
+            // the player and persistent level objects (e.g. BreakableBlock) alone.
+            static constexpr std::array kEffectTypes{
+                world::entity::EntityTypeId::Projectile,
+                world::entity::EntityTypeId::ChargeEffect,
+                world::entity::EntityTypeId::SlidingDustEffect,
+                world::entity::EntityTypeId::SplashEffect,
+                world::entity::EntityTypeId::SmallExplosionEffect,
+            };
+            _ctx->entity_mgr->KillAllOfTypes(kEffectTypes);
+
+            // Freeze SE (not BGM) so a continuous one -- the charge loop, notably --
+            // doesn't keep advancing while gameplay (and the player's actual charge
+            // frames) are frozen for the duration of the scroll.
+            audio.PauseSe();
+        }
+        else
+        {
+            audio.ResumeSe();
         }
     }
 }

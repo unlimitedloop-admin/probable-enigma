@@ -22,7 +22,7 @@ namespace mm2hack::apps::world::entity
 
         bool IsKnownEntityType(EntityTypeId type) noexcept
         {
-            return type >= EntityTypeId::Player && type <= EntityTypeId::BreakableBlock;
+            return type >= EntityTypeId::Player && type <= EntityTypeId::SmallExplosionEffect;
         }
     }
 
@@ -230,6 +230,23 @@ namespace mm2hack::apps::world::entity
             if (auto* c = dynamic_cast<systems::physics::ICollider*>(e.get()))
             {
                 out.push_back(c);
+            }
+        }
+    }
+
+    void EntityManager::KillAllOfTypes(std::span<const EntityTypeId> types) noexcept
+    {
+        for (auto& e : _entities)
+        {
+            if (!e || !e->IsAlive())
+            {
+                continue;
+            }
+
+            const auto id = e->StateTypeId();
+            if (std::find(types.begin(), types.end(), id) != types.end())
+            {
+                e->Kill();
             }
         }
     }

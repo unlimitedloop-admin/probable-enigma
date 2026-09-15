@@ -98,6 +98,16 @@ namespace mm2hack::apps::systems::audio
         _seManager.Pause();
     }
 
+    void AudioManager::PauseSe()
+    {
+        _seManager.Pause();
+    }
+
+    void AudioManager::ResumeSe()
+    {
+        _seManager.Resume();
+    }
+
     void AudioManager::Resume()
     {
         _bgmManager.Resume();

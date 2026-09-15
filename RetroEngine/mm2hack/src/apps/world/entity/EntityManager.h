@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <memory>
+#include <span>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -79,6 +80,12 @@ namespace mm2hack::apps::world::entity
         // Collects raw ICollider* for every currently alive entity that implements it
         // (via dynamic_cast). Pointers are only valid until the next UpdateAll()/Clear() call.
         void CollectColliders(std::vector<systems::physics::ICollider*>& out) const;
+
+        // Kills every alive entity whose StateTypeId() is one of `types` (still
+        // removed on the next UpdateAll(), but stops rendering/colliding
+        // immediately). Used to drop transient effects before a page-scroll
+        // transition without disturbing the player or persistent level objects.
+        void KillAllOfTypes(std::span<const EntityTypeId> types) noexcept;
 
         // Removes all entities immediately
         void Clear() noexcept;
