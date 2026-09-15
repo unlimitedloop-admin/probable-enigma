@@ -77,12 +77,11 @@ namespace mm2hack::apps::world::entity::avatar::states
         // half-size matches each visual's real footprint (ProjectileEntity.cpp),
         // that accidental compensation is gone, so Y is nudged by the same 8px
         // to keep the on-screen muzzle position where it was.
-        // X was 32/-16 (asymmetric by design -- the arm sprite isn't centered on
-        // pos either, see RockBusterOffsetTable.h). Play-tested to still be 3px
-        // off on each side relative to the actual hit-box range, so nudged
-        // further inward by the same 3px on both facings.
-        foundation::math::Vec2 projectileSpawnOffsetPxRight{ 29.0, -3.0 };
-        foundation::math::Vec2 projectileSpawnOffsetPxLeft{ -13.0, -3.0 };
+        // X started asymmetric (32/-16, following the arm sprite's own offset --
+        // see RockBusterOffsetTable.h), but play-testing against the hit-box range
+        // landed on a symmetric +-22px instead.
+        foundation::math::Vec2 projectileSpawnOffsetPxRight{ 22.0, -3.0 };
+        foundation::math::Vec2 projectileSpawnOffsetPxLeft{ -22.0, -3.0 };
 
         // ChargeLevel2 is drawn as a 32x32 block, vertically centered on the
         // player rather than at the muzzle -- see ProjectileEntity::Render()'s
