@@ -486,6 +486,12 @@ namespace mm2hack::apps::scenes
             MM2H_GRAPHPROPS(ChargeEffect));
         if (_spriteBank.charge_effect == SpriteManagerId(-1)) return false;
 
+        _spriteBank.small_explosion_effect = spriteLoader.Load(
+            L"SmallExplosionEffect",
+            MM2H_GRAPHICS(SmallExplosion),
+            MM2H_GRAPHPROPS(SmallExplosion));
+        if (_spriteBank.small_explosion_effect == SpriteManagerId(-1)) return false;
+
         const int sprvmax = spriteLoader.VariantCountById(_spriteBank.player);
         spriteLoader.SetGlobalVariant(sprvmax);
         resource.FadeInSprite(_fadeDurationFrames);

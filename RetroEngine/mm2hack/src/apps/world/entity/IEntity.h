@@ -26,7 +26,8 @@ namespace mm2hack::apps::world::entity
         ChargeEffect = 3,
         SlidingDustEffect = 4,
         SplashEffect = 5,
-        BreakableBlock = 6
+        BreakableBlock = 6,
+        SmallExplosionEffect = 7
     };
 
     // Base interface for all entities

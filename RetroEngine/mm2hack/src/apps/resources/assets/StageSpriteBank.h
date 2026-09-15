@@ -27,6 +27,7 @@ namespace mm2hack::apps::resources::assets
         SpriteManagerId effects{};
         SpriteManagerId sliding_dust_effect{};
         SpriteManagerId charge_effect{};
+        SpriteManagerId small_explosion_effect{};
 
         std::unordered_map<world::entity::enemy::EnemyKind, SpriteManagerId> enemies{};
     };

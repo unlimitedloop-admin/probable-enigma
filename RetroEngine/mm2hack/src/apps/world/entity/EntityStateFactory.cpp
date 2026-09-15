@@ -12,6 +12,7 @@
 #include "apps/world/entity/effects/ChargeEffectEntity.h"
 #include "apps/world/entity/effects/ProjectileEntity.h"
 #include "apps/world/entity/effects/SlidingDustEffectEntity.h"
+#include "apps/world/entity/effects/SmallExplosionEffectEntity.h"
 #include "apps/world/entity/effects/SplashEffectEntity.h"
 #include "apps/world/entity/hazards/BreakableBlockEntity.h"
 #include "core/save/StateIO.h"
@@ -156,6 +157,15 @@ namespace mm2hack::apps::world::entity
             hazards::BreakableBlockEntityState state{};
             return ParseBreakableBlock(record, state);
         }
+        case EntityTypeId::SmallExplosionEffect:
+        {
+            TimedEffectEntityState state{};
+            return ParseTimedEffect(
+                record,
+                effects::SmallExplosionEffectEntity::kStateVersion,
+                effects::SmallExplosionEffectEntity::kTotalTicks,
+                state);
+        }
         default:
             return false;
         }
@@ -262,6 +272,21 @@ namespace mm2hack::apps::world::entity
                 return nullptr;
             }
             return std::make_unique<hazards::BreakableBlockEntity>(state, tileset_id);
+        }
+        case EntityTypeId::SmallExplosionEffect:
+        {
+            TimedEffectEntityState state{};
+            const auto sprite_id = _assets.SmallExplosionEffectSprite();
+            if (!ParseTimedEffect(
+                    record,
+                    effects::SmallExplosionEffectEntity::kStateVersion,
+                    effects::SmallExplosionEffectEntity::kTotalTicks,
+                    state) ||
+                !IsValidSpriteId(sprite_id))
+            {
+                return nullptr;
+            }
+            return std::make_unique<effects::SmallExplosionEffectEntity>(state, sprite_id);
         }
         default:
             return nullptr;

@@ -157,7 +157,10 @@ namespace mm2hack::apps::world::entity::hazards
 
         if (ApplyAttack(*attack))
         {
-            // TODO: spawn a destruction effect once one exists.
+            // The destruction VFX/SFX itself is fired by
+            // AbstractActionPhase::spawnDestructionEffectsForTheDead_() right after
+            // this collision pass, keyed off IDamageable + IsAlive() -- nothing more
+            // to do here than die.
             Kill();
         }
     }

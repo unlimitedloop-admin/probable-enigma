@@ -13,6 +13,7 @@
 #include "apps/scenes/PhaseFadeController.h"
 #include "apps/systems/audio/AudioManager.h"
 #include "apps/systems/audio/SeTransportState.h"
+#include "apps/systems/combat/IDamageable.h"
 #include "apps/systems/physics/ICollider.h"
 #include "apps/systems/scrolling/atomic/ScrollController.h"
 #include "apps/systems/view/RenderContext.h"
@@ -22,9 +23,11 @@
 #include "apps/world/entity/avatar/PlayerFrameOutput.h"
 #include "apps/world/entity/common/SpawnChargeEffectCommand.h"
 #include "apps/world/entity/common/SpawnSlidingDustEffectCommand.h"
+#include "apps/world/entity/common/SpawnSmallExplosionEffectCommand.h"
 #include "apps/world/entity/effects/ChargeEffectEntity.h"
 #include "apps/world/entity/effects/ProjectileEntity.h"
 #include "apps/world/entity/effects/SlidingDustEffectEntity.h"
+#include "apps/world/entity/effects/SmallExplosionEffectEntity.h"
 #include "apps/world/entity/effects/SplashEffectEntity.h"
 #include "apps/world/entity/EntityManager.h"
 #include "apps/world/entity/EntityStateFactory.h"
@@ -594,6 +597,7 @@ namespace mm2hack::apps::scenes::phases
                 std::vector<systems::physics::ICollider*> colliders;
                 _ctx->entity_mgr->CollectColliders(colliders);
                 _ctx->collision.ResolveEntities(colliders);
+                spawnDestructionEffectsForTheDead_(colliders);
 
                 delta = player->pos - prev_pos;
             }
@@ -683,5 +687,46 @@ namespace mm2hack::apps::scenes::phases
                 .spriteId = sprite_id,
                 .baseTexture = particle.base_texture
             });
+    }
+
+    void AbstractActionPhase::spawnDestructionEffectsForTheDead_(
+        const std::vector<systems::physics::ICollider*>& colliders)
+    {
+        using systems::combat::IDamageable;
+
+        const auto sprite_id = _ctx->asset_provider->SmallExplosionEffectSprite();
+        if (sprite_id == static_cast<rendering::sprite::SpriteManager::Id>(-1))
+        {
+            return;
+        }
+
+        auto& audio = runtime::GameContext::GetInstance().GetResourceManager().GetAudioManager();
+
+        for (auto* collider : colliders)
+        {
+            // `colliders` was snapshotted alive just before ResolveEntities() ran
+            // above, so a now-dead entry died on this exact pass -- fire its
+            // destruction effect exactly once, right here.
+            if (collider == nullptr || collider->OwnerEntity().IsAlive())
+            {
+                continue;
+            }
+
+            // Only entities with an HP pool (combat::IDamageable) get a destruction
+            // effect -- e.g. a projectile despawning on its own isn't "destroyed".
+            if (dynamic_cast<IDamageable*>(collider) == nullptr)
+            {
+                continue;
+            }
+
+            const auto center = collider->Bounds().center();
+            _ctx->entity_mgr->Spawn<world::entity::effects::SmallExplosionEffectEntity>(
+                world::entity::common::SpawnSmallExplosionEffectCommand{
+                    .spawnPos = Vec2{ center.x, center.y },
+                    .spriteId = sprite_id,
+                    .baseTexture = 0,
+                });
+            audio.PlaySe(L"enemy_small_explosion");
+        }
     }
 }

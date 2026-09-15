@@ -389,6 +389,7 @@ namespace mm2hack::test
             SpriteManagerId EffectsSprite() const noexcept override { return 5; }
             SpriteManagerId SlidingDustEffectSprite() const noexcept override { return 6; }
             SpriteManagerId ChargeEffectSprite() const noexcept override { return 7; }
+            SpriteManagerId SmallExplosionEffectSprite() const noexcept override { return 9; }
             BGTileManagerId BgTilesetId() const noexcept override { return 8; }
             bool TryEnemySprite(
                 apps::world::entity::enemy::EnemyKind kind,

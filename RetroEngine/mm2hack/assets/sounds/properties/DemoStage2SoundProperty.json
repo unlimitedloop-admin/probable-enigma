@@ -92,6 +92,16 @@
                 }
             ]
         },
+        "enemy_small_explosion": {
+            "channels": [
+                {
+                    "file": "assets/sounds/SoundEffects/ENEMYLITTLEBOOM_EFFECT_N0_SE_Noise.wav",
+                    "volume": 255,
+                    "voice": "noise",
+                    "priority": 2
+                }
+            ]
+        },
         "onstage_thump": {
             "channels": [
                 {

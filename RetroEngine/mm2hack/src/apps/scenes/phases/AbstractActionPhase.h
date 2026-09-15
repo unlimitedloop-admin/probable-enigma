@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/systems/scrolling/atomic/ScrollController.h"
@@ -41,6 +42,11 @@ namespace mm2hack::apps::world::entity
 namespace mm2hack::apps::systems::audio
 {
     struct SeTransportState;
+}
+
+namespace mm2hack::apps::systems::physics
+{
+    struct ICollider;
 }
 
 namespace mm2hack::apps::scenes::phases
@@ -121,6 +127,11 @@ namespace mm2hack::apps::scenes::phases
         void updateChargePresentation_(
             const world::entity::avatar::PlayerEntity& player,
             const world::entity::avatar::ChargeStatus& charge);
+        // Fires the small-explosion VFX/SFX once for every collider that was alive
+        // when `colliders` was snapshotted but died during the collision pass just
+        // run against it (i.e. any combat::IDamageable that just hit 0 HP).
+        void spawnDestructionEffectsForTheDead_(
+            const std::vector<systems::physics::ICollider*>& colliders);
 
     private:
         const std::wstring kClassName{ L"AbstractActionPhase" };

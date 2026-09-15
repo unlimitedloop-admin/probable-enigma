@@ -256,6 +256,7 @@
     <ClCompile Include="src\apps\world\entity\hazards\BreakableBlockEntity.cpp" />
     <ClCompile Include="src\apps\systems\combat\HealthComponent.cpp" />
     <ClCompile Include="src\apps\world\entity\effects\SplashEffectEntity.cpp" />
+    <ClCompile Include="src\apps\world\entity\effects\SmallExplosionEffectEntity.cpp" />
     <ClCompile Include="src\apps\world\entity\effects\SlidingDustEffectEntity.cpp" />
     <ClCompile Include="src\apps\world\entity\effects\ChargeEffectEntity.cpp" />
     <ClCompile Include="src\apps\world\entity\EntityManager.cpp" />
@@ -346,6 +347,7 @@
     <ClInclude Include="src\apps\world\entity\common\SpawnSplashEffectCommand.h" />
     <ClInclude Include="src\apps\world\entity\common\SpawnSlidingDustEffectCommand.h" />
     <ClInclude Include="src\apps\world\entity\common\SpawnChargeEffectCommand.h" />
+    <ClInclude Include="src\apps\world\entity\common\SpawnSmallExplosionEffectCommand.h" />
     <ClInclude Include="src\apps\world\entity\effects\SlidingDustEffectEntity.h" />
     <ClInclude Include="src\apps\world\entity\effects\ChargeEffectEntity.h" />
     <ClInclude Include="src\apps\world\entity\enemy\lists\EnemyLists.h" />
@@ -402,6 +404,7 @@
     <ClInclude Include="src\apps\systems\combat\IDamageable.h" />
     <ClInclude Include="src\apps\systems\combat\HealthComponent.h" />
     <ClInclude Include="src\apps\world\entity\effects\SplashEffectEntity.h" />
+    <ClInclude Include="src\apps\world\entity\effects\SmallExplosionEffectEntity.h" />
     <ClInclude Include="src\apps\world\entity\EntityBase.h" />
     <ClInclude Include="src\apps\world\entity\EntityStateFactory.h" />
     <ClInclude Include="src\apps\world\entity\IEntity.h" />
