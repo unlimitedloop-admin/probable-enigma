@@ -49,6 +49,11 @@ namespace mm2hack::apps::systems::physics
     struct ICollider;
 }
 
+namespace mm2hack::apps::systems::combat
+{
+    struct IDamageable;
+}
+
 namespace mm2hack::apps::scenes::phases
 {
     class IStageScript;
@@ -132,6 +137,20 @@ namespace mm2hack::apps::scenes::phases
         // run against it (i.e. any combat::IDamageable that just hit 0 HP).
         void spawnDestructionEffectsForTheDead_(
             const std::vector<systems::physics::ICollider*>& colliders);
+
+        // HP of one combat::IDamageable, captured before a collision pass so a
+        // non-lethal hit can be told apart from "nothing happened".
+        struct DamageableHpSnapshot final
+        {
+            systems::combat::IDamageable* damageable{};
+            int hp_before{};
+        };
+        [[nodiscard]] std::vector<DamageableHpSnapshot> captureDamageableHp_(
+            const std::vector<systems::physics::ICollider*>& colliders) const;
+        // Plays the "hit_attack" SE once if any snapshotted IDamageable took
+        // damage this pass but is still alive (a lethal hit is destruction's job,
+        // via spawnDestructionEffectsForTheDead_() above).
+        void spawnHitEffectsForTheSurvivors_(const std::vector<DamageableHpSnapshot>& before);
         // Detects the scroll-lock rising/falling edge and, once per edge: clears
         // every transient effect entity and pauses SE (rising), or resumes SE
         // (falling). No-op mid-lock or mid-unlock.

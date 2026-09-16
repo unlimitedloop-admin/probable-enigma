@@ -601,8 +601,10 @@ namespace mm2hack::apps::scenes::phases
                 // items/traps, etc.). Runs after positions are finalized for this tick.
                 std::vector<systems::physics::ICollider*> colliders;
                 _ctx->entity_mgr->CollectColliders(colliders);
+                const auto damageable_hp_before = captureDamageableHp_(colliders);
                 _ctx->collision.ResolveEntities(colliders);
                 spawnDestructionEffectsForTheDead_(colliders);
+                spawnHitEffectsForTheSurvivors_(damageable_hp_before);
 
                 delta = player->pos - prev_pos;
             }
@@ -733,6 +735,49 @@ namespace mm2hack::apps::scenes::phases
                 });
             audio.PlaySe(L"enemy_small_explosion");
         }
+    }
+
+    std::vector<AbstractActionPhase::DamageableHpSnapshot> AbstractActionPhase::captureDamageableHp_(
+        const std::vector<systems::physics::ICollider*>& colliders) const
+    {
+        using systems::combat::IDamageable;
+
+        std::vector<DamageableHpSnapshot> snapshot;
+        snapshot.reserve(colliders.size());
+        for (auto* collider : colliders)
+        {
+            if (collider == nullptr)
+            {
+                continue;
+            }
+
+            if (auto* damageable = dynamic_cast<IDamageable*>(collider))
+            {
+                snapshot.push_back({ damageable, damageable->CurrentHP() });
+            }
+        }
+        return snapshot;
+    }
+
+    void AbstractActionPhase::spawnHitEffectsForTheSurvivors_(
+        const std::vector<DamageableHpSnapshot>& before)
+    {
+        const bool any_hit = std::any_of(before.begin(), before.end(),
+            [](const DamageableHpSnapshot& snap)
+            {
+                // A kill is destruction's job (spawnDestructionEffectsForTheDead_);
+                // this is only for a hit that didn't finish the target off.
+                return !snap.damageable->IsDead() && snap.damageable->CurrentHP() < snap.hp_before;
+            });
+
+        if (!any_hit)
+        {
+            return;
+        }
+
+        // One shot per frame regardless of how many things got hit -- a single
+        // SE channel pair, no point stacking retriggers.
+        runtime::GameContext::GetInstance().GetResourceManager().GetAudioManager().PlaySe(L"hit_attack");
     }
 
     void AbstractActionPhase::handleScrollLockTransition_(bool locked_now)
