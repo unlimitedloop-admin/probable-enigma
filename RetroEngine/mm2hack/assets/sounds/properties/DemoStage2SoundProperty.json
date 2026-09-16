@@ -95,9 +95,9 @@
         "hit_attack": {
             "channels": [
                 {
-                    "file": "assets/sounds/SoundEffects/HITATTACK_EFFECT_N0_SE_Square1.wav",
+                    "file": "assets/sounds/SoundEffects/HITATTACK_EFFECT_N0_SE_Square2.wav",
                     "volume": 255,
-                    "voice": "pulse1",
+                    "voice": "pulse2",
                     "priority": 1
                 },
                 {
