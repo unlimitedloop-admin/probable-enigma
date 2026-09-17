@@ -10,6 +10,7 @@
 #include "apps/world/entity/avatar/PlayerEntity.h"
 #include "apps/world/entity/avatar/PlayerEntityState.h"
 #include "apps/world/entity/effects/ChargeEffectEntity.h"
+#include "apps/world/entity/enemy/EnemyEntity.h"
 #include "apps/world/entity/effects/ProjectileEntity.h"
 #include "apps/world/entity/effects/SlidingDustEffectEntity.h"
 #include "apps/world/entity/effects/SmallExplosionEffectEntity.h"
@@ -109,6 +110,19 @@ namespace mm2hack::apps::world::entity
                     return value.Load(reader);
                 });
         }
+
+        bool ParseEnemy(const EntityStateRecord& record, enemy::EnemyEntityState& state)
+        {
+            if (record.component_version != enemy::EnemyEntity::kStateVersion)
+            {
+                return false;
+            }
+            return ParseState(record, state,
+                [](enemy::EnemyEntityState& value, core::save::StateReader& reader)
+                {
+                    return value.Load(reader);
+                });
+        }
     }
 
     bool EntityStateFactory::ValidateRecord(const EntityStateRecord& record)
@@ -156,6 +170,11 @@ namespace mm2hack::apps::world::entity
         {
             hazards::BreakableBlockEntityState state{};
             return ParseBreakableBlock(record, state);
+        }
+        case EntityTypeId::Enemy:
+        {
+            enemy::EnemyEntityState state{};
+            return ParseEnemy(record, state);
         }
         case EntityTypeId::SmallExplosionEffect:
         {
@@ -272,6 +291,20 @@ namespace mm2hack::apps::world::entity
                 return nullptr;
             }
             return std::make_unique<hazards::BreakableBlockEntity>(state, tileset_id);
+        }
+        case EntityTypeId::Enemy:
+        {
+            enemy::EnemyEntityState state{};
+            if (!ParseEnemy(record, state))
+            {
+                return nullptr;
+            }
+            rendering::sprite::SpriteManager::Id sprite_id{};
+            if (!_assets.TryEnemySprite(state.kind, sprite_id) || !IsValidSpriteId(sprite_id))
+            {
+                return nullptr;
+            }
+            return std::make_unique<enemy::EnemyEntity>(state, sprite_id);
         }
         case EntityTypeId::SmallExplosionEffect:
         {

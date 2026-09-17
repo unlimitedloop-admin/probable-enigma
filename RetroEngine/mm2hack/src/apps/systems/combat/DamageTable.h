@@ -76,6 +76,18 @@ namespace mm2hack::apps::systems::combat
             return DamageTable{};
         }
 
+        // A table where every weapon is immune -- HP can never move, i.e. the
+        // object is effectively invincible regardless of its own max HP.
+        [[nodiscard]] static constexpr DamageTable Invincible() noexcept
+        {
+            DamageTable table{};
+            for (std::size_t i = 0; i < table._percent.size(); ++i)
+            {
+                table._percent[i] = kImmunePercent;
+            }
+            return table;
+        }
+
     private:
         [[nodiscard]] static constexpr std::size_t Index(WeaponId weapon) noexcept
         {

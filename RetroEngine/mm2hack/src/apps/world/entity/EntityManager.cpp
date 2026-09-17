@@ -22,7 +22,7 @@ namespace mm2hack::apps::world::entity
 
         bool IsKnownEntityType(EntityTypeId type) noexcept
         {
-            return type >= EntityTypeId::Player && type <= EntityTypeId::SmallExplosionEffect;
+            return type >= EntityTypeId::Player && type <= EntityTypeId::Enemy;
         }
     }
 
