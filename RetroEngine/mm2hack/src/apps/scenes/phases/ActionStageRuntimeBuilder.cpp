@@ -11,6 +11,7 @@
 #include "apps/systems/scrolling/atomic/Camera.h"
 #include "apps/systems/scrolling/atomic/ScrollController.h"
 #include "apps/world/entity/avatar/PlayerEntity.h"
+#include "apps/world/entity/enemy/EnemyEntity.h"
 #include "apps/world/entity/EntityManager.h"
 #include "apps/world/entity/hazards/BreakableBlockEntity.h"
 #include "apps/world/stage/RoomGraphAdapter.h"
@@ -177,5 +178,27 @@ namespace mm2hack::apps::scenes::phases
             /* max_hp */ 2,
             foundation::math::Vec2{ kBlockHalfHeight, kBlockHalfHeight },
             /* resistances */ DamageTable::Neutral());
+
+        // TODO(enemy verification): temporary hardcoded Met placement, same
+        // reasoning as the block above -- remove/replace once real level/enemy
+        // placement exists.
+        using world::entity::enemy::EnemyEntity;
+        using world::entity::enemy::EnemyKind;
+        rendering::sprite::SpriteManager::Id metall_sprite_id{};
+        if (ctx.asset_provider->TryEnemySprite(EnemyKind::Met, metall_sprite_id))
+        {
+            constexpr double kMetallHalfHeight = 16.0; // 32x32 tile
+            ctx.entity_mgr->Spawn<EnemyEntity>(
+                EnemyKind::Met,
+                foundation::math::Vec2{
+                    player->pos.x + 96.0,
+                    player->pos.y + (kPlayerGroundProbeOffsetY - kMetallHalfHeight) },
+                metall_sprite_id,
+                /* base_texture */ 4, // walking pose, first frame -- static for now
+                /* palette_variant */ 0,
+                /* toughness */ 2,
+                foundation::math::Vec2{ kMetallHalfHeight, kMetallHalfHeight },
+                /* move_speed_scale */ 1.0);
+        }
     }
 }

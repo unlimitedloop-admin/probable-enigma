@@ -492,6 +492,13 @@ namespace mm2hack::apps::scenes
             MM2H_GRAPHPROPS(SmallExplosion));
         if (_spriteBank.small_explosion_effect == SpriteManagerId(-1)) return false;
 
+        const auto metall_sprite = spriteLoader.Load(
+            L"MetallArmy",
+            MM2H_GRAPHICS(MetallArmy),
+            MM2H_GRAPHPROPS(MetallArmy));
+        if (metall_sprite == SpriteManagerId(-1)) return false;
+        _spriteBank.enemies[world::entity::enemy::EnemyKind::Met] = metall_sprite;
+
         const int sprvmax = spriteLoader.VariantCountById(_spriteBank.player);
         spriteLoader.SetGlobalVariant(sprvmax);
         resource.FadeInSprite(_fadeDurationFrames);
