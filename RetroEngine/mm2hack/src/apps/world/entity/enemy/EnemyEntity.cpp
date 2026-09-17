@@ -41,6 +41,7 @@ namespace mm2hack::apps::world::entity::enemy
         return IsValid() && kinematic.Save(writer) &&
             writer.WriteU16(static_cast<std::uint16_t>(kind)) &&
             writer.WriteI32(base_texture) &&
+            writer.WriteI32(facing_texture_offset_left) &&
             writer.WriteI32(palette_variant) &&
             writer.WriteI32(toughness) &&
             writer.WriteI32(hp) &&
@@ -58,6 +59,7 @@ namespace mm2hack::apps::world::entity::enemy
         if (!loaded.kinematic.Load(reader) ||
             !reader.ReadU16(encoded_kind) ||
             !reader.ReadI32(loaded.base_texture) ||
+            !reader.ReadI32(loaded.facing_texture_offset_left) ||
             !reader.ReadI32(loaded.palette_variant) ||
             !reader.ReadI32(loaded.toughness) ||
             !reader.ReadI32(loaded.hp) ||
@@ -88,6 +90,7 @@ namespace mm2hack::apps::world::entity::enemy
         return kinematic.IsValid() &&
             kind <= EnemyKind::FlyBoy &&
             base_texture >= 0 && base_texture <= 65'535 &&
+            facing_texture_offset_left >= -65'535 && facing_texture_offset_left <= 65'535 &&
             palette_variant >= 0 && palette_variant <= kMaximumPaletteVariant &&
             toughness >= 0 && toughness <= 1'000 &&
             hp >= 1 && hp <= std::max(1, toughness) &&
@@ -104,11 +107,13 @@ namespace mm2hack::apps::world::entity::enemy
         Vec2 spawn_pos,
         rendering::sprite::SpriteManager::Id sprite_id,
         int base_texture,
+        int facing_texture_offset_left,
         int palette_variant,
         int toughness,
         Vec2 half_size,
         double move_speed_scale)
         : _kind(kind), _id(sprite_id), _base_texture(base_texture),
+          _facing_texture_offset_left(facing_texture_offset_left),
           _palette_variant(palette_variant), _half(half_size), _toughness(toughness)
     {
         pos = spawn_pos;
@@ -138,6 +143,7 @@ namespace mm2hack::apps::world::entity::enemy
             .kinematic = CaptureKinematicState(),
             .kind = _kind,
             .base_texture = _base_texture,
+            .facing_texture_offset_left = _facing_texture_offset_left,
             .palette_variant = _palette_variant,
             .toughness = _toughness,
             .hp = _health.CurrentHP(),
@@ -170,6 +176,7 @@ namespace mm2hack::apps::world::entity::enemy
         _kind = state.kind;
         _toughness = state.toughness;
         _base_texture = state.base_texture;
+        _facing_texture_offset_left = state.facing_texture_offset_left;
         _palette_variant = state.palette_variant;
         _half = state.half_size;
         _spawn_x = state.spawn_x;
@@ -222,8 +229,10 @@ namespace mm2hack::apps::world::entity::enemy
         const int x = static_cast<int>(pos.x - view.viewWorldX - _half.x);
         const int y = static_cast<int>(pos.y - view.viewWorldY - _half.y);
 
+        const int texture = _base_texture + (_facing < 0 ? _facing_texture_offset_left : 0);
+
         auto& res = runtime::GameContext::GetInstance().GetResourceManager();
-        res.GetSpriteManager().UseByIdVariant(_id, _palette_variant, _base_texture, x, y);
+        res.GetSpriteManager().UseByIdVariant(_id, _palette_variant, texture, x, y);
     }
 
     EnemyEntity::RectF EnemyEntity::Bounds() const

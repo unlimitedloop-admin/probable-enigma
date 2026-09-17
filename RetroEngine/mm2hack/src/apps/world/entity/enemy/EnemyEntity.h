@@ -37,6 +37,7 @@ namespace mm2hack::apps::world::entity::enemy
         EntityKinematicState kinematic{};
         EnemyKind kind{ EnemyKind::Met };
         std::int32_t base_texture{};
+        std::int32_t facing_texture_offset_left{};     // Added to base_texture when facing left (0 = no mirrored tiles)
         std::int32_t palette_variant{};
         // 0 = invincible (immune to every weapon, HP never moves); N = dies
         // after N hits' worth of accumulated normal-shot power.
@@ -79,12 +80,16 @@ namespace mm2hack::apps::world::entity::enemy
         // frame -- the "color" knob, picking among the sheet's baked-in palettes.
         // `toughness`: 0 = invincible, N = dies after N hits' worth of
         // accumulated normal-shot power (1 = one-hit kill).
+        // `facing_texture_offset_left`: added to base_texture while patrolling
+        // left, for sheets that carry separate mirrored tiles (0 if the sheet
+        // has none, or the art is symmetric).
         // `move_speed_scale`: multiplies kDefaultPatrolSpeedPxPerSec.
         EnemyEntity(
             EnemyKind kind,
             Vec2 spawn_pos,
             rendering::sprite::SpriteManager::Id sprite_id,
             int base_texture,
+            int facing_texture_offset_left,
             int palette_variant,
             int toughness,
             Vec2 half_size,
@@ -126,7 +131,8 @@ namespace mm2hack::apps::world::entity::enemy
     private:
         EnemyKind _kind{ EnemyKind::Met };
         rendering::sprite::SpriteManager::Id _id{};    // Object sprite id
-        int _base_texture{ 0 };                         // Base texture index
+        int _base_texture{ 0 };                         // Base texture index (right-facing)
+        int _facing_texture_offset_left{ 0 };           // Added to _base_texture while facing left
         int _palette_variant{ 0 };                      // Per-instance color (SpriteManager variant index)
         Vec2 _half{ 8.0, 8.0 };                         // Half-size (used for both drawing and hit judgement)
         systems::combat::HealthComponent _health{};     // HP + per-weapon resistance

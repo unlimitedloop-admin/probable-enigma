@@ -188,13 +188,20 @@ namespace mm2hack::apps::scenes::phases
         if (ctx.asset_provider->TryEnemySprite(EnemyKind::Met, metall_sprite_id))
         {
             constexpr double kMetallHalfHeight = 16.0; // 32x32 tile
+            // The player's own sprite sits 1px into the floor by design (confirmed
+            // correct), so ground-resting objects that should visually match it
+            // get the same +1 nudge. kPlayerGroundProbeOffsetY alone (the physics
+            // constant) still lands exactly flush -- this is a purely visual offset
+            // on top of that.
+            constexpr double kVisualFloorSinkPx = 1.0;
             ctx.entity_mgr->Spawn<EnemyEntity>(
                 EnemyKind::Met,
                 foundation::math::Vec2{
                     player->pos.x + 96.0,
-                    player->pos.y + (kPlayerGroundProbeOffsetY - kMetallHalfHeight) },
+                    player->pos.y + (kPlayerGroundProbeOffsetY - kMetallHalfHeight) + kVisualFloorSinkPx },
                 metall_sprite_id,
                 /* base_texture */ 4, // walking pose, first frame -- static for now
+                /* facing_texture_offset_left */ 12,
                 /* palette_variant */ 0,
                 /* toughness */ 2,
                 foundation::math::Vec2{ kMetallHalfHeight, kMetallHalfHeight },
