@@ -5,7 +5,6 @@
 #include "apps/rendering/bg/BGTileMapProvider.h"
 #include "apps/resources/ResourceManager.h"
 #include "apps/runtime/GameContext.h"
-#include "apps/systems/combat/DamageTable.h"
 #include "apps/systems/physics/LadderService.h"
 #include "apps/systems/physics/PageGridIndex.h"
 #include "apps/systems/physics/TileQueryService.h"
@@ -14,7 +13,6 @@
 #include "apps/world/entity/avatar/PlayerEntity.h"
 #include "apps/world/entity/enemy/EnemyEntity.h"
 #include "apps/world/entity/EntityManager.h"
-#include "apps/world/entity/hazards/BreakableBlockEntity.h"
 #include "apps/world/stage/RoomGraphAdapter.h"
 #include "config/SystemConfig.h"
 #include "core/assembly/StateProvider.h"
@@ -153,39 +151,21 @@ namespace mm2hack::apps::scenes::phases
 
         player->texture = 0;
 
-        // TODO(hit-detection verification): temporary hardcoded placement to verify
-        // ProjectileEntity/BreakableBlockEntity collision end-to-end before real
-        // level-object placement (or enemies) exist. Remove/replace once that lands.
-        using world::entity::hazards::BreakableBlockEntity;
-        using systems::combat::DamageTable;
-        const auto block_tileset_id = ctx.asset_provider->BgTilesetId();
-        // Both PlayerEntity::pos and BreakableBlockEntity's spawn_pos are center-based
-        // (see their Bounds()/Render()). But the player's *resting-on-ground* Y is NOT
-        // pos.y + PlayerEntity's half-height (16px) -- it's governed by the ground probe
-        // the landing sweep snaps to tile boundaries with (Probes::refreshAll(),
-        // PlayerParams::PlayerProbes::groundLineOffsetY), which sits only 9px below
-        // pos.y, not 16px. So on flat ground: pos.y + kPlayerGroundProbeOffsetY == a
-        // tile-aligned floor line. Shift the block down by
-        // (kPlayerGroundProbeOffsetY - blockHalfHeight) so its bottom edge lands on
-        // that same line.
-        constexpr double kPlayerGroundProbeOffsetY = 9.0; // mirrors PlayerProbes::groundLineOffsetY
-        constexpr double kBlockHalfHeight = 8.0;
-        ctx.entity_mgr->Spawn<BreakableBlockEntity>(
-            foundation::math::Vec2{
-                player->pos.x + 48.0,
-                player->pos.y + (kPlayerGroundProbeOffsetY - kBlockHalfHeight) },
-            block_tileset_id,
-            /* tile_index */ 76,
-            /* max_hp */ 2,
-            foundation::math::Vec2{ kBlockHalfHeight, kBlockHalfHeight },
-            /* resistances */ DamageTable::Neutral());
-
-        // TODO(enemy verification): temporary hardcoded Met placement, same
-        // reasoning as the block above -- remove/replace once real level/enemy
-        // placement exists. Spawns one of each palette preset (default/yellow/
-        // blue/red) in a row to verify the animation + recolor pipeline together.
+        // TODO(enemy verification): temporary hardcoded Met placement to verify
+        // the animation/collision/palette pipeline end-to-end before real
+        // level/enemy placement exists. Remove/replace once that lands. Spawns
+        // one of each palette preset (default/yellow/blue/red) in a row.
         using world::entity::enemy::EnemyEntity;
         using world::entity::enemy::EnemyKind;
+        // PlayerEntity::pos is center-based (see its Bounds()/Render()), but the
+        // player's *resting-on-ground* Y is NOT pos.y + PlayerEntity's half-height
+        // (16px) -- it's governed by the ground probe the landing sweep snaps to
+        // tile boundaries with (Probes::refreshAll(), PlayerParams::PlayerProbes::
+        // groundLineOffsetY), which sits only 9px below pos.y, not 16px. So on
+        // flat ground: pos.y + kPlayerGroundProbeOffsetY == a tile-aligned floor
+        // line -- ground-resting entities shift down by
+        // (kPlayerGroundProbeOffsetY - their own half-height) to land on it.
+        constexpr double kPlayerGroundProbeOffsetY = 9.0; // mirrors PlayerProbes::groundLineOffsetY
         const auto* metall_def =
             runtime::GameContext::GetInstance().GetResourceManager().GetEnemyDefinitionCatalog().Find(EnemyKind::Met);
         if (metall_def != nullptr)
