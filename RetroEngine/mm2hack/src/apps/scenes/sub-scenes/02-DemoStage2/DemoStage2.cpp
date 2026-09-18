@@ -35,6 +35,7 @@
 #include "core/assembly/FilteredJoystickInputProvider.h"
 #include "core/save/StateIO.h"
 #include "utils/output_debug.h"
+#include "utils/string_converter.h"
 
 namespace mm2hack::apps::scenes
 {
@@ -215,6 +216,23 @@ namespace mm2hack::apps::scenes
             return false;
         }
         out = it->second;
+        return true;
+    }
+
+    bool DemoStage2::TryEnemySprite(
+        world::entity::enemy::EnemyKind kind, int palette_preset_index, SpriteManagerId& out) const noexcept
+    {
+        const auto kind_it = _spriteBank.enemy_palette_variants.find(kind);
+        if (kind_it == _spriteBank.enemy_palette_variants.end())
+        {
+            return false;
+        }
+        const auto preset_it = kind_it->second.find(palette_preset_index);
+        if (preset_it == kind_it->second.end())
+        {
+            return false;
+        }
+        out = preset_it->second;
         return true;
     }
 
@@ -498,6 +516,47 @@ namespace mm2hack::apps::scenes
             MM2H_GRAPHPROPS(MetallArmy));
         if (metall_sprite == SpriteManagerId(-1)) return false;
         _spriteBank.enemies[world::entity::enemy::EnemyKind::Met] = metall_sprite;
+
+        // Animation state graph + palette presets for Met, then one recolored
+        // sprite id per preset (index 0 is always `metall_sprite` itself --
+        // preset 0 is required to have empty mappings, i.e. the sheet's
+        // original colors -- see EnemyDefinitionLoader).
+        {
+            using world::entity::enemy::EnemyKind;
+            auto& enemyDefs = resource.GetEnemyDefinitionCatalog();
+            if (!enemyDefs.LoadForKind(EnemyKind::Met, L"assets\\data\\enemies\\METALL.json"))
+            {
+                return false;
+            }
+            const auto* met_def = enemyDefs.Find(EnemyKind::Met);
+            if (met_def == nullptr) return false;
+
+            auto& variants = _spriteBank.enemy_palette_variants[EnemyKind::Met];
+            for (std::size_t i = 0; i < met_def->palette_presets.size(); ++i)
+            {
+                const auto& preset = met_def->palette_presets[i];
+                if (preset.mappings.empty())
+                {
+                    variants[static_cast<int>(i)] = metall_sprite;
+                    continue;
+                }
+
+                const std::wstring variant_name = L"MetallArmy_" + utils::utf8_to_wstring(preset.id);
+                const auto variant_id = spriteLoader.Load(
+                    variant_name, MM2H_GRAPHICS(MetallArmy), MM2H_GRAPHPROPS(MetallArmy));
+                if (variant_id == SpriteManagerId(-1)) return false;
+
+                std::vector<rendering::sprite::SpriteAtlas::PaletteColorMapping> mappings;
+                mappings.reserve(preset.mappings.size());
+                for (const auto& mapping : preset.mappings)
+                {
+                    mappings.push_back({ mapping.source_index, mapping.target_index });
+                }
+                if (!spriteLoader.ReplacePixelColorsById(variant_id, mappings)) return false;
+
+                variants[static_cast<int>(i)] = variant_id;
+            }
+        }
 
         const int sprvmax = spriteLoader.VariantCountById(_spriteBank.player);
         spriteLoader.SetGlobalVariant(sprvmax);

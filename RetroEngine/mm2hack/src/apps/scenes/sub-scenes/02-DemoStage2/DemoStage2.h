@@ -77,6 +77,8 @@ namespace mm2hack::apps::scenes
         SpriteManagerId ChargeEffectSprite() const noexcept override { return _spriteBank.charge_effect; }
         SpriteManagerId SmallExplosionEffectSprite() const noexcept override { return _spriteBank.small_explosion_effect; }
         bool TryEnemySprite(world::entity::enemy::EnemyKind kind, SpriteManagerId& out) const noexcept override;
+        bool TryEnemySprite(
+            world::entity::enemy::EnemyKind kind, int palette_preset_index, SpriteManagerId& out) const noexcept override;
         BGTileManagerId BgTilesetId() const noexcept override { return _bgTileId; }
 
         // === DemoStage2 specific ===

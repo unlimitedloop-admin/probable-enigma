@@ -399,6 +399,16 @@ namespace mm2hack::test
                 (void)out;
                 return false;
             }
+            bool TryEnemySprite(
+                apps::world::entity::enemy::EnemyKind kind,
+                int palette_preset_index,
+                SpriteManagerId& out) const noexcept override
+            {
+                (void)kind;
+                (void)palette_preset_index;
+                (void)out;
+                return false;
+            }
         };
 
         std::vector<std::uint8_t> ToBytes(const std::string& value)

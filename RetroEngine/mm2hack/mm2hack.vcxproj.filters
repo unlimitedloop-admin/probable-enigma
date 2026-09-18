@@ -107,6 +107,9 @@
     <ClCompile Include="src\apps\world\entity\effects\ProjectileEntity.cpp" />
     <ClCompile Include="src\apps\world\entity\hazards\BreakableBlockEntity.cpp" />
     <ClCompile Include="src\apps\world\entity\enemy\EnemyEntity.cpp" />
+    <ClCompile Include="src\apps\world\entity\enemy\animation\EnemyDefinitionLoader.cpp" />
+    <ClCompile Include="src\apps\world\entity\enemy\animation\AnimationStatePlayer.cpp" />
+    <ClCompile Include="src\apps\world\entity\enemy\animation\EnemyDefinitionCatalog.cpp" />
     <ClCompile Include="src\apps\systems\combat\HealthComponent.cpp" />
     <ClCompile Include="src\apps\world\entity\effects\SplashEffectEntity.cpp" />
     <ClCompile Include="src\apps\world\entity\effects\SmallExplosionEffectEntity.cpp" />
@@ -321,6 +324,10 @@
     <ClInclude Include="src\apps\world\entity\effects\ProjectileEntity.h" />
     <ClInclude Include="src\apps\world\entity\hazards\BreakableBlockEntity.h" />
     <ClInclude Include="src\apps\world\entity\enemy\EnemyEntity.h" />
+    <ClInclude Include="src\apps\world\entity\enemy\animation\AnimationTypes.h" />
+    <ClInclude Include="src\apps\world\entity\enemy\animation\EnemyDefinitionLoader.h" />
+    <ClInclude Include="src\apps\world\entity\enemy\animation\AnimationStatePlayer.h" />
+    <ClInclude Include="src\apps\world\entity\enemy\animation\EnemyDefinitionCatalog.h" />
     <ClInclude Include="src\apps\systems\physics\IAttackInfo.h" />
     <ClInclude Include="src\apps\systems\physics\WeaponId.h" />
     <ClInclude Include="src\apps\systems\combat\DamageTable.h" />

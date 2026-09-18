@@ -4,6 +4,7 @@
 
 #include "apps/rendering/bg/BGTileMapProvider.h"
 #include "apps/resources/ResourceManager.h"
+#include "apps/runtime/GameContext.h"
 #include "apps/systems/combat/DamageTable.h"
 #include "apps/systems/physics/LadderService.h"
 #include "apps/systems/physics/PageGridIndex.h"
@@ -181,11 +182,13 @@ namespace mm2hack::apps::scenes::phases
 
         // TODO(enemy verification): temporary hardcoded Met placement, same
         // reasoning as the block above -- remove/replace once real level/enemy
-        // placement exists.
+        // placement exists. Spawns one of each palette preset (default/yellow/
+        // blue/red) in a row to verify the animation + recolor pipeline together.
         using world::entity::enemy::EnemyEntity;
         using world::entity::enemy::EnemyKind;
-        rendering::sprite::SpriteManager::Id metall_sprite_id{};
-        if (ctx.asset_provider->TryEnemySprite(EnemyKind::Met, metall_sprite_id))
+        const auto* metall_def =
+            runtime::GameContext::GetInstance().GetResourceManager().GetEnemyDefinitionCatalog().Find(EnemyKind::Met);
+        if (metall_def != nullptr)
         {
             constexpr double kMetallHalfHeight = 16.0; // 32x32 tile
             // The player's own sprite sits 1px into the floor by design (confirmed
@@ -194,18 +197,29 @@ namespace mm2hack::apps::scenes::phases
             // constant) still lands exactly flush -- this is a purely visual offset
             // on top of that.
             constexpr double kVisualFloorSinkPx = 1.0;
-            ctx.entity_mgr->Spawn<EnemyEntity>(
-                EnemyKind::Met,
-                foundation::math::Vec2{
-                    player->pos.x + 96.0,
-                    player->pos.y + (kPlayerGroundProbeOffsetY - kMetallHalfHeight) + kVisualFloorSinkPx },
-                metall_sprite_id,
-                /* base_texture */ 4, // walking pose, first frame -- static for now
-                /* facing_texture_offset_left */ 12,
-                /* palette_variant */ 0,
-                /* toughness */ 2,
-                foundation::math::Vec2{ kMetallHalfHeight, kMetallHalfHeight },
-                /* move_speed_scale */ 1.0);
+            const double metall_y =
+                player->pos.y + (kPlayerGroundProbeOffsetY - kMetallHalfHeight) + kVisualFloorSinkPx;
+
+            for (int preset_index = 0; preset_index < static_cast<int>(metall_def->palette_presets.size()); ++preset_index)
+            {
+                rendering::sprite::SpriteManager::Id metall_sprite_id{};
+                if (!ctx.asset_provider->TryEnemySprite(EnemyKind::Met, preset_index, metall_sprite_id))
+                {
+                    continue;
+                }
+                ctx.entity_mgr->Spawn<EnemyEntity>(
+                    EnemyKind::Met,
+                    foundation::math::Vec2{
+                        player->pos.x + 96.0 + static_cast<double>(preset_index) * 40.0,
+                        metall_y },
+                    metall_sprite_id,
+                    preset_index,
+                    &metall_def->animation,
+                    /* facing_texture_offset_left */ 12,
+                    /* toughness */ 2,
+                    foundation::math::Vec2{ kMetallHalfHeight, kMetallHalfHeight },
+                    /* move_speed_scale */ 1.0);
+            }
         }
     }
 }

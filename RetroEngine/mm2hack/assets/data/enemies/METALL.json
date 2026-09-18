@@ -1,0 +1,48 @@
+{
+    "id": "metall",
+    "enemy_type": "minion",
+    "name": "METALL",
+    "initial_state": "hidden",
+    "states": [
+        {
+            "id": "hidden",
+            "loop": false,
+            "frames": [
+                { "tile": 0, "wait": "hold" }
+            ],
+            "transitions": [
+                { "when": "timer", "frames": 90, "to": "wake_up" }
+            ]
+        },
+        {
+            "id": "wake_up",
+            "loop": false,
+            "frames": [
+                { "tile": 0, "wait": 6 },
+                { "tile": 1, "wait": 6 },
+                { "tile": 2, "wait": 6 },
+                { "tile": 3, "wait": 6 }
+            ],
+            "transitions": [
+                { "when": "clip_finished", "to": "walk" }
+            ]
+        },
+        {
+            "id": "walk",
+            "loop": true,
+            "frames": [
+                { "tile": 4, "wait": 8 },
+                { "tile": 5, "wait": 8 },
+                { "tile": 6, "wait": 8 },
+                { "tile": 7, "wait": 8 }
+            ],
+            "transitions": []
+        }
+    ],
+    "palette_presets": [
+        { "id": "default", "mappings": [] },
+        { "id": "yellow", "mappings": [ { "source": 39, "target": 40 } ] },
+        { "id": "blue", "mappings": [ { "source": 39, "target": 17 } ] },
+        { "id": "red", "mappings": [ { "source": 39, "target": 6 } ] }
+    ]
+}

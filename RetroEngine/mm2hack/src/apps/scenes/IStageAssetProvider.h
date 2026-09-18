@@ -32,6 +32,10 @@ namespace mm2hack::apps::scenes
         virtual SpriteManagerId SmallExplosionEffectSprite() const noexcept = 0;
 
         virtual bool TryEnemySprite(world::entity::enemy::EnemyKind kind, SpriteManagerId& out) const noexcept = 0;
+        // Same lookup, but for a specific palette preset (see StageSpriteBank::
+        // enemy_palette_variants). Index 0 is always the sheet's original colors.
+        virtual bool TryEnemySprite(
+            world::entity::enemy::EnemyKind kind, int palette_preset_index, SpriteManagerId& out) const noexcept = 0;
 
         // The stage's own BG tileset -- lets world objects (breakable blocks, etc.)
         // render using the same tile art as the background instead of a sprite sheet.

@@ -40,16 +40,19 @@ namespace mm2hack::apps::world::entity::enemy
     {
         return IsValid() && kinematic.Save(writer) &&
             writer.WriteU16(static_cast<std::uint16_t>(kind)) &&
-            writer.WriteI32(base_texture) &&
+            writer.WriteI32(palette_preset_index) &&
             writer.WriteI32(facing_texture_offset_left) &&
-            writer.WriteI32(palette_variant) &&
             writer.WriteI32(toughness) &&
             writer.WriteI32(hp) &&
             writer.WriteF64(half_size.x) &&
             writer.WriteF64(half_size.y) &&
             writer.WriteF64(spawn_x) &&
             writer.WriteF64(move_speed_px_per_sec) &&
-            writer.WriteI32(facing);
+            writer.WriteI32(facing) &&
+            writer.WriteI32(anim_state_index) &&
+            writer.WriteI32(anim_frame_index) &&
+            writer.WriteI32(anim_frame_elapsed) &&
+            writer.WriteI32(anim_state_elapsed);
     }
 
     bool EnemyEntityState::Load(core::save::StateReader& reader)
@@ -58,16 +61,19 @@ namespace mm2hack::apps::world::entity::enemy
         std::uint16_t encoded_kind{};
         if (!loaded.kinematic.Load(reader) ||
             !reader.ReadU16(encoded_kind) ||
-            !reader.ReadI32(loaded.base_texture) ||
+            !reader.ReadI32(loaded.palette_preset_index) ||
             !reader.ReadI32(loaded.facing_texture_offset_left) ||
-            !reader.ReadI32(loaded.palette_variant) ||
             !reader.ReadI32(loaded.toughness) ||
             !reader.ReadI32(loaded.hp) ||
             !reader.ReadF64(loaded.half_size.x) ||
             !reader.ReadF64(loaded.half_size.y) ||
             !reader.ReadF64(loaded.spawn_x) ||
             !reader.ReadF64(loaded.move_speed_px_per_sec) ||
-            !reader.ReadI32(loaded.facing))
+            !reader.ReadI32(loaded.facing) ||
+            !reader.ReadI32(loaded.anim_state_index) ||
+            !reader.ReadI32(loaded.anim_frame_index) ||
+            !reader.ReadI32(loaded.anim_frame_elapsed) ||
+            !reader.ReadI32(loaded.anim_state_elapsed))
         {
             return false;
         }
@@ -85,13 +91,12 @@ namespace mm2hack::apps::world::entity::enemy
         constexpr double kMaximumHalfSize = 256.0;
         constexpr double kMaximumCoordinate = 1'000'000.0;
         constexpr double kMaximumSpeed = 10'000.0;
-        constexpr int kMaximumPaletteVariant = 16;
+        constexpr int kMaximumAnimCounter = 36'000;
 
         return kinematic.IsValid() &&
             kind <= EnemyKind::FlyBoy &&
-            base_texture >= 0 && base_texture <= 65'535 &&
+            palette_preset_index >= 0 && palette_preset_index <= 255 &&
             facing_texture_offset_left >= -65'535 && facing_texture_offset_left <= 65'535 &&
-            palette_variant >= 0 && palette_variant <= kMaximumPaletteVariant &&
             toughness >= 0 && toughness <= 1'000 &&
             hp >= 1 && hp <= std::max(1, toughness) &&
             std::isfinite(half_size.x) && half_size.x > 0.0 && half_size.x <= kMaximumHalfSize &&
@@ -99,22 +104,26 @@ namespace mm2hack::apps::world::entity::enemy
             std::isfinite(spawn_x) && std::abs(spawn_x) <= kMaximumCoordinate &&
             std::isfinite(move_speed_px_per_sec) &&
             move_speed_px_per_sec >= 0.0 && move_speed_px_per_sec <= kMaximumSpeed &&
-            (facing == 1 || facing == -1);
+            (facing == 1 || facing == -1) &&
+            anim_state_index >= 0 && anim_state_index <= kMaximumAnimCounter &&
+            anim_frame_index >= 0 && anim_frame_index <= kMaximumAnimCounter &&
+            anim_frame_elapsed >= 0 && anim_frame_elapsed <= kMaximumAnimCounter &&
+            anim_state_elapsed >= 0 && anim_state_elapsed <= kMaximumAnimCounter;
     }
 
     EnemyEntity::EnemyEntity(
         EnemyKind kind,
         Vec2 spawn_pos,
         rendering::sprite::SpriteManager::Id sprite_id,
-        int base_texture,
+        int palette_preset_index,
+        const animation::EnemyAnimationDef* animation_def,
         int facing_texture_offset_left,
-        int palette_variant,
         int toughness,
         Vec2 half_size,
         double move_speed_scale)
-        : _kind(kind), _id(sprite_id), _base_texture(base_texture),
-          _facing_texture_offset_left(facing_texture_offset_left),
-          _palette_variant(palette_variant), _half(half_size), _toughness(toughness)
+        : _kind(kind), _id(sprite_id), _palette_preset_index(palette_preset_index),
+          _facing_texture_offset_left(facing_texture_offset_left), _half(half_size),
+          _toughness(toughness)
     {
         pos = spawn_pos;
         _spawn_x = spawn_pos.x;
@@ -122,14 +131,27 @@ namespace mm2hack::apps::world::entity::enemy
 
         const auto [max_hp, table] = HealthForToughness(toughness);
         _health = systems::combat::HealthComponent(max_hp, table);
+
+        if (animation_def != nullptr)
+        {
+            _animator = animation::AnimationStatePlayer(*animation_def);
+        }
     }
 
     EnemyEntity::EnemyEntity(
         const EnemyEntityState& state,
-        rendering::sprite::SpriteManager::Id sprite_id)
+        rendering::sprite::SpriteManager::Id sprite_id,
+        const animation::EnemyAnimationDef* animation_def)
         : _id(sprite_id)
     {
         RestoreState(state);
+        if (animation_def != nullptr)
+        {
+            _animator.RestoreState(
+                state.anim_state_index, state.anim_frame_index,
+                state.anim_frame_elapsed, state.anim_state_elapsed,
+                *animation_def);
+        }
     }
 
     bool EnemyEntity::SaveState(core::save::StateWriter& writer) const
@@ -142,15 +164,18 @@ namespace mm2hack::apps::world::entity::enemy
         return EnemyEntityState{
             .kinematic = CaptureKinematicState(),
             .kind = _kind,
-            .base_texture = _base_texture,
+            .palette_preset_index = _palette_preset_index,
             .facing_texture_offset_left = _facing_texture_offset_left,
-            .palette_variant = _palette_variant,
             .toughness = _toughness,
             .hp = _health.CurrentHP(),
             .half_size = _half,
             .spawn_x = _spawn_x,
             .move_speed_px_per_sec = _move_speed,
             .facing = _facing,
+            .anim_state_index = _animator.StateIndex(),
+            .anim_frame_index = _animator.FrameIndex(),
+            .anim_frame_elapsed = _animator.FrameElapsed(),
+            .anim_state_elapsed = _animator.StateElapsed(),
         };
     }
 
@@ -175,13 +200,16 @@ namespace mm2hack::apps::world::entity::enemy
 
         _kind = state.kind;
         _toughness = state.toughness;
-        _base_texture = state.base_texture;
+        _palette_preset_index = state.palette_preset_index;
         _facing_texture_offset_left = state.facing_texture_offset_left;
-        _palette_variant = state.palette_variant;
         _half = state.half_size;
         _spawn_x = state.spawn_x;
         _move_speed = state.move_speed_px_per_sec;
         _facing = state.facing;
+        // NOTE: _animator itself is (re)attached by the reconstruction
+        // constructor, which has the EnemyAnimationDef this needs and this
+        // method doesn't. A fresh RestoreState() call on an already-live entity
+        // (not currently done anywhere) would leave the animator as-is.
         return true;
     }
 
@@ -193,6 +221,7 @@ namespace mm2hack::apps::world::entity::enemy
     void EnemyEntity::Update(const ViewState* view, double dt)
     {
         (void)view;
+        (void)dt;
 
         if (!IsAlive())
         {
@@ -216,6 +245,8 @@ namespace mm2hack::apps::world::entity::enemy
             pos.x = right;
             _facing = -1;
         }
+
+        _animator.Tick();
     }
 
     void EnemyEntity::Render(RenderContext& ctx)
@@ -229,10 +260,11 @@ namespace mm2hack::apps::world::entity::enemy
         const int x = static_cast<int>(pos.x - view.viewWorldX - _half.x);
         const int y = static_cast<int>(pos.y - view.viewWorldY - _half.y);
 
-        const int texture = _base_texture + (_facing < 0 ? _facing_texture_offset_left : 0);
+        const int texture = _animator.CurrentTile() +
+            (_facing < 0 ? _facing_texture_offset_left : 0);
 
         auto& res = runtime::GameContext::GetInstance().GetResourceManager();
-        res.GetSpriteManager().UseByIdVariant(_id, _palette_variant, texture, x, y);
+        res.GetSpriteManager().UseById(_id, texture, x, y);
     }
 
     EnemyEntity::RectF EnemyEntity::Bounds() const

@@ -30,5 +30,8 @@ namespace mm2hack::apps::resources::assets
         SpriteManagerId small_explosion_effect{};
 
         std::unordered_map<world::entity::enemy::EnemyKind, SpriteManagerId> enemies{};
+        // [kind][palette preset index into EnemyDefinition::palette_presets] -> recolored sprite id.
+        // Index 0 is always present and is the sheet's original (unrecolored) colors.
+        std::unordered_map<world::entity::enemy::EnemyKind, std::unordered_map<int, SpriteManagerId>> enemy_palette_variants{};
     };
 }

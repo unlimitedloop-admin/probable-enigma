@@ -6,6 +6,8 @@
 
 #include "apps/rendering/bg/BGTileManager.h"
 #include "apps/rendering/sprite/SpriteManager.h"
+#include "apps/resources/ResourceManager.h"
+#include "apps/runtime/GameContext.h"
 #include "apps/scenes/IStageAssetProvider.h"
 #include "apps/world/entity/avatar/PlayerEntity.h"
 #include "apps/world/entity/avatar/PlayerEntityState.h"
@@ -300,11 +302,21 @@ namespace mm2hack::apps::world::entity
                 return nullptr;
             }
             rendering::sprite::SpriteManager::Id sprite_id{};
-            if (!_assets.TryEnemySprite(state.kind, sprite_id) || !IsValidSpriteId(sprite_id))
+            if (!_assets.TryEnemySprite(state.kind, state.palette_preset_index, sprite_id) ||
+                !IsValidSpriteId(sprite_id))
             {
                 return nullptr;
             }
-            return std::make_unique<enemy::EnemyEntity>(state, sprite_id);
+            // The animation state graph isn't part of the saved bytes (like a
+            // sprite id, it's re-resolved by kind), so a missing/failed-to-load
+            // definition simply fails the restore rather than corrupting state.
+            const auto* enemy_def =
+                runtime::GameContext::GetInstance().GetResourceManager().GetEnemyDefinitionCatalog().Find(state.kind);
+            if (enemy_def == nullptr)
+            {
+                return nullptr;
+            }
+            return std::make_unique<enemy::EnemyEntity>(state, sprite_id, &enemy_def->animation);
         }
         case EntityTypeId::SmallExplosionEffect:
         {
