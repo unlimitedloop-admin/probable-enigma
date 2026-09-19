@@ -185,6 +185,13 @@ namespace mm2hack::apps::world::entity
     {
         static_assert(std::is_base_of_v<IEntity, T>, "T must derive from IEntity.");
 
+        // Matches are snapshotted before any fn() call so that a Spawn() from
+        // within fn (e.g. an enemy queuing a projectile) -- which reallocates
+        // _entities when called outside UpdateAll()'s _is_updating window --
+        // can't invalidate this loop. The raw T* stays valid across that
+        // reallocation since it points at the entity itself, not the
+        // unique_ptr slot that moved.
+        std::vector<T*> matches{};
         for (auto& e : _entities)
         {
             if (!e || !e->IsAlive())
@@ -194,8 +201,13 @@ namespace mm2hack::apps::world::entity
 
             if (auto* p = dynamic_cast<T*>(e.get()); p != nullptr)
             {
-                fn(*p);
+                matches.push_back(p);
             }
+        }
+
+        for (T* p : matches)
+        {
+            fn(*p);
         }
     }
 
