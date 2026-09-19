@@ -607,8 +607,25 @@ namespace mm2hack::apps::scenes::phases
             {
                 player->SetInput(_ctx->input);
 
+                // CountAlive<ProjectileEntity>() would count every projectile
+                // regardless of owner -- since ProjectileEntity is now shared
+                // with enemy shots (see ProjectileEntity::Layer()/CollisionLayer::
+                // ProjectileEnemy), that let an enemy's own volley (e.g. Met's
+                // 3-way shot) eat the player's on-screen shot budget and block
+                // their Rock Buster. Only the player's own shots should count
+                // against it.
+                std::size_t player_projectile_count = 0;
+                _ctx->entity_mgr->ForEachAlive<effects::ProjectileEntity>(
+                    [&player_projectile_count](const effects::ProjectileEntity& projectile)
+                    {
+                        if (projectile.Layer() == systems::physics::CollisionLayer::ProjectilePlayer)
+                        {
+                            ++player_projectile_count;
+                        }
+                    });
+
                 auto entity_ctx = avatar::ExPlayerContextForEntity{
-                    .canSpawnProjectile = (_ctx->entity_mgr->CountAlive<effects::ProjectileEntity>() < 3),   // TODO: make configurable (attack limit for player)
+                    .canSpawnProjectile = (player_projectile_count < 3),   // TODO: make configurable (attack limit for player)
                 };
 
                 player->SetEntityContext(entity_ctx);

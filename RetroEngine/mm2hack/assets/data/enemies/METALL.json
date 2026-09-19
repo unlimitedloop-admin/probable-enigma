@@ -41,8 +41,7 @@
                 { "tile": 4, "wait": 6 },
                 { "tile": 8, "wait": 6 },
                 { "tile": 9, "wait": 6 },
-                { "tile": 10, "wait": 6 },
-                { "tile": 11, "wait": "hold" }
+                { "tile": 10, "wait": "hold" }
             ],
             "transitions": [
                 { "when": "grounded", "to": "cooldown" }
