@@ -27,9 +27,9 @@
             ],
             "transitions": [
                 { "when": "clip_finished", "to": "jump", "jump_impulse": -4.0, "projectile_spawns": [
-                    { "angle_deg": 0, "speed_px_per_frame": 3.0 },
-                    { "angle_deg": -45, "speed_px_per_frame": 3.0 },
-                    { "angle_deg": 45, "speed_px_per_frame": 3.0 }
+                    { "angle_deg": 0, "speed_px_per_frame": 2.0 },
+                    { "angle_deg": -45, "speed_px_per_frame": 2.0 },
+                    { "angle_deg": 45, "speed_px_per_frame": 2.0 }
                 ] }
             ]
         },
@@ -38,7 +38,6 @@
             "loop": false,
             "move_speed_multiplier": 1.5,
             "frames": [
-                { "tile": 4, "wait": 6 },
                 { "tile": 8, "wait": 6 },
                 { "tile": 9, "wait": 6 },
                 { "tile": 10, "wait": "hold" }
