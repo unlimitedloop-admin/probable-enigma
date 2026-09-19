@@ -34,6 +34,13 @@ namespace mm2hack::apps::world::entity::enemy::animation
         // AnimationState::allow_movement). Permissive (true) with no attached
         // definition, matching the rest of this class's null-safety.
         [[nodiscard]] bool AllowsMovement() const noexcept;
+        // Multiplies the caller's own base horizontal speed (see
+        // AnimationState::move_speed_multiplier). 1.0 with no attached definition.
+        [[nodiscard]] double MoveSpeedMultiplier() const noexcept;
+        // 0.0 normally; non-zero only immediately after a Tick() where a
+        // transition carrying a jump_impulse fired (see AnimationTransition::
+        // jump_impulse) -- read this right after calling Tick(), same frame.
+        [[nodiscard]] double LastJumpImpulse() const noexcept { return _pending_jump_impulse; }
 
         // Save/restore. Restoring re-attaches to `def` (not persisted itself --
         // it's resolved by EnemyKind at reconstruction time, same as a sprite id).
@@ -51,5 +58,6 @@ namespace mm2hack::apps::world::entity::enemy::animation
         int _frame_index{ 0 };
         int _frame_elapsed{ 0 };    // Ticks spent on the current frame
         int _state_elapsed{ 0 };    // Ticks spent in the current state (drives Timer)
+        double _pending_jump_impulse{ 0.0 }; // See LastJumpImpulse(); reset every Tick()
     };
 }

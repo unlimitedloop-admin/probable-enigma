@@ -63,6 +63,23 @@ namespace mm2hack::apps::world::entity::enemy::animation
             return true;
         }
 
+        // Like try_read_nonnegative_double, but any finite sign (e.g. a jump
+        // impulse is conventionally negative -- upward).
+        bool try_read_double(const json& object, const char* key, double default_value, double& out)
+        {
+            const auto value = object.find(key);
+            if (value == object.end())
+            {
+                out = default_value;
+                return true;
+            }
+            if (!value->is_number()) return false;
+            const double parsed = value->get<double>();
+            if (!std::isfinite(parsed)) return false;
+            out = parsed;
+            return true;
+        }
+
         bool try_parse_frame(const json& source, AnimationFrame& out)
         {
             if (!source.is_object()) return false;
@@ -88,7 +105,8 @@ namespace mm2hack::apps::world::entity::enemy::animation
             if (!source.is_object()) return false;
 
             std::string when;
-            if (!try_read_string(source, "when", when) || !try_read_string(source, "to", out.to_state))
+            if (!try_read_string(source, "when", when) || !try_read_string(source, "to", out.to_state) ||
+                !try_read_double(source, "jump_impulse", 0.0, out.jump_impulse))
             {
                 return false;
             }
@@ -128,6 +146,7 @@ namespace mm2hack::apps::world::entity::enemy::animation
 
             if (!try_read_bool(source, "loop", false, out.clip.loop)) return false;
             if (!try_read_bool(source, "allow_movement", true, out.allow_movement)) return false;
+            if (!try_read_nonnegative_double(source, "move_speed_multiplier", 1.0, out.move_speed_multiplier)) return false;
 
             const auto frames = source.find("frames");
             if (frames == source.end() || !frames->is_array() || frames->empty()) return false;

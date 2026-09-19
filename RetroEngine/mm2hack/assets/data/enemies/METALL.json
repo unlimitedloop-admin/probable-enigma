@@ -33,6 +33,7 @@
         {
             "id": "walk",
             "loop": true,
+            "move_speed_multiplier": 1.25,
             "frames": [
                 { "tile": 4, "wait": 8 },
                 { "tile": 5, "wait": 8 },
@@ -40,12 +41,14 @@
                 { "tile": 7, "wait": 8 }
             ],
             "transitions": [
-                { "when": "airborne", "to": "falling" }
+                { "when": "airborne", "to": "falling" },
+                { "when": "timer", "frames": 150, "to": "falling", "jump_impulse": -4.0 }
             ]
         },
         {
             "id": "falling",
             "loop": false,
+            "move_speed_multiplier": 2.0,
             "frames": [
                 { "tile": 10, "wait": "hold" }
             ],

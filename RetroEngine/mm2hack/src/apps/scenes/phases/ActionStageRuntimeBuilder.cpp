@@ -182,7 +182,7 @@ namespace mm2hack::apps::scenes::phases
                     preset_index,
                     &metall_def->animation,
                     /* facing_texture_offset_left */ 12,
-                    /* toughness */ 2,
+                    /* toughness */ 3,
                     foundation::math::Vec2{ kMetallHalfHeight, kMetallHalfHeight },
                     /* move_speed_scale */ 1.0,
                     /* gravity_scale */ 1.0);

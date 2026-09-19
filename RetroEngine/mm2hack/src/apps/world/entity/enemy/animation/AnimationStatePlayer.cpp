@@ -13,6 +13,8 @@ namespace mm2hack::apps::world::entity::enemy::animation
 
     void AnimationStatePlayer::Tick(const AnimationConditionInputs& inputs) noexcept
     {
+        _pending_jump_impulse = 0.0;
+
         if (_def == nullptr || _def->states.empty() ||
             _state_index < 0 || _state_index >= static_cast<int>(_def->states.size()))
         {
@@ -93,6 +95,7 @@ namespace mm2hack::apps::world::entity::enemy::animation
                 _frame_index = 0;
                 _frame_elapsed = 0;
                 _state_elapsed = 0;
+                _pending_jump_impulse = transition.jump_impulse;
             }
             break;
         }
@@ -122,6 +125,16 @@ namespace mm2hack::apps::world::entity::enemy::animation
             return true;
         }
         return _def->states[static_cast<std::size_t>(_state_index)].allow_movement;
+    }
+
+    double AnimationStatePlayer::MoveSpeedMultiplier() const noexcept
+    {
+        if (_def == nullptr ||
+            _state_index < 0 || _state_index >= static_cast<int>(_def->states.size()))
+        {
+            return 1.0;
+        }
+        return _def->states[static_cast<std::size_t>(_state_index)].move_speed_multiplier;
     }
 
     bool AnimationStatePlayer::RestoreState(

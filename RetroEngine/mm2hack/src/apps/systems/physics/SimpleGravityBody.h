@@ -55,6 +55,17 @@ namespace mm2hack::apps::systems::physics
         [[nodiscard]] double Tick(
             const ITerrainProbe* terrain, double foot_x, double current_bottom_y) noexcept;
 
+        // Sets vertical velocity to `impulse` directly (negative = upward, same
+        // sign convention as PlayerTuning::jumpImpulse) and clears the on-ground
+        // flag. Meant to be called the instant an entity enters a jump/airborne
+        // animation state (see EnemyEntity, which drives this off
+        // AnimationStatePlayer's transition-carried jump_impulse).
+        void Jump(double impulse) noexcept
+        {
+            _vel_y = impulse;
+            _on_ground = false;
+        }
+
         [[nodiscard]] bool IsOnGround() const noexcept { return _on_ground; }
         [[nodiscard]] double VerticalVelocity() const noexcept { return _vel_y; }
         // Configuration accessors, for callers that need to persist the already-

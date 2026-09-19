@@ -262,7 +262,7 @@ namespace mm2hack::apps::world::entity::enemy
         // allow_movement) -- e.g. Met holds still while hidden under its helmet.
         if (_animator.AllowsMovement())
         {
-            pos.x += static_cast<double>(_facing) * _move_speed * dt;
+            pos.x += static_cast<double>(_facing) * _move_speed * _animator.MoveSpeedMultiplier() * dt;
 
             const double left = _spawn_x - kDefaultPatrolRangePx;
             const double right = _spawn_x + kDefaultPatrolRangePx;
@@ -287,6 +287,16 @@ namespace mm2hack::apps::world::entity::enemy
         pos.y = resolved_bottom_y - _half.y + (_gravity.IsOnGround() ? kVisualFloorSinkPx : 0.0);
 
         _animator.Tick(animation::AnimationConditionInputs{ .grounded = _gravity.IsOnGround() });
+
+        // A transition that just fired may carry a jump impulse (see
+        // AnimationTransition::jump_impulse) -- e.g. Met's periodic hop while
+        // walking. Applied after this tick's gravity resolution above so it
+        // takes effect starting next frame, not retroactively this one.
+        const double jump_impulse = _animator.LastJumpImpulse();
+        if (jump_impulse != 0.0)
+        {
+            _gravity.Jump(jump_impulse);
+        }
     }
 
     void EnemyEntity::Render(RenderContext& ctx)

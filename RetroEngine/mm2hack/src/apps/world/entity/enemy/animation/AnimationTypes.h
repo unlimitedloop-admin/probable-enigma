@@ -66,6 +66,15 @@ namespace mm2hack::apps::world::entity::enemy::animation
         double param_x{ 0.0 };     // PlayerNear (reserved): horizontal trigger half-range, px
         double param_y{ 0.0 };     // PlayerNear (reserved): vertical trigger half-range, px
         std::string to_state;      // Target AnimationState::id
+        // 0 = no jump (the common case -- most transitions are just a pose
+        // change). Non-zero: the instant this transition fires, the entity's
+        // SimpleGravityBody gets Jump()'d with this value (negative = upward,
+        // same convention as PlayerTuning::jumpImpulse). Lets two transitions
+        // into the *same* airborne state stay distinct -- e.g. Met's `walk`
+        // has one `airborne`-triggered transition to `falling` with no
+        // impulse (stepped off a ledge) and one `timer`-triggered transition
+        // to the same `falling` state with an impulse (a deliberate hop).
+        double jump_impulse{ 0.0 };
     };
 
     struct AnimationState final
@@ -77,6 +86,9 @@ namespace mm2hack::apps::world::entity::enemy::animation
         // patrol) should run while this state is active. A "hidden"/peeking
         // state, for instance, sets this false so the creature holds still.
         bool allow_movement{ true };
+        // Multiplies the entity's own base horizontal speed while this state
+        // is active (e.g. faster horizontal drift mid-jump than while walking).
+        double move_speed_multiplier{ 1.0 };
     };
 
     // One creature's full animation graph, loaded once from its JSON pattern
