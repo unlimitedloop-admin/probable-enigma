@@ -76,6 +76,7 @@ namespace mm2hack::apps::scenes
         SpriteManagerId SlidingDustEffectSprite() const noexcept override { return _spriteBank.sliding_dust_effect; }
         SpriteManagerId ChargeEffectSprite() const noexcept override { return _spriteBank.charge_effect; }
         SpriteManagerId SmallExplosionEffectSprite() const noexcept override { return _spriteBank.small_explosion_effect; }
+        SpriteManagerId EnemyProjectileSprite() const noexcept override { return _spriteBank.enemy_projectile; }
         bool TryEnemySprite(world::entity::enemy::EnemyKind kind, SpriteManagerId& out) const noexcept override;
         bool TryEnemySprite(
             world::entity::enemy::EnemyKind kind, int palette_preset_index, SpriteManagerId& out) const noexcept override;

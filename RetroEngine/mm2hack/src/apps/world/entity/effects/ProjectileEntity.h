@@ -39,6 +39,8 @@ namespace mm2hack::apps::world::entity::effects
         std::uint32_t elapsed_ticks{};
         std::int32_t power{ 1 };
         foundation::math::Vec2 hit_half_size{ 2.0, 2.0 };
+        systems::physics::CollisionLayer collision_layer{ systems::physics::CollisionLayer::ProjectilePlayer };
+        systems::physics::WeaponId weapon{ systems::physics::WeaponId::Buster };
 
         bool Save(core::save::StateWriter& writer) const;
         bool Load(core::save::StateReader& reader);
@@ -79,14 +81,15 @@ namespace mm2hack::apps::world::entity::effects
         const IEntity& OwnerEntity() const noexcept override { return *this; }
         RectF Bounds() const override;
         bool IsCollidable() const noexcept override { return IsAlive(); }
-        CollisionLayer Layer() const noexcept override { return CollisionLayer::ProjectilePlayer; }
+        CollisionLayer Layer() const noexcept override { return _collision_layer; }
         void OnTileCollision(const Vec2& normal, TileAttribute attr) override;
         void OnEntityCollision(IEntity& other) override;
 
         // IAttackInfo
         [[nodiscard]] int AttackPower() const noexcept override { return _power; }
-        // A charged shot is still the Buster -- charge level only changes AttackPower().
-        [[nodiscard]] systems::physics::WeaponId Weapon() const noexcept override { return systems::physics::WeaponId::Buster; }
+        // A charged Rock Buster shot is still the Buster -- charge level only
+        // changes AttackPower(), not the weapon (see SpawnProjectileCommand::weapon).
+        [[nodiscard]] systems::physics::WeaponId Weapon() const noexcept override { return _weapon; }
 
     private:
         systems::view::Layer _draw_layer{ systems::view::Layer::Actors }; // Drawing layer
@@ -104,5 +107,7 @@ namespace mm2hack::apps::world::entity::effects
 
         int _power{ 1 };                                // Attack power carried on contact
         foundation::math::Vec2 _hit_half_size{ 2.0, 2.0 }; // Half-size of the attack hit judgement box (independent of _half)
+        CollisionLayer _collision_layer{ CollisionLayer::ProjectilePlayer };
+        systems::physics::WeaponId _weapon{ systems::physics::WeaponId::Buster };
     };
 }

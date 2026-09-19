@@ -55,7 +55,9 @@ namespace mm2hack::apps::world::entity::effects
             writer.WriteU32(elapsed_ticks) &&
             writer.WriteI32(power) &&
             writer.WriteF64(hit_half_size.x) &&
-            writer.WriteF64(hit_half_size.y);
+            writer.WriteF64(hit_half_size.y) &&
+            writer.WriteU8(static_cast<std::uint8_t>(collision_layer)) &&
+            writer.WriteU8(static_cast<std::uint8_t>(weapon));
     }
 
     bool ProjectileEntityState::Load(core::save::StateReader& reader)
@@ -63,6 +65,8 @@ namespace mm2hack::apps::world::entity::effects
         ProjectileEntityState loaded{};
         std::uint8_t encoded_layer{};
         std::uint8_t encoded_visual{};
+        std::uint8_t encoded_collision_layer{};
+        std::uint8_t encoded_weapon{};
         if (!loaded.kinematic.Load(reader) ||
             !reader.ReadU8(encoded_layer) ||
             !reader.ReadI32(loaded.base_texture) ||
@@ -74,12 +78,16 @@ namespace mm2hack::apps::world::entity::effects
             !reader.ReadU32(loaded.elapsed_ticks) ||
             !reader.ReadI32(loaded.power) ||
             !reader.ReadF64(loaded.hit_half_size.x) ||
-            !reader.ReadF64(loaded.hit_half_size.y))
+            !reader.ReadF64(loaded.hit_half_size.y) ||
+            !reader.ReadU8(encoded_collision_layer) ||
+            !reader.ReadU8(encoded_weapon))
         {
             return false;
         }
         loaded.draw_layer = static_cast<systems::view::Layer>(encoded_layer);
         loaded.visual = static_cast<common::ProjectileVisual>(encoded_visual);
+        loaded.collision_layer = static_cast<systems::physics::CollisionLayer>(encoded_collision_layer);
+        loaded.weapon = static_cast<systems::physics::WeaponId>(encoded_weapon);
         if (!loaded.IsValid())
         {
             return false;
@@ -106,7 +114,9 @@ namespace mm2hack::apps::world::entity::effects
             age_seconds <= kMaximumDurationSeconds &&
             power >= 0 && power <= 1'000 &&
             std::isfinite(hit_half_size.x) && hit_half_size.x > 0.0 && hit_half_size.x <= kMaximumHitHalfSize &&
-            std::isfinite(hit_half_size.y) && hit_half_size.y > 0.0 && hit_half_size.y <= kMaximumHitHalfSize;
+            std::isfinite(hit_half_size.y) && hit_half_size.y > 0.0 && hit_half_size.y <= kMaximumHitHalfSize &&
+            collision_layer < systems::physics::CollisionLayer::Count &&
+            weapon < systems::physics::WeaponId::Count;
     }
 
     ProjectileEntity::ProjectileEntity(const common::SpawnProjectileCommand& cmd)
@@ -128,6 +138,8 @@ namespace mm2hack::apps::world::entity::effects
 
         _power = cmd.power;
         _hit_half_size = cmd.hitHalfSize;
+        _collision_layer = cmd.collisionLayer;
+        _weapon = cmd.weapon;
     }
 
     ProjectileEntity::ProjectileEntity(
@@ -158,6 +170,8 @@ namespace mm2hack::apps::world::entity::effects
             .elapsed_ticks = _elapsed_ticks,
             .power = _power,
             .hit_half_size = _hit_half_size,
+            .collision_layer = _collision_layer,
+            .weapon = _weapon,
         };
     }
 
@@ -177,6 +191,8 @@ namespace mm2hack::apps::world::entity::effects
         _elapsed_ticks = state.elapsed_ticks;
         _power = state.power;
         _hit_half_size = state.hit_half_size;
+        _collision_layer = state.collision_layer;
+        _weapon = state.weapon;
         return true;
     }
 

@@ -59,6 +59,17 @@ namespace mm2hack::apps::world::entity::enemy::animation
         bool loop{ false };
     };
 
+    // One shot fired the instant a transition carrying it fires. `angle_deg`:
+    // 0 = straight along the entity's current facing, positive = rotates
+    // toward +Y (down, since screen Y grows downward), negative = up. The
+    // horizontal component mirrors with facing; the vertical component
+    // doesn't (an "up-45" shot is always up, whichever way the entity faces).
+    struct ProjectileSpawnSpec final
+    {
+        double angle_deg{ 0.0 };
+        double speed_px_per_frame{ 0.0 };
+    };
+
     struct AnimationTransition final
     {
         AnimationCondition condition{ AnimationCondition::Timer };
@@ -75,6 +86,9 @@ namespace mm2hack::apps::world::entity::enemy::animation
         // impulse (stepped off a ledge) and one `timer`-triggered transition
         // to the same `falling` state with an impulse (a deliberate hop).
         double jump_impulse{ 0.0 };
+        // Empty (the common case) = fires nothing. Non-empty: the instant this
+        // transition fires, the entity spawns one projectile per entry here.
+        std::vector<ProjectileSpawnSpec> projectile_spawns{};
     };
 
     struct AnimationState final

@@ -151,6 +151,10 @@ namespace mm2hack::apps::scenes::phases
         // damage this pass but is still alive (a lethal hit is destruction's job,
         // via spawnDestructionEffectsForTheDead_() above).
         void spawnHitEffectsForTheSurvivors_(const std::vector<DamageableHpSnapshot>& before);
+        // Drains every alive EnemyEntity's ConsumePendingProjectileSpawns() and
+        // actually Spawn()s them -- the entity itself has no EntityManager
+        // access (see AnimationTransition::projectile_spawns).
+        void spawnEnemyProjectiles_();
         // Detects the scroll-lock rising/falling edge and, once per edge: clears
         // every transient effect entity and pauses SE (rising), or resumes SE
         // (falling). No-op mid-lock or mid-unlock.

@@ -9,6 +9,7 @@ X(SlidingDustEffect, SpritesDir,    LR"(avatar\miscellaneous\EFFECT02_N0_ALL_PAT
 X(ChargeEffect,      SpritesDir,    LR"(avatar\miscellaneous\EFFECT03_N0_ALL_PATTERN.png)", LR"(avatar\miscellaneous\EFFECT03_N0_ALL_PATTERN.json)")
 X(SmallExplosion,    SpritesDir,    LR"(enemies\miscellaneous\EFFECT11_N0_ALL_PATTERN.png)", LR"(enemies\miscellaneous\EFFECT11_N0_ALL_PATTERN.json)")
 X(MetallArmy,        SpritesDir,    LR"(enemies\minion\METALL_ARMY_N0_ALL_PATTERN.png)",     LR"(enemies\minion\METALL_ARMY_N0_ALL_PATTERN.json)")
+X(EnemyProjectiles,  SpritesDir,    LR"(enemies\miscellaneous\ENEMY_PROJECTILES_N0_ALL_PATTERN.png)", LR"(enemies\miscellaneous\ENEMY_PROJECTILES_N0_ALL_PATTERN.json)")
 X(FlashStar,         BgsDir,        LR"(animation\FLASHSTAR_N0_ALL_PATTERN.png)",           LR"(animation\FLASHSTAR_N0_ALL_PATTERN.json)")
 X(FlatCursor,        SpritesDir,    LR"(miscellaneous\CURSOR_N0_ALL_PATTERN.png)",          LR"(miscellaneous\CURSOR_N0_ALL_PATTERN.json)")
 X(SampleStage,       ExamsDir,      LR"(bg\DEMOSTAGE2_N0_ALL_PATTERN.png)",                 LR"(bg\DEMOSTAGE2_N0_ALL_PATTERN.json)")

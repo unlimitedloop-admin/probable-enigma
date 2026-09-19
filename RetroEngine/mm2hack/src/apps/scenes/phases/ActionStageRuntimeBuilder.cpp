@@ -185,7 +185,8 @@ namespace mm2hack::apps::scenes::phases
                     /* toughness */ 3,
                     foundation::math::Vec2{ kMetallHalfHeight, kMetallHalfHeight },
                     /* move_speed_scale */ 1.0,
-                    /* gravity_scale */ 1.0);
+                    /* gravity_scale */ 1.0,
+                    ctx.asset_provider->EnemyProjectileSprite());
                 metall.SetTerrainProbe(ctx.terrain_probe.get());
             }
         }

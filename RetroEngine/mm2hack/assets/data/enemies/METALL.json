@@ -26,7 +26,11 @@
                 { "tile": 3, "wait": 6 }
             ],
             "transitions": [
-                { "when": "clip_finished", "to": "walk" },
+                { "when": "clip_finished", "to": "walk", "projectile_spawns": [
+                    { "angle_deg": 0, "speed_px_per_frame": 3.0 },
+                    { "angle_deg": -45, "speed_px_per_frame": 3.0 },
+                    { "angle_deg": 45, "speed_px_per_frame": 3.0 }
+                ] },
                 { "when": "airborne", "to": "falling" }
             ]
         },

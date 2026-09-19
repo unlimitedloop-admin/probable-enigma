@@ -558,6 +558,12 @@ namespace mm2hack::apps::scenes
             }
         }
 
+        _spriteBank.enemy_projectile = spriteLoader.Load(
+            L"EnemyProjectiles",
+            MM2H_GRAPHICS(EnemyProjectiles),
+            MM2H_GRAPHPROPS(EnemyProjectiles));
+        if (_spriteBank.enemy_projectile == SpriteManagerId(-1)) return false;
+
         const int sprvmax = spriteLoader.VariantCountById(_spriteBank.player);
         spriteLoader.SetGlobalVariant(sprvmax);
         resource.FadeInSprite(_fadeDurationFrames);

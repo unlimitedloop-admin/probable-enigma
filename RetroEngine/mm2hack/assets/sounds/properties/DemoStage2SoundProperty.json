@@ -118,6 +118,16 @@
                 }
             ]
         },
+        "enemy_fire": {
+            "channels": [
+                {
+                    "file": "assets/sounds/SoundEffects/ENEMYFIRE_EFFECT_N0_SE_Square2.wav",
+                    "volume": 255,
+                    "voice": "pulse2",
+                    "priority": 1
+                }
+            ]
+        },
         "onstage_thump": {
             "channels": [
                 {

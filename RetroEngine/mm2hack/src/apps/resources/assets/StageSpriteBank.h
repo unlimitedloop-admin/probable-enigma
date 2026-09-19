@@ -28,6 +28,7 @@ namespace mm2hack::apps::resources::assets
         SpriteManagerId sliding_dust_effect{};
         SpriteManagerId charge_effect{};
         SpriteManagerId small_explosion_effect{};
+        SpriteManagerId enemy_projectile{};
 
         std::unordered_map<world::entity::enemy::EnemyKind, SpriteManagerId> enemies{};
         // [kind][palette preset index into EnemyDefinition::palette_presets] -> recolored sprite id.

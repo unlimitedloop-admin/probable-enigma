@@ -133,10 +133,11 @@ namespace mm2hack::apps::world::entity::enemy
         int toughness,
         Vec2 half_size,
         double move_speed_scale,
-        double gravity_scale)
+        double gravity_scale,
+        rendering::sprite::SpriteManager::Id projectile_sprite_id)
         : _kind(kind), _id(sprite_id), _palette_preset_index(palette_preset_index),
           _facing_texture_offset_left(facing_texture_offset_left), _half(half_size),
-          _toughness(toughness)
+          _toughness(toughness), _projectile_sprite_id(projectile_sprite_id)
     {
         pos = spawn_pos;
         _spawn_x = spawn_pos.x;
@@ -158,8 +159,9 @@ namespace mm2hack::apps::world::entity::enemy
     EnemyEntity::EnemyEntity(
         const EnemyEntityState& state,
         rendering::sprite::SpriteManager::Id sprite_id,
-        const animation::EnemyAnimationDef* animation_def)
-        : _id(sprite_id)
+        const animation::EnemyAnimationDef* animation_def,
+        rendering::sprite::SpriteManager::Id projectile_sprite_id)
+        : _id(sprite_id), _projectile_sprite_id(projectile_sprite_id)
     {
         RestoreState(state);
         if (animation_def != nullptr)
@@ -296,6 +298,38 @@ namespace mm2hack::apps::world::entity::enemy
         if (jump_impulse != 0.0)
         {
             _gravity.Jump(jump_impulse);
+        }
+
+        // Likewise, a transition may carry one or more projectile_spawns (e.g.
+        // Met's 3-way shot on waking up). Queued here for AbstractActionPhase to
+        // actually Spawn() -- this entity has no EntityManager access itself.
+        if (_projectile_sprite_id != static_cast<rendering::sprite::SpriteManager::Id>(-1))
+        {
+            constexpr double kDegToRad = 3.14159265358979323846 / 180.0;
+            constexpr double kFramesPerSecond = 60.0; // matches every other frame-stepped assumption in this codebase
+
+            for (const auto& spec : _animator.LastProjectileSpawns())
+            {
+                const double rad = spec.angle_deg * kDegToRad;
+                const double dir_x = static_cast<double>(_facing) * std::cos(rad);
+                const double dir_y = std::sin(rad);
+                const double speed_px_per_sec = spec.speed_px_per_frame * kFramesPerSecond;
+
+                common::SpawnProjectileCommand cmd{};
+                cmd.spawnPos = pos;
+                cmd.velocity = Vec2{ dir_x * speed_px_per_sec, dir_y * speed_px_per_sec };
+                cmd.drawLayer = Layer::Effects;
+                cmd.spriteId = _projectile_sprite_id;
+                cmd.baseTexture = 0;
+                cmd.visual = common::ProjectileVisual::Normal;
+                cmd.lifeSec = -1.0; // alive until it leaves the active view, same sentinel as the player's shots
+                cmd.power = kDefaultProjectilePower;
+                cmd.hitHalfSize = kDefaultProjectileHitHalfSize;
+                cmd.collisionLayer = CollisionLayer::ProjectileEnemy;
+                cmd.weapon = systems::physics::WeaponId::EnemyShot;
+
+                _pending_projectile_spawns.push_back(cmd);
+            }
         }
     }
 

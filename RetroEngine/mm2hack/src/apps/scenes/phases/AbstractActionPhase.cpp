@@ -615,6 +615,7 @@ namespace mm2hack::apps::scenes::phases
 
                 _ctx->entity_mgr->UpdateAll(&_ctx->scroll->GetView(), dt);
                 consumePlayerOutput_(*player);
+                spawnEnemyProjectiles_();
 
                 // Entity-vs-entity hit detection (projectiles vs enemies/traps, player vs
                 // items/traps, etc.). Runs after positions are finalized for this tick.
@@ -797,6 +798,18 @@ namespace mm2hack::apps::scenes::phases
         // One shot per frame regardless of how many things got hit -- a single
         // SE channel pair, no point stacking retriggers.
         runtime::GameContext::GetInstance().GetResourceManager().GetAudioManager().PlaySe(L"hit_attack");
+    }
+
+    void AbstractActionPhase::spawnEnemyProjectiles_()
+    {
+        _ctx->entity_mgr->ForEachAlive<world::entity::enemy::EnemyEntity>(
+            [this](world::entity::enemy::EnemyEntity& enemy)
+            {
+                for (auto& cmd : enemy.ConsumePendingProjectileSpawns())
+                {
+                    _ctx->entity_mgr->Spawn<world::entity::effects::ProjectileEntity>(cmd);
+                }
+            });
     }
 
     void AbstractActionPhase::handleScrollLockTransition_(bool locked_now)

@@ -14,6 +14,7 @@ namespace mm2hack::apps::world::entity::enemy::animation
     void AnimationStatePlayer::Tick(const AnimationConditionInputs& inputs) noexcept
     {
         _pending_jump_impulse = 0.0;
+        _pending_projectile_spawns.clear();
 
         if (_def == nullptr || _def->states.empty() ||
             _state_index < 0 || _state_index >= static_cast<int>(_def->states.size()))
@@ -96,6 +97,7 @@ namespace mm2hack::apps::world::entity::enemy::animation
                 _frame_elapsed = 0;
                 _state_elapsed = 0;
                 _pending_jump_impulse = transition.jump_impulse;
+                _pending_projectile_spawns = transition.projectile_spawns;
             }
             break;
         }

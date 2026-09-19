@@ -17,6 +17,8 @@
 #include "apps/world/entity/EntityBase.h"
 
 #include <cstdint>
+#include <utility>
+#include <vector>
 
 #include "animation/AnimationStatePlayer.h"
 #include "animation/AnimationTypes.h"
@@ -31,6 +33,7 @@
 #include "apps/systems/physics/TileAttribute.h"
 #include "apps/systems/view/RenderContext.h"
 #include "apps/systems/view/ViewState.h"
+#include "apps/world/entity/common/SpawnProjectileCommand.h"
 #include "apps/world/entity/enemy/lists/EnemyLists.h"
 #include "apps/world/entity/IEntity.h"
 #include "core/save/StateIO.h"
@@ -102,6 +105,11 @@ namespace mm2hack::apps::world::entity::enemy
         // PlayerTuning itself.
         static constexpr double kDefaultGravityPerFrame{ 0.25 };
         static constexpr double kDefaultTerminalVelocityPerFrame{ 19.0 };
+        // Shared across every shooting enemy for now (see AnimationTransition::
+        // projectile_spawns) -- revisit as a per-spawn parameter if a second
+        // kind needs a different value.
+        static constexpr int kDefaultProjectilePower{ 1 };
+        static constexpr Vec2 kDefaultProjectileHitHalfSize{ 3.0, 3.0 };
 
         // Fresh placement (level/test spawn).
         // `palette_preset_index`: which of the kind's EnemyDefinition::
@@ -119,6 +127,9 @@ namespace mm2hack::apps::world::entity::enemy
         // `gravity_scale`: multiplies both kDefaultGravityPerFrame and
         // kDefaultTerminalVelocityPerFrame, so heavier/floatier enemies can
         // fall faster/slower than the player without a second knob.
+        // `projectile_sprite_id`: sprite for shots this enemy's animation graph
+        // fires (see AnimationTransition::projectile_spawns); default (-1) is
+        // fine for enemies whose graph never carries projectile_spawns.
         EnemyEntity(
             EnemyKind kind,
             Vec2 spawn_pos,
@@ -129,14 +140,19 @@ namespace mm2hack::apps::world::entity::enemy
             int toughness,
             Vec2 half_size,
             double move_speed_scale = 1.0,
-            double gravity_scale = 1.0);
+            double gravity_scale = 1.0,
+            rendering::sprite::SpriteManager::Id projectile_sprite_id =
+                static_cast<rendering::sprite::SpriteManager::Id>(-1));
         // Reconstruction from saved state (kind/toughness/etc. all come from
         // `state`). `animation_def` is resolved externally the same way as
-        // `sprite_id` -- by `state.kind`, via EnemyDefinitionCatalog.
+        // `sprite_id` -- by `state.kind`, via EnemyDefinitionCatalog; same for
+        // `projectile_sprite_id`.
         EnemyEntity(
             const EnemyEntityState& state,
             rendering::sprite::SpriteManager::Id sprite_id,
-            const animation::EnemyAnimationDef* animation_def);
+            const animation::EnemyAnimationDef* animation_def,
+            rendering::sprite::SpriteManager::Id projectile_sprite_id =
+                static_cast<rendering::sprite::SpriteManager::Id>(-1));
 
         // Get drawing layer (IRenderable)
         systems::view::Layer DrawLayer() const noexcept override;
@@ -158,6 +174,15 @@ namespace mm2hack::apps::world::entity::enemy
         // simply skips gravity for the frame (see SimpleGravityBody::Tick()).
         void SetTerrainProbe(const systems::physics::ITerrainProbe* terrain) noexcept { _terrain = terrain; }
         [[nodiscard]] bool IsOnGround() const noexcept { return _gravity.IsOnGround(); }
+
+        // Drains and returns any projectile spawns queued during the last
+        // Update() (see AnimationTransition::projectile_spawns). Polled by
+        // AbstractActionPhase after updating all entities -- EnemyEntity itself
+        // has no EntityManager access to spawn them directly.
+        [[nodiscard]] std::vector<common::SpawnProjectileCommand> ConsumePendingProjectileSpawns() noexcept
+        {
+            return std::exchange(_pending_projectile_spawns, {});
+        }
 
         // ICollider
         IEntity& OwnerEntity() noexcept override { return *this; }
@@ -190,5 +215,8 @@ namespace mm2hack::apps::world::entity::enemy
 
         systems::physics::SimpleGravityBody _gravity{};  // Vertical physics (see SetTerrainProbe())
         const systems::physics::ITerrainProbe* _terrain{ nullptr }; // Not saved; re-wired externally
+
+        rendering::sprite::SpriteManager::Id _projectile_sprite_id{ static_cast<rendering::sprite::SpriteManager::Id>(-1) };
+        std::vector<common::SpawnProjectileCommand> _pending_projectile_spawns{}; // Drained each frame; not saved
     };
 }

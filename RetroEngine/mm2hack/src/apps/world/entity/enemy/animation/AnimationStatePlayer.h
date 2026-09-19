@@ -41,6 +41,13 @@ namespace mm2hack::apps::world::entity::enemy::animation
         // transition carrying a jump_impulse fired (see AnimationTransition::
         // jump_impulse) -- read this right after calling Tick(), same frame.
         [[nodiscard]] double LastJumpImpulse() const noexcept { return _pending_jump_impulse; }
+        // Empty normally; holds the firing transition's projectile_spawns
+        // immediately after a Tick() where one fired -- read this right after
+        // calling Tick(), same frame (see AnimationTransition::projectile_spawns).
+        [[nodiscard]] const std::vector<ProjectileSpawnSpec>& LastProjectileSpawns() const noexcept
+        {
+            return _pending_projectile_spawns;
+        }
 
         // Save/restore. Restoring re-attaches to `def` (not persisted itself --
         // it's resolved by EnemyKind at reconstruction time, same as a sprite id).
@@ -59,5 +66,6 @@ namespace mm2hack::apps::world::entity::enemy::animation
         int _frame_elapsed{ 0 };    // Ticks spent on the current frame
         int _state_elapsed{ 0 };    // Ticks spent in the current state (drives Timer)
         double _pending_jump_impulse{ 0.0 }; // See LastJumpImpulse(); reset every Tick()
+        std::vector<ProjectileSpawnSpec> _pending_projectile_spawns{}; // See LastProjectileSpawns(); reset every Tick()
     };
 }

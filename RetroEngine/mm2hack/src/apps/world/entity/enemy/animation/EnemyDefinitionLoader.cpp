@@ -100,6 +100,15 @@ namespace mm2hack::apps::world::entity::enemy::animation
             return true;
         }
 
+        bool try_parse_projectile_spawn(const json& source, ProjectileSpawnSpec& out)
+        {
+            if (!source.is_object()) return false;
+            return try_read_double(source, "angle_deg", 0.0, out.angle_deg) &&
+                out.angle_deg >= -180.0 && out.angle_deg <= 180.0 &&
+                try_read_nonnegative_double(source, "speed_px_per_frame", 0.0, out.speed_px_per_frame) &&
+                out.speed_px_per_frame > 0.0 && out.speed_px_per_frame <= 100.0;
+        }
+
         bool try_parse_transition(const json& source, AnimationTransition& out)
         {
             if (!source.is_object()) return false;
@@ -109,6 +118,18 @@ namespace mm2hack::apps::world::entity::enemy::animation
                 !try_read_double(source, "jump_impulse", 0.0, out.jump_impulse))
             {
                 return false;
+            }
+
+            const auto spawns = source.find("projectile_spawns");
+            if (spawns != source.end())
+            {
+                if (!spawns->is_array()) return false;
+                for (const auto& spawn_json : *spawns)
+                {
+                    ProjectileSpawnSpec spawn{};
+                    if (!try_parse_projectile_spawn(spawn_json, spawn)) return false;
+                    out.projectile_spawns.push_back(spawn);
+                }
             }
 
             if (when == "timer")

@@ -316,7 +316,8 @@ namespace mm2hack::apps::world::entity
             {
                 return nullptr;
             }
-            return std::make_unique<enemy::EnemyEntity>(state, sprite_id, &enemy_def->animation);
+            return std::make_unique<enemy::EnemyEntity>(
+                state, sprite_id, &enemy_def->animation, _assets.EnemyProjectileSprite());
         }
         case EntityTypeId::SmallExplosionEffect:
         {
