@@ -258,19 +258,24 @@ namespace mm2hack::apps::world::entity::enemy
         // Basic left-right patrol, bouncing between spawn_x +- range. Real
         // per-kind movement (ledge/wall detection, chase, fly patterns, ...) is
         // future work; this only exists to exercise the move-speed knob.
-        pos.x += static_cast<double>(_facing) * _move_speed * dt;
+        // Gated by the current animation state (see AnimationState::
+        // allow_movement) -- e.g. Met holds still while hidden under its helmet.
+        if (_animator.AllowsMovement())
+        {
+            pos.x += static_cast<double>(_facing) * _move_speed * dt;
 
-        const double left = _spawn_x - kDefaultPatrolRangePx;
-        const double right = _spawn_x + kDefaultPatrolRangePx;
-        if (pos.x <= left)
-        {
-            pos.x = left;
-            _facing = 1;
-        }
-        else if (pos.x >= right)
-        {
-            pos.x = right;
-            _facing = -1;
+            const double left = _spawn_x - kDefaultPatrolRangePx;
+            const double right = _spawn_x + kDefaultPatrolRangePx;
+            if (pos.x <= left)
+            {
+                pos.x = left;
+                _facing = 1;
+            }
+            else if (pos.x >= right)
+            {
+                pos.x = right;
+                _facing = -1;
+            }
         }
 
         // Vertical physics: gravity + ground snap. The player's own sprite

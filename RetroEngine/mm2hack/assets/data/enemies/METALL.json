@@ -7,6 +7,7 @@
         {
             "id": "hidden",
             "loop": false,
+            "allow_movement": false,
             "frames": [
                 { "tile": 0, "wait": "hold" }
             ],
@@ -17,6 +18,7 @@
         {
             "id": "wake_up",
             "loop": false,
+            "allow_movement": false,
             "frames": [
                 { "tile": 0, "wait": 6 },
                 { "tile": 1, "wait": 6 },

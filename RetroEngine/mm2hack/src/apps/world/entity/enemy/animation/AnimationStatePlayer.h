@@ -30,6 +30,10 @@ namespace mm2hack::apps::world::entity::enemy::animation
         void Tick(const AnimationConditionInputs& inputs) noexcept;
 
         [[nodiscard]] int CurrentTile() const noexcept;
+        // Whether the current state allows the entity's own locomotion (see
+        // AnimationState::allow_movement). Permissive (true) with no attached
+        // definition, matching the rest of this class's null-safety.
+        [[nodiscard]] bool AllowsMovement() const noexcept;
 
         // Save/restore. Restoring re-attaches to `def` (not persisted itself --
         // it's resolved by EnemyKind at reconstruction time, same as a sprite id).

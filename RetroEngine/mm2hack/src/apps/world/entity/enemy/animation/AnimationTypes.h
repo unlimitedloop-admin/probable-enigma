@@ -73,6 +73,10 @@ namespace mm2hack::apps::world::entity::enemy::animation
         std::string id;
         AnimationClip clip;
         std::vector<AnimationTransition> transitions;
+        // Whether the entity's own locomotion (e.g. EnemyEntity's left-right
+        // patrol) should run while this state is active. A "hidden"/peeking
+        // state, for instance, sets this false so the creature holds still.
+        bool allow_movement{ true };
     };
 
     // One creature's full animation graph, loaded once from its JSON pattern

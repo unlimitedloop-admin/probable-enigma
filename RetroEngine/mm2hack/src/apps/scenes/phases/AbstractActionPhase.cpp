@@ -446,6 +446,16 @@ namespace mm2hack::apps::scenes::phases
         const double dt = runtime::GameContext::GetInstance().Time().DeltaSeconds();
         _intro.timer += dt;
 
+        // Enemies animate/patrol/fall through the READY/warp-in sequence too --
+        // the player itself is intentionally NOT run through its regular
+        // Update() here (it has its own intro-specific animation path below),
+        // and collision is intentionally NOT resolved here either, so nothing
+        // can actually touch the player while it isn't controllable yet. This
+        // is a non-issue for real level design anyway: enemies belong to the
+        // page a stage's starting page scrolls into, not the start page itself.
+        _ctx->entity_mgr->ForEachAlive<enemy::EnemyEntity>(
+            [view = &_ctx->scroll->GetView(), dt](enemy::EnemyEntity& e) { e.Update(view, dt); });
+
         auto* player = _ctx->entity_mgr->FindFirst<avatar::PlayerEntity>();
 
         switch (_intro.step)
