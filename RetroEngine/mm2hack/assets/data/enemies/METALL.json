@@ -2,21 +2,21 @@
     "id": "metall",
     "enemy_type": "minion",
     "name": "METALL",
-    "initial_state": "hidden",
+    "initial_state": "idle",
     "states": [
         {
-            "id": "hidden",
+            "id": "idle",
             "loop": false,
             "allow_movement": false,
             "frames": [
                 { "tile": 0, "wait": "hold" }
             ],
             "transitions": [
-                { "when": "timer", "frames": 90, "to": "wake_up" }
+                { "when": "player_near", "x": 48, "y": 24, "to": "rise" }
             ]
         },
         {
-            "id": "wake_up",
+            "id": "rise",
             "loop": false,
             "allow_movement": false,
             "frames": [
@@ -26,38 +26,37 @@
                 { "tile": 3, "wait": 6 }
             ],
             "transitions": [
-                { "when": "clip_finished", "to": "walk", "projectile_spawns": [
+                { "when": "clip_finished", "to": "jump", "jump_impulse": -4.0, "projectile_spawns": [
                     { "angle_deg": 0, "speed_px_per_frame": 3.0 },
                     { "angle_deg": -45, "speed_px_per_frame": 3.0 },
                     { "angle_deg": 45, "speed_px_per_frame": 3.0 }
-                ] },
-                { "when": "airborne", "to": "falling" }
+                ] }
             ]
         },
         {
-            "id": "walk",
-            "loop": true,
-            "move_speed_multiplier": 1.25,
-            "frames": [
-                { "tile": 4, "wait": 8 },
-                { "tile": 5, "wait": 8 },
-                { "tile": 6, "wait": 8 },
-                { "tile": 7, "wait": 8 }
-            ],
-            "transitions": [
-                { "when": "airborne", "to": "falling" },
-                { "when": "timer", "frames": 150, "to": "falling", "jump_impulse": -4.0 }
-            ]
-        },
-        {
-            "id": "falling",
+            "id": "jump",
             "loop": false,
-            "move_speed_multiplier": 2.0,
+            "move_speed_multiplier": 1.5,
             "frames": [
-                { "tile": 10, "wait": "hold" }
+                { "tile": 4, "wait": 6 },
+                { "tile": 8, "wait": 6 },
+                { "tile": 9, "wait": 6 },
+                { "tile": 10, "wait": 6 },
+                { "tile": 11, "wait": "hold" }
             ],
             "transitions": [
-                { "when": "grounded", "to": "walk" }
+                { "when": "grounded", "to": "cooldown" }
+            ]
+        },
+        {
+            "id": "cooldown",
+            "loop": false,
+            "allow_movement": false,
+            "frames": [
+                { "tile": 0, "wait": "hold" }
+            ],
+            "transitions": [
+                { "when": "timer", "frames": 30, "to": "idle" }
             ]
         }
     ],

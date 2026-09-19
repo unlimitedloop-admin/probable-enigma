@@ -59,8 +59,7 @@ namespace mm2hack::apps::world::entity::enemy::animation
         }
 
         // Evaluate this state's transitions in order; the first whose condition
-        // fires wins. PlayerNear/Grounded are reserved (see AnimationTypes.h)
-        // and never fire yet.
+        // fires wins.
         for (const auto& transition : state.transitions)
         {
             bool fires = false;
@@ -79,6 +78,9 @@ namespace mm2hack::apps::world::entity::enemy::animation
                 fires = !inputs.grounded;
                 break;
             case AnimationCondition::PlayerNear:
+                fires = inputs.player_dx <= transition.param_x &&
+                    inputs.player_dy <= transition.param_y;
+                break;
             default:
                 fires = false;
                 break;

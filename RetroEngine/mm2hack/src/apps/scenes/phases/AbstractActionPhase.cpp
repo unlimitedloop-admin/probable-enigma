@@ -613,6 +613,15 @@ namespace mm2hack::apps::scenes::phases
 
                 player->SetEntityContext(entity_ctx);
 
+                // Feeds this frame's player position to every enemy for
+                // AnimationCondition::PlayerNear, before their own Update()
+                // runs (see EnemyEntity::SetPlayerPosition()).
+                _ctx->entity_mgr->ForEachAlive<enemy::EnemyEntity>(
+                    [player](enemy::EnemyEntity& enemy_entity)
+                    {
+                        enemy_entity.SetPlayerPosition(player->pos);
+                    });
+
                 _ctx->entity_mgr->UpdateAll(&_ctx->scroll->GetView(), dt);
                 consumePlayerOutput_(*player);
                 spawnEnemyProjectiles_();

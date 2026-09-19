@@ -288,7 +288,13 @@ namespace mm2hack::apps::world::entity::enemy
         const double resolved_bottom_y = _gravity.Tick(_terrain, pos.x, pos.y + _half.y);
         pos.y = resolved_bottom_y - _half.y + (_gravity.IsOnGround() ? kVisualFloorSinkPx : 0.0);
 
-        _animator.Tick(animation::AnimationConditionInputs{ .grounded = _gravity.IsOnGround() });
+        animation::AnimationConditionInputs anim_inputs{ .grounded = _gravity.IsOnGround() };
+        if (_has_player_pos)
+        {
+            anim_inputs.player_dx = std::abs(_player_pos.x - pos.x);
+            anim_inputs.player_dy = std::abs(_player_pos.y - pos.y);
+        }
+        _animator.Tick(anim_inputs);
 
         // A transition that just fired may carry a jump impulse (see
         // AnimationTransition::jump_impulse) -- e.g. Met's periodic hop while

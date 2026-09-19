@@ -17,26 +17,31 @@
 
 namespace mm2hack::apps::world::entity::enemy::animation
 {
-    // Recognized transition triggers. PlayerNear is still reserved (fires
-    // never) until an entity has access to the player's position -- see
-    // AnimationStatePlayer::Tick(). Grounded/Airborne are implemented, driven
-    // by whatever AnimationConditionInputs the caller passes to Tick() each
-    // frame (see EnemyEntity, which feeds it from combat::SimpleGravityBody).
+    // Recognized transition triggers, all driven by whatever
+    // AnimationConditionInputs the caller passes to Tick() each frame (see
+    // EnemyEntity, which feeds Grounded/Airborne from combat::
+    // SimpleGravityBody and PlayerNear from whoever last called
+    // EnemyEntity::SetPlayerPosition()).
     enum class AnimationCondition : std::uint8_t
     {
         Timer,          // Fires after `param_frames` ticks spent in this state
         ClipFinished,   // Fires the instant a non-looping clip completes its last frame
-        PlayerNear,     // Reserved: player within (param_x, param_y) of the entity
+        PlayerNear,     // Fires while |player - entity| <= (param_x, param_y), both axes
         Grounded,       // Fires on a tick where AnimationConditionInputs::grounded is true
         Airborne,       // Fires on a tick where AnimationConditionInputs::grounded is false
     };
 
     // External signals AnimationStatePlayer::Tick() needs to evaluate
-    // conditions it can't determine from the clip data alone. Extend this as
-    // more conditions graduate from "reserved" to implemented.
+    // conditions it can't determine from the clip data alone.
     struct AnimationConditionInputs final
     {
         bool grounded{ true };
+        // Absolute horizontal/vertical distance to the player, in px. Left at
+        // this huge sentinel when the caller has no player position to report
+        // yet, so a PlayerNear transition simply never fires rather than
+        // firing spuriously against a stale (0,0).
+        double player_dx{ 1'000'000.0 };
+        double player_dy{ 1'000'000.0 };
     };
 
     // One frame of a clip: which tile to show, and how long (in ticks/frames,
@@ -74,8 +79,8 @@ namespace mm2hack::apps::world::entity::enemy::animation
     {
         AnimationCondition condition{ AnimationCondition::Timer };
         int param_frames{ 0 };     // Timer: frames to wait in-state before firing
-        double param_x{ 0.0 };     // PlayerNear (reserved): horizontal trigger half-range, px
-        double param_y{ 0.0 };     // PlayerNear (reserved): vertical trigger half-range, px
+        double param_x{ 0.0 };     // PlayerNear: horizontal trigger half-range, px
+        double param_y{ 0.0 };     // PlayerNear: vertical trigger half-range, px
         std::string to_state;      // Target AnimationState::id
         // 0 = no jump (the common case -- most transitions are just a pose
         // change). Non-zero: the instant this transition fires, the entity's

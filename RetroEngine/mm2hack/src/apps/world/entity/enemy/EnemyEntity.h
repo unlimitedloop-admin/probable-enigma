@@ -175,6 +175,18 @@ namespace mm2hack::apps::world::entity::enemy
         void SetTerrainProbe(const systems::physics::ITerrainProbe* terrain) noexcept { _terrain = terrain; }
         [[nodiscard]] bool IsOnGround() const noexcept { return _gravity.IsOnGround(); }
 
+        // Wired externally once per frame, before Update() (see
+        // AbstractActionPhase::updateActive_(), which calls this on every alive
+        // EnemyEntity right before EntityManager::UpdateAll()) -- not part of
+        // saved state. Feeds AnimationCondition::PlayerNear; without a call
+        // this frame, PlayerNear transitions simply never fire (see
+        // AnimationConditionInputs' sentinel default).
+        void SetPlayerPosition(const Vec2& player_pos) noexcept
+        {
+            _player_pos = player_pos;
+            _has_player_pos = true;
+        }
+
         // Drains and returns any projectile spawns queued during the last
         // Update() (see AnimationTransition::projectile_spawns). Polled by
         // AbstractActionPhase after updating all entities -- EnemyEntity itself
@@ -218,5 +230,8 @@ namespace mm2hack::apps::world::entity::enemy
 
         rendering::sprite::SpriteManager::Id _projectile_sprite_id{ static_cast<rendering::sprite::SpriteManager::Id>(-1) };
         std::vector<common::SpawnProjectileCommand> _pending_projectile_spawns{}; // Drained each frame; not saved
+
+        Vec2 _player_pos{};        // See SetPlayerPosition(); not saved, re-wired externally every frame
+        bool _has_player_pos{ false };
     };
 }
