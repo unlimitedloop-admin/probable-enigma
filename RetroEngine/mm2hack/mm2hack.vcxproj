@@ -181,6 +181,7 @@
     <ClCompile Include="src\apps\scenes\sub-scenes\02-DemoStage2\DemoStage2.cpp" />
     <ClCompile Include="src\apps\systems\physics\CollisionLayer.cpp" />
     <ClCompile Include="src\apps\systems\physics\CollisionSystem.cpp" />
+    <ClCompile Include="src\apps\systems\physics\SimpleGravityBody.cpp" />
     <ClCompile Include="src\apps\systems\physics\TileQueryService.cpp" />
     <ClCompile Include="src\apps\systems\scrolling\atomic\FixedScrollDriver.cpp" />
     <ClCompile Include="src\apps\systems\scrolling\atomic\FreeScrollDriver.cpp" />
@@ -371,6 +372,7 @@
     <ClInclude Include="src\apps\systems\physics\Probes.h" />
     <ClInclude Include="src\apps\systems\physics\CollisionLayer.h" />
     <ClInclude Include="src\apps\systems\physics\CollisionSystem.h" />
+    <ClInclude Include="src\apps\systems\physics\SimpleGravityBody.h" />
     <ClInclude Include="src\apps\systems\physics\ICollider.h" />
     <ClInclude Include="src\apps\systems\physics\ITileMapProvider.h" />
     <ClInclude Include="src\apps\systems\physics\TileAttribute.h" />

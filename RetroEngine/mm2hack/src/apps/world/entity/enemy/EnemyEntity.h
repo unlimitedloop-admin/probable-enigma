@@ -27,6 +27,7 @@
 #include "apps/systems/combat/IDamageable.h"
 #include "apps/systems/physics/CollisionLayer.h"
 #include "apps/systems/physics/ICollider.h"
+#include "apps/systems/physics/SimpleGravityBody.h"
 #include "apps/systems/physics/TileAttribute.h"
 #include "apps/systems/view/RenderContext.h"
 #include "apps/systems/view/ViewState.h"
@@ -60,6 +61,14 @@ namespace mm2hack::apps::world::entity::enemy
         std::int32_t anim_frame_index{ 0 };
         std::int32_t anim_frame_elapsed{ 0 };
         std::int32_t anim_state_elapsed{ 0 };
+        // Already includes the spawn-time gravity_scale (same idea as
+        // move_speed_px_per_sec above -- the scale itself isn't needed again
+        // once these are computed).
+        double gravity_per_frame{ 0.0 };
+        double terminal_velocity_per_frame{ 0.0 };
+        // Live SimpleGravityBody snapshot.
+        double gravity_vel_y{ 0.0 };
+        bool on_ground{ false };
 
         bool Save(core::save::StateWriter& writer) const;
         bool Load(core::save::StateReader& reader);
@@ -87,6 +96,12 @@ namespace mm2hack::apps::world::entity::enemy
         // until real per-kind movement AI lands.
         static constexpr double kDefaultPatrolSpeedPxPerSec{ 20.0 };
         static constexpr double kDefaultPatrolRangePx{ 24.0 };
+        // Same per-frame values as PlayerTuning's normal (non-underwater)
+        // gravity/terminalVelocity -- see SimpleGravityBody.h for why this is a
+        // separate, independent constant rather than a shared reference to
+        // PlayerTuning itself.
+        static constexpr double kDefaultGravityPerFrame{ 0.25 };
+        static constexpr double kDefaultTerminalVelocityPerFrame{ 19.0 };
 
         // Fresh placement (level/test spawn).
         // `palette_preset_index`: which of the kind's EnemyDefinition::
@@ -101,6 +116,9 @@ namespace mm2hack::apps::world::entity::enemy
         // while patrolling left, for sheets with separate mirrored tiles (0 if
         // the sheet has none, or the art is symmetric).
         // `move_speed_scale`: multiplies kDefaultPatrolSpeedPxPerSec.
+        // `gravity_scale`: multiplies both kDefaultGravityPerFrame and
+        // kDefaultTerminalVelocityPerFrame, so heavier/floatier enemies can
+        // fall faster/slower than the player without a second knob.
         EnemyEntity(
             EnemyKind kind,
             Vec2 spawn_pos,
@@ -110,7 +128,8 @@ namespace mm2hack::apps::world::entity::enemy
             int facing_texture_offset_left,
             int toughness,
             Vec2 half_size,
-            double move_speed_scale = 1.0);
+            double move_speed_scale = 1.0,
+            double gravity_scale = 1.0);
         // Reconstruction from saved state (kind/toughness/etc. all come from
         // `state`). `animation_def` is resolved externally the same way as
         // `sprite_id` -- by `state.kind`, via EnemyDefinitionCatalog.
@@ -133,6 +152,12 @@ namespace mm2hack::apps::world::entity::enemy
         bool RestoreState(const EnemyEntityState& state) noexcept;
 
         [[nodiscard]] EnemyKind Kind() const noexcept { return _kind; }
+
+        // Wired externally after construction/restoration (mirrors PlayerEntity::
+        // SetTerrainProbe()) -- not part of saved state. Without it, Update()
+        // simply skips gravity for the frame (see SimpleGravityBody::Tick()).
+        void SetTerrainProbe(const systems::physics::ITerrainProbe* terrain) noexcept { _terrain = terrain; }
+        [[nodiscard]] bool IsOnGround() const noexcept { return _gravity.IsOnGround(); }
 
         // ICollider
         IEntity& OwnerEntity() noexcept override { return *this; }
@@ -162,5 +187,8 @@ namespace mm2hack::apps::world::entity::enemy
         double _spawn_x{ 0.0 };                         // Patrol center
         double _move_speed{ 0.0 };                      // px/sec, already includes the spawn-time scale
         int _facing{ 1 };                                // +1 right, -1 left
+
+        systems::physics::SimpleGravityBody _gravity{};  // Vertical physics (see SetTerrainProbe())
+        const systems::physics::ITerrainProbe* _terrain{ nullptr }; // Not saved; re-wired externally
     };
 }

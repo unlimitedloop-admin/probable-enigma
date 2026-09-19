@@ -25,8 +25,9 @@ namespace mm2hack::apps::world::entity::enemy::animation
         // Advances one tick. Assumed to be called once per game frame (60fps),
         // matching every other frame-stepped effect in this codebase (see
         // ChargeEffectEntity) -- durations in the data are frame counts, not
-        // wall-clock seconds.
-        void Tick() noexcept;
+        // wall-clock seconds. `inputs` carries whatever this frame's
+        // Grounded/Airborne/... signals are (see AnimationConditionInputs).
+        void Tick(const AnimationConditionInputs& inputs) noexcept;
 
         [[nodiscard]] int CurrentTile() const noexcept;
 

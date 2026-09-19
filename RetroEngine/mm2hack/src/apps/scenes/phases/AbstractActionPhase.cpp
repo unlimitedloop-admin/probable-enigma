@@ -29,6 +29,7 @@
 #include "apps/world/entity/effects/SlidingDustEffectEntity.h"
 #include "apps/world/entity/effects/SmallExplosionEffectEntity.h"
 #include "apps/world/entity/effects/SplashEffectEntity.h"
+#include "apps/world/entity/enemy/EnemyEntity.h"
 #include "apps/world/entity/EntityManager.h"
 #include "apps/world/entity/EntityStateFactory.h"
 #include "config/ConfigUIManager.h"
@@ -231,6 +232,14 @@ namespace mm2hack::apps::scenes::phases
         player->SetTerrainProbe(_ctx->terrain_probe.get());
         player->SetLadderService(_ctx->ladder_service.get());
         player->SetScrollRuleProvider(_ctx->scroll->Rules());
+
+        // EnemyEntity's ITerrainProbe* (needed for gravity) isn't part of its
+        // saved state either -- same reasoning as the player's above.
+        _ctx->entity_mgr->ForEachAlive<world::entity::enemy::EnemyEntity>(
+            [this](world::entity::enemy::EnemyEntity& enemy)
+            {
+                enemy.SetTerrainProbe(_ctx->terrain_probe.get());
+            });
         if (phase_state.phase == ActionPhaseState::Active)
         {
             player->SetInput(_ctx->input);

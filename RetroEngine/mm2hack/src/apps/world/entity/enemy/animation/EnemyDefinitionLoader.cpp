@@ -114,6 +114,11 @@ namespace mm2hack::apps::world::entity::enemy::animation
                 out.condition = AnimationCondition::Grounded;
                 return true;
             }
+            if (when == "airborne")
+            {
+                out.condition = AnimationCondition::Airborne;
+                return true;
+            }
             return false;
         }
 

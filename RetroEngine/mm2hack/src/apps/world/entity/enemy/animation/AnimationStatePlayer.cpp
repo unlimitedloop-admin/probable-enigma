@@ -11,7 +11,7 @@ namespace mm2hack::apps::world::entity::enemy::animation
         _state_index = (initial >= 0) ? initial : 0;
     }
 
-    void AnimationStatePlayer::Tick() noexcept
+    void AnimationStatePlayer::Tick(const AnimationConditionInputs& inputs) noexcept
     {
         if (_def == nullptr || _def->states.empty() ||
             _state_index < 0 || _state_index >= static_cast<int>(_def->states.size()))
@@ -69,8 +69,13 @@ namespace mm2hack::apps::world::entity::enemy::animation
             case AnimationCondition::ClipFinished:
                 fires = clip_finished_this_tick;
                 break;
-            case AnimationCondition::PlayerNear:
             case AnimationCondition::Grounded:
+                fires = inputs.grounded;
+                break;
+            case AnimationCondition::Airborne:
+                fires = !inputs.grounded;
+                break;
+            case AnimationCondition::PlayerNear:
             default:
                 fires = false;
                 break;

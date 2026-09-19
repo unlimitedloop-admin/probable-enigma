@@ -17,17 +17,26 @@
 
 namespace mm2hack::apps::world::entity::enemy::animation
 {
-    // Recognized transition triggers. PlayerNear/Grounded are reserved for once
-    // an entity has access to the player's position / terrain-probe grounded
-    // state -- until wired up, AnimationStatePlayer never fires them (see its
-    // Tick()). Declaring them now keeps the JSON schema stable across that
-    // future change instead of needing a new "condition" vocabulary later.
+    // Recognized transition triggers. PlayerNear is still reserved (fires
+    // never) until an entity has access to the player's position -- see
+    // AnimationStatePlayer::Tick(). Grounded/Airborne are implemented, driven
+    // by whatever AnimationConditionInputs the caller passes to Tick() each
+    // frame (see EnemyEntity, which feeds it from combat::SimpleGravityBody).
     enum class AnimationCondition : std::uint8_t
     {
         Timer,          // Fires after `param_frames` ticks spent in this state
         ClipFinished,   // Fires the instant a non-looping clip completes its last frame
         PlayerNear,     // Reserved: player within (param_x, param_y) of the entity
-        Grounded,       // Reserved: entity resting on solid ground
+        Grounded,       // Fires on a tick where AnimationConditionInputs::grounded is true
+        Airborne,       // Fires on a tick where AnimationConditionInputs::grounded is false
+    };
+
+    // External signals AnimationStatePlayer::Tick() needs to evaluate
+    // conditions it can't determine from the clip data alone. Extend this as
+    // more conditions graduate from "reserved" to implemented.
+    struct AnimationConditionInputs final
+    {
+        bool grounded{ true };
     };
 
     // One frame of a clip: which tile to show, and how long (in ticks/frames,

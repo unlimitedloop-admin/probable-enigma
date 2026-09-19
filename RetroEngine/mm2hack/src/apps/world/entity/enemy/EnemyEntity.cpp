@@ -52,7 +52,11 @@ namespace mm2hack::apps::world::entity::enemy
             writer.WriteI32(anim_state_index) &&
             writer.WriteI32(anim_frame_index) &&
             writer.WriteI32(anim_frame_elapsed) &&
-            writer.WriteI32(anim_state_elapsed);
+            writer.WriteI32(anim_state_elapsed) &&
+            writer.WriteF64(gravity_per_frame) &&
+            writer.WriteF64(terminal_velocity_per_frame) &&
+            writer.WriteF64(gravity_vel_y) &&
+            writer.WriteBool(on_ground);
     }
 
     bool EnemyEntityState::Load(core::save::StateReader& reader)
@@ -73,7 +77,11 @@ namespace mm2hack::apps::world::entity::enemy
             !reader.ReadI32(loaded.anim_state_index) ||
             !reader.ReadI32(loaded.anim_frame_index) ||
             !reader.ReadI32(loaded.anim_frame_elapsed) ||
-            !reader.ReadI32(loaded.anim_state_elapsed))
+            !reader.ReadI32(loaded.anim_state_elapsed) ||
+            !reader.ReadF64(loaded.gravity_per_frame) ||
+            !reader.ReadF64(loaded.terminal_velocity_per_frame) ||
+            !reader.ReadF64(loaded.gravity_vel_y) ||
+            !reader.ReadBool(loaded.on_ground))
         {
             return false;
         }
@@ -108,7 +116,11 @@ namespace mm2hack::apps::world::entity::enemy
             anim_state_index >= 0 && anim_state_index <= kMaximumAnimCounter &&
             anim_frame_index >= 0 && anim_frame_index <= kMaximumAnimCounter &&
             anim_frame_elapsed >= 0 && anim_frame_elapsed <= kMaximumAnimCounter &&
-            anim_state_elapsed >= 0 && anim_state_elapsed <= kMaximumAnimCounter;
+            anim_state_elapsed >= 0 && anim_state_elapsed <= kMaximumAnimCounter &&
+            std::isfinite(gravity_per_frame) && gravity_per_frame >= 0.0 && gravity_per_frame <= 100.0 &&
+            std::isfinite(terminal_velocity_per_frame) &&
+            terminal_velocity_per_frame >= 0.0 && terminal_velocity_per_frame <= 1'000.0 &&
+            std::isfinite(gravity_vel_y) && std::abs(gravity_vel_y) <= 1'000.0;
     }
 
     EnemyEntity::EnemyEntity(
@@ -120,7 +132,8 @@ namespace mm2hack::apps::world::entity::enemy
         int facing_texture_offset_left,
         int toughness,
         Vec2 half_size,
-        double move_speed_scale)
+        double move_speed_scale,
+        double gravity_scale)
         : _kind(kind), _id(sprite_id), _palette_preset_index(palette_preset_index),
           _facing_texture_offset_left(facing_texture_offset_left), _half(half_size),
           _toughness(toughness)
@@ -128,6 +141,10 @@ namespace mm2hack::apps::world::entity::enemy
         pos = spawn_pos;
         _spawn_x = spawn_pos.x;
         _move_speed = kDefaultPatrolSpeedPxPerSec * std::max(0.0, move_speed_scale);
+
+        const double scale = std::max(0.0, gravity_scale);
+        _gravity = systems::physics::SimpleGravityBody(
+            kDefaultGravityPerFrame * scale, kDefaultTerminalVelocityPerFrame * scale);
 
         const auto [max_hp, table] = HealthForToughness(toughness);
         _health = systems::combat::HealthComponent(max_hp, table);
@@ -176,6 +193,10 @@ namespace mm2hack::apps::world::entity::enemy
             .anim_frame_index = _animator.FrameIndex(),
             .anim_frame_elapsed = _animator.FrameElapsed(),
             .anim_state_elapsed = _animator.StateElapsed(),
+            .gravity_per_frame = _gravity.GravityPerFrame(),
+            .terminal_velocity_per_frame = _gravity.TerminalVelocityPerFrame(),
+            .gravity_vel_y = _gravity.VerticalVelocity(),
+            .on_ground = _gravity.IsOnGround(),
         };
     }
 
@@ -206,6 +227,13 @@ namespace mm2hack::apps::world::entity::enemy
         _spawn_x = state.spawn_x;
         _move_speed = state.move_speed_px_per_sec;
         _facing = state.facing;
+
+        _gravity = systems::physics::SimpleGravityBody(
+            state.gravity_per_frame, state.terminal_velocity_per_frame);
+        if (!_gravity.RestoreState({ state.gravity_vel_y, state.on_ground }))
+        {
+            return false;
+        }
         // NOTE: _animator itself is (re)attached by the reconstruction
         // constructor, which has the EnemyAnimationDef this needs and this
         // method doesn't. A fresh RestoreState() call on an already-live entity
@@ -221,7 +249,6 @@ namespace mm2hack::apps::world::entity::enemy
     void EnemyEntity::Update(const ViewState* view, double dt)
     {
         (void)view;
-        (void)dt;
 
         if (!IsAlive())
         {
@@ -246,7 +273,15 @@ namespace mm2hack::apps::world::entity::enemy
             _facing = -1;
         }
 
-        _animator.Tick();
+        // Vertical physics: gravity + ground snap. The player's own sprite
+        // sits 1px into the floor by design (confirmed correct in this
+        // project), so a ground-resting enemy gets the same nudge whenever
+        // SimpleGravityBody reports a (physics-flush) landing.
+        constexpr double kVisualFloorSinkPx = 1.0;
+        const double resolved_bottom_y = _gravity.Tick(_terrain, pos.x, pos.y + _half.y);
+        pos.y = resolved_bottom_y - _half.y + (_gravity.IsOnGround() ? kVisualFloorSinkPx : 0.0);
+
+        _animator.Tick(animation::AnimationConditionInputs{ .grounded = _gravity.IsOnGround() });
     }
 
     void EnemyEntity::Render(RenderContext& ctx)

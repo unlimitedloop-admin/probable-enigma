@@ -97,6 +97,13 @@ namespace mm2hack::apps::world::entity
         template <typename T>
         const T* FindFirst() const noexcept;
 
+        // Invokes `fn(T&)` for every currently alive entity of type T (dynamic_cast).
+        // Used for post-restore fixups that every entity of a type needs (e.g.
+        // re-wiring a non-owning ITerrainProbe* that isn't part of saved state --
+        // see AbstractActionPhase::RestoreEntityState()).
+        template <typename T, typename F>
+        void ForEachAlive(F&& fn);
+
         // Counts the number of alive entities of type T (dynamic_cast)
         template <typename T>
         std::size_t CountAlive() const noexcept;
@@ -171,6 +178,25 @@ namespace mm2hack::apps::world::entity
             }
         }
         return nullptr;
+    }
+
+    template <typename T, typename F>
+    void EntityManager::ForEachAlive(F&& fn)
+    {
+        static_assert(std::is_base_of_v<IEntity, T>, "T must derive from IEntity.");
+
+        for (auto& e : _entities)
+        {
+            if (!e || !e->IsAlive())
+            {
+                continue;
+            }
+
+            if (auto* p = dynamic_cast<T*>(e.get()); p != nullptr)
+            {
+                fn(*p);
+            }
+        }
     }
 
     template <typename T>

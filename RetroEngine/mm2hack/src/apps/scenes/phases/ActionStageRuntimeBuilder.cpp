@@ -152,33 +152,19 @@ namespace mm2hack::apps::scenes::phases
         player->texture = 0;
 
         // TODO(enemy verification): temporary hardcoded Met placement to verify
-        // the animation/collision/palette pipeline end-to-end before real
-        // level/enemy placement exists. Remove/replace once that lands. Spawns
-        // one of each palette preset (default/yellow/blue/red) in a row.
+        // the animation/collision/palette/gravity pipeline end-to-end before
+        // real level/enemy placement exists. Remove/replace once that lands.
+        // Spawns one of each palette preset (default/yellow/blue/red) in a row,
+        // a bit above the floor so gravity visibly drops and lands each one
+        // (also exercises the falling-pose animation transition).
         using world::entity::enemy::EnemyEntity;
         using world::entity::enemy::EnemyKind;
-        // PlayerEntity::pos is center-based (see its Bounds()/Render()), but the
-        // player's *resting-on-ground* Y is NOT pos.y + PlayerEntity's half-height
-        // (16px) -- it's governed by the ground probe the landing sweep snaps to
-        // tile boundaries with (Probes::refreshAll(), PlayerParams::PlayerProbes::
-        // groundLineOffsetY), which sits only 9px below pos.y, not 16px. So on
-        // flat ground: pos.y + kPlayerGroundProbeOffsetY == a tile-aligned floor
-        // line -- ground-resting entities shift down by
-        // (kPlayerGroundProbeOffsetY - their own half-height) to land on it.
-        constexpr double kPlayerGroundProbeOffsetY = 9.0; // mirrors PlayerProbes::groundLineOffsetY
         const auto* metall_def =
             runtime::GameContext::GetInstance().GetResourceManager().GetEnemyDefinitionCatalog().Find(EnemyKind::Met);
         if (metall_def != nullptr)
         {
             constexpr double kMetallHalfHeight = 16.0; // 32x32 tile
-            // The player's own sprite sits 1px into the floor by design (confirmed
-            // correct), so ground-resting objects that should visually match it
-            // get the same +1 nudge. kPlayerGroundProbeOffsetY alone (the physics
-            // constant) still lands exactly flush -- this is a purely visual offset
-            // on top of that.
-            constexpr double kVisualFloorSinkPx = 1.0;
-            const double metall_y =
-                player->pos.y + (kPlayerGroundProbeOffsetY - kMetallHalfHeight) + kVisualFloorSinkPx;
+            const double metall_spawn_y = player->pos.y - 32.0; // above the floor; gravity does the rest
 
             for (int preset_index = 0; preset_index < static_cast<int>(metall_def->palette_presets.size()); ++preset_index)
             {
@@ -187,18 +173,20 @@ namespace mm2hack::apps::scenes::phases
                 {
                     continue;
                 }
-                ctx.entity_mgr->Spawn<EnemyEntity>(
+                auto& metall = ctx.entity_mgr->Spawn<EnemyEntity>(
                     EnemyKind::Met,
                     foundation::math::Vec2{
                         player->pos.x + 96.0 + static_cast<double>(preset_index) * 40.0,
-                        metall_y },
+                        metall_spawn_y },
                     metall_sprite_id,
                     preset_index,
                     &metall_def->animation,
                     /* facing_texture_offset_left */ 12,
                     /* toughness */ 2,
                     foundation::math::Vec2{ kMetallHalfHeight, kMetallHalfHeight },
-                    /* move_speed_scale */ 1.0);
+                    /* move_speed_scale */ 1.0,
+                    /* gravity_scale */ 1.0);
+                metall.SetTerrainProbe(ctx.terrain_probe.get());
             }
         }
     }
