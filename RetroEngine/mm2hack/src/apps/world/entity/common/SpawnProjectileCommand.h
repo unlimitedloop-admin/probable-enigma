@@ -43,6 +43,13 @@ namespace mm2hack::apps::world::entity::common
         int power{ 1 };                                                     // Attack power (damage) carried on contact
         foundation::math::Vec2 hitHalfSize{ 2.0, 2.0 };                     // Half-size of the attack hit judgement box (independent of the sprite's draw size)
 
+        // Whether this shot despawns on touching a solid/damage tile (see
+        // ProjectileEntity::checkTerrainCollision_()). Off by default: most
+        // existing shots (Rock Buster, Met's energy shot) are meant to fly
+        // through terrain unaffected. A weapon whose shots should die or
+        // deflect on field contact opts in per spawn.
+        bool terrainCollisionEnabled{ false };
+
         // Which collidable layer this shot belongs to, and which weapon it's
         // reported as for resistance lookups. Default to the player's own Rock
         // Buster so every existing spawn call keeps working unchanged; an enemy

@@ -240,6 +240,13 @@ namespace mm2hack::apps::scenes::phases
             {
                 enemy.SetTerrainProbe(_ctx->terrain_probe.get());
             });
+        // ProjectileEntity's ITerrainProbe* (needed for wall/floor despawn) isn't
+        // part of its saved state either -- same reasoning as the enemy's above.
+        _ctx->entity_mgr->ForEachAlive<world::entity::effects::ProjectileEntity>(
+            [this](world::entity::effects::ProjectileEntity& projectile)
+            {
+                projectile.SetTerrainProbe(_ctx->terrain_probe.get());
+            });
         if (phase_state.phase == ActionPhaseState::Active)
         {
             player->SetInput(_ctx->input);
@@ -558,7 +565,8 @@ namespace mm2hack::apps::scenes::phases
 
         if (output.projectile.has_value())
         {
-            _ctx->entity_mgr->Spawn<world::entity::effects::ProjectileEntity>(*output.projectile);
+            auto& projectile = _ctx->entity_mgr->Spawn<world::entity::effects::ProjectileEntity>(*output.projectile);
+            projectile.SetTerrainProbe(_ctx->terrain_probe.get());
         }
 
         if (output.splashEffect.has_value())
@@ -833,7 +841,8 @@ namespace mm2hack::apps::scenes::phases
             {
                 for (auto& cmd : enemy.ConsumePendingProjectileSpawns())
                 {
-                    _ctx->entity_mgr->Spawn<world::entity::effects::ProjectileEntity>(cmd);
+                    auto& projectile = _ctx->entity_mgr->Spawn<world::entity::effects::ProjectileEntity>(cmd);
+                    projectile.SetTerrainProbe(_ctx->terrain_probe.get());
                 }
             });
     }

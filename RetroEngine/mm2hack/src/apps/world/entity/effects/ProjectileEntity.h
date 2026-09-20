@@ -17,6 +17,7 @@
 #include "apps/systems/physics/CollisionLayer.h"
 #include "apps/systems/physics/IAttackInfo.h"
 #include "apps/systems/physics/ICollider.h"
+#include "apps/systems/physics/ITerrainProbe.h"
 #include "apps/systems/physics/TileAttribute.h"
 #include "apps/systems/view/RenderContext.h"
 #include "apps/systems/view/ViewState.h"
@@ -41,6 +42,7 @@ namespace mm2hack::apps::world::entity::effects
         foundation::math::Vec2 hit_half_size{ 2.0, 2.0 };
         systems::physics::CollisionLayer collision_layer{ systems::physics::CollisionLayer::ProjectilePlayer };
         systems::physics::WeaponId weapon{ systems::physics::WeaponId::Buster };
+        bool terrain_collision_enabled{ false };
 
         bool Save(core::save::StateWriter& writer) const;
         bool Load(core::save::StateReader& reader);
@@ -57,7 +59,7 @@ namespace mm2hack::apps::world::entity::effects
         using TileAttribute = systems::physics::TileAttribute;
 
     public:
-        static constexpr std::uint16_t kStateVersion{ 2 };
+        static constexpr std::uint16_t kStateVersion{ 3 };
 
         explicit ProjectileEntity(const common::SpawnProjectileCommand& cmd);
         ProjectileEntity(
@@ -76,6 +78,11 @@ namespace mm2hack::apps::world::entity::effects
         [[nodiscard]] ProjectileEntityState CaptureState() const noexcept;
         bool RestoreState(const ProjectileEntityState& state) noexcept;
 
+        // Wired externally after construction/restoration (mirrors EnemyEntity::
+        // SetTerrainProbe()) -- not part of saved state. Without it, Update()
+        // simply skips terrain collision for the frame (the shot flies through walls).
+        void SetTerrainProbe(const systems::physics::ITerrainProbe* terrain) noexcept { _terrain = terrain; }
+
         // ICollider
         IEntity& OwnerEntity() noexcept override { return *this; }
         const IEntity& OwnerEntity() const noexcept override { return *this; }
@@ -90,6 +97,12 @@ namespace mm2hack::apps::world::entity::effects
         // A charged Rock Buster shot is still the Buster -- charge level only
         // changes AttackPower(), not the weapon (see SpawnProjectileCommand::weapon).
         [[nodiscard]] systems::physics::WeaponId Weapon() const noexcept override { return _weapon; }
+
+    private:
+        // Samples the terrain at the hit box's leading edge (in the direction of
+        // travel) and reports whether it has run into a solid tile. No-op (false)
+        // when no ITerrainProbe has been wired -- see SetTerrainProbe().
+        [[nodiscard]] bool checkTerrainCollision_() const;
 
     private:
         systems::view::Layer _draw_layer{ systems::view::Layer::Actors }; // Drawing layer
@@ -109,5 +122,8 @@ namespace mm2hack::apps::world::entity::effects
         foundation::math::Vec2 _hit_half_size{ 2.0, 2.0 }; // Half-size of the attack hit judgement box (independent of _half)
         CollisionLayer _collision_layer{ CollisionLayer::ProjectilePlayer };
         systems::physics::WeaponId _weapon{ systems::physics::WeaponId::Buster };
+        bool _terrain_collision_enabled{ false };       // Per-shot opt-in; see SpawnProjectileCommand::terrainCollisionEnabled
+
+        const systems::physics::ITerrainProbe* _terrain{ nullptr }; // Not saved; re-wired externally
     };
 }

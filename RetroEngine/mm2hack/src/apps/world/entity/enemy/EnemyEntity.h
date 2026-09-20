@@ -109,7 +109,14 @@ namespace mm2hack::apps::world::entity::enemy
         // projectile_spawns) -- revisit as a per-spawn parameter if a second
         // kind needs a different value.
         static constexpr int kDefaultProjectilePower{ 1 };
-        static constexpr Vec2 kDefaultProjectileHitHalfSize{ 3.0, 3.0 };
+        // The ring sprite's actual opaque pixels only cover an 8x8 area centered
+        // in its 16x16 tile (ENEMY_PROJECTILES_N0_ALL_PATTERN.png); {3,3} (a 6x6
+        // box) covered 75% of that, far stricter than the player's own Rock
+        // Buster pellet (a 4x4 box against an ~11x6 visible sprite -- see
+        // AttackActionState::AttackTuning::normalHitHalfSize). Matched to the
+        // Buster's box size so an enemy shot is at least as forgiving to the
+        // player as the player's own shot is to enemies.
+        static constexpr Vec2 kDefaultProjectileHitHalfSize{ 2.0, 2.0 };
 
         // Fresh placement (level/test spawn).
         // `palette_preset_index`: which of the kind's EnemyDefinition::

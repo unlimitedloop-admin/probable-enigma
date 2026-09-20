@@ -57,7 +57,8 @@ namespace mm2hack::apps::world::entity::effects
             writer.WriteF64(hit_half_size.x) &&
             writer.WriteF64(hit_half_size.y) &&
             writer.WriteU8(static_cast<std::uint8_t>(collision_layer)) &&
-            writer.WriteU8(static_cast<std::uint8_t>(weapon));
+            writer.WriteU8(static_cast<std::uint8_t>(weapon)) &&
+            writer.WriteBool(terrain_collision_enabled);
     }
 
     bool ProjectileEntityState::Load(core::save::StateReader& reader)
@@ -80,7 +81,8 @@ namespace mm2hack::apps::world::entity::effects
             !reader.ReadF64(loaded.hit_half_size.x) ||
             !reader.ReadF64(loaded.hit_half_size.y) ||
             !reader.ReadU8(encoded_collision_layer) ||
-            !reader.ReadU8(encoded_weapon))
+            !reader.ReadU8(encoded_weapon) ||
+            !reader.ReadBool(loaded.terrain_collision_enabled))
         {
             return false;
         }
@@ -140,6 +142,7 @@ namespace mm2hack::apps::world::entity::effects
         _hit_half_size = cmd.hitHalfSize;
         _collision_layer = cmd.collisionLayer;
         _weapon = cmd.weapon;
+        _terrain_collision_enabled = cmd.terrainCollisionEnabled;
     }
 
     ProjectileEntity::ProjectileEntity(
@@ -172,6 +175,7 @@ namespace mm2hack::apps::world::entity::effects
             .hit_half_size = _hit_half_size,
             .collision_layer = _collision_layer,
             .weapon = _weapon,
+            .terrain_collision_enabled = _terrain_collision_enabled,
         };
     }
 
@@ -193,6 +197,7 @@ namespace mm2hack::apps::world::entity::effects
         _hit_half_size = state.hit_half_size;
         _collision_layer = state.collision_layer;
         _weapon = state.weapon;
+        _terrain_collision_enabled = state.terrain_collision_enabled;
         return true;
     }
 
@@ -215,6 +220,12 @@ namespace mm2hack::apps::world::entity::effects
         // A non-positive lifetime is the existing sentinel for an entity that
         // remains alive until it leaves the active view.
         if (_life_sec > 0.0 && _age_sec >= _life_sec)
+        {
+            Kill();
+            return;
+        }
+
+        if (checkTerrainCollision_())
         {
             Kill();
             return;
@@ -243,9 +254,32 @@ namespace mm2hack::apps::world::entity::effects
 
     void ProjectileEntity::OnTileCollision(const Vec2& normal, TileAttribute attr)
     {
-        // TODO: Projectiles don't interact with terrain yet (no wall-hit despawn/spark).
+        // Unused: nothing in this codebase drives entities through ICollider::
+        // OnTileCollision yet (PlayerEntity/EnemyEntity resolve terrain directly
+        // in their own Update() too). See checkTerrainCollision_() for the actual
+        // wall/floor despawn logic.
         (void)normal;
         (void)attr;
+    }
+
+    bool ProjectileEntity::checkTerrainCollision_() const
+    {
+        if (!_terrain_collision_enabled || _terrain == nullptr)
+        {
+            return false;
+        }
+
+        // Point-sample the leading corner of the hit box in the direction of
+        // travel. Good enough for the small, fast, mostly axis-aligned shots
+        // this engine spawns; a stationary shot (vel == 0) samples its
+        // bottom-right corner, which never matters since it can't be moving
+        // into a wall in the first place.
+        const double lead_x = pos.x + (vel.x >= 0.0 ? _hit_half_size.x : -_hit_half_size.x);
+        const double lead_y = pos.y + (vel.y >= 0.0 ? _hit_half_size.y : -_hit_half_size.y);
+
+        const TileAttribute attr = _terrain->AttributeAt(lead_x, lead_y);
+        return systems::physics::Has(attr, TileAttribute::Solid) ||
+            systems::physics::Has(attr, TileAttribute::Damage);
     }
 
     void ProjectileEntity::OnEntityCollision(IEntity& other)
