@@ -6,10 +6,11 @@
 //  Generic, data-driven enemy. One class covers every EnemyKind: sprite id,
 //  which palette preset (color), toughness (resistance), a movement speed
 //  multiplier, and the animation state graph itself are all supplied per
-//  spawn rather than hardcoded per kind. Movement is a simple left-right
-//  patrol for now; per-kind movement AI (chase, hide, fly patterns, ...) is
-//  future work, layered on top of the animation::AnimationStatePlayer this
-//  entity already drives.
+//  spawn rather than hardcoded per kind. Always faces the player and hops
+//  toward them per its animation state graph's own movement/timing (e.g.
+//  Met's proximity-triggered rise-shoot-jump); per-kind movement AI beyond
+//  that (fly patterns, ranged retreat, ...) is future work, layered on top
+//  of the animation::AnimationStatePlayer this entity already drives.
 //
 //==============================================================================
 #pragma once
@@ -54,7 +55,7 @@ namespace mm2hack::apps::world::entity::enemy
         std::int32_t toughness{ 1 };
         std::int32_t hp{ 1 };                          // Current HP (meaningless/always full when toughness == 0)
         foundation::math::Vec2 half_size{ 8.0, 8.0 };
-        double spawn_x{};                              // Patrol center; independent of the live, moving pos.x
+        double spawn_x{};                              // Original spawn X, kept for future leash/return-to-post AI; independent of the live, moving pos.x
         double move_speed_px_per_sec{};                // Already includes the spawn-time speed scale
         std::int32_t facing{ 1 };                       // +1 = moving right, -1 = moving left
         // AnimationStatePlayer snapshot. Only structurally sanity-checked here
@@ -94,11 +95,11 @@ namespace mm2hack::apps::world::entity::enemy
 
     public:
         static constexpr std::uint16_t kStateVersion{ 1 };
-        // Basic patrol tuning (px/sec at scale=1.0, and the +-range around
-        // spawn_x it walks before turning). Not yet per-kind; a placeholder
-        // until real per-kind movement AI lands.
+        // Base horizontal speed (px/sec at scale=1.0) for whatever locomotion
+        // the current animation state allows (e.g. Met's hop toward the player
+        // during its "jump" state). Not yet per-kind; a placeholder until real
+        // per-kind movement AI lands.
         static constexpr double kDefaultPatrolSpeedPxPerSec{ 20.0 };
-        static constexpr double kDefaultPatrolRangePx{ 24.0 };
         // Same per-frame values as PlayerTuning's normal (non-underwater)
         // gravity/terminalVelocity -- see SimpleGravityBody.h for why this is a
         // separate, independent constant rather than a shared reference to
@@ -128,7 +129,7 @@ namespace mm2hack::apps::world::entity::enemy
         // `toughness`: 0 = invincible, N = dies after N hits' worth of
         // accumulated normal-shot power (1 = one-hit kill).
         // `facing_texture_offset_left`: added to the animator's current tile
-        // while patrolling left, for sheets with separate mirrored tiles (0 if
+        // while facing left, for sheets with separate mirrored tiles (0 if
         // the sheet has none, or the art is symmetric).
         // `move_speed_scale`: multiplies kDefaultPatrolSpeedPxPerSec.
         // `gravity_scale`: multiplies both kDefaultGravityPerFrame and
@@ -163,8 +164,9 @@ namespace mm2hack::apps::world::entity::enemy
 
         // Get drawing layer (IRenderable)
         systems::view::Layer DrawLayer() const noexcept override;
-        // Main update (IUpdatable) -- left-right patrol between spawn_x +- range,
-        // and steps the animation state machine one tick
+        // Main update (IUpdatable) -- faces the player, moves per the current
+        // animation state's own rules, and steps the animation state machine
+        // one tick
         void Update(const systems::view::ViewState* view, double dt) override;
         // Render (IRenderable)
         void Render(systems::view::RenderContext& ctx) override;
@@ -228,9 +230,9 @@ namespace mm2hack::apps::world::entity::enemy
         int _toughness{ 1 };                            // Raw tuning value driving _health's (max_hp, table); saved as-is
         animation::AnimationStatePlayer _animator{};    // Drives which tile is currently shown
 
-        double _spawn_x{ 0.0 };                         // Patrol center
+        double _spawn_x{ 0.0 };                         // Original spawn X (unused for behavior currently; see EnemyEntityState::spawn_x)
         double _move_speed{ 0.0 };                      // px/sec, already includes the spawn-time scale
-        int _facing{ 1 };                                // +1 right, -1 left
+        int _facing{ 1 };                                // +1 right, -1 left; tracks the player every frame once SetPlayerPosition() has been called (see Update())
 
         systems::physics::SimpleGravityBody _gravity{};  // Vertical physics (see SetTerrainProbe())
         const systems::physics::ITerrainProbe* _terrain{ nullptr }; // Not saved; re-wired externally

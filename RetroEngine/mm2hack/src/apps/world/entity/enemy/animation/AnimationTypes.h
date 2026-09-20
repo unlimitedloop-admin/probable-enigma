@@ -108,6 +108,14 @@ namespace mm2hack::apps::world::entity::enemy::animation
         // Multiplies the entity's own base horizontal speed while this state
         // is active (e.g. faster horizontal drift mid-jump than while walking).
         double move_speed_multiplier{ 1.0 };
+        // Whether the entity re-aims its facing at the player's current
+        // position while this state is active (see EnemyEntity::Update()).
+        // True by default (e.g. an idle/waiting state should always be ready
+        // to aim); a committed attack -- Met's rise/jump/cooldown -- sets this
+        // false so the facing it locked in when the attack started (and every
+        // shot/hop direction derived from it) can't flip mid-attack just
+        // because the player crossed to the other side.
+        bool track_player_facing{ true };
     };
 
     // One creature's full animation graph, loaded once from its JSON pattern

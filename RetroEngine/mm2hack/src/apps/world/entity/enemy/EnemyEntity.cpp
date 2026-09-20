@@ -257,27 +257,29 @@ namespace mm2hack::apps::world::entity::enemy
             return;
         }
 
-        // Basic left-right patrol, bouncing between spawn_x +- range. Real
-        // per-kind movement (ledge/wall detection, chase, fly patterns, ...) is
-        // future work; this only exists to exercise the move-speed knob.
-        // Gated by the current animation state (see AnimationState::
-        // allow_movement) -- e.g. Met holds still while hidden under its helmet.
+        // Re-aim at the player, independent of AllowsMovement() -- e.g. Met is
+        // still "idle" (no locomotion) when it needs to already be facing the
+        // right way for the shots its next "rise" fires. Gated by
+        // TracksPlayerFacing() (see AnimationState::track_player_facing) so a
+        // committed attack -- Met's rise/jump/cooldown -- keeps whatever
+        // facing it locked in when the attack started, even if the player
+        // crosses to the other side mid-attack; it only re-aims once back in
+        // a state that allows it (idle). Left alone (at whatever it was,
+        // default +1) until the first SetPlayerPosition() call arrives.
+        if (_has_player_pos && _animator.TracksPlayerFacing())
+        {
+            _facing = (_player_pos.x < pos.x) ? -1 : 1;
+        }
+
+        // Horizontal locomotion (e.g. Met's hop during its "jump" state) in
+        // the facing direction above. Gated by the current animation state
+        // (see AnimationState::allow_movement) -- e.g. Met holds still while
+        // hidden under its helmet. No patrol range/turnaround here anymore:
+        // since facing now always tracks the player instead of bouncing
+        // between fixed bounds, clamping position would fight that.
         if (_animator.AllowsMovement())
         {
             pos.x += static_cast<double>(_facing) * _move_speed * _animator.MoveSpeedMultiplier() * dt;
-
-            const double left = _spawn_x - kDefaultPatrolRangePx;
-            const double right = _spawn_x + kDefaultPatrolRangePx;
-            if (pos.x <= left)
-            {
-                pos.x = left;
-                _facing = 1;
-            }
-            else if (pos.x >= right)
-            {
-                pos.x = right;
-                _facing = -1;
-            }
         }
 
         // Vertical physics: gravity + ground snap. The player's own sprite

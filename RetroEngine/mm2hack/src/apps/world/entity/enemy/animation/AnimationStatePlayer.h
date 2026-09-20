@@ -37,6 +37,10 @@ namespace mm2hack::apps::world::entity::enemy::animation
         // Multiplies the caller's own base horizontal speed (see
         // AnimationState::move_speed_multiplier). 1.0 with no attached definition.
         [[nodiscard]] double MoveSpeedMultiplier() const noexcept;
+        // Whether the current state should re-aim facing at the player (see
+        // AnimationState::track_player_facing). Permissive (true) with no
+        // attached definition, matching the rest of this class's null-safety.
+        [[nodiscard]] bool TracksPlayerFacing() const noexcept;
         // 0.0 normally; non-zero only immediately after a Tick() where a
         // transition carrying a jump_impulse fired (see AnimationTransition::
         // jump_impulse) -- read this right after calling Tick(), same frame.

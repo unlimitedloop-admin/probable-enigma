@@ -12,13 +12,14 @@
                 { "tile": 0, "wait": "hold" }
             ],
             "transitions": [
-                { "when": "player_near", "x": 48, "y": 24, "to": "rise" }
+                { "when": "player_near", "x": 80, "y": 24, "to": "rise" }
             ]
         },
         {
             "id": "rise",
             "loop": false,
             "allow_movement": false,
+            "track_player_facing": false,
             "frames": [
                 { "tile": 0, "wait": 6 },
                 { "tile": 1, "wait": 6 },
@@ -37,6 +38,7 @@
             "id": "jump",
             "loop": false,
             "move_speed_multiplier": 1.5,
+            "track_player_facing": false,
             "frames": [
                 { "tile": 8, "wait": 6 },
                 { "tile": 9, "wait": 6 },
@@ -50,6 +52,7 @@
             "id": "cooldown",
             "loop": false,
             "allow_movement": false,
+            "track_player_facing": false,
             "frames": [
                 { "tile": 0, "wait": "hold" }
             ],

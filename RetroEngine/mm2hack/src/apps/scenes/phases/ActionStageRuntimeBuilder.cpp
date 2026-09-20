@@ -154,9 +154,9 @@ namespace mm2hack::apps::scenes::phases
         // TODO(enemy verification): temporary hardcoded Met placement to verify
         // the animation/collision/palette/gravity pipeline end-to-end before
         // real level/enemy placement exists. Remove/replace once that lands.
-        // Spawns one of each palette preset (default/yellow/blue/red) in a row,
-        // a bit above the floor so gravity visibly drops and lands each one
-        // (also exercises the falling-pose animation transition).
+        // Only the default palette preset is spawned for now -- the recolor
+        // pipeline itself (yellow/blue/red) was already verified separately and
+        // doesn't need a live instance of each cluttering every behavior test.
         using world::entity::enemy::EnemyEntity;
         using world::entity::enemy::EnemyKind;
         const auto* metall_def =
@@ -165,21 +165,16 @@ namespace mm2hack::apps::scenes::phases
         {
             constexpr double kMetallHalfHeight = 16.0; // 32x32 tile
             const double metall_spawn_y = player->pos.y - 32.0; // above the floor; gravity does the rest
+            constexpr int kDefaultPresetIndex = 0;
 
-            for (int preset_index = 0; preset_index < static_cast<int>(metall_def->palette_presets.size()); ++preset_index)
+            rendering::sprite::SpriteManager::Id metall_sprite_id{};
+            if (ctx.asset_provider->TryEnemySprite(EnemyKind::Met, kDefaultPresetIndex, metall_sprite_id))
             {
-                rendering::sprite::SpriteManager::Id metall_sprite_id{};
-                if (!ctx.asset_provider->TryEnemySprite(EnemyKind::Met, preset_index, metall_sprite_id))
-                {
-                    continue;
-                }
                 auto& metall = ctx.entity_mgr->Spawn<EnemyEntity>(
                     EnemyKind::Met,
-                    foundation::math::Vec2{
-                        player->pos.x + 96.0 + static_cast<double>(preset_index) * 40.0,
-                        metall_spawn_y },
+                    foundation::math::Vec2{ player->pos.x + 96.0, metall_spawn_y },
                     metall_sprite_id,
-                    preset_index,
+                    kDefaultPresetIndex,
                     &metall_def->animation,
                     /* facing_texture_offset_left */ 12,
                     /* toughness */ 3,

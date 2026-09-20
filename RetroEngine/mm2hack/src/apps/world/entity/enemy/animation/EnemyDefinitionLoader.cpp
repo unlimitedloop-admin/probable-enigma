@@ -168,6 +168,7 @@ namespace mm2hack::apps::world::entity::enemy::animation
             if (!try_read_bool(source, "loop", false, out.clip.loop)) return false;
             if (!try_read_bool(source, "allow_movement", true, out.allow_movement)) return false;
             if (!try_read_nonnegative_double(source, "move_speed_multiplier", 1.0, out.move_speed_multiplier)) return false;
+            if (!try_read_bool(source, "track_player_facing", true, out.track_player_facing)) return false;
 
             const auto frames = source.find("frames");
             if (frames == source.end() || !frames->is_array() || frames->empty()) return false;
