@@ -44,6 +44,8 @@ namespace mm2hack::apps::rendering::sprite
         // Variant info
         [[nodiscard]] inline int MaxVariant() const noexcept { return _catalog.MaxVariantAcross(); }
         [[nodiscard]] int VariantCountById(Id id) const;
+        // Frame (tile) count for the given sprite -- 0 if `id` is invalid.
+        [[nodiscard]] int FrameCountById(Id id) const;
         void SetGlobalVariantClamped(int v) noexcept;
 
         // Variant (palette step) controls

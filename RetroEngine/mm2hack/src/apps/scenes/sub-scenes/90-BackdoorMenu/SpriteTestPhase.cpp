@@ -153,10 +153,37 @@ namespace mm2hack::apps::scenes
                 break;
             }
 
+            frameCount_ = sprites.FrameCountById(spriteId_);
             patterns_ = LoadPatterns(PatternJsonPathFor(character_));
 
-            // +1 for the trailing BACK row.
-            cursorCtl_.SetItemCount(static_cast<int>(patterns_.size()) + 1);
+            buildRows_();
+        }
+
+        void SpriteTestPhase::buildRows_()
+        {
+            rows_.clear();
+            int y = 16;
+
+            // PALETTE TABLE is a placeholder row -- non-selectable until that
+            // mode is actually built (see SpriteTestPhase.h's RowKind comment).
+            rows_.push_back({ L"PALETTE TABLE", RowKind::PaletteTable, -1, false, y }); y += 10;
+            rows_.push_back({ L"ORIGINAL SHEET", RowKind::OriginalSheet, -1, true, y }); y += 10;
+            y += 10; // Blank line, matches the target layout's gap before the pattern list.
+
+            for (int i = 0; i < static_cast<int>(patterns_.size()); ++i)
+            {
+                rows_.push_back({ patterns_[static_cast<std::size_t>(i)].label, RowKind::Pattern, i, true, y });
+                y += 10;
+            }
+            rows_.push_back({ L"BACK", RowKind::Back, -1, true, y });
+
+            selectableRows_.clear();
+            for (int i = 0; i < static_cast<int>(rows_.size()); ++i)
+            {
+                if (rows_[static_cast<std::size_t>(i)].selectable) selectableRows_.push_back(i);
+            }
+
+            cursorCtl_.SetItemCount(static_cast<int>(selectableRows_.size()));
             cursorCtl_.SetIndex(0);
         }
 
@@ -183,6 +210,22 @@ namespace mm2hack::apps::scenes
                 return;
             }
 
+            if (subState_ == SubState::TileBrowse)
+            {
+                // Reel-counter style: wraps at both ends instead of clamping.
+                if (frameCount_ > 0)
+                {
+                    if (input->JustPressed(JPBTN::DOWN)) { tileBrowseIndex_ = (tileBrowseIndex_ + 1) % frameCount_; }
+                    if (input->JustPressed(JPBTN::UP)) { tileBrowseIndex_ = (tileBrowseIndex_ - 1 + frameCount_) % frameCount_; }
+                }
+                if (cancelled)
+                {
+                    owner.Resource()->GetAudioManager().PlaySe(L"plink_ring");
+                    subState_ = SubState::PatternSelect;
+                }
+                return;
+            }
+
             // SubState::PatternSelect
             if (input->JustPressed(JPBTN::DOWN)) { cursorCtl_.Move(+1); }
             if (input->JustPressed(JPBTN::UP)) { cursorCtl_.Move(-1); }
@@ -190,14 +233,7 @@ namespace mm2hack::apps::scenes
             if (verified)
             {
                 owner.Resource()->GetAudioManager().PlaySe(L"plink_ring");
-                if (cursorCtl_.Index() < static_cast<int>(patterns_.size()))
-                {
-                    startPreview_();
-                }
-                else
-                {
-                    goBackToCharacterSelect_();
-                }
+                activateRow_(rows_[static_cast<std::size_t>(selectableRows_[static_cast<std::size_t>(cursorCtl_.Index())])]);
                 return;
             }
             if (cancelled)
@@ -207,22 +243,38 @@ namespace mm2hack::apps::scenes
             }
         }
 
+        void SpriteTestPhase::activateRow_(const MenuRow& row) noexcept
+        {
+            switch (row.kind)
+            {
+            case RowKind::PaletteTable:
+                break; // Non-selectable for now; unreachable via cursor navigation.
+            case RowKind::OriginalSheet:
+                enterTileBrowse_();
+                break;
+            case RowKind::Pattern:
+                startPreview_(row.patternIndex);
+                break;
+            case RowKind::Back:
+                goBackToCharacterSelect_();
+                break;
+            }
+        }
+
         void SpriteTestPhase::RenderWorld()
         {
             owner.StarField().DrawStars();
 
             auto& fonts = owner.Resource()->GetFontTileManager();
-            int y = 16;
-            for (const auto& pattern : patterns_)
+            for (const auto& row : rows_)
             {
-                fonts.DrawTextImage(pattern.label.c_str(), 30, y);
-                y += 10;
+                fonts.DrawTextImage(row.label.c_str(), 30, row.y);
             }
-            fonts.DrawTextImage(L"BACK", 30, y);
 
             if (subState_ == SubState::PatternSelect)
             {
-                owner.Cursor().DrawAt(16, 16 + cursorCtl_.Index() * 10);
+                const int row = selectableRows_[static_cast<std::size_t>(cursorCtl_.Index())];
+                owner.Cursor().DrawAt(16, rows_[static_cast<std::size_t>(row)].y);
             }
 
             int tile = idleTile_();
@@ -232,6 +284,13 @@ namespace mm2hack::apps::scenes
                 {
                     tile = pattern->clip.frames[static_cast<std::size_t>(frameIndex_)].tile;
                 }
+            }
+            else if (subState_ == SubState::TileBrowse)
+            {
+                tile = tileBrowseIndex_;
+                std::wstring number = std::to_wstring(tileBrowseIndex_);
+                if (number.size() < 2) { number = L"0" + number; }
+                fonts.DrawTextImage(number.c_str(), 170, 80);
             }
 
             auto& sprites = owner.Resource()->GetSpriteManager();
@@ -271,10 +330,17 @@ namespace mm2hack::apps::scenes
                 next);
         }
 
-        void SpriteTestPhase::startPreview_() noexcept
+        void SpriteTestPhase::startPreview_(int patternIndex) noexcept
         {
+            previewingPatternIndex_ = patternIndex;
             subState_ = SubState::Preview;
             restartClip_();
+        }
+
+        void SpriteTestPhase::enterTileBrowse_() noexcept
+        {
+            subState_ = SubState::TileBrowse;
+            tileBrowseIndex_ = 0;
         }
 
         void SpriteTestPhase::restartClip_() noexcept
@@ -310,9 +376,11 @@ namespace mm2hack::apps::scenes
 
         const SpriteTestPattern* SpriteTestPhase::currentPattern_() const noexcept
         {
-            const int idx = cursorCtl_.Index();
-            if (idx < 0 || idx >= static_cast<int>(patterns_.size())) return nullptr;
-            return &patterns_[static_cast<std::size_t>(idx)];
+            if (previewingPatternIndex_ < 0 || previewingPatternIndex_ >= static_cast<int>(patterns_.size()))
+            {
+                return nullptr;
+            }
+            return &patterns_[static_cast<std::size_t>(previewingPatternIndex_)];
         }
 
         int SpriteTestPhase::idleTile_() const noexcept

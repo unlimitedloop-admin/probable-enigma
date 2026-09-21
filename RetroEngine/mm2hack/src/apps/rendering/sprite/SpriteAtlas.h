@@ -40,6 +40,10 @@ namespace mm2hack::apps::rendering::sprite
 
         // Properties
         [[nodiscard]] int VariantCount() const noexcept { return static_cast<int>(_graphs_by_variant.size()); }
+        // Frame (tile) count for one variant -- 0 if `variant` is out of range.
+        // Every variant of the same atlas has the same frame count (they're
+        // recolors of the same grid), so any valid variant index works.
+        [[nodiscard]] int FrameCount(int variant = 0) const noexcept;
 
         // Draw specified frame with specified color-variant
         void Draw(int variant, int frame, int x, int y) const noexcept;

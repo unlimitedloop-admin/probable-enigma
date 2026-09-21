@@ -73,12 +73,30 @@ namespace mm2hack::apps::scenes
             bool Load(core::save::StateReader& reader) override;
 
         private:
-            enum class SubState { PatternSelect, Preview };
+            enum class SubState { PatternSelect, Preview, TileBrowse };
 
+            // What a PatternSelect row activates. PaletteTable exists as a
+            // (currently non-selectable, see buildRows_()) placeholder row so
+            // the list's layout already matches the target design ahead of
+            // that mode actually being built.
+            enum class RowKind { PaletteTable, OriginalSheet, Pattern, Back };
+
+            struct MenuRow
+            {
+                std::wstring label;
+                RowKind kind{ RowKind::Back };
+                int patternIndex{ -1 };  // Valid only when kind == Pattern
+                bool selectable{ true };
+                int y{ 0 };
+            };
+
+            void buildRows_();
+            void activateRow_(const MenuRow& row) noexcept;
             void goBackToCharacterSelect_() noexcept;
-            void startPreview_() noexcept;
+            void startPreview_(int patternIndex) noexcept;
             void restartClip_() noexcept;
             void tickClip_() noexcept; // Advances the previewed clip by one frame (loop or hold on the last one)
+            void enterTileBrowse_() noexcept;
 
             [[nodiscard]] const SpriteTestPattern* currentPattern_() const noexcept;
             // Tile shown before any pattern has been previewed / while the
@@ -91,16 +109,25 @@ namespace mm2hack::apps::scenes
             SpriteTestCharacterId character_;
             std::wstring characterLabel_;
             SpriteId spriteId_{ static_cast<SpriteId>(-1) };
+            int frameCount_{ 0 }; // SpriteManager::FrameCountById(spriteId_), cached in the ctor
 
             std::vector<SpriteTestPattern> patterns_{}; // Empty if the JSON failed to load
 
+            std::vector<MenuRow> rows_{};
+            std::vector<int> selectableRows_{}; // Indices into rows_; cursorCtl_.Index() indexes into this
+
             SubState subState_{ SubState::PatternSelect };
-            MenuCursor cursorCtl_{ {16, 16, 10}, 1 };   // Item count set from patterns_.size()+1 (BACK) in the ctor
+            int previewingPatternIndex_{ -1 };          // Which patterns_[] entry SubState::Preview is showing
+            MenuCursor cursorCtl_{ {16, 16, 10}, 1 };   // Item count set from selectableRows_.size() in the ctor
             CursorPointer cursorAnim_;
 
             // Live clip playback state (SubState::Preview only)
             int frameIndex_{ 0 };
             int frameElapsed_{ 0 };
+
+            // SubState::TileBrowse only -- current raw tile index, wraps
+            // within [0, frameCount_) like a reel counter.
+            int tileBrowseIndex_{ 0 };
         };
     }
 }

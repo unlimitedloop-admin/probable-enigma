@@ -43,6 +43,12 @@ namespace mm2hack::apps::rendering::sprite
         return *this;
     }
 
+    int SpriteAtlas::FrameCount(int variant) const noexcept
+    {
+        if (variant < 0 || variant >= static_cast<int>(_graphs_by_variant.size())) return 0;
+        return static_cast<int>(_graphs_by_variant[static_cast<std::size_t>(variant)].size());
+    }
+
     void SpriteAtlas::Draw(int variant, int frame, int x, int y) const noexcept
     {
         if (variant < 0 || variant >= static_cast<int>(_graphs_by_variant.size()))
