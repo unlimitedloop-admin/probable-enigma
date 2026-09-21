@@ -8,7 +8,10 @@
 
 #include <nlohmann/json.hpp>
 
+#include "apps/resources/ResourceManager.h"
+#include "apps/runtime/GameContext.h"
 #include "apps/scenes/PhaseFadeController.h"
+#include "apps/world/entity/enemy/lists/EnemyLists.h"
 #include "BackdoorMenuCatalog.h"
 #include "BackdoorMenuPhase.h"
 #include "config/GameAssets.h"
@@ -164,9 +167,7 @@ namespace mm2hack::apps::scenes
             rows_.clear();
             int y = 16;
 
-            // PALETTE TABLE is a placeholder row -- non-selectable until that
-            // mode is actually built (see SpriteTestPhase.h's RowKind comment).
-            rows_.push_back({ L"PALETTE TABLE", RowKind::PaletteTable, -1, false, y }); y += 10;
+            rows_.push_back({ L"PALETTE TABLE", RowKind::PaletteTable, -1, true, y }); y += 10;
             rows_.push_back({ L"ORIGINAL SHEET", RowKind::OriginalSheet, -1, true, y }); y += 10;
             y += 10; // Blank line, matches the target layout's gap before the pattern list.
 
@@ -226,6 +227,31 @@ namespace mm2hack::apps::scenes
                 return;
             }
 
+            if (subState_ == SubState::PaletteTable)
+            {
+                const int count = static_cast<int>(paletteLabels_.size());
+                if (count > 0)
+                {
+                    if (input->JustPressed(JPBTN::RIGHT)) { paletteCursor_ = (paletteCursor_ + 1) % count; }
+                    if (input->JustPressed(JPBTN::LEFT)) { paletteCursor_ = (paletteCursor_ - 1 + count) % count; }
+                }
+                if (verified && count > 0)
+                {
+                    // Commit: this palette becomes the sprite every other
+                    // mode (ORIGINAL SHEET, pattern preview) draws from.
+                    owner.Resource()->GetAudioManager().PlaySe(L"plink_ring");
+                    spriteId_ = paletteSpriteIds_[static_cast<std::size_t>(paletteCursor_)];
+                    subState_ = SubState::PatternSelect;
+                    return;
+                }
+                if (cancelled)
+                {
+                    owner.Resource()->GetAudioManager().PlaySe(L"plink_ring");
+                    subState_ = SubState::PatternSelect;
+                }
+                return;
+            }
+
             // SubState::PatternSelect
             if (input->JustPressed(JPBTN::DOWN)) { cursorCtl_.Move(+1); }
             if (input->JustPressed(JPBTN::UP)) { cursorCtl_.Move(-1); }
@@ -248,7 +274,8 @@ namespace mm2hack::apps::scenes
             switch (row.kind)
             {
             case RowKind::PaletteTable:
-                break; // Non-selectable for now; unreachable via cursor navigation.
+                enterPaletteTable_();
+                break;
             case RowKind::OriginalSheet:
                 enterTileBrowse_();
                 break;
@@ -277,6 +304,7 @@ namespace mm2hack::apps::scenes
                 owner.Cursor().DrawAt(16, rows_[static_cast<std::size_t>(row)].y);
             }
 
+            SpriteId drawSpriteId = spriteId_;
             int tile = idleTile_();
             if (subState_ == SubState::Preview)
             {
@@ -292,9 +320,25 @@ namespace mm2hack::apps::scenes
                 if (number.size() < 2) { number = L"0" + number; }
                 fonts.DrawTextImage(number.c_str(), 170, 80);
             }
+            else if (subState_ == SubState::PaletteTable)
+            {
+                constexpr int kPaletteY = 110;
+                constexpr int kPaletteStartX = 30;
+                constexpr int kPaletteSpacingX = 20;
+                for (std::size_t i = 0; i < paletteLabels_.size(); ++i)
+                {
+                    fonts.DrawTextImage(
+                        paletteLabels_[i].c_str(), kPaletteStartX + static_cast<int>(i) * kPaletteSpacingX, kPaletteY);
+                }
+                if (!paletteSpriteIds_.empty())
+                {
+                    owner.Cursor().DrawAt(kPaletteStartX + paletteCursor_ * kPaletteSpacingX - 14, kPaletteY);
+                    drawSpriteId = paletteSpriteIds_[static_cast<std::size_t>(paletteCursor_)];
+                }
+            }
 
             auto& sprites = owner.Resource()->GetSpriteManager();
-            sprites.UseById(spriteId_, tile, 170, 100);
+            sprites.UseById(drawSpriteId, tile, 170, 100);
         }
 
         void SpriteTestPhase::RenderOverlay() { /* nothing */ }
@@ -341,6 +385,90 @@ namespace mm2hack::apps::scenes
         {
             subState_ = SubState::TileBrowse;
             tileBrowseIndex_ = 0;
+        }
+
+        void SpriteTestPhase::enterPaletteTable_() noexcept
+        {
+            if (!palettePresetsLoaded_)
+            {
+                loadPalettePresets_();
+                palettePresetsLoaded_ = true;
+            }
+            subState_ = SubState::PaletteTable;
+            paletteCursor_ = 0;
+        }
+
+        void SpriteTestPhase::loadPalettePresets_()
+        {
+            using world::entity::enemy::EnemyKind;
+            using world::entity::enemy::animation::EnemyDefinitionCatalog;
+
+            paletteLabels_.clear();
+            paletteSpriteIds_.clear();
+
+            auto& sprites = owner.Resource()->GetSpriteManager();
+
+            if (character_ == SpriteTestCharacterId::Metall)
+            {
+                EnemyDefinitionCatalog& catalog =
+                    runtime::GameContext::GetInstance().GetResourceManager().GetEnemyDefinitionCatalog();
+                const auto* def = catalog.Find(EnemyKind::Met);
+                if (def == nullptr)
+                {
+                    // Not loaded yet -- SPRITE TEST can be reached before any
+                    // stage has touched the real gameplay catalog.
+                    catalog.LoadForKind(EnemyKind::Met, L"assets\\data\\enemies\\METALL.json");
+                    def = catalog.Find(EnemyKind::Met);
+                }
+
+                if (def != nullptr && !def->palette_presets.empty())
+                {
+                    for (std::size_t i = 0; i < def->palette_presets.size(); ++i)
+                    {
+                        const auto& preset = def->palette_presets[i];
+                        paletteLabels_.push_back(std::to_wstring(i + 1));
+
+                        if (preset.mappings.empty())
+                        {
+                            paletteSpriteIds_.push_back(spriteId_); // Preset 0: the sheet's original colors, no recolor needed.
+                            continue;
+                        }
+
+                        bool created = false;
+                        const std::wstring variantName =
+                            L"MetallArmy_SpriteTest_" + utils::utf8_to_wstring(preset.id);
+                        const SpriteId variantId = sprites.Load(
+                            variantName, MM2H_GRAPHICS(MetallArmy), MM2H_GRAPHPROPS(MetallArmy), &created);
+
+                        if (created)
+                        {
+                            // Only recolor a freshly-loaded copy -- Load() is
+                            // idempotent by name, so re-entering this screen
+                            // returns the already-baked Id instead, and
+                            // re-applying the mapping on top of itself would
+                            // recolor an already-recolored image.
+                            std::vector<rendering::sprite::SpriteAtlas::PaletteColorMapping> mappings;
+                            mappings.reserve(preset.mappings.size());
+                            for (const auto& mapping : preset.mappings)
+                            {
+                                mappings.push_back({ mapping.source_index, mapping.target_index });
+                            }
+                            sprites.ReplacePixelColorsById(variantId, mappings);
+                        }
+
+                        paletteSpriteIds_.push_back(variantId);
+                    }
+                    return;
+                }
+            }
+
+            // No presets defined yet for this character (e.g. ROCKMAN --
+            // weapon-swap recoloring is planned but not built). Falls back to
+            // a single "1" entry pointing at the plain sheet so PALETTE TABLE
+            // still works instead of being a dead end, and starts behaving
+            // like METALL's the moment real presets are added for it.
+            paletteLabels_.push_back(L"1");
+            paletteSpriteIds_.push_back(spriteId_);
         }
 
         void SpriteTestPhase::restartClip_() noexcept

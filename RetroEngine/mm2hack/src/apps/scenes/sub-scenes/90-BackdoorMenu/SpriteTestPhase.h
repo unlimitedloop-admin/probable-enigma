@@ -73,12 +73,8 @@ namespace mm2hack::apps::scenes
             bool Load(core::save::StateReader& reader) override;
 
         private:
-            enum class SubState { PatternSelect, Preview, TileBrowse };
+            enum class SubState { PatternSelect, Preview, TileBrowse, PaletteTable };
 
-            // What a PatternSelect row activates. PaletteTable exists as a
-            // (currently non-selectable, see buildRows_()) placeholder row so
-            // the list's layout already matches the target design ahead of
-            // that mode actually being built.
             enum class RowKind { PaletteTable, OriginalSheet, Pattern, Back };
 
             struct MenuRow
@@ -97,6 +93,16 @@ namespace mm2hack::apps::scenes
             void restartClip_() noexcept;
             void tickClip_() noexcept; // Advances the previewed clip by one frame (loop or hold on the last one)
             void enterTileBrowse_() noexcept;
+            void enterPaletteTable_() noexcept;
+            // Bakes one SpriteManager::Id per this character's
+            // animation::EnemyPalettePreset (the same predefined
+            // default/yellow/blue/red-style presets the real game recolors
+            // from -- see EnemyDefinitionCatalog/METALL.json), reusing an
+            // already-baked Id on re-entry instead of recoloring twice. A
+            // character with no presets defined yet (Rockman today -- planned
+            // for weapon-swap recoloring, not built) falls back to a single
+            // "1" entry pointing at the plain sheet.
+            void loadPalettePresets_();
 
             [[nodiscard]] const SpriteTestPattern* currentPattern_() const noexcept;
             // Tile shown before any pattern has been previewed / while the
@@ -128,6 +134,14 @@ namespace mm2hack::apps::scenes
             // SubState::TileBrowse only -- current raw tile index, wraps
             // within [0, frameCount_) like a reel counter.
             int tileBrowseIndex_{ 0 };
+
+            // SubState::PaletteTable. paletteLabels_/paletteSpriteIds_ are
+            // parallel arrays, lazily populated on first entry (see
+            // loadPalettePresets_()).
+            std::vector<std::wstring> paletteLabels_{};
+            std::vector<SpriteId> paletteSpriteIds_{};
+            bool palettePresetsLoaded_{ false };
+            int paletteCursor_{ 0 };
         };
     }
 }
