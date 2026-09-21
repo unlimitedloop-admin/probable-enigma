@@ -54,7 +54,12 @@ namespace mm2hack::apps::scenes
     {
         Credit,
         TopMenu,
-        InsideMenu
+        InsideMenu,
+        // Debug-only SPRITE TEST preview screen (see SpriteTestPhase.h).
+        // Deliberately has no case in BackdoorMenu.cpp's ValidatePhaseState()/
+        // Load() switches -- a save captured while this phase is active is
+        // rejected on load rather than partially supported.
+        SpriteTest
     };
 
     // Interface for different phases of the BackdoorMenu class

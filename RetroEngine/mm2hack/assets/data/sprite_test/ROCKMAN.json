@@ -1,0 +1,30 @@
+{
+    "id": "rockman",
+    "patterns": [
+        { "label": "1: IDLE BLINK", "loop": true, "frames": [
+            { "tile": 1, "wait": 80 },
+            { "tile": 2, "wait": 10 },
+            { "tile": 1, "wait": 6 }
+        ] },
+        { "label": "2: RUN", "loop": true, "frames": [
+            { "tile": 4, "wait": 8 },
+            { "tile": 6, "wait": 8 },
+            { "tile": 5, "wait": 8 },
+            { "tile": 6, "wait": 8 }
+        ] },
+        { "label": "3: INTO RUN, BRAKE", "loop": false, "frames": [
+            { "tile": 1, "wait": 2 },
+            { "tile": 3, "wait": 7 },
+            { "tile": 4, "wait": 8 },
+            { "tile": 6, "wait": 8 },
+            { "tile": 5, "wait": 8 },
+            { "tile": 6, "wait": 8 },
+            { "tile": 4, "wait": 8 },
+            { "tile": 6, "wait": 8 },
+            { "tile": 5, "wait": 8 },
+            { "tile": 6, "wait": 8 },
+            { "tile": 3, "wait": 6 },
+            { "tile": 1, "wait": 2 }
+        ] }
+    ]
+}

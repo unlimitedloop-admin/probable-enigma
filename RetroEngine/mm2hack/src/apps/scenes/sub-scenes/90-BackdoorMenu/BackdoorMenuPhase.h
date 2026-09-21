@@ -163,6 +163,13 @@ namespace mm2hack::apps::scenes
             void ActivateCurrent_() noexcept; // A/START
             void GoBackToTop_() noexcept;     // B/BACK or deciding on BACK item
 
+            // SPRITE TEST (topItemIndex_ == 6) character-select handlers --
+            // hand-built like GoBackToTop_() rather than going through
+            // Action/AppendEntriesFrom_, since no generic Action exists for
+            // "queue an unrelated phase with a parameter" (see SpriteTestPhase.h).
+            void EnterSpriteTestRockman_() noexcept;
+            void EnterSpriteTestMetall_() noexcept;
+
             // Action resolvers
             static ActHandler ResolveAction_(Action a) noexcept;
             void AppendEntriesFrom_(std::span<const InsideMenuItemDesc> src);

@@ -226,6 +226,7 @@
     <ClCompile Include="src\apps\scenes\sub-scenes\01-DemoStage1\DemoStage1Phase.cpp" />
     <ClCompile Include="src\apps\scenes\sub-scenes\90-BackdoorMenu\BackdoorMenu.cpp" />
     <ClCompile Include="src\apps\scenes\sub-scenes\90-BackdoorMenu\BackdoorMenuPhase.cpp" />
+    <ClCompile Include="src\apps\scenes\sub-scenes\90-BackdoorMenu\SpriteTestPhase.cpp" />
     <ClCompile Include="src\apps\scenes\sub-scenes\LaunchingGame.cpp" />
     <ClCompile Include="src\apps\sequence\DebugSequence.cpp" />
     <ClCompile Include="src\apps\sequence\SequenceManager.cpp" />
@@ -476,6 +477,7 @@
     <ClInclude Include="src\apps\scenes\sub-scenes\90-BackdoorMenu\BackdoorMenu.h" />
     <ClInclude Include="src\apps\scenes\sub-scenes\90-BackdoorMenu\BackdoorMenuCatalog.h" />
     <ClInclude Include="src\apps\scenes\sub-scenes\90-BackdoorMenu\BackdoorMenuPhase.h" />
+    <ClInclude Include="src\apps\scenes\sub-scenes\90-BackdoorMenu\SpriteTestPhase.h" />
     <ClInclude Include="src\apps\scenes\sub-scenes\LaunchingGame.h" />
     <ClInclude Include="src\apps\sequence\DebugSequence.h" />
     <ClInclude Include="src\apps\sequence\ISequence.h" />

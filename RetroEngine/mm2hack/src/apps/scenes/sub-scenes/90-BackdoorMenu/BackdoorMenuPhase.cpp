@@ -12,6 +12,7 @@
 #include "core/assembly/StateProvider.h"
 #include "core/save/StateIO.h"
 #include "input/Jpbtn.h"
+#include "SpriteTestPhase.h"
 
 namespace mm2hack::apps::scenes
 {
@@ -371,6 +372,15 @@ namespace mm2hack::apps::scenes
                 break;
             }
 
+            case 6: // SPRITE TEST
+                page_.cursorX = 16; page_.firstY = 16; page_.lineH = 10;
+                page_.entries = {
+                    { L"BACK",    true, &InsideMenuPhase::GoBackToTop_,             1 },
+                    { L"ROCKMAN", true, &InsideMenuPhase::EnterSpriteTestRockman_,  1 },
+                    { L"METALL",  true, &InsideMenuPhase::EnterSpriteTestMetall_,   1 },
+                };
+                break;
+
             // HACK: Add other inside menu pages
 
             case 7: // RESET PARAMETER
@@ -453,6 +463,26 @@ namespace mm2hack::apps::scenes
                 FadeLayerMask::All
             );
             owner.QueuePhase(std::make_unique<TopMenuPhase>(owner, topItemIndex_), next);
+        }
+
+        void InsideMenuPhase::EnterSpriteTestRockman_() noexcept
+        {
+            auto& audio = owner.Resource()->GetAudioManager();
+            audio.PlaySe(L"plink_ring");
+
+            PhaseFadePlan next(5, 20, 0, 20, 0, FadeLayerMask::All);
+            owner.QueuePhase(
+                std::make_unique<SpriteTestPhase>(owner, SpriteTestCharacterId::Rockman), next);
+        }
+
+        void InsideMenuPhase::EnterSpriteTestMetall_() noexcept
+        {
+            auto& audio = owner.Resource()->GetAudioManager();
+            audio.PlaySe(L"plink_ring");
+
+            PhaseFadePlan next(5, 20, 0, 20, 0, FadeLayerMask::All);
+            owner.QueuePhase(
+                std::make_unique<SpriteTestPhase>(owner, SpriteTestCharacterId::Metall), next);
         }
 
         // Extra display handlers for each inside menu page.
