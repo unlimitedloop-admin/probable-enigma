@@ -83,6 +83,12 @@ namespace mm2hack::apps::scenes::phases
         foundation::math::Vec2 player_previous_position{};
         ui::productions::StageIntroUIState ready_ui{};
         systems::scrolling::atomic::ScrollControllerState scroll{};
+        // Shared across every EnemyEntity in the stage; incremented once per
+        // AnimationTransition::increments_shared_counter firing (see
+        // EnemyEntity::SetSharedAttackCounter()/ConsumeAttackCounterIncrementRequest()).
+        // Saved so a parity-gated attack pattern (e.g. Met's jump/walk split)
+        // stays deterministic across a save/load, same as everything else replay cares about.
+        std::uint64_t enemy_attack_pattern_counter{ 0 };
 
         bool Save(core::save::StateWriter& writer) const;
         bool Load(core::save::StateReader& reader);
@@ -155,6 +161,11 @@ namespace mm2hack::apps::scenes::phases
         // actually Spawn()s them -- the entity itself has no EntityManager
         // access (see AnimationTransition::projectile_spawns).
         void spawnEnemyProjectiles_();
+        // Drains every alive EnemyEntity's ConsumeAttackCounterIncrementRequest()
+        // and bumps _enemy_attack_pattern_counter once per request -- the
+        // entity itself holds no authoritative counter, only a per-frame
+        // snapshot (see AnimationTransition::increments_shared_counter).
+        void advanceSharedAttackCounter_();
         // Detects the scroll-lock rising/falling edge and, once per edge: clears
         // every transient effect entity and pauses SE (rising), or resumes SE
         // (falling). No-op mid-lock or mid-unlock.
@@ -180,6 +191,7 @@ namespace mm2hack::apps::scenes::phases
         world::entity::avatar::ChargePhase _charge_phase{ world::entity::avatar::ChargePhase::Idle };
 
         Vec2 _player_prev_pos{};                            // Previous player position, scrolling-player sync use
+        std::uint64_t _enemy_attack_pattern_counter{ 0 };   // See AbstractActionPhaseState::enemy_attack_pattern_counter
         ActionPhaseState _state{ ActionPhaseState::Intro }; // Current state of the action phase
         ui::productions::StageIntroUI _ready_ui{};          // UI for the intro sequence
 

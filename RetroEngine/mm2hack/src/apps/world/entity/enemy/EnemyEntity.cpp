@@ -290,13 +290,17 @@ namespace mm2hack::apps::world::entity::enemy
         const double resolved_bottom_y = _gravity.Tick(_terrain, pos.x, pos.y + _half.y);
         pos.y = resolved_bottom_y - _half.y + (_gravity.IsOnGround() ? kVisualFloorSinkPx : 0.0);
 
-        animation::AnimationConditionInputs anim_inputs{ .grounded = _gravity.IsOnGround() };
+        animation::AnimationConditionInputs anim_inputs{
+            .grounded = _gravity.IsOnGround(),
+            .shared_counter = _shared_attack_counter,
+        };
         if (_has_player_pos)
         {
             anim_inputs.player_dx = std::abs(_player_pos.x - pos.x);
             anim_inputs.player_dy = std::abs(_player_pos.y - pos.y);
         }
         _animator.Tick(anim_inputs);
+        _pending_counter_increment_requested = _animator.LastRequestedCounterIncrement();
 
         // A transition that just fired may carry a jump impulse (see
         // AnimationTransition::jump_impulse) -- e.g. Met's periodic hop while
@@ -324,7 +328,7 @@ namespace mm2hack::apps::world::entity::enemy
                 const double speed_px_per_sec = spec.speed_px_per_frame * kFramesPerSecond;
 
                 common::SpawnProjectileCommand cmd{};
-                cmd.spawnPos = pos;
+                cmd.spawnPos = pos + Vec2{ 0.0, kDefaultProjectileSpawnOffsetY };
                 cmd.velocity = Vec2{ dir_x * speed_px_per_sec, dir_y * speed_px_per_sec };
                 cmd.drawLayer = Layer::Effects;
                 cmd.spriteId = _projectile_sprite_id;

@@ -31,6 +31,20 @@ namespace mm2hack::apps::world::entity::enemy::animation
         Airborne,       // Fires on a tick where AnimationConditionInputs::grounded is false
     };
 
+    // Optional extra gate ANDed onto a transition's own `condition` (see
+    // AnimationTransition::required_parity) -- lets two transitions with the
+    // same trigger stay mutually exclusive based on AnimationConditionInputs::
+    // shared_counter instead of picking randomly. Deliberately not a
+    // condition of its own: it never fires by itself (a state with only a
+    // parity-gated transition and no matching base condition would never
+    // leave), it only narrows one that already would.
+    enum class CounterParity : std::uint8_t
+    {
+        Any,    // No gating -- the transition's own condition is the only requirement
+        Even,
+        Odd
+    };
+
     // External signals AnimationStatePlayer::Tick() needs to evaluate
     // conditions it can't determine from the clip data alone.
     struct AnimationConditionInputs final
@@ -42,6 +56,14 @@ namespace mm2hack::apps::world::entity::enemy::animation
         // firing spuriously against a stale (0,0).
         double player_dx{ 1'000'000.0 };
         double player_dy{ 1'000'000.0 };
+        // Current value of a counter shared across every enemy in the stage,
+        // incremented once per AnimationTransition::increments_shared_counter
+        // firing (see EnemyEntity::SetSharedAttackCounter() /
+        // AbstractActionPhase, which owns the real, save-stated value and
+        // feeds it in each frame the same way it feeds player_dx/dy). Used to
+        // alternate between two otherwise-identical triggers (see
+        // CounterParity) deterministically -- replay-safe, unlike an RNG roll.
+        std::uint64_t shared_counter{ 0 };
     };
 
     // One frame of a clip: which tile to show, and how long (in ticks/frames,
@@ -94,6 +116,20 @@ namespace mm2hack::apps::world::entity::enemy::animation
         // Empty (the common case) = fires nothing. Non-empty: the instant this
         // transition fires, the entity spawns one projectile per entry here.
         std::vector<ProjectileSpawnSpec> projectile_spawns{};
+        // Any (the common case): this transition fires whenever `condition`
+        // does. Even/Odd: also requires AnimationConditionInputs::
+        // shared_counter to have that parity -- e.g. two PlayerNear
+        // transitions out of the same state, one Even one Odd, deterministically
+        // alternate between two attack patterns across repeated triggers
+        // instead of always picking the same one (see CounterParity).
+        CounterParity required_parity{ CounterParity::Any };
+        // False (the common case): no side effect. True: the instant this
+        // transition fires, the shared counter above increments by one (via
+        // EnemyEntity's pending-increment poll, same fire-and-drain shape as
+        // jump_impulse/projectile_spawns) -- so the *next* parity-gated
+        // decision flips. Combined with required_parity, this is what turns a
+        // fixed Any/Even/Odd split into a clean A/B/A/B alternation.
+        bool increments_shared_counter{ false };
     };
 
     struct AnimationState final

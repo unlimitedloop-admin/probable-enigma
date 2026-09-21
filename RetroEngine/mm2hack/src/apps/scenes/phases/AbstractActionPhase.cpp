@@ -87,7 +87,8 @@ namespace mm2hack::apps::scenes::phases
             writer.WriteF64(player_previous_position.x) &&
             writer.WriteF64(player_previous_position.y) &&
             ready_ui.Save(writer) &&
-            scroll.Save(writer);
+            scroll.Save(writer) &&
+            writer.WriteU64(enemy_attack_pattern_counter);
     }
 
     bool AbstractActionPhaseState::Load(core::save::StateReader& reader)
@@ -103,7 +104,8 @@ namespace mm2hack::apps::scenes::phases
             !reader.ReadF64(loaded.player_previous_position.x) ||
             !reader.ReadF64(loaded.player_previous_position.y) ||
             !loaded.ready_ui.Load(reader) ||
-            !loaded.scroll.Load(reader))
+            !loaded.scroll.Load(reader) ||
+            !reader.ReadU64(loaded.enemy_attack_pattern_counter))
         {
             return false;
         }
@@ -189,6 +191,7 @@ namespace mm2hack::apps::scenes::phases
             .player_previous_position = _player_prev_pos,
             .ready_ui = _ready_ui.CaptureState(),
             .scroll = _ctx->scroll->CaptureState(),
+            .enemy_attack_pattern_counter = _enemy_attack_pattern_counter,
         };
         return state.IsValid();
     }
@@ -277,6 +280,7 @@ namespace mm2hack::apps::scenes::phases
         _entered = state.entered;
         _operate = state.operate;
         _player_prev_pos = state.player_previous_position;
+        _enemy_attack_pattern_counter = state.enemy_attack_pattern_counter;
 
         // Audio and charge particles are presentation state. Rebuild them from
         // the player's next frame output instead of serializing channel state.
@@ -638,18 +642,21 @@ namespace mm2hack::apps::scenes::phases
 
                 player->SetEntityContext(entity_ctx);
 
-                // Feeds this frame's player position to every enemy for
-                // AnimationCondition::PlayerNear, before their own Update()
-                // runs (see EnemyEntity::SetPlayerPosition()).
+                // Feeds this frame's player position and the shared attack
+                // pattern counter to every enemy, before their own Update()
+                // runs (see EnemyEntity::SetPlayerPosition()/
+                // SetSharedAttackCounter()).
                 _ctx->entity_mgr->ForEachAlive<enemy::EnemyEntity>(
-                    [player](enemy::EnemyEntity& enemy_entity)
+                    [player, counter = _enemy_attack_pattern_counter](enemy::EnemyEntity& enemy_entity)
                     {
                         enemy_entity.SetPlayerPosition(player->pos);
+                        enemy_entity.SetSharedAttackCounter(counter);
                     });
 
                 _ctx->entity_mgr->UpdateAll(&_ctx->scroll->GetView(), dt);
                 consumePlayerOutput_(*player);
                 spawnEnemyProjectiles_();
+                advanceSharedAttackCounter_();
 
                 // Entity-vs-entity hit detection (projectiles vs enemies/traps, player vs
                 // items/traps, etc.). Runs after positions are finalized for this tick.
@@ -843,6 +850,18 @@ namespace mm2hack::apps::scenes::phases
                 {
                     auto& projectile = _ctx->entity_mgr->Spawn<world::entity::effects::ProjectileEntity>(cmd);
                     projectile.SetTerrainProbe(_ctx->terrain_probe.get());
+                }
+            });
+    }
+
+    void AbstractActionPhase::advanceSharedAttackCounter_()
+    {
+        _ctx->entity_mgr->ForEachAlive<world::entity::enemy::EnemyEntity>(
+            [this](world::entity::enemy::EnemyEntity& enemy)
+            {
+                if (enemy.ConsumeAttackCounterIncrementRequest())
+                {
+                    ++_enemy_attack_pattern_counter;
                 }
             });
     }

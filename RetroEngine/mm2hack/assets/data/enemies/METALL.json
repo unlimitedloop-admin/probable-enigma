@@ -12,7 +12,8 @@
                 { "tile": 0, "wait": "hold" }
             ],
             "transitions": [
-                { "when": "player_near", "x": 80, "y": 24, "to": "rise" }
+                { "when": "player_near", "x": 80, "y": 24, "to": "rise", "parity": "even", "increments_shared_counter": true },
+                { "when": "player_near", "x": 80, "y": 24, "to": "rise_walk", "parity": "odd", "increments_shared_counter": true }
             ]
         },
         {
@@ -49,6 +50,54 @@
             ]
         },
         {
+            "id": "rise_walk",
+            "loop": false,
+            "allow_movement": false,
+            "track_player_facing": false,
+            "frames": [
+                { "tile": 0, "wait": 6 },
+                { "tile": 1, "wait": 6 },
+                { "tile": 2, "wait": 6 },
+                { "tile": 3, "wait": 6 }
+            ],
+            "transitions": [
+                { "when": "clip_finished", "to": "walk_ready", "projectile_spawns": [
+                    { "angle_deg": 0, "speed_px_per_frame": 2.0 }
+                ] }
+            ]
+        },
+        {
+            "id": "walk_ready",
+            "loop": false,
+            "allow_movement": false,
+            "track_player_facing": false,
+            "frames": [
+                { "tile": 4, "wait": "hold" }
+            ],
+            "transitions": [
+                { "when": "timer", "frames": 24, "to": "walk_shoot", "projectile_spawns": [
+                    { "angle_deg": 0, "speed_px_per_frame": 2.0 }
+                ] }
+            ]
+        },
+        {
+            "id": "walk_shoot",
+            "loop": true,
+            "move_speed_multiplier": 3.0,
+            "track_player_facing": false,
+            "frames": [
+                { "tile": 4, "wait": 6 },
+                { "tile": 5, "wait": 6 },
+                { "tile": 6, "wait": 6 },
+                { "tile": 7, "wait": 6 }
+            ],
+            "transitions": [
+                { "when": "timer", "frames": 48, "to": "cooldown", "projectile_spawns": [
+                    { "angle_deg": 0, "speed_px_per_frame": 2.0 }
+                ] }
+            ]
+        },
+        {
             "id": "cooldown",
             "loop": false,
             "allow_movement": false,
@@ -57,7 +106,7 @@
                 { "tile": 0, "wait": "hold" }
             ],
             "transitions": [
-                { "when": "timer", "frames": 30, "to": "idle" }
+                { "when": "timer", "frames": 60, "to": "idle" }
             ]
         }
     ],

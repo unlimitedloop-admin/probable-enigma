@@ -118,6 +118,12 @@ namespace mm2hack::apps::world::entity::enemy
         // Buster's box size so an enemy shot is at least as forgiving to the
         // player as the player's own shot is to enemies.
         static constexpr Vec2 kDefaultProjectileHitHalfSize{ 2.0, 2.0 };
+        // Muzzle offset from pos, applied before facing/angle rotation (Y only
+        // for now -- positive = down, since screen Y grows downward). Tuning
+        // knob for "the shot spawns a bit above/below the sprite's visual
+        // center"; revisit as a per-spawn parameter if a second kind needs a
+        // different value (same reasoning as kDefaultProjectilePower above).
+        static constexpr double kDefaultProjectileSpawnOffsetY{ 5.0 };
 
         // Fresh placement (level/test spawn).
         // `palette_preset_index`: which of the kind's EnemyDefinition::
@@ -196,6 +202,13 @@ namespace mm2hack::apps::world::entity::enemy
             _has_player_pos = true;
         }
 
+        // Wired externally once per frame, before Update() (same call site as
+        // SetPlayerPosition() above) -- not part of saved state. The real,
+        // save-stated counter lives in AbstractActionPhase; this is just this
+        // frame's read-only snapshot of it, for AnimationCondition parity
+        // gating (see AnimationConditionInputs::shared_counter).
+        void SetSharedAttackCounter(std::uint64_t value) noexcept { _shared_attack_counter = value; }
+
         // Drains and returns any projectile spawns queued during the last
         // Update() (see AnimationTransition::projectile_spawns). Polled by
         // AbstractActionPhase after updating all entities -- EnemyEntity itself
@@ -203,6 +216,16 @@ namespace mm2hack::apps::world::entity::enemy
         [[nodiscard]] std::vector<common::SpawnProjectileCommand> ConsumePendingProjectileSpawns() noexcept
         {
             return std::exchange(_pending_projectile_spawns, {});
+        }
+
+        // Drains and returns whether the last Update() fired a transition with
+        // increments_shared_counter=true. Polled by AbstractActionPhase after
+        // updating all entities, the same way as ConsumePendingProjectileSpawns()
+        // above -- this entity has no access to the authoritative counter to
+        // bump it itself.
+        [[nodiscard]] bool ConsumeAttackCounterIncrementRequest() noexcept
+        {
+            return std::exchange(_pending_counter_increment_requested, false);
         }
 
         // ICollider
@@ -239,8 +262,10 @@ namespace mm2hack::apps::world::entity::enemy
 
         rendering::sprite::SpriteManager::Id _projectile_sprite_id{ static_cast<rendering::sprite::SpriteManager::Id>(-1) };
         std::vector<common::SpawnProjectileCommand> _pending_projectile_spawns{}; // Drained each frame; not saved
+        bool _pending_counter_increment_requested{ false }; // Drained each frame; not saved -- see ConsumeAttackCounterIncrementRequest()
 
         Vec2 _player_pos{};        // See SetPlayerPosition(); not saved, re-wired externally every frame
         bool _has_player_pos{ false };
+        std::uint64_t _shared_attack_counter{ 0 }; // See SetSharedAttackCounter(); not saved, re-wired externally every frame
     };
 }

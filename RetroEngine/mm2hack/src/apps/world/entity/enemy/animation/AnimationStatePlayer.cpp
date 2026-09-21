@@ -15,6 +15,7 @@ namespace mm2hack::apps::world::entity::enemy::animation
     {
         _pending_jump_impulse = 0.0;
         _pending_projectile_spawns.clear();
+        _pending_counter_increment_requested = false;
 
         if (_def == nullptr || _def->states.empty() ||
             _state_index < 0 || _state_index >= static_cast<int>(_def->states.size()))
@@ -86,6 +87,13 @@ namespace mm2hack::apps::world::entity::enemy::animation
                 break;
             }
 
+            if (fires && transition.required_parity != CounterParity::Any)
+            {
+                const bool counter_is_even = (inputs.shared_counter % 2) == 0;
+                const bool wants_even = transition.required_parity == CounterParity::Even;
+                fires = counter_is_even == wants_even;
+            }
+
             if (!fires)
             {
                 continue;
@@ -100,6 +108,7 @@ namespace mm2hack::apps::world::entity::enemy::animation
                 _state_elapsed = 0;
                 _pending_jump_impulse = transition.jump_impulse;
                 _pending_projectile_spawns = transition.projectile_spawns;
+                _pending_counter_increment_requested = transition.increments_shared_counter;
             }
             break;
         }

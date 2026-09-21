@@ -52,6 +52,16 @@ namespace mm2hack::apps::world::entity::enemy::animation
         {
             return _pending_projectile_spawns;
         }
+        // False normally; true only immediately after a Tick() where a
+        // transition with increments_shared_counter=true fired -- read this
+        // right after calling Tick(), same frame (see AnimationTransition::
+        // increments_shared_counter). The caller (EnemyEntity) owns no
+        // authoritative counter itself; it just relays this request up to
+        // whoever does (AbstractActionPhase).
+        [[nodiscard]] bool LastRequestedCounterIncrement() const noexcept
+        {
+            return _pending_counter_increment_requested;
+        }
 
         // Save/restore. Restoring re-attaches to `def` (not persisted itself --
         // it's resolved by EnemyKind at reconstruction time, same as a sprite id).
@@ -71,5 +81,6 @@ namespace mm2hack::apps::world::entity::enemy::animation
         int _state_elapsed{ 0 };    // Ticks spent in the current state (drives Timer)
         double _pending_jump_impulse{ 0.0 }; // See LastJumpImpulse(); reset every Tick()
         std::vector<ProjectileSpawnSpec> _pending_projectile_spawns{}; // See LastProjectileSpawns(); reset every Tick()
+        bool _pending_counter_increment_requested{ false }; // See LastRequestedCounterIncrement(); reset every Tick()
     };
 }

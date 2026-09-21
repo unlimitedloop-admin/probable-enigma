@@ -115,9 +115,20 @@ namespace mm2hack::apps::world::entity::enemy::animation
 
             std::string when;
             if (!try_read_string(source, "when", when) || !try_read_string(source, "to", out.to_state) ||
-                !try_read_double(source, "jump_impulse", 0.0, out.jump_impulse))
+                !try_read_double(source, "jump_impulse", 0.0, out.jump_impulse) ||
+                !try_read_bool(source, "increments_shared_counter", false, out.increments_shared_counter))
             {
                 return false;
+            }
+
+            const auto parity = source.find("parity");
+            if (parity != source.end())
+            {
+                if (!parity->is_string()) return false;
+                const std::string parity_str = parity->get<std::string>();
+                if (parity_str == "even") out.required_parity = CounterParity::Even;
+                else if (parity_str == "odd") out.required_parity = CounterParity::Odd;
+                else return false;
             }
 
             const auto spawns = source.find("projectile_spawns");
