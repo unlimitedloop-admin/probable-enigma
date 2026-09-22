@@ -330,7 +330,9 @@ namespace mm2hack::apps::world::entity::avatar
     {
         // RectF is {x, y, w, h}, not {left, top, right, bottom} -- width/height must be
         // the full box size (2 * half-extent), not an absolute coordinate.
-        return { pos.x - _half.x, pos.y - _half.y, _half.x * 2.0, _half.y * 2.0 };
+        // Deliberately _hitbox_half, not _half (the sprite tile's own half-size)
+        // -- see _hitbox_half's declaration comment.
+        return { pos.x - _hitbox_half.x, pos.y - _hitbox_half.y, _hitbox_half.x * 2.0, _hitbox_half.y * 2.0 };
     }
 
     bool PlayerEntity::IsCollidable() const noexcept { return _collidable; }

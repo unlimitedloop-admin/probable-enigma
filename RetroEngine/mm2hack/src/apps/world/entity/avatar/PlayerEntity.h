@@ -197,7 +197,15 @@ namespace mm2hack::apps::world::entity::avatar
         SpriteManagerId _effects_id{};                              // Effect sprite Id
         SpriteManagerId _charge_level1_id{ static_cast<SpriteManagerId>(-1) };
         SpriteManagerId _charge_level2_id{ static_cast<SpriteManagerId>(-1) };
-        Vec2 _half{};                                               // Half-size of the bounding box
+        Vec2 _half{};                                               // Half-size of the sprite tile (render anchor, probe layout) -- NOT the hit box, see _hitbox_half
+        // Half-size of the entity-collision box (ICollider::Bounds(), used for
+        // item pickup / trap / enemy / enemy-shot hits) -- independent of
+        // _half, the same way ProjectileEntity keeps its hit box independent
+        // of its render footprint. The player sprite's own opaque pixels only
+        // cover a 21x24 area centered in the 32x32 tile (PLAYER_N0_ALL_
+        // PATTERN.png); using the full tile as the hit box meant an enemy
+        // shot could register a hit while still visibly outside the sprite.
+        Vec2 _hitbox_half{ 10.0, 12.0 };
         bool _collidable{ true };                                   // Whether collision is enabled
         systems::combat::HealthComponent _health{};                 // Vitality; see PlayerVitalityTuning
         PlayerStateMachine _state_machine{};                        // Locomotion state ownership and transitions
