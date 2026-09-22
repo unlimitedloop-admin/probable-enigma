@@ -199,5 +199,7 @@ namespace mm2hack::apps::scenes::phases
         int _page_index_debug{ 0 };
         double _player_pos_x_debug{ 0 };
         double _player_pos_y_debug{ 0 };
+        int _player_hp_debug{ 0 };
+        int _player_max_hp_debug{ 0 };
     };
 }

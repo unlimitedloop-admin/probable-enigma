@@ -63,6 +63,11 @@ namespace mm2hack::core::overlay
             const std::wstring ystr = decode_floating_hex_number(_playerPositionContext.y);
             concat_to_wchar_buffer(buffer, sizeof(buffer) / sizeof(buffer[0]), { L"Player Pos = (", xstr, L", ", ystr, L")" });
             ::DxLib::DrawString(8, y, buffer, 0xFFFF0000);
+            y += 18;
+
+            swprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), L"Player HP = %d / %d",
+                _playerPositionContext.hp, _playerPositionContext.maxHp);
+            ::DxLib::DrawString(8, y, buffer, 0xFFFF0000);
         }
     }
 }

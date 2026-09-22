@@ -8,6 +8,8 @@
 //==============================================================================
 #pragma once
 
+#include "apps/systems/combat/HealthComponent.h"
+#include "apps/systems/combat/IDamageable.h"
 #include "apps/systems/physics/ICollider.h"
 #include "apps/world/entity/EntityBase.h"
 
@@ -49,7 +51,10 @@ namespace mm2hack::core::assembly
 namespace mm2hack::apps::world::entity::avatar
 {
     // User player character entity
-    class PlayerEntity final : public EntityBase, public systems::physics::ICollider
+    class PlayerEntity final :
+        public EntityBase,
+        public systems::physics::ICollider,
+        public systems::combat::IDamageable
     {
         using AnimeStepper              = common::AnimeStepper;
         using RectF                     = foundation::math::RectF;
@@ -105,6 +110,12 @@ namespace mm2hack::apps::world::entity::avatar
         void OnTileCollision(const Vec2& normal, TileAttribute attr) override;
         // Entity collision reaction (ICollider)
         void OnEntityCollision(IEntity& other) override;
+
+        // IDamageable
+        bool ApplyAttack(const systems::physics::IAttackInfo& attack) noexcept override;
+        [[nodiscard]] int CurrentHP() const noexcept override { return _health.CurrentHP(); }
+        [[nodiscard]] int MaxHP() const noexcept override { return _health.MaxHP(); }
+        [[nodiscard]] bool IsDead() const noexcept override { return _health.IsDead(); }
 
         // Return the owner entity
         IEntity& OwnerEntity() noexcept override;
@@ -188,6 +199,7 @@ namespace mm2hack::apps::world::entity::avatar
         SpriteManagerId _charge_level2_id{ static_cast<SpriteManagerId>(-1) };
         Vec2 _half{};                                               // Half-size of the bounding box
         bool _collidable{ true };                                   // Whether collision is enabled
+        systems::combat::HealthComponent _health{};                 // Vitality; see PlayerVitalityTuning
         PlayerStateMachine _state_machine{};                        // Locomotion state ownership and transitions
         std::unique_ptr<states::AttackActionState> _attackAction{}; // Attack action state handler
         states::RockBusterDrawInfo _rock_buster{};                  // Rock Buster drawing info

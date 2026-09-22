@@ -31,7 +31,11 @@ namespace mm2hack::apps::systems::combat
 
     bool HealthComponentState::IsValid() const noexcept
     {
-        return max_hp >= 1 && max_hp <= 1'000 && hp >= 1 && hp <= max_hp;
+        // hp == 0 is a legitimate, persistable state: an owner that stays
+        // alive at 0 HP for a beat before reacting (e.g. the player, ahead of
+        // its own miss/death sequence landing) needs to round-trip through a
+        // save without HealthComponent forcing a premature Kill().
+        return max_hp >= 1 && max_hp <= 1'000 && hp >= 0 && hp <= max_hp;
     }
 
     bool HealthComponent::ApplyAttack(const physics::IAttackInfo& attack) noexcept
@@ -47,7 +51,7 @@ namespace mm2hack::apps::systems::combat
             return false;
         }
 
-        _hp -= damage;
+        _hp = std::max(0, _hp - damage);
         return IsDead();
     }
 

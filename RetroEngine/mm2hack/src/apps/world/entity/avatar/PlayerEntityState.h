@@ -30,6 +30,7 @@ namespace mm2hack::apps::world::entity::avatar
     {
         EntityKinematicState kinematic{};
         bool collidable{ true };
+        std::int32_t hp{ 28 };  // See avatar::PlayerVitalityTuning::maxHp for the default's source
         bool on_ground{};
         AvatarDirection facing{ AvatarDirection::Right };
         std::int32_t base_texture{};

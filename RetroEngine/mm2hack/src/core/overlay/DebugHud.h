@@ -17,6 +17,11 @@ namespace mm2hack::core::overlay
         int pageIndex = 0;
         double x = 0.0;
         double y = 0.0;
+        // Piggybacked here rather than a separate context/flag -- a
+        // temporary debug-only readout for player vitality (Phase 1 of
+        // player damage; no real HUD gauge exists yet).
+        int hp = 0;
+        int maxHp = 0;
     };
 
     // Debug HUD for displaying debug information on the screen

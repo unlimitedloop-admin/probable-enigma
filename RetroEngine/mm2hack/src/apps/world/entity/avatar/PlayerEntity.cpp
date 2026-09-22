@@ -7,6 +7,7 @@
 #include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/runtime/GameContext.h"
 #include "apps/systems/physics/CollisionLayer.h"
+#include "apps/systems/physics/IAttackInfo.h"
 #include "apps/systems/physics/TileAttribute.h"
 #include "apps/systems/scrolling/atomic/ScrollController.h"
 #include "apps/systems/scrolling/atomic/ScrollTypes.h"
@@ -42,7 +43,8 @@ namespace mm2hack::apps::world::entity::avatar
           _effects_id(effectsId),
           _charge_level1_id(chargeLevel1Id),
           _charge_level2_id(chargeLevel2Id),
-          _half{ 16.0, 16.0 }
+          _half{ 16.0, 16.0 },
+          _health(PlayerVitalityTuning{}.maxHp, systems::combat::DamageTable::Neutral())
     {
         _attackAction = std::make_unique<states::AttackActionState>(weaponId);
         SetTuning(PlayerTuning{});
@@ -66,6 +68,7 @@ namespace mm2hack::apps::world::entity::avatar
         return PlayerEntityState{
             .kinematic = CaptureKinematicState(),
             .collidable = _collidable,
+            .hp = _health.CurrentHP(),
             .on_ground = onGround,
             .facing = facingLR,
             .base_texture = baseTexture,
@@ -95,6 +98,12 @@ namespace mm2hack::apps::world::entity::avatar
             !_attackAction->RestoreState(state.attack) ||
             !_environment_controller.RestoreState(state.environment) ||
             !_anime_stepper.RestoreState(state.animation))
+        {
+            return false;
+        }
+
+        const systems::combat::HealthComponentState health_state{ PlayerVitalityTuning{}.maxHp, state.hp };
+        if (!_health.RestoreState(health_state, systems::combat::DamageTable::Neutral()))
         {
             return false;
         }
@@ -338,8 +347,25 @@ namespace mm2hack::apps::world::entity::avatar
 
     void PlayerEntity::OnEntityCollision(IEntity& other)
     {
-        (void)other;
-        // TODO: Item acquisition, enemy damage, etc. goes here
+        // TODO: Item acquisition still goes here.
+
+        if (!IsAlive()) return;
+
+        // Mirrors EnemyEntity::OnEntityCollision()'s shape: only a collider
+        // carrying an attack payload (an enemy projectile today) can hurt the
+        // player. Deliberately NOT calling Kill() on a lethal ApplyAttack()
+        // result yet -- HealthComponent clamps at 0 and IsDead() reports
+        // true, but what happens next (a miss, lives, respawn) is its own
+        // later step; for now the player simply stays alive at 0 HP.
+        auto* attack = dynamic_cast<systems::physics::IAttackInfo*>(&other);
+        if (attack == nullptr) return;
+
+        ApplyAttack(*attack);
+    }
+
+    bool PlayerEntity::ApplyAttack(const systems::physics::IAttackInfo& attack) noexcept
+    {
+        return _health.ApplyAttack(attack);
     }
 
     IEntity& PlayerEntity::OwnerEntity() noexcept { return *this; }

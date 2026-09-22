@@ -60,6 +60,16 @@ namespace mm2hack::apps::world::entity::avatar
         PlayerProbes probeOffsets;                  // Player probes offsets
     };
 
+    // Vitality tuning, kept as its own small struct rather than folded into
+    // PlayerTuning -- mirrors states::AttackTuning's precedent of a
+    // dedicated struct for one feature area passed alongside PlayerTuning.
+    // 28 matches the classic Mega Man energy scale (a normal Buster shot
+    // deals 1, so this is "28 hits" worth of vitality).
+    struct PlayerVitalityTuning
+    {
+        int maxHp{ 28 };
+    };
+
     // Player physical environment
     enum class PlayerEnvironment : std::uint8_t
     {

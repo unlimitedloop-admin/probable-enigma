@@ -434,7 +434,7 @@ namespace mm2hack::apps::scenes::phases
         if (hud.showPlayerPosition)
         {
             core::overlay::DebugHud::GetInstance().SetPlayerPositionContext(
-                { _page_index_debug, _player_pos_x_debug, _player_pos_y_debug }
+                { _page_index_debug, _player_pos_x_debug, _player_pos_y_debug, _player_hp_debug, _player_max_hp_debug }
             );
         }
 
@@ -700,6 +700,8 @@ namespace mm2hack::apps::scenes::phases
         _page_index_debug = static_cast<int>(_ctx->scroll->PageIndex());
         _player_pos_x_debug = player ? _ctx->page_grid->ToLocalPos(player->pos.x, config::SystemConfig::kScreenWidth) : 0;
         _player_pos_y_debug = player ? _ctx->page_grid->ToLocalPos(player->pos.y, config::SystemConfig::kScreenHeight) : 0;
+        _player_hp_debug = player ? player->CurrentHP() : 0;
+        _player_max_hp_debug = player ? player->MaxHP() : 0;
 
         _player_prev_pos = player ? player->pos : Vec2::Zero();
 
@@ -823,30 +825,53 @@ namespace mm2hack::apps::scenes::phases
     void AbstractActionPhase::spawnHitEffectsForTheSurvivors_(
         const std::vector<DamageableHpSnapshot>& before)
     {
-        const bool any_hit = std::any_of(before.begin(), before.end(),
-            [](const DamageableHpSnapshot& snap)
-            {
-                // A kill is destruction's job (spawnDestructionEffectsForTheDead_);
-                // this is only for a hit that didn't finish the target off.
-                return !snap.damageable->IsDead() && snap.damageable->CurrentHP() < snap.hp_before;
-            });
-
-        if (!any_hit)
+        // A kill is destruction's job (spawnDestructionEffectsForTheDead_);
+        // this is only for a hit that didn't finish the target off. Split by
+        // whether the target was the player -- "be_damaged" is the player's
+        // own hit-reaction SE, distinct from "hit_attack" (an enemy taking a
+        // non-lethal hit from the player's own weapon).
+        bool any_enemy_hit = false;
+        bool player_hit = false;
+        for (const auto& snap : before)
         {
-            return;
+            if (snap.damageable->IsDead() || snap.damageable->CurrentHP() >= snap.hp_before)
+            {
+                continue;
+            }
+            if (dynamic_cast<world::entity::avatar::PlayerEntity*>(snap.damageable) != nullptr)
+            {
+                player_hit = true;
+            }
+            else
+            {
+                any_enemy_hit = true;
+            }
         }
 
+        auto& audio = runtime::GameContext::GetInstance().GetResourceManager().GetAudioManager();
         // One shot per frame regardless of how many things got hit -- a single
         // SE channel pair, no point stacking retriggers.
-        runtime::GameContext::GetInstance().GetResourceManager().GetAudioManager().PlaySe(L"hit_attack");
+        if (any_enemy_hit) { audio.PlaySe(L"hit_attack"); }
+        if (player_hit) { audio.PlaySe(L"be_damaged"); }
     }
 
     void AbstractActionPhase::spawnEnemyProjectiles_()
     {
+        auto& audio = runtime::GameContext::GetInstance().GetResourceManager().GetAudioManager();
         _ctx->entity_mgr->ForEachAlive<world::entity::enemy::EnemyEntity>(
-            [this](world::entity::enemy::EnemyEntity& enemy)
+            [this, &audio](world::entity::enemy::EnemyEntity& enemy)
             {
-                for (auto& cmd : enemy.ConsumePendingProjectileSpawns())
+                auto spawns = enemy.ConsumePendingProjectileSpawns();
+                if (spawns.empty())
+                {
+                    return;
+                }
+
+                // One shot per firing enemy this frame, not one per bullet --
+                // e.g. Met's 3-way volley on waking up is a single "it fired"
+                // cue, not three overlapping copies of the same SE.
+                audio.PlaySe(L"enemy_fire");
+                for (auto& cmd : spawns)
                 {
                     auto& projectile = _ctx->entity_mgr->Spawn<world::entity::effects::ProjectileEntity>(cmd);
                     projectile.SetTerrainProbe(_ctx->terrain_probe.get());

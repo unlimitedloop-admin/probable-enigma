@@ -44,7 +44,8 @@ namespace mm2hack::apps::world::entity::avatar
     bool PlayerEntityState::Save(core::save::StateWriter& writer) const
     {
         if (!IsValid() || !kinematic.Save(writer) ||
-            !writer.WriteBool(collidable) || !writer.WriteBool(on_ground) ||
+            !writer.WriteBool(collidable) || !writer.WriteI32(hp) ||
+            !writer.WriteBool(on_ground) ||
             !writer.WriteI32(static_cast<std::int32_t>(facing)) ||
             !writer.WriteI32(base_texture) || !writer.WriteI32(attack_texture) ||
             !locomotion.Save(writer) || !attack.Save(writer) ||
@@ -95,6 +96,7 @@ namespace mm2hack::apps::world::entity::avatar
         bool has_pending_scroll{};
         if (!loaded.kinematic.Load(reader) ||
             !reader.ReadBool(loaded.collidable) ||
+            !reader.ReadI32(loaded.hp) ||
             !reader.ReadBool(loaded.on_ground) ||
             !reader.ReadI32(encoded_facing) ||
             !reader.ReadI32(loaded.base_texture) ||
@@ -197,6 +199,7 @@ namespace mm2hack::apps::world::entity::avatar
                              : charge.phase == ChargePhase::Idle);
 
         return kinematic.IsValid() &&
+            hp >= 0 && hp <= PlayerVitalityTuning{}.maxHp &&
             (facing == AvatarDirection::Left || facing == AvatarDirection::Right) &&
             IsTexture(base_texture) && IsTexture(attack_texture) &&
             locomotion.IsValid() && attack.IsValid() &&
