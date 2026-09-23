@@ -59,6 +59,14 @@ namespace mm2hack::apps::world::entity::avatar
         DashStart,
         Dashing,
         ToTheLeft = 40,
+        // Knockback ("Setback") reaction tiles -- right-facing; ToTheLeft(40)
+        // is added on top exactly like every other tile, via composeFinalTexture_().
+        DamagedGroundA = 81,
+        DamagedGroundB = 82,
+        DamagedGroundC = 83,
+        DamagedAirA = 84,
+        DamagedAirB = 85,
+        DamagedAirC = 86,
         IntroDropEmpty = 160,
         IntroDropA,
         IntroDropB,

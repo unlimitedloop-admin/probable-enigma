@@ -70,6 +70,17 @@ namespace mm2hack::apps::world::entity::avatar
         int maxHp{ 28 };
     };
 
+    // Head-impact effect drawn alongside the player while in knockback (see
+    // states::SetbackState / PlayerContext::damageEffectTile). Mirrors
+    // states::RockBusterDrawInfo's shape -- a second sprite PlayerEntity
+    // draws itself in Render(), not a spawned effect entity, since it must
+    // track the player's own (moving) position every frame.
+    struct DamageEffectDrawInfo
+    {
+        bool visible{ false };
+        int texture{ 0 };
+    };
+
     // Player physical environment
     enum class PlayerEnvironment : std::uint8_t
     {

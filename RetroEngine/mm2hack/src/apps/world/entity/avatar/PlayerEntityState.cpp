@@ -45,6 +45,9 @@ namespace mm2hack::apps::world::entity::avatar
     {
         if (!IsValid() || !kinematic.Save(writer) ||
             !writer.WriteBool(collidable) || !writer.WriteI32(hp) ||
+            !writer.WriteU8(invincible_frames_remaining) ||
+            !writer.WriteBool(damage_effect.visible) ||
+            !writer.WriteI32(damage_effect.texture) ||
             !writer.WriteBool(on_ground) ||
             !writer.WriteI32(static_cast<std::int32_t>(facing)) ||
             !writer.WriteI32(base_texture) || !writer.WriteI32(attack_texture) ||
@@ -97,6 +100,9 @@ namespace mm2hack::apps::world::entity::avatar
         if (!loaded.kinematic.Load(reader) ||
             !reader.ReadBool(loaded.collidable) ||
             !reader.ReadI32(loaded.hp) ||
+            !reader.ReadU8(loaded.invincible_frames_remaining) ||
+            !reader.ReadBool(loaded.damage_effect.visible) ||
+            !reader.ReadI32(loaded.damage_effect.texture) ||
             !reader.ReadBool(loaded.on_ground) ||
             !reader.ReadI32(encoded_facing) ||
             !reader.ReadI32(loaded.base_texture) ||
@@ -200,6 +206,7 @@ namespace mm2hack::apps::world::entity::avatar
 
         return kinematic.IsValid() &&
             hp >= 0 && hp <= PlayerVitalityTuning{}.maxHp &&
+            invincible_frames_remaining <= 84 &&
             (facing == AvatarDirection::Left || facing == AvatarDirection::Right) &&
             IsTexture(base_texture) && IsTexture(attack_texture) &&
             locomotion.IsValid() && attack.IsValid() &&
