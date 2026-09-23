@@ -217,6 +217,10 @@ namespace mm2hack::apps::world::entity::effects
         pos += vel * dt;
         _age_sec += dt;
         ++_elapsed_ticks;
+        if (_deflect_grace_frames > 0)
+        {
+            --_deflect_grace_frames;
+        }
 
         // A non-positive lifetime is the existing sentinel for an entity that
         // remains alive until it leaves the active view.
@@ -285,6 +289,14 @@ namespace mm2hack::apps::world::entity::effects
 
     void ProjectileEntity::OnEntityCollision(IEntity& other)
     {
+        // Still drifting clear from a very recent deflection -- ignore every
+        // collision (not just another deflect) until then, see
+        // _deflect_grace_frames's declaration comment for why.
+        if (_deflect_grace_frames > 0)
+        {
+            return;
+        }
+
         // A deflector (Met hidden under its helmet) bounces the shot instead
         // of consuming it -- queried the same way a receiver queries
         // IAttackInfo. The deflector's own OnEntityCollision() independently
@@ -315,6 +327,16 @@ namespace mm2hack::apps::world::entity::effects
         vel.x = speed * reversed_dir * std::cos(kDeflectAngleRad);
         vel.y = speed * std::sin(kDeflectAngleRad);
         _pending_deflected = true;
+
+        // No position change -- deliberately. An earlier version nudged pos
+        // to guarantee clearing the deflector's Bounds() the same frame, but
+        // that read as a visible teleport/warp at the moment of impact. A
+        // grace period (ignore further collisions for a few frames instead,
+        // see OnEntityCollision()) fixes the same re-deflect bug without
+        // moving the sprite at all -- it just flies out under its own
+        // (admittedly modest) redirected velocity like it looks like it should.
+        constexpr int kDeflectGraceFrames = 12;
+        _deflect_grace_frames = kDeflectGraceFrames;
     }
 
     void ProjectileEntity::Render(RenderContext& ctx)

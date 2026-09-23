@@ -120,7 +120,7 @@ namespace mm2hack::apps::world::entity::effects
         // keeps its speed, reverses horizontal direction (back the way it
         // came), and arcs it upward. Same graphic, new trajectory; no change
         // to collisionLayer/weapon, so it can still hit something else along
-        // the new path.
+        // the new path. Also arms _deflect_grace_frames (see its declaration).
         void deflect_() noexcept;
 
     private:
@@ -145,5 +145,14 @@ namespace mm2hack::apps::world::entity::effects
 
         const systems::physics::ITerrainProbe* _terrain{ nullptr }; // Not saved; re-wired externally
         bool _pending_deflected{ false };               // Not saved; see ConsumeDeflected()
+        // Frames left to ignore further OnEntityCollision() calls after a
+        // deflection. Without this, the shot -- still alive/collidable, still
+        // overlapping the deflector's Bounds() for a few frames while it
+        // drifts away at its (comparatively slow) redirected velocity -- gets
+        // re-processed by CollisionSystem every one of those frames and
+        // re-deflects the already-deflected velocity each time, reading as an
+        // erratic S-curve. Not saved -- short-lived (a handful of frames),
+        // same reasoning as _pending_deflected above.
+        int _deflect_grace_frames{ 0 };
     };
 }
