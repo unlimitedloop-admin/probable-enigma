@@ -152,6 +152,12 @@ namespace mm2hack::apps::world::entity::enemy::animation
         // shot/hop direction derived from it) can't flip mid-attack just
         // because the player crossed to the other side.
         bool track_player_facing{ true };
+        // False (the common case): a hit is a normal hit. True: while this
+        // state is active, the entity takes no damage from an incoming
+        // attack at all -- the attacking collider deflects instead (see
+        // systems::physics::IDeflector, EnemyEntity::DeflectsAttacks()).
+        // Met's `idle` (still hidden under its helmet) sets this true.
+        bool deflects_attacks{ false };
     };
 
     // One creature's full animation graph, loaded once from its JSON pattern

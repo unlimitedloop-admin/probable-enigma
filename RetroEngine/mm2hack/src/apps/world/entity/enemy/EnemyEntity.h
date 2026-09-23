@@ -30,6 +30,7 @@
 #include "apps/systems/combat/IDamageable.h"
 #include "apps/systems/physics/CollisionLayer.h"
 #include "apps/systems/physics/ICollider.h"
+#include "apps/systems/physics/IDeflector.h"
 #include "apps/systems/physics/SimpleGravityBody.h"
 #include "apps/systems/physics/TileAttribute.h"
 #include "apps/systems/view/RenderContext.h"
@@ -84,7 +85,8 @@ namespace mm2hack::apps::world::entity::enemy
     class EnemyEntity final :
         public EntityBase,
         public systems::physics::ICollider,
-        public systems::combat::IDamageable
+        public systems::combat::IDamageable,
+        public systems::physics::IDeflector
     {
         // NOTE: no `Layer` alias here -- it would collide with ICollider::Layer() below.
         using RectF = foundation::math::RectF;
@@ -242,6 +244,9 @@ namespace mm2hack::apps::world::entity::enemy
         [[nodiscard]] int CurrentHP() const noexcept override { return _health.CurrentHP(); }
         [[nodiscard]] int MaxHP() const noexcept override { return _health.MaxHP(); }
         [[nodiscard]] bool IsDead() const noexcept override { return _health.IsDead(); }
+
+        // IDeflector -- data-driven per animation state, see AnimationState::deflects_attacks
+        [[nodiscard]] bool DeflectsAttacks() const noexcept override { return _animator.DeflectsAttacks(); }
 
     private:
         EnemyKind _kind{ EnemyKind::Met };

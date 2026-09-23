@@ -11,6 +11,7 @@
 #include "apps/world/entity/EntityBase.h"
 
 #include <cstdint>
+#include <utility>
 
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/rendering/sprite/SpriteManager.h"
@@ -92,6 +93,18 @@ namespace mm2hack::apps::world::entity::effects
         void OnTileCollision(const Vec2& normal, TileAttribute attr) override;
         void OnEntityCollision(IEntity& other) override;
 
+        // Drains (and clears) whether this shot deflected off an
+        // IDeflector-implementing collider since the last call. Polled by
+        // AbstractActionPhase right after collision resolution to play
+        // "defend_shot" once per frame -- this entity has no AudioManager
+        // access of its own, same reasoning as every other entity-side SE.
+        // Not saved (see CanCaptureState()-style reasoning elsewhere): this
+        // flag never survives more than a fraction of a frame in practice.
+        [[nodiscard]] bool ConsumeDeflected() noexcept
+        {
+            return std::exchange(_pending_deflected, false);
+        }
+
         // IAttackInfo
         [[nodiscard]] int AttackPower() const noexcept override { return _power; }
         // A charged Rock Buster shot is still the Buster -- charge level only
@@ -103,6 +116,12 @@ namespace mm2hack::apps::world::entity::effects
         // travel) and reports whether it has run into a solid tile. No-op (false)
         // when no ITerrainProbe has been wired -- see SetTerrainProbe().
         [[nodiscard]] bool checkTerrainCollision_() const;
+        // Redirects this shot's velocity off an IDeflector instead of dying --
+        // keeps its speed, reverses horizontal direction (back the way it
+        // came), and arcs it upward. Same graphic, new trajectory; no change
+        // to collisionLayer/weapon, so it can still hit something else along
+        // the new path.
+        void deflect_() noexcept;
 
     private:
         systems::view::Layer _draw_layer{ systems::view::Layer::Actors }; // Drawing layer
@@ -125,5 +144,6 @@ namespace mm2hack::apps::world::entity::effects
         bool _terrain_collision_enabled{ false };       // Per-shot opt-in; see SpawnProjectileCommand::terrainCollisionEnabled
 
         const systems::physics::ITerrainProbe* _terrain{ nullptr }; // Not saved; re-wired externally
+        bool _pending_deflected{ false };               // Not saved; see ConsumeDeflected()
     };
 }

@@ -7,6 +7,7 @@
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/runtime/GameContext.h"
+#include "apps/systems/physics/IDeflector.h"
 #include "apps/systems/view/RenderContext.h"
 #include "apps/systems/view/ViewState.h"
 #include "apps/world/entity/common/SpawnProjectileCommand.h"
@@ -284,11 +285,36 @@ namespace mm2hack::apps::world::entity::effects
 
     void ProjectileEntity::OnEntityCollision(IEntity& other)
     {
+        // A deflector (Met hidden under its helmet) bounces the shot instead
+        // of consuming it -- queried the same way a receiver queries
+        // IAttackInfo. The deflector's own OnEntityCollision() independently
+        // skips taking damage; this is purely this shot's own reaction.
+        if (auto* deflector = dynamic_cast<systems::physics::IDeflector*>(&other);
+            deflector != nullptr && deflector->DeflectsAttacks())
+        {
+            deflect_();
+            return;
+        }
+
         // Any collidable partner reaching here has already passed the CollisionMatrix
         // filter (Enemy/Trap for the ProjectilePlayer layer), so a single shot is
         // consumed on any qualifying hit -- matches the original Rock Buster behavior.
-        (void)other;
         Kill();
+    }
+
+    void ProjectileEntity::deflect_() noexcept
+    {
+        // Fixed upward-back arc, same speed as before -- a glancing "clink"
+        // off the helmet rather than an aimed reflection back at whoever
+        // fired it (see the design discussion this landed from: a redirect
+        // reads as clearly "no effect" without turning the player's own shot
+        // into a threat against them).
+        constexpr double kDeflectAngleRad = -0.6; // ~-34 degrees; screen Y grows down, so negative = up.
+        const double speed = std::hypot(vel.x, vel.y);
+        const double reversed_dir = (vel.x >= 0.0) ? -1.0 : 1.0;
+        vel.x = speed * reversed_dir * std::cos(kDeflectAngleRad);
+        vel.y = speed * std::sin(kDeflectAngleRad);
+        _pending_deflected = true;
     }
 
     void ProjectileEntity::Render(RenderContext& ctx)

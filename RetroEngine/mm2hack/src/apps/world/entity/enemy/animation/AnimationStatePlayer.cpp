@@ -160,6 +160,16 @@ namespace mm2hack::apps::world::entity::enemy::animation
         return _def->states[static_cast<std::size_t>(_state_index)].track_player_facing;
     }
 
+    bool AnimationStatePlayer::DeflectsAttacks() const noexcept
+    {
+        if (_def == nullptr ||
+            _state_index < 0 || _state_index >= static_cast<int>(_def->states.size()))
+        {
+            return false;
+        }
+        return _def->states[static_cast<std::size_t>(_state_index)].deflects_attacks;
+    }
+
     bool AnimationStatePlayer::RestoreState(
         int state_index, int frame_index, int frame_elapsed, int state_elapsed,
         const EnemyAnimationDef& def) noexcept

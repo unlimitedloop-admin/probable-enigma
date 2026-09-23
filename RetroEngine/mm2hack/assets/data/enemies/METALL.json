@@ -8,6 +8,7 @@
             "id": "idle",
             "loop": false,
             "allow_movement": false,
+            "deflects_attacks": true,
             "frames": [
                 { "tile": 0, "wait": "hold" }
             ],
@@ -102,6 +103,7 @@
             "loop": false,
             "allow_movement": false,
             "track_player_facing": false,
+            "deflects_attacks": true,
             "frames": [
                 { "tile": 0, "wait": "hold" }
             ],

@@ -334,6 +334,7 @@
     <ClInclude Include="src\apps\world\entity\enemy\animation\AnimationStatePlayer.h" />
     <ClInclude Include="src\apps\world\entity\enemy\animation\EnemyDefinitionCatalog.h" />
     <ClInclude Include="src\apps\systems\physics\IAttackInfo.h" />
+    <ClInclude Include="src\apps\systems\physics\IDeflector.h" />
     <ClInclude Include="src\apps\systems\physics\WeaponId.h" />
     <ClInclude Include="src\apps\systems\combat\DamageTable.h" />
     <ClInclude Include="src\apps\systems\combat\IDamageable.h" />

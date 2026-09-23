@@ -666,6 +666,7 @@ namespace mm2hack::apps::scenes::phases
                 _ctx->collision.ResolveEntities(colliders);
                 spawnDestructionEffectsForTheDead_(colliders);
                 spawnHitEffectsForTheSurvivors_(damageable_hp_before);
+                spawnDeflectEffectsForTheBounced_(colliders);
 
                 delta = player->pos - prev_pos;
             }
@@ -853,6 +854,25 @@ namespace mm2hack::apps::scenes::phases
         // SE channel pair, no point stacking retriggers.
         if (any_enemy_hit) { audio.PlaySe(L"hit_attack"); }
         if (player_hit) { audio.PlaySe(L"be_damaged"); }
+    }
+
+    void AbstractActionPhase::spawnDeflectEffectsForTheBounced_(
+        const std::vector<systems::physics::ICollider*>& colliders)
+    {
+        bool any_deflected = false;
+        for (auto* collider : colliders)
+        {
+            auto* projectile = dynamic_cast<world::entity::effects::ProjectileEntity*>(collider);
+            if (projectile != nullptr && projectile->ConsumeDeflected())
+            {
+                any_deflected = true;
+            }
+        }
+
+        if (any_deflected)
+        {
+            runtime::GameContext::GetInstance().GetResourceManager().GetAudioManager().PlaySe(L"defend_shot");
+        }
     }
 
     void AbstractActionPhase::spawnEnemyProjectiles_()

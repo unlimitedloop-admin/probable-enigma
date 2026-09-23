@@ -157,6 +157,11 @@ namespace mm2hack::apps::scenes::phases
         // damage this pass but is still alive (a lethal hit is destruction's job,
         // via spawnDestructionEffectsForTheDead_() above).
         void spawnHitEffectsForTheSurvivors_(const std::vector<DamageableHpSnapshot>& before);
+        // Drains every ProjectileEntity's ConsumeDeflected() (set by
+        // ProjectileEntity::OnEntityCollision() when it bounces off an
+        // IDeflector, e.g. Met hidden under its helmet) and plays "defend_shot"
+        // once if anything deflected this pass.
+        void spawnDeflectEffectsForTheBounced_(const std::vector<systems::physics::ICollider*>& colliders);
         // Drains every alive EnemyEntity's ConsumePendingProjectileSpawns() and
         // actually Spawn()s them -- the entity itself has no EntityManager
         // access (see AnimationTransition::projectile_spawns).

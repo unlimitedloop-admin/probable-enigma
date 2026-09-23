@@ -385,6 +385,14 @@ namespace mm2hack::apps::world::entity::enemy
             return;
         }
 
+        // Deflecting (Met hidden under its helmet) takes no damage at all --
+        // the attacking collider itself decides how to bounce off (see
+        // ProjectileEntity::OnEntityCollision()); nothing to do on this side.
+        if (DeflectsAttacks())
+        {
+            return;
+        }
+
         if (ApplyAttack(*attack))
         {
             // Destruction VFX/SFX and the non-lethal "hit" SE are both fired

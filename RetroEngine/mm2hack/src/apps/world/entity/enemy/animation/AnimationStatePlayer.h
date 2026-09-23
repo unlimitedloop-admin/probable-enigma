@@ -41,6 +41,11 @@ namespace mm2hack::apps::world::entity::enemy::animation
         // AnimationState::track_player_facing). Permissive (true) with no
         // attached definition, matching the rest of this class's null-safety.
         [[nodiscard]] bool TracksPlayerFacing() const noexcept;
+        // Whether the current state deflects incoming attacks instead of
+        // taking damage (see AnimationState::deflects_attacks). false with no
+        // attached definition (a defined enemy with no data shouldn't become
+        // unkillable by accident).
+        [[nodiscard]] bool DeflectsAttacks() const noexcept;
         // 0.0 normally; non-zero only immediately after a Tick() where a
         // transition carrying a jump_impulse fired (see AnimationTransition::
         // jump_impulse) -- read this right after calling Tick(), same frame.
