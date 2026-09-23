@@ -5,6 +5,7 @@
 #include <algorithm>
 
 #include "apps/systems/physics/ITerrainProbe.h"
+#include "apps/world/entity/avatar/abilities/MovementAbilities.h"
 #include "apps/world/entity/avatar/AvatarStatus.h"
 #include "apps/world/entity/avatar/PlayerContext.h"
 #include "apps/world/entity/avatar/PlayerParams.h"
@@ -34,32 +35,34 @@ namespace mm2hack::apps::world::entity::avatar::states
         return true;
     }
 
-    void SetbackState::OnEnter(PlayerContext& cx, StateProvider*, const PlayerTuning&)
+    void SetbackState::OnEnter(PlayerContext& cx, StateProvider*, const PlayerTuning& t)
     {
         _elapsed_frames = 0;
         _airborne = !cx.onGround;
+        // "Still rising" is judged off the real vel.y at the moment of
+        // impact, but the launch itself always uses the full jumpImpulse --
+        // a partial hit late in the ascent (vel.y just past the threshold)
+        // relaunching at full strength reads as a proper knockback punch,
+        // rather than a barely-there continuation of whatever was left of
+        // the original jump. Gravity decays it from there every frame
+        // (abilities::apply_gravity, Update()), same as a real jump arc, and
+        // it's free to turn into a fall before the 28 frames are up.
         _rising = _airborne && cx.vel.y < kAirRiseThreshold;
+
         cx.vel = {};
+        if (_rising) { cx.vel.y = t.jumpImpulse; }
         cx.animeStepper.reset();
 
         cx.basePose = static_cast<int>(_airborne ? kAirCycle[0] : kGroundCycle[0]);
         cx.damageEffectTile = kEffectBaseTile + (cx.facingLR == AvatarDirection::Left ? kEffectLeftOffset : 0);
     }
 
-    AvatarStatus SetbackState::Update(PlayerContext& cx, StateProvider*, const PlayerTuning&, double)
+    AvatarStatus SetbackState::Update(PlayerContext& cx, StateProvider*, const PlayerTuning& t, double)
     {
         if (_elapsed_frames < kDurationFrames)
         {
             ++_elapsed_frames;
         }
-
-        // Only meaningful for the air branch: true the instant the falling
-        // slam touches ground before the 28-frame timer runs out. Without
-        // this, a knockback that started airborne would keep running the air
-        // cycle (and later hand off to Hovering) even after it's visibly
-        // sitting on the floor -- Hovering never sees a landing edge in that
-        // case (onGround was already true on entry) and gets stuck.
-        bool landed_early = false;
 
         if (!_airborne)
         {
@@ -72,13 +75,32 @@ namespace mm2hack::apps::world::entity::avatar::states
         else
         {
             cx.vel.x = 0.0;
-            cx.vel.y = _rising ? -kAirRisePxPerFrame : kAirFallPxPerFrame;
+            if (_rising)
+            {
+                // Same decay normal jump physics uses -- not a fixed rate.
+                // Naturally turns into falling once gravity eats through it.
+                abilities::apply_gravity(cx.vel, t.gravity, t.terminalVelocity);
+            }
+            else
+            {
+                cx.vel.y = kAirFallPxPerFrame;
+            }
+
             const auto v_hit = cx.terrain->SweepVertical(cx.probes, cx.vel);
             if (v_hit.hit)
             {
                 cx.vel.y = v_hit.maxDistanceY;
                 const bool now_grounded = (v_hit.kind == systems::physics::VHitKind::Floor);
-                landed_early = now_grounded && !cx.onGround;
+                if (now_grounded && !cx.onGround)
+                {
+                    // Landed before the 28 frames were up -- convert to ground
+                    // mode (both movement and the tile cycle below key off
+                    // _airborne) and keep going for the remaining frames,
+                    // retreating like a knockback that started grounded,
+                    // instead of ending early or handing off to Hovering
+                    // while already touching the floor.
+                    _airborne = false;
+                }
                 cx.onGround = now_grounded;
             }
         }
@@ -90,10 +112,6 @@ namespace mm2hack::apps::world::entity::avatar::states
         const int effect_index = std::min(3, static_cast<int>(_elapsed_frames / kEffectFramesPerTile));
         cx.damageEffectTile = kEffectBaseTile + effect_index + (cx.facingLR == AvatarDirection::Left ? kEffectLeftOffset : 0);
 
-        if (landed_early)
-        {
-            return AvatarStatus::Standing;
-        }
         if (_elapsed_frames >= kDurationFrames)
         {
             return _airborne ? AvatarStatus::Hovering : AvatarStatus::Standing;

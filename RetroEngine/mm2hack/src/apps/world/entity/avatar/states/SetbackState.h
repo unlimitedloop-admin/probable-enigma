@@ -43,10 +43,16 @@ namespace mm2hack::apps::world::entity::avatar::states
         // makeDashProbes_()'s own local hardcoded offsets.
         static constexpr std::uint8_t kDurationFrames{ 28 };
         static constexpr double kGroundRetreatPxPerFrame{ 0.5 };
-        static constexpr double kAirRisePxPerFrame{ 1.0 };
-        static constexpr double kAirFallPxPerFrame{ 2.0 };
+        // Steep dive for the "not still rising" air branch -- if it lands
+        // before the 28 frames are up, the state converts to ground mode
+        // (see _airborne) and finishes out the remaining frames retreating,
+        // rather than ending early.
+        static constexpr double kAirFallPxPerFrame{ 4.0 };
         // Below this vel.y (more negative = faster upward), the hit is judged
-        // "still clearly ascending from a jump" -- rise further; otherwise fall.
+        // "still clearly ascending from a jump" -- in that case the knockback
+        // just lets normal jump gravity (PlayerTuning::gravity/terminalVelocity,
+        // via abilities::apply_gravity) keep decaying the existing vel.y for the
+        // full 28 frames, rather than imposing a fixed rate; otherwise it dives.
         static constexpr double kAirRiseThreshold{ -0x02.00p0 };
         static constexpr std::uint8_t kBodyFramesPerTile{ 2 };
         static constexpr std::uint8_t kEffectFramesPerTile{ 8 };

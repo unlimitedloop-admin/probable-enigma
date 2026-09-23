@@ -140,7 +140,7 @@
                     "file": "assets/sounds/SoundEffects/ENEMYFIRE_EFFECT_N0_SE_Square2.wav",
                     "volume": 255,
                     "voice": "pulse2",
-                    "priority": 1
+                    "priority": 0
                 }
             ]
         },
@@ -150,13 +150,13 @@
                     "file": "assets/sounds/SoundEffects/ONSTAGE_EFFECT_N0_SE_Square2.wav",
                     "volume": 255,
                     "voice": "pulse2",
-                    "priority": 2
+                    "priority": 0
                 },
                 {
                     "file": "assets/sounds/SoundEffects/ONSTAGE_EFFECT_N0_SE_Noise.wav",
                     "volume": 255,
                     "voice": "noise",
-                    "priority": 2
+                    "priority": 0
                 }
             ]
         }
