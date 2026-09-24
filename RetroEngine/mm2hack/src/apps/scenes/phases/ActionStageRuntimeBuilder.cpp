@@ -166,13 +166,17 @@ namespace mm2hack::apps::scenes::phases
             constexpr double kMetallHalfHeight = 16.0; // 32x32 tile
             // Hit box, independent of the render half-size above -- measured
             // against METALL_ARMY_N0_ALL_PATTERN.png's opaque pixels, which
-            // span roughly x=7-25 across every pose and grow as tall as
-            // y=7-31 while rising/walking/jumping (vs. a squat y=21-31 while
-            // idle/cooldown -- but Met takes no damage in those states
-            // anyway, see EnemyEntity::DeflectsAttacks()). Same reasoning as
-            // PlayerEntity::_hitbox_half: a fixed box can't track the pose
-            // exactly, so this favors the taller, "active" silhouette.
-            constexpr foundation::math::Vec2 kMetallHitboxHalfSize{ 9.0, 12.0 };
+            // span roughly x=7-25 across every pose. Height is trickier: the
+            // silhouette is bottom-anchored (y≈29-31) across every pose, but
+            // the top varies a lot -- y=21 while idle/cooldown (helmet down,
+            // crouched -- also Met's deflecting states, see DeflectsAttacks())
+            // vs. y=7-13 while rising/walking/jumping. A box centered on pos
+            // would either loom way above the idle/helmet silhouette or clip
+            // the active one, so kMetallHitboxOffsetY nudges the box down
+            // instead of centering it, trimming that overhang while still
+            // reaching up into most of the active poses.
+            constexpr foundation::math::Vec2 kMetallHitboxHalfSize{ 9.0, 8.0 };
+            constexpr double kMetallHitboxOffsetY = 10.0;
             const double metall_spawn_y = player->pos.y - 32.0; // above the floor; gravity does the rest
             constexpr int kDefaultPresetIndex = 0;
 
@@ -189,6 +193,7 @@ namespace mm2hack::apps::scenes::phases
                     /* toughness */ 3,
                     foundation::math::Vec2{ kMetallHalfHeight, kMetallHalfHeight },
                     kMetallHitboxHalfSize,
+                    kMetallHitboxOffsetY,
                     /* move_speed_scale */ 1.0,
                     /* gravity_scale */ 1.0,
                     ctx.asset_provider->EnemyProjectileSprite());

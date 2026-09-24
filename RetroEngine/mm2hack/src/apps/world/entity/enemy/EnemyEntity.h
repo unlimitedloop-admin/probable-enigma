@@ -61,6 +61,9 @@ namespace mm2hack::apps::world::entity::enemy
         // keep a hit box separate from their render footprint -- see
         // EnemyEntity::_hitbox_half.
         foundation::math::Vec2 hitbox_half_size{ 8.0, 8.0 };
+        // Shifts the hit box's center down from pos (Y only, same idea as
+        // kDefaultProjectileSpawnOffsetY) -- see EnemyEntity::_hitbox_offset_y.
+        double hitbox_offset_y{ 0.0 };
         double spawn_x{};                              // Original spawn X, kept for future leash/return-to-post AI; independent of the live, moving pos.x
         double move_speed_px_per_sec{};                // Already includes the spawn-time speed scale
         std::int32_t facing{ 1 };                       // +1 = moving right, -1 = moving left
@@ -157,6 +160,9 @@ namespace mm2hack::apps::world::entity::enemy
         // fall faster/slower than the player without a second knob.
         // `hitbox_half_size`: entity-collision box (ICollider::Bounds()),
         // independent of `half_size` (render/probe footprint) -- see _hitbox_half.
+        // `hitbox_offset_y`: shifts that box's center down from pos (0.0 for
+        // kinds whose silhouette is already centered in the tile) -- see
+        // _hitbox_offset_y.
         // `projectile_sprite_id`: sprite for shots this enemy's animation graph
         // fires (see AnimationTransition::projectile_spawns); default (-1) is
         // fine for enemies whose graph never carries projectile_spawns.
@@ -170,6 +176,7 @@ namespace mm2hack::apps::world::entity::enemy
             int toughness,
             Vec2 half_size,
             Vec2 hitbox_half_size,
+            double hitbox_offset_y = 0.0,
             double move_speed_scale = 1.0,
             double gravity_scale = 1.0,
             rendering::sprite::SpriteManager::Id projectile_sprite_id =
@@ -288,6 +295,15 @@ namespace mm2hack::apps::world::entity::enemy
         // pixels don't fill the full tile, so using _half here let attacks
         // register while still visibly outside the sprite.
         Vec2 _hitbox_half{ 8.0, 8.0 };
+        // Shifts the hit box's center down (+) from pos, Y only for now (same
+        // reasoning as kDefaultProjectileSpawnOffsetY). Met's own silhouette
+        // sits low in its tile and consistently bottom-anchored across every
+        // pose while its top varies a lot (crouched under its helmet vs.
+        // reared back mid-attack) -- a plain symmetric half-size around pos
+        // can't track that, so this nudges the box toward the bottom instead
+        // of centering it, trimming how far the box reaches above Met's
+        // actual visible top.
+        double _hitbox_offset_y{ 0.0 };
         systems::combat::HealthComponent _health{};     // HP + per-weapon resistance
         int _toughness{ 1 };                            // Raw tuning value driving _health's (max_hp, table); saved as-is
         animation::AnimationStatePlayer _animator{};    // Drives which tile is currently shown
