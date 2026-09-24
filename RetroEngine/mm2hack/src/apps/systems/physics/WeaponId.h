@@ -23,6 +23,10 @@ namespace mm2hack::apps::systems::physics
         // A generic enemy projectile. Resolves against PlayerEntity's own
         // combat::DamageTable (see PlayerEntity::ApplyAttack()).
         EnemyShot,
+        // Touching an enemy's body directly (no projectile involved). Kept
+        // distinct from EnemyShot so a kind's resistance to being touched can
+        // differ from its resistance to being shot at, later.
+        EnemyContact,
 
         Count
     };

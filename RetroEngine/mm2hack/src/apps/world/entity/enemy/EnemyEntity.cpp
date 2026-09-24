@@ -46,6 +46,8 @@ namespace mm2hack::apps::world::entity::enemy
             writer.WriteI32(hp) &&
             writer.WriteF64(half_size.x) &&
             writer.WriteF64(half_size.y) &&
+            writer.WriteF64(hitbox_half_size.x) &&
+            writer.WriteF64(hitbox_half_size.y) &&
             writer.WriteF64(spawn_x) &&
             writer.WriteF64(move_speed_px_per_sec) &&
             writer.WriteI32(facing) &&
@@ -71,6 +73,8 @@ namespace mm2hack::apps::world::entity::enemy
             !reader.ReadI32(loaded.hp) ||
             !reader.ReadF64(loaded.half_size.x) ||
             !reader.ReadF64(loaded.half_size.y) ||
+            !reader.ReadF64(loaded.hitbox_half_size.x) ||
+            !reader.ReadF64(loaded.hitbox_half_size.y) ||
             !reader.ReadF64(loaded.spawn_x) ||
             !reader.ReadF64(loaded.move_speed_px_per_sec) ||
             !reader.ReadI32(loaded.facing) ||
@@ -109,6 +113,8 @@ namespace mm2hack::apps::world::entity::enemy
             hp >= 1 && hp <= std::max(1, toughness) &&
             std::isfinite(half_size.x) && half_size.x > 0.0 && half_size.x <= kMaximumHalfSize &&
             std::isfinite(half_size.y) && half_size.y > 0.0 && half_size.y <= kMaximumHalfSize &&
+            std::isfinite(hitbox_half_size.x) && hitbox_half_size.x > 0.0 && hitbox_half_size.x <= kMaximumHalfSize &&
+            std::isfinite(hitbox_half_size.y) && hitbox_half_size.y > 0.0 && hitbox_half_size.y <= kMaximumHalfSize &&
             std::isfinite(spawn_x) && std::abs(spawn_x) <= kMaximumCoordinate &&
             std::isfinite(move_speed_px_per_sec) &&
             move_speed_px_per_sec >= 0.0 && move_speed_px_per_sec <= kMaximumSpeed &&
@@ -132,11 +138,13 @@ namespace mm2hack::apps::world::entity::enemy
         int facing_texture_offset_left,
         int toughness,
         Vec2 half_size,
+        Vec2 hitbox_half_size,
         double move_speed_scale,
         double gravity_scale,
         rendering::sprite::SpriteManager::Id projectile_sprite_id)
         : _kind(kind), _id(sprite_id), _palette_preset_index(palette_preset_index),
           _facing_texture_offset_left(facing_texture_offset_left), _half(half_size),
+          _hitbox_half(hitbox_half_size),
           _toughness(toughness), _projectile_sprite_id(projectile_sprite_id)
     {
         pos = spawn_pos;
@@ -188,6 +196,7 @@ namespace mm2hack::apps::world::entity::enemy
             .toughness = _toughness,
             .hp = _health.CurrentHP(),
             .half_size = _half,
+            .hitbox_half_size = _hitbox_half,
             .spawn_x = _spawn_x,
             .move_speed_px_per_sec = _move_speed,
             .facing = _facing,
@@ -226,6 +235,7 @@ namespace mm2hack::apps::world::entity::enemy
         _palette_preset_index = state.palette_preset_index;
         _facing_texture_offset_left = state.facing_texture_offset_left;
         _half = state.half_size;
+        _hitbox_half = state.hitbox_half_size;
         _spawn_x = state.spawn_x;
         _move_speed = state.move_speed_px_per_sec;
         _facing = state.facing;
@@ -365,7 +375,7 @@ namespace mm2hack::apps::world::entity::enemy
 
     EnemyEntity::RectF EnemyEntity::Bounds() const
     {
-        return { pos.x - _half.x, pos.y - _half.y, _half.x * 2.0, _half.y * 2.0 };
+        return { pos.x - _hitbox_half.x, pos.y - _hitbox_half.y, _hitbox_half.x * 2.0, _hitbox_half.y * 2.0 };
     }
 
     void EnemyEntity::OnEntityCollision(IEntity& other)
@@ -376,9 +386,9 @@ namespace mm2hack::apps::world::entity::enemy
         }
 
         // Only a collider that carries an attack payload damages the enemy (a
-        // player projectile today). Contact damage against the player -- this
-        // enemy implementing IAttackInfo -- is a later step (player isn't
-        // IDamageable yet either).
+        // player projectile). This enemy's own IAttackInfo (contact damage
+        // against the player) is handled the other way around, generically,
+        // by PlayerEntity::OnEntityCollision() -- nothing to special-case here.
         auto* attack = dynamic_cast<systems::physics::IAttackInfo*>(&other);
         if (attack == nullptr)
         {

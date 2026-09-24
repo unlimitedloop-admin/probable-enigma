@@ -127,12 +127,17 @@
         "defend_shot": {
             "channels": [
                 {
-                    "file": "assets/sounds/SoundEffects/DEFENSIVE_FLIPSHOT_EFFECT_N0_SE_Square2.wav",
+                    "file": "assets/sounds/SoundEffects/DEFENSIVE_FLIPSHOT2_EFFECT_N0_SE_Square2.wav",
                     "volume": 255,
                     "voice": "pulse2",
                     "priority": 2
-                }
-            ]
+                },
+                {
+                    "file": "assets/sounds/SoundEffects/DEFENSIVE_FLIPSHOT2_EFFECT_N0_SE_Triangle.wav",
+                    "volume": 255,
+                    "voice": "triangle",
+                    "priority": 2
+                }]
         },
         "enemy_small_explosion": {
             "channels": [

@@ -41,7 +41,7 @@ namespace mm2hack::apps::world::entity::avatar::states
         // to this one state, and IPlayerState's fixed method signatures have no
         // room for a second tuning parameter; mirrors DashingState::
         // makeDashProbes_()'s own local hardcoded offsets.
-        static constexpr std::uint8_t kDurationFrames{ 28 };
+        static constexpr std::uint8_t kDurationFrames{ 0x1C };
         static constexpr double kGroundRetreatPxPerFrame{ 0.5 };
         // Steep dive for the "not still rising" air branch -- if it lands
         // before the 28 frames are up, the state converts to ground mode
@@ -53,7 +53,7 @@ namespace mm2hack::apps::world::entity::avatar::states
         // just lets normal jump gravity (PlayerTuning::gravity/terminalVelocity,
         // via abilities::apply_gravity) keep decaying the existing vel.y for the
         // full 28 frames, rather than imposing a fixed rate; otherwise it dives.
-        static constexpr double kAirRiseThreshold{ -0x02.00p0 };
+        static constexpr double kAirRiseThreshold{ -0x02.B0p0 };
         static constexpr std::uint8_t kBodyFramesPerTile{ 2 };
         static constexpr std::uint8_t kEffectFramesPerTile{ 8 };
         // Left-facing offsets, matching STile::ToTheLeft(40) for the body tile

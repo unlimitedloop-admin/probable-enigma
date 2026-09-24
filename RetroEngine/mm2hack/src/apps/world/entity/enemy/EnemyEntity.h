@@ -29,6 +29,7 @@
 #include "apps/systems/combat/HealthComponent.h"
 #include "apps/systems/combat/IDamageable.h"
 #include "apps/systems/physics/CollisionLayer.h"
+#include "apps/systems/physics/IAttackInfo.h"
 #include "apps/systems/physics/ICollider.h"
 #include "apps/systems/physics/IDeflector.h"
 #include "apps/systems/physics/SimpleGravityBody.h"
@@ -56,6 +57,10 @@ namespace mm2hack::apps::world::entity::enemy
         std::int32_t toughness{ 1 };
         std::int32_t hp{ 1 };                          // Current HP (meaningless/always full when toughness == 0)
         foundation::math::Vec2 half_size{ 8.0, 8.0 };
+        // Independent of half_size, the same way ProjectileEntity/PlayerEntity
+        // keep a hit box separate from their render footprint -- see
+        // EnemyEntity::_hitbox_half.
+        foundation::math::Vec2 hitbox_half_size{ 8.0, 8.0 };
         double spawn_x{};                              // Original spawn X, kept for future leash/return-to-post AI; independent of the live, moving pos.x
         double move_speed_px_per_sec{};                // Already includes the spawn-time speed scale
         std::int32_t facing{ 1 };                       // +1 = moving right, -1 = moving left
@@ -86,7 +91,8 @@ namespace mm2hack::apps::world::entity::enemy
         public EntityBase,
         public systems::physics::ICollider,
         public systems::combat::IDamageable,
-        public systems::physics::IDeflector
+        public systems::physics::IDeflector,
+        public systems::physics::IAttackInfo
     {
         // NOTE: no `Layer` alias here -- it would collide with ICollider::Layer() below.
         using RectF = foundation::math::RectF;
@@ -112,6 +118,12 @@ namespace mm2hack::apps::world::entity::enemy
         // projectile_spawns) -- revisit as a per-spawn parameter if a second
         // kind needs a different value.
         static constexpr int kDefaultProjectilePower{ 1 };
+        // Contact damage (touching this enemy's body directly, no projectile
+        // involved). Shared across every kind for now, same reasoning as
+        // kDefaultProjectilePower above -- revisit as a per-spawn parameter if
+        // a second kind needs a different value. Only actually dealt while
+        // NOT deflecting -- see AttackPower().
+        static constexpr int kDefaultContactDamagePower{ 1 };
         // The ring sprite's actual opaque pixels only cover an 8x8 area centered
         // in its 16x16 tile (ENEMY_PROJECTILES_N0_ALL_PATTERN.png); {3,3} (a 6x6
         // box) covered 75% of that, far stricter than the player's own Rock
@@ -143,6 +155,8 @@ namespace mm2hack::apps::world::entity::enemy
         // `gravity_scale`: multiplies both kDefaultGravityPerFrame and
         // kDefaultTerminalVelocityPerFrame, so heavier/floatier enemies can
         // fall faster/slower than the player without a second knob.
+        // `hitbox_half_size`: entity-collision box (ICollider::Bounds()),
+        // independent of `half_size` (render/probe footprint) -- see _hitbox_half.
         // `projectile_sprite_id`: sprite for shots this enemy's animation graph
         // fires (see AnimationTransition::projectile_spawns); default (-1) is
         // fine for enemies whose graph never carries projectile_spawns.
@@ -155,6 +169,7 @@ namespace mm2hack::apps::world::entity::enemy
             int facing_texture_offset_left,
             int toughness,
             Vec2 half_size,
+            Vec2 hitbox_half_size,
             double move_speed_scale = 1.0,
             double gravity_scale = 1.0,
             rendering::sprite::SpriteManager::Id projectile_sprite_id =
@@ -248,12 +263,31 @@ namespace mm2hack::apps::world::entity::enemy
         // IDeflector -- data-driven per animation state, see AnimationState::deflects_attacks
         [[nodiscard]] bool DeflectsAttacks() const noexcept override { return _animator.DeflectsAttacks(); }
 
+        // IAttackInfo -- contact damage (touching this enemy's body directly).
+        // Returns 0 (no damage; see DamageTable::ComputeDamage()) while
+        // deflecting, so a helmeted Met is safe to stand against, same as it
+        // being immune to the Buster in that state.
+        [[nodiscard]] int AttackPower() const noexcept override
+        {
+            return DeflectsAttacks() ? 0 : kDefaultContactDamagePower;
+        }
+        [[nodiscard]] systems::physics::WeaponId Weapon() const noexcept override
+        {
+            return systems::physics::WeaponId::EnemyContact;
+        }
+
     private:
         EnemyKind _kind{ EnemyKind::Met };
         rendering::sprite::SpriteManager::Id _id{};    // Object sprite id (already the correct color/recolor)
         int _palette_preset_index{ 0 };                 // Which preset produced _id (save-only, see EnemyEntityState)
         int _facing_texture_offset_left{ 0 };           // Added to the animator's tile while facing left
-        Vec2 _half{ 8.0, 8.0 };                         // Half-size (used for both drawing and hit judgement)
+        Vec2 _half{ 8.0, 8.0 };                         // Half-size of the sprite tile (render anchor) -- NOT the hit box, see _hitbox_half
+        // Half-size of the entity-collision box (ICollider::Bounds()),
+        // independent of _half -- same reasoning as ProjectileEntity's
+        // _hit_half_size / PlayerEntity's _hitbox_half: the sprite's opaque
+        // pixels don't fill the full tile, so using _half here let attacks
+        // register while still visibly outside the sprite.
+        Vec2 _hitbox_half{ 8.0, 8.0 };
         systems::combat::HealthComponent _health{};     // HP + per-weapon resistance
         int _toughness{ 1 };                            // Raw tuning value driving _health's (max_hp, table); saved as-is
         animation::AnimationStatePlayer _animator{};    // Drives which tile is currently shown
