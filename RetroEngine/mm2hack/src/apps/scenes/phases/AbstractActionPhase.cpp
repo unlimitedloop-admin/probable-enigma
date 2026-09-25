@@ -700,31 +700,14 @@ namespace mm2hack::apps::scenes::phases
 
                 player->SetEntityContext(entity_ctx);
 
-                // Feeds this frame's player position and the shared attack
-                // pattern counter to every enemy, before their own Update()
-                // runs (see EnemyEntity::SetPlayerPosition()/
-                // SetSharedAttackCounter()).
-                _ctx->entity_mgr->ForEachAlive<enemy::EnemyEntity>(
-                    [player, counter = _enemy_attack_pattern_counter](enemy::EnemyEntity& enemy_entity)
-                    {
-                        enemy_entity.SetPlayerPosition(player->pos);
-                        enemy_entity.SetSharedAttackCounter(counter);
-                    });
+                feedEnemies_(player->pos);
 
                 _ctx->entity_mgr->UpdateAll(&_ctx->scroll->GetView(), dt);
                 consumePlayerOutput_(*player);
                 spawnEnemyProjectiles_();
                 advanceSharedAttackCounter_();
 
-                // Entity-vs-entity hit detection (projectiles vs enemies/traps, player vs
-                // items/traps, etc.). Runs after positions are finalized for this tick.
-                std::vector<systems::physics::ICollider*> colliders;
-                _ctx->entity_mgr->CollectColliders(colliders);
-                const auto damageable_hp_before = captureDamageableHp_(colliders);
-                _ctx->collision.ResolveEntities(colliders);
-                spawnDestructionEffectsForTheDead_(colliders);
-                spawnHitEffectsForTheSurvivors_(damageable_hp_before);
-                spawnDeflectEffectsForTheBounced_(colliders);
+                resolveEntityCollisions_();
 
                 // Vitality ran out on this pass: the miss starts this very
                 // tick, before the (now moot) knockback reaction ever shows.
@@ -785,16 +768,46 @@ namespace mm2hack::apps::scenes::phases
         }
     }
 
+    void AbstractActionPhase::feedEnemies_(const Vec2& player_pos)
+    {
+        // Feeds the player position and the shared attack pattern counter to
+        // every enemy, before their own Update() runs (see EnemyEntity::
+        // SetPlayerPosition()/SetSharedAttackCounter()).
+        _ctx->entity_mgr->ForEachAlive<world::entity::enemy::EnemyEntity>(
+            [&player_pos, counter = _enemy_attack_pattern_counter](world::entity::enemy::EnemyEntity& enemy_entity)
+            {
+                enemy_entity.SetPlayerPosition(player_pos);
+                enemy_entity.SetSharedAttackCounter(counter);
+            });
+    }
+
+    void AbstractActionPhase::resolveEntityCollisions_()
+    {
+        // Entity-vs-entity hit detection (projectiles vs enemies/traps, player vs
+        // items/traps, etc.). Runs after positions are finalized for this tick.
+        std::vector<systems::physics::ICollider*> colliders;
+        _ctx->entity_mgr->CollectColliders(colliders);
+        const auto damageable_hp_before = captureDamageableHp_(colliders);
+        _ctx->collision.ResolveEntities(colliders);
+        spawnDestructionEffectsForTheDead_(colliders);
+        spawnHitEffectsForTheSurvivors_(damageable_hp_before);
+        spawnDeflectEffectsForTheBounced_(colliders);
+    }
+
     void AbstractActionPhase::updateMiss_()
     {
-        // Everything else stays frozen where it was (enemies, shots, the
-        // camera) -- only the bubbles move.
+        // The rest of the world carries on as if the player were still
+        // standing where it was lost: enemies keep facing/attacking that
+        // spot, and shots already in flight (the player's own included) keep
+        // flying and hitting. The player itself is dead, so it is neither
+        // updated nor collected as a collider -- nothing can hurt it now.
+        // Only the camera stays put (no target to follow).
         const double dt = runtime::GameContext::GetInstance().Time().DeltaSeconds();
-        _ctx->entity_mgr->ForEachAlive<world::entity::effects::MissBubbleEffectEntity>(
-            [view = &_ctx->scroll->GetView(), dt](world::entity::effects::MissBubbleEffectEntity& bubble)
-            {
-                bubble.Update(view, dt);
-            });
+        feedEnemies_(_miss_origin);
+        _ctx->entity_mgr->UpdateAll(&_ctx->scroll->GetView(), dt);
+        spawnEnemyProjectiles_();
+        advanceSharedAttackCounter_();
+        resolveEntityCollisions_();
 
         ++_miss_frames;
         if (_retry_requested || _miss_frames < _miss_fade_out_delay_frames || _host == nullptr)
@@ -841,6 +854,7 @@ namespace mm2hack::apps::scenes::phases
 
         auto& audio = runtime::GameContext::GetInstance().GetResourceManager().GetAudioManager();
         const Vec2 origin = player.pos;
+        _miss_origin = origin;
 
         // The charge loop would otherwise keep running (and its particles keep
         // hovering around nobody) through the whole sequence.

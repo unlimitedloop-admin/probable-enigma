@@ -145,6 +145,12 @@ namespace mm2hack::apps::scenes::phases
         void updateIntro_();                                // Handles the intro state update
         void updateActive_();                               // Handles the active state update
         void updateMiss_();                                 // Handles the miss state update
+        // Hands every enemy the position to track/attack and the shared attack
+        // pattern counter for this tick (before UpdateAll()).
+        void feedEnemies_(const Vec2& player_pos);
+        // Entity-vs-entity collision pass plus the destruction/hit/deflect
+        // presentation it triggers.
+        void resolveEntityCollisions_();
         // True once the player fell fully below the current page without a
         // page scroll taking over, i.e. into a pit with no room beneath it.
         [[nodiscard]] bool hasFallenOutOfStage_(const world::entity::avatar::PlayerEntity& player) const;
@@ -221,6 +227,7 @@ namespace mm2hack::apps::scenes::phases
         ActionPhaseState _state{ ActionPhaseState::Intro }; // Current state of the action phase
         int _miss_frames{ 0 };                              // Ticks elapsed in ActionPhaseState::Miss
         int _miss_fade_out_delay_frames{ 0 };               // Ticks this miss runs before the restart's fade-out (per MissCause)
+        Vec2 _miss_origin{};                                // Where the player was lost; enemies keep targeting it during the miss
         bool _retry_requested{ false };                     // Restart already requested from the host this miss
         ui::productions::StageIntroUI _ready_ui{};          // UI for the intro sequence
 
