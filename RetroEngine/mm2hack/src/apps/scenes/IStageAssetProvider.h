@@ -30,6 +30,8 @@ namespace mm2hack::apps::scenes
         virtual SpriteManagerId SlidingDustEffectSprite() const noexcept = 0;
         virtual SpriteManagerId ChargeEffectSprite() const noexcept = 0;
         virtual SpriteManagerId SmallExplosionEffectSprite() const noexcept = 0;
+        // Bubbles scattered from the player on a miss (see MissBubbleEffectEntity).
+        virtual SpriteManagerId MissBubbleEffectSprite() const noexcept = 0;
         // Shared across every shooting enemy kind (see AnimationTransition::
         // projectile_spawns) -- one sprite, not per-EnemyKind like TryEnemySprite.
         virtual SpriteManagerId EnemyProjectileSprite() const noexcept = 0;

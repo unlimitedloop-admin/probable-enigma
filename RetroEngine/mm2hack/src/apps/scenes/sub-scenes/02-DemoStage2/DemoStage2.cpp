@@ -252,7 +252,7 @@ namespace mm2hack::apps::scenes
     {
         const auto* phase = dynamic_cast<const phases::AbstractActionPhase*>(_phase.get());
         return phase != nullptr && phase->CanCaptureState() &&
-            _pendingPhase == nullptr && _nextScene == SceneID::None &&
+            _pendingPhase == nullptr && !_pendingRestart && _nextScene == SceneID::None &&
             _stageScript == nullptr && _resource != nullptr &&
             _fader.Current() == PhaseFadeController::State::Interactive;
     }
@@ -294,7 +294,7 @@ namespace mm2hack::apps::scenes
         core::save::StateReader reader(in);
         if (!state.Load(reader) || _resource == nullptr ||
             _stageScript != nullptr || _pendingPhase != nullptr ||
-            _nextScene != SceneID::None)
+            _pendingRestart || _nextScene != SceneID::None)
         {
             return false;
         }
@@ -347,36 +347,16 @@ namespace mm2hack::apps::scenes
             THROW_EXCEPTION(L"Failed to initialize resources", kClassName);
         }
 
-        // Construct the Action Stage Runtime Context.
-        // Create definition.
-        phases::StageDefinition def{};
-        def.map_binary_path = std::wstring(kStageMapBinary);
-        def.start_page_index = _roomState.pageIndex;
-        def.start_local_pos = { 128.0, 183.0 }; // TODO: This should be loaded from a external def-file instead of hardcoded.
-
-        // Create build config.
-        phases::ActionStageBuildConfig build{};
-        build.map_name = std::wstring(kMapName);
-        build.tile_px = config::SystemConfig::kTileSize;
-        build.asset_provider = this;
+        _startPageIndex = _roomState.pageIndex;
+        _enterParams = params;
 
         // Create filtered joystick input provider.
         _input = &gc.Input();
-        // Build the context using the builder.
-        auto ctx = _actionBuilder.Build(resource, *_input, def, build, L"AreaA");
         // Create the initial phase.
-        _phase = std::make_unique<phases::AbstractActionPhase>(std::move(ctx), _stageScript.get(), *this);
+        _phase = buildActionPhase_();
 
         // Start with a fade-in.
-        PhaseFadePlan first(
-            20,     // preBlackHold
-            20,     // fadeInFrames
-            0,      // preFadeOutHold
-            12,     // fadeOutFrames
-            20,     // postFadeOutHold
-            FadeLayerMask::All  // layers
-        );
-        _fader.BeginPhase(first, resource);
+        _fader.BeginPhase(stageEntryPlan_(), resource);
 
         _phase->Initialize(params);
 
@@ -510,6 +490,12 @@ namespace mm2hack::apps::scenes
             MM2H_GRAPHPROPS(SmallExplosion));
         if (_spriteBank.small_explosion_effect == SpriteManagerId(-1)) return false;
 
+        _spriteBank.miss_bubble_effect = spriteLoader.Load(
+            L"MissBubbleEffect",
+            MM2H_GRAPHICS(MissBubble),
+            MM2H_GRAPHPROPS(MissBubble));
+        if (_spriteBank.miss_bubble_effect == SpriteManagerId(-1)) return false;
+
         const auto metall_sprite = spriteLoader.Load(
             L"MetallArmy",
             MM2H_GRAPHICS(MetallArmy),
@@ -631,6 +617,52 @@ namespace mm2hack::apps::scenes
         return true;
     }
 
+    std::unique_ptr<phases::IPhase> DemoStage2::buildActionPhase_()
+    {
+        auto& resource = runtime::GameContext::GetInstance().GetResourceManager();
+
+        // Construct the Action Stage Runtime Context.
+        // Create definition.
+        phases::StageDefinition def{};
+        def.map_binary_path = std::wstring(kStageMapBinary);
+        def.start_page_index = _startPageIndex;
+        def.start_local_pos = { 128.0, 183.0 }; // TODO: This should be loaded from a external def-file instead of hardcoded.
+
+        // Create build config.
+        phases::ActionStageBuildConfig build{};
+        build.map_name = std::wstring(kMapName);
+        build.tile_px = config::SystemConfig::kTileSize;
+        build.asset_provider = this;
+
+        // Build the context using the builder.
+        auto ctx = _actionBuilder.Build(resource, *_input, def, build, L"AreaA");
+        return std::make_unique<phases::AbstractActionPhase>(std::move(ctx), _stageScript.get(), *this);
+    }
+
+    PhaseFadePlan DemoStage2::stageEntryPlan_() const noexcept
+    {
+        return PhaseFadePlan(
+            20,     // preBlackHold
+            20,     // fadeInFrames
+            0,      // preFadeOutHold
+            12,     // fadeOutFrames
+            20,     // postFadeOutHold
+            FadeLayerMask::All  // layers
+        );
+    }
+
+    void DemoStage2::requestRestart_(const PhaseFadePlan& plan)
+    {
+        _pendingRestart = true;
+        _pendingPlan = plan;
+
+        if (_fader.Current() == PhaseFadeController::State::Interactive)
+        {
+            auto& res = apps::runtime::GameContext::GetInstance().GetResourceManager();
+            _fader.RequestFadeOut(res);
+        }
+    }
+
     void DemoStage2::applyPendingPhaseIfReady_()
     {
         using namespace apps::runtime;
@@ -638,6 +670,25 @@ namespace mm2hack::apps::scenes
 
         if (!_fader.ReadyToSwitchPhase())
         {
+            return;
+        }
+
+        if (_pendingRestart)
+        {
+            _pendingRestart = false;
+
+            // Tear the old stage down first (its entities, scroll and page
+            // cache) so the rebuild starts from a clean slate -- enemies
+            // included, just like entering the stage anew.
+            _phase.reset();
+            _roomState.pageIndex = _startPageIndex;
+            _phase = buildActionPhase_();
+
+            _fader.BeginPhase(_pendingPlan, res);
+            _pendingPlan = {};
+
+            // Replays bgm_key, so the BGM restarts from the top with every voice back.
+            _phase->Initialize(_enterParams);
             return;
         }
 
@@ -662,6 +713,13 @@ namespace mm2hack::apps::scenes
     void DemoStage2::dispatchTransition_(const std::wstring& next_key, const PhaseFadePlan& plan, const Parameters& params)
     {
         // NOTE: Dispatch the transition request based on the next_key.
+        if (next_key == L"Retry")
+        {
+            // Player missed: start the stage over from its beginning.
+            requestRestart_(plan);
+            return;
+        }
+
         //if (next_key == L"Intro")
         //{
             // QueuePhase(std::make_unique<TopMenuPhase>(*this /* host */), plan);

@@ -62,7 +62,9 @@ namespace mm2hack::apps::scenes::phases
     enum class ActionPhaseState : std::uint8_t
     {
         Intro,  // avatar character warp animation, and more
-        Active  // main gameplay state
+        Active, // main gameplay state
+        Miss    // player lost (0 HP / fell into a pit): bubbles scatter, then the stage restarts.
+                // Never serialized -- CanCaptureState() refuses a capture for the whole window.
     };
 
     enum class ActionIntroStep : std::uint8_t
@@ -134,6 +136,17 @@ namespace mm2hack::apps::scenes::phases
     private:
         void updateIntro_();                                // Handles the intro state update
         void updateActive_();                               // Handles the active state update
+        void updateMiss_();                                 // Handles the miss state update
+        // True once the player fell fully below the current page without a
+        // page scroll taking over, i.e. into a pit with no room beneath it.
+        [[nodiscard]] bool hasFallenOutOfStage_(const world::entity::avatar::PlayerEntity& player) const;
+        // Enters ActionPhaseState::Miss: removes the player, scatters the
+        // bubbles from its position, plays the miss SE and drops the BGM down
+        // to its triangle/noise voices.
+        void beginMiss_(world::entity::avatar::PlayerEntity& player);
+        // Mutes/unmutes the BGM's pulse1/pulse2/DPCM voices (the SE-shared
+        // ones), leaving triangle and noise playing.
+        static void setBgmMissVoicesMuted_(bool muted);
         void consumePlayerOutput_(world::entity::avatar::PlayerEntity& player); // Handles player events and spawn commands
         void updateChargePresentation_(
             const world::entity::avatar::PlayerEntity& player,
@@ -198,6 +211,8 @@ namespace mm2hack::apps::scenes::phases
         Vec2 _player_prev_pos{};                            // Previous player position, scrolling-player sync use
         std::uint64_t _enemy_attack_pattern_counter{ 0 };   // See AbstractActionPhaseState::enemy_attack_pattern_counter
         ActionPhaseState _state{ ActionPhaseState::Intro }; // Current state of the action phase
+        int _miss_frames{ 0 };                              // Ticks elapsed in ActionPhaseState::Miss
+        bool _retry_requested{ false };                     // Restart already requested from the host this miss
         ui::productions::StageIntroUI _ready_ui{};          // UI for the intro sequence
 
         // ======== debug info ========

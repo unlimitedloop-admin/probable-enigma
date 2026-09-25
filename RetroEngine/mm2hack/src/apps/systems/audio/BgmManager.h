@@ -8,6 +8,7 @@
 //==============================================================================
 #pragma once
 
+#include <array>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -58,6 +59,10 @@ namespace mm2hack::apps::systems::audio
         int GetMasterVolume() const { return _masterVolume; }
         // Reapply logical BGM volumes after APU voice ownership changes.
         void RefreshOutputVolumes();
+        // Silence (or un-silence) one BGM voice without stopping its playback
+        // position -- e.g. the miss sequence dropping both pulses so only the
+        // triangle/noise keep going. Persists across Play(); cleared by Release().
+        void SetVoiceMuted(ApuVoice voice, bool muted);
 
         // Update the BGM manager (handle fading and looping)
         void Update();
@@ -93,6 +98,7 @@ namespace mm2hack::apps::systems::audio
 
         std::wstring _currentBgm;                           // Name of the currently playing BGM
         std::vector<int> _logical_volumes;                  // Logical volumes before SE voice preemption
+        std::array<bool, kApuVoiceCount> _muted_voices{};   // Per-voice mute, see SetVoiceMuted()
         bool _isPlaying = false;
         bool _isPaused = false;
 

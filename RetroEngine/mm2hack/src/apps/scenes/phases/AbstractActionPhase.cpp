@@ -11,8 +11,10 @@
 #include "apps/resources/parameters/Parameters.h"
 #include "apps/runtime/GameContext.h"
 #include "apps/scenes/PhaseFadeController.h"
+#include "apps/systems/audio/ApuVoice.h"
 #include "apps/systems/audio/AudioManager.h"
 #include "apps/systems/audio/SeTransportState.h"
+#include "apps/systems/audio/SoundChannel.h"
 #include "apps/systems/combat/IDamageable.h"
 #include "apps/systems/physics/ICollider.h"
 #include "apps/systems/scrolling/atomic/ScrollController.h"
@@ -22,9 +24,11 @@
 #include "apps/world/entity/avatar/PlayerEntity.h"
 #include "apps/world/entity/avatar/PlayerFrameOutput.h"
 #include "apps/world/entity/common/SpawnChargeEffectCommand.h"
+#include "apps/world/entity/common/SpawnMissBubbleEffectCommand.h"
 #include "apps/world/entity/common/SpawnSlidingDustEffectCommand.h"
 #include "apps/world/entity/common/SpawnSmallExplosionEffectCommand.h"
 #include "apps/world/entity/effects/ChargeEffectEntity.h"
+#include "apps/world/entity/effects/MissBubbleEffectEntity.h"
 #include "apps/world/entity/effects/ProjectileEntity.h"
 #include "apps/world/entity/effects/SlidingDustEffectEntity.h"
 #include "apps/world/entity/effects/SmallExplosionEffectEntity.h"
@@ -68,6 +72,25 @@ namespace mm2hack::apps::scenes::phases
             ChargeParticleStep{ -10, 0 },
             ChargeParticleStep{   0, 8 },
             ChargeParticleStep{   9, 8 },
+        };
+
+        // ======== Miss sequence ========
+        // Ticks from the miss until the restart's fade-out begins.
+        constexpr int kMissFadeOutDelayFrames = 240;
+        // Two rings of 8 bubbles each, all leaving the player's position at
+        // once: the outer ring fast, the inner one at half its speed (px/tick).
+        constexpr double kMissOuterRingSpeed = 2.0;
+        constexpr double kMissInnerRingSpeed = 1.0;
+        constexpr double kDiagonal = 0.70710678118654752; // 1/sqrt(2)
+        constexpr std::array kMissBubbleDirections{
+            foundation::math::Vec2{  1.0,        0.0       },
+            foundation::math::Vec2{  kDiagonal, -kDiagonal },
+            foundation::math::Vec2{  0.0,       -1.0       },
+            foundation::math::Vec2{ -kDiagonal, -kDiagonal },
+            foundation::math::Vec2{ -1.0,        0.0       },
+            foundation::math::Vec2{ -kDiagonal,  kDiagonal },
+            foundation::math::Vec2{  0.0,        1.0       },
+            foundation::math::Vec2{  kDiagonal,  kDiagonal },
         };
     }
 
@@ -170,7 +193,11 @@ namespace mm2hack::apps::scenes::phases
 
     bool AbstractActionPhase::CanCaptureState() const noexcept
     {
-        return _ctx != nullptr && _ctx->scroll != nullptr &&
+        // The miss sequence is a short, non-interactive window between the
+        // player vanishing and the stage restarting -- nothing worth resuming
+        // into, so it is simply not capturable (see ActionPhaseState::Miss).
+        return _state != ActionPhaseState::Miss &&
+            _ctx != nullptr && _ctx->scroll != nullptr &&
             _ctx->entity_mgr != nullptr && _ctx->asset_provider != nullptr &&
             _ctx->entity_mgr->CanCaptureState();
     }
@@ -282,6 +309,12 @@ namespace mm2hack::apps::scenes::phases
         _player_prev_pos = state.player_previous_position;
         _enemy_attack_pattern_counter = state.enemy_attack_pattern_counter;
 
+        // Loading mid-miss drops straight back into the saved (never-Miss)
+        // state, so undo the miss sequence's own leftovers too.
+        _miss_frames = 0;
+        _retry_requested = false;
+        setBgmMissVoicesMuted_(false);
+
         // Audio and charge particles are presentation state. Rebuild them from
         // the player's next frame output instead of serializing channel state.
         _charge_sound_playing = false;
@@ -331,6 +364,10 @@ namespace mm2hack::apps::scenes::phases
 
     void AbstractActionPhase::Initialize(const resources::parameters::Parameters& params)
     {
+        // A restart after a miss builds a fresh phase while the previous one's
+        // voice mutes are still in effect (see beginMiss_()).
+        setBgmMissVoicesMuted_(false);
+
         if (params.Get<std::wstring>(L"bgm_key"))
         {
             _bgm_key = *params.Get<std::wstring>(L"bgm_key");
@@ -370,6 +407,12 @@ namespace mm2hack::apps::scenes::phases
         if (_state == ActionPhaseState::Intro)
         {
             updateIntro_();
+            return PhaseResult::None();
+        }
+
+        if (_state == ActionPhaseState::Miss)
+        {
+            updateMiss_();
             return PhaseResult::None();
         }
 
@@ -668,6 +711,14 @@ namespace mm2hack::apps::scenes::phases
                 spawnHitEffectsForTheSurvivors_(damageable_hp_before);
                 spawnDeflectEffectsForTheBounced_(colliders);
 
+                // Vitality ran out on this pass: the miss starts this very
+                // tick, before the (now moot) knockback reaction ever shows.
+                if (player->IsDead())
+                {
+                    beginMiss_(*player);
+                    return;
+                }
+
                 delta = player->pos - prev_pos;
             }
             else
@@ -698,6 +749,12 @@ namespace mm2hack::apps::scenes::phases
             player->pos += fx.playerDelta;
         }
 
+        if (player != nullptr && hasFallenOutOfStage_(*player))
+        {
+            beginMiss_(*player);
+            return;
+        }
+
         _page_index_debug = static_cast<int>(_ctx->scroll->PageIndex());
         _player_pos_x_debug = player ? _ctx->page_grid->ToLocalPos(player->pos.x, config::SystemConfig::kScreenWidth) : 0;
         _player_pos_y_debug = player ? _ctx->page_grid->ToLocalPos(player->pos.y, config::SystemConfig::kScreenHeight) : 0;
@@ -710,6 +767,115 @@ namespace mm2hack::apps::scenes::phases
         {
             auto* audio = &runtime::GameContext::GetInstance().GetResourceManager().GetAudioManager();
             audio->OutputBGMMasterVolume();
+        }
+    }
+
+    void AbstractActionPhase::updateMiss_()
+    {
+        // Everything else stays frozen where it was (enemies, shots, the
+        // camera) -- only the bubbles move.
+        const double dt = runtime::GameContext::GetInstance().Time().DeltaSeconds();
+        _ctx->entity_mgr->ForEachAlive<world::entity::effects::MissBubbleEffectEntity>(
+            [view = &_ctx->scroll->GetView(), dt](world::entity::effects::MissBubbleEffectEntity& bubble)
+            {
+                bubble.Update(view, dt);
+            });
+
+        ++_miss_frames;
+        if (_retry_requested || _miss_frames < kMissFadeOutDelayFrames || _host == nullptr)
+        {
+            return;
+        }
+
+        // Same timing as the scene's own first entry into the stage, so a
+        // restart reads the same as starting it fresh (READY included -- the
+        // host builds a brand-new phase for it).
+        _retry_requested = true;
+        const PhaseFadePlan retry(
+            20,  /* preBlackHold */
+            20,  /* fadeInFrames */
+            0,   /* preFadeOutHold */
+            12,  /* fadeOutFrames */
+            20,  /* postBlackHold */
+            FadeLayerMask::All /* layers */
+        );
+        const resources::parameters::Parameters none;
+        _host->RequestTransition(L"Retry", retry, none);
+    }
+
+    bool AbstractActionPhase::hasFallenOutOfStage_(const world::entity::avatar::PlayerEntity& player) const
+    {
+        // A room below takes over through a fixed page scroll, requested as
+        // soon as the player's feet cross the page's bottom edge -- well before
+        // the whole hit box can clear the view. A free-scrolling page keeps the
+        // camera on the player instead. So still sinking out of the view
+        // without either happening means there is nothing down there.
+        if (_ctx->scroll->IsScrollLocked())
+        {
+            return false;
+        }
+
+        const auto& view = _ctx->scroll->GetView();
+        const double view_bottom = view.viewWorldY + static_cast<double>(view.viewH);
+        return player.Bounds().y >= view_bottom;
+    }
+
+    void AbstractActionPhase::beginMiss_(world::entity::avatar::PlayerEntity& player)
+    {
+        using world::entity::EntityTypeId;
+
+        auto& audio = runtime::GameContext::GetInstance().GetResourceManager().GetAudioManager();
+        const Vec2 origin = player.pos;
+
+        // The charge loop would otherwise keep running (and its particles keep
+        // hovering around nobody) through the whole sequence.
+        if (_charge_sound_playing)
+        {
+            audio.StopSe(kChargeSeName);
+            _charge_sound_playing = false;
+        }
+        _charge_phase = world::entity::avatar::ChargePhase::Idle;
+        static constexpr std::array kChargeEffectTypes{ EntityTypeId::ChargeEffect };
+        _ctx->entity_mgr->KillAllOfTypes(kChargeEffectTypes);
+
+        player.Kill();
+
+        const auto sprite_id = _ctx->asset_provider->MissBubbleEffectSprite();
+        if (sprite_id != static_cast<rendering::sprite::SpriteManager::Id>(-1))
+        {
+            for (const double speed : { kMissOuterRingSpeed, kMissInnerRingSpeed })
+            {
+                for (const auto& direction : kMissBubbleDirections)
+                {
+                    _ctx->entity_mgr->Spawn<world::entity::effects::MissBubbleEffectEntity>(
+                        world::entity::common::SpawnMissBubbleEffectCommand{
+                            .spawnPos = origin,
+                            .velocity = direction * speed,
+                            .spriteId = sprite_id,
+                        });
+                }
+            }
+        }
+
+        audio.PlaySe(L"terrible_scatter");
+        setBgmMissVoicesMuted_(true);
+
+        _state = ActionPhaseState::Miss;
+        _miss_frames = 0;
+        _retry_requested = false;
+    }
+
+    void AbstractActionPhase::setBgmMissVoicesMuted_(bool muted)
+    {
+        using systems::audio::ApuVoice;
+        using systems::audio::SoundChip;
+
+        // Just the triangle and noise carry on, as if the pulses had been
+        // taken over by the miss SE for good -- a 2A03 channel-budget look.
+        auto& audio = runtime::GameContext::GetInstance().GetResourceManager().GetAudioManager();
+        for (const ApuVoice voice : { ApuVoice::Pulse1, ApuVoice::Pulse2, ApuVoice::Dpcm })
+        {
+            audio.MuteChannel(SoundChip::APU, static_cast<int>(systems::audio::ToIndex(voice)), muted);
         }
     }
 

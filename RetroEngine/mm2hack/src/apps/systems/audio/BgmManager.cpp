@@ -88,6 +88,7 @@ namespace mm2hack::apps::systems::audio
         _bgmData.clear();
         _currentBgm.clear();
         _logical_volumes.clear();
+        _muted_voices.fill(false);
         _loopStart = 0.0;
         _loopEnd = 0.0;
         _isFading = false;
@@ -256,6 +257,12 @@ namespace mm2hack::apps::systems::audio
         }
     }
 
+    void BgmManager::SetVoiceMuted(ApuVoice voice, bool muted)
+    {
+        _muted_voices[ToIndex(voice)] = muted;
+        RefreshOutputVolumes();
+    }
+
     void BgmManager::applyFade_()
     {
         if (_isFading && _fadeFramesRemaining > 0)
@@ -309,6 +316,7 @@ namespace mm2hack::apps::systems::audio
     }
     int BgmManager::effectiveVolume_(ApuVoice voice, int logicalVolume) const
     {
+        if (_muted_voices[ToIndex(voice)]) return 0;
         return _seManager != nullptr && _seManager->IsVoiceOwnedBySe(voice) ? 0 : logicalVolume;
     }
 }

@@ -28,7 +28,8 @@ namespace mm2hack::apps::world::entity
         SplashEffect = 5,
         BreakableBlock = 6,
         SmallExplosionEffect = 7,
-        Enemy = 8
+        Enemy = 8,
+        MissBubbleEffect = 9    // Never serialized -- see MissBubbleEffectEntity
     };
 
     // Base interface for all entities

@@ -76,6 +76,7 @@ namespace mm2hack::apps::scenes
         SpriteManagerId SlidingDustEffectSprite() const noexcept override { return _spriteBank.sliding_dust_effect; }
         SpriteManagerId ChargeEffectSprite() const noexcept override { return _spriteBank.charge_effect; }
         SpriteManagerId SmallExplosionEffectSprite() const noexcept override { return _spriteBank.small_explosion_effect; }
+        SpriteManagerId MissBubbleEffectSprite() const noexcept override { return _spriteBank.miss_bubble_effect; }
         SpriteManagerId EnemyProjectileSprite() const noexcept override { return _spriteBank.enemy_projectile; }
         bool TryEnemySprite(world::entity::enemy::EnemyKind kind, SpriteManagerId& out) const noexcept override;
         bool TryEnemySprite(
@@ -110,6 +111,9 @@ namespace mm2hack::apps::scenes
         bool loadAssets_();                                             // Load stage sprite assets (player, enemies, effects...)
         bool initializeAnimationBG_(BGTileManager& bgTileManager);      // Initialize background tile animations
 
+        std::unique_ptr<phases::IPhase> buildActionPhase_();            // Build a fresh action phase at the stage's start point
+        PhaseFadePlan stageEntryPlan_() const noexcept;                 // Fade plan for entering the stage (first time and on restart)
+        void requestRestart_(const PhaseFadePlan& plan);                // Fade out, then rebuild the stage from its start (after a miss)
         void applyPendingPhaseIfReady_();                               // Apply pending phase if fader is ready
         void dispatchTransition_(
             const std::wstring& next_key,
@@ -135,6 +139,12 @@ namespace mm2hack::apps::scenes
         std::unique_ptr<phases::IPhase> _phase{};                       // Current active phase
         std::unique_ptr<phases::IPhase> _pendingPhase{};                // Pending phase to switch to
         PhaseFadePlan _pendingPlan{};                                   // Fade plan for the pending phase
+        // A restart is built only once the fade-out has finished (see
+        // applyPendingPhaseIfReady_()), not when requested: the outgoing
+        // phase is still on screen until then, sharing the BG/sprite managers.
+        bool _pendingRestart{ false };
+        Parameters _enterParams{};                                      // Scene-entry parameters (bgm_key, ...), replayed into a restarted phase
+        int _startPageIndex{ 0 };                                       // Page the stage (and every restart) begins on
 
         PhaseFadeController _fader{};                                   // Fade controller for transitions
         const int _fadeDurationFrames{ 16 };                            // Duration of fade in frames

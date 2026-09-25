@@ -89,7 +89,13 @@ namespace mm2hack::apps::systems::audio
         auto key = std::make_pair(chip, index);
         if (mute) _mutedChannels.insert(key);
         else _mutedChannels.erase(key);
-        // Add logic to actually set the channel volume to 0 or restore its original value.
+
+        // Only the 2A03's own five voices are backed by real BGM channels today;
+        // expansion chips (VRC6/MMC5/N163) are recorded above but have nothing to mute yet.
+        if (chip == SoundChip::APU && index >= 0 && index < static_cast<int>(kApuVoiceCount))
+        {
+            _bgmManager.SetVoiceMuted(static_cast<ApuVoice>(index), mute);
+        }
     }
 
     void AudioManager::Pause()
@@ -167,6 +173,7 @@ namespace mm2hack::apps::systems::audio
     {
         _bgmManager.Release();
         _seManager.Release();
+        _mutedChannels.clear();
     }
 
     int AudioManager::toDxVolume_(int uiVolume)

@@ -159,6 +159,22 @@
                 }
             ]
         },
+        "terrible_scatter": {
+            "channels": [
+                {
+                    "file": "assets/sounds/SoundEffects/TERRIBLESCATTER_EFFECT_N0_SE_Square1.wav",
+                    "volume": 255,
+                    "voice": "pulse1",
+                    "priority": 2
+                },
+                {
+                    "file": "assets/sounds/SoundEffects/TERRIBLESCATTER_EFFECT_N0_SE_Square2.wav",
+                    "volume": 255,
+                    "voice": "pulse2",
+                    "priority": 2
+                }
+            ]
+        },
         "onstage_thump": {
             "channels": [
                 {
