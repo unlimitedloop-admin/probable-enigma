@@ -67,6 +67,14 @@ namespace mm2hack::apps::scenes::phases
                 // Never serialized -- CanCaptureState() refuses a capture for the whole window.
     };
 
+    // What ended the player's life -- picks how long the miss sequence runs
+    // before the restart's fade-out.
+    enum class MissCause : std::uint8_t
+    {
+        OutOfVitality,  // HP reached 0
+        FellIntoPit     // dropped out of the view with no room below
+    };
+
     enum class ActionIntroStep : std::uint8_t
     {
         Standby,
@@ -141,11 +149,11 @@ namespace mm2hack::apps::scenes::phases
         // page scroll taking over, i.e. into a pit with no room beneath it.
         [[nodiscard]] bool hasFallenOutOfStage_(const world::entity::avatar::PlayerEntity& player) const;
         // Enters ActionPhaseState::Miss: removes the player, scatters the
-        // bubbles from its position, plays the miss SE and drops the BGM down
-        // to its triangle/noise voices.
-        void beginMiss_(world::entity::avatar::PlayerEntity& player);
-        // Mutes/unmutes the BGM's pulse1/pulse2/DPCM voices (the SE-shared
-        // ones), leaving triangle and noise playing.
+        // bubbles from its position, plays the miss SE and drops the BGM's
+        // pulse voices.
+        void beginMiss_(world::entity::avatar::PlayerEntity& player, MissCause cause);
+        // Mutes/unmutes the BGM's pulse1/pulse2 voices (the ones the miss SE
+        // takes over), leaving triangle, noise and DPCM playing.
         static void setBgmMissVoicesMuted_(bool muted);
         void consumePlayerOutput_(world::entity::avatar::PlayerEntity& player); // Handles player events and spawn commands
         void updateChargePresentation_(
@@ -212,6 +220,7 @@ namespace mm2hack::apps::scenes::phases
         std::uint64_t _enemy_attack_pattern_counter{ 0 };   // See AbstractActionPhaseState::enemy_attack_pattern_counter
         ActionPhaseState _state{ ActionPhaseState::Intro }; // Current state of the action phase
         int _miss_frames{ 0 };                              // Ticks elapsed in ActionPhaseState::Miss
+        int _miss_fade_out_delay_frames{ 0 };               // Ticks this miss runs before the restart's fade-out (per MissCause)
         bool _retry_requested{ false };                     // Restart already requested from the host this miss
         ui::productions::StageIntroUI _ready_ui{};          // UI for the intro sequence
 

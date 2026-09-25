@@ -75,8 +75,23 @@ namespace mm2hack::apps::scenes::phases
         };
 
         // ======== Miss sequence ========
-        // Ticks from the miss until the restart's fade-out begins.
-        constexpr int kMissFadeOutDelayFrames = 240;
+        // Ticks from the miss until the restart's fade-out begins, per cause.
+        // A pit miss has little to watch (the bubbles start off-screen), so it
+        // cuts to the restart sooner.
+        constexpr int kMissOutOfVitalityFadeOutDelayFrames = 0xC8;  // 200
+        constexpr int kMissFellIntoPitFadeOutDelayFrames = 0x5A;    // 90
+
+        [[nodiscard]] constexpr int MissFadeOutDelayFrames(MissCause cause) noexcept
+        {
+            switch (cause)
+            {
+            case MissCause::FellIntoPit:
+                return kMissFellIntoPitFadeOutDelayFrames;
+            case MissCause::OutOfVitality:
+            default:
+                return kMissOutOfVitalityFadeOutDelayFrames;
+            }
+        }
         // Two rings of 8 bubbles each, all leaving the player's position at
         // once: the outer ring fast, the inner one at half its speed (px/tick).
         constexpr double kMissOuterRingSpeed = 2.0;
@@ -715,7 +730,7 @@ namespace mm2hack::apps::scenes::phases
                 // tick, before the (now moot) knockback reaction ever shows.
                 if (player->IsDead())
                 {
-                    beginMiss_(*player);
+                    beginMiss_(*player, MissCause::OutOfVitality);
                     return;
                 }
 
@@ -751,7 +766,7 @@ namespace mm2hack::apps::scenes::phases
 
         if (player != nullptr && hasFallenOutOfStage_(*player))
         {
-            beginMiss_(*player);
+            beginMiss_(*player, MissCause::FellIntoPit);
             return;
         }
 
@@ -782,7 +797,7 @@ namespace mm2hack::apps::scenes::phases
             });
 
         ++_miss_frames;
-        if (_retry_requested || _miss_frames < kMissFadeOutDelayFrames || _host == nullptr)
+        if (_retry_requested || _miss_frames < _miss_fade_out_delay_frames || _host == nullptr)
         {
             return;
         }
@@ -820,7 +835,7 @@ namespace mm2hack::apps::scenes::phases
         return player.Bounds().y >= view_bottom;
     }
 
-    void AbstractActionPhase::beginMiss_(world::entity::avatar::PlayerEntity& player)
+    void AbstractActionPhase::beginMiss_(world::entity::avatar::PlayerEntity& player, MissCause cause)
     {
         using world::entity::EntityTypeId;
 
@@ -862,6 +877,7 @@ namespace mm2hack::apps::scenes::phases
 
         _state = ActionPhaseState::Miss;
         _miss_frames = 0;
+        _miss_fade_out_delay_frames = MissFadeOutDelayFrames(cause);
         _retry_requested = false;
     }
 
@@ -870,10 +886,10 @@ namespace mm2hack::apps::scenes::phases
         using systems::audio::ApuVoice;
         using systems::audio::SoundChip;
 
-        // Just the triangle and noise carry on, as if the pulses had been
-        // taken over by the miss SE for good -- a 2A03 channel-budget look.
+        // Only the pulses drop out, as if the miss SE had taken them over for
+        // good -- a 2A03 channel-budget look. Triangle, noise and DPCM carry on.
         auto& audio = runtime::GameContext::GetInstance().GetResourceManager().GetAudioManager();
-        for (const ApuVoice voice : { ApuVoice::Pulse1, ApuVoice::Pulse2, ApuVoice::Dpcm })
+        for (const ApuVoice voice : { ApuVoice::Pulse1, ApuVoice::Pulse2 })
         {
             audio.MuteChannel(SoundChip::APU, static_cast<int>(systems::audio::ToIndex(voice)), muted);
         }
