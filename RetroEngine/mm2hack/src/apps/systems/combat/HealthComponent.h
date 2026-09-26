@@ -28,8 +28,8 @@ namespace mm2hack::apps::systems::combat
     // fixed trait (sprite id, half-size, ...), only current/max HP vary.
     struct HealthComponentState final
     {
-        std::int32_t max_hp{ 1 };
-        std::int32_t hp{ 1 };
+        std::int32_t max_hp{ 0x01 };
+        std::int32_t hp{ 0x01 };
 
         bool Save(core::save::StateWriter& writer) const;
         bool Load(core::save::StateReader& reader);
@@ -61,8 +61,8 @@ namespace mm2hack::apps::systems::combat
         bool RestoreState(const HealthComponentState& state, DamageTable resistances) noexcept;
 
     private:
-        int _max_hp{ 1 };
-        int _hp{ 1 };
+        int _max_hp{ 0x01 };
+        int _hp{ 0x01 };
         DamageTable _table{ DamageTable::Neutral() };
     };
 }

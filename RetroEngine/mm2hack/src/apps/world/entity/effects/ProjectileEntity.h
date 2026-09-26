@@ -39,7 +39,7 @@ namespace mm2hack::apps::world::entity::effects
         double lifetime_seconds{ 1.0 };
         double age_seconds{};
         std::uint32_t elapsed_ticks{};
-        std::int32_t power{ 1 };
+        std::int32_t power{ 0x01 };
         foundation::math::Vec2 hit_half_size{ 2.0, 2.0 };
         systems::physics::CollisionLayer collision_layer{ systems::physics::CollisionLayer::ProjectilePlayer };
         systems::physics::WeaponId weapon{ systems::physics::WeaponId::Buster };
@@ -137,7 +137,7 @@ namespace mm2hack::apps::world::entity::effects
         double _age_sec{ 0.0 };                         // Age in seconds
         std::uint32_t _elapsed_ticks{ 0 };
 
-        int _power{ 1 };                                // Attack power carried on contact
+        int _power{ 0x01 };                             // Attack power carried on contact
         foundation::math::Vec2 _hit_half_size{ 2.0, 2.0 }; // Half-size of the attack hit judgement box (independent of _half)
         CollisionLayer _collision_layer{ CollisionLayer::ProjectilePlayer };
         systems::physics::WeaponId _weapon{ systems::physics::WeaponId::Buster };

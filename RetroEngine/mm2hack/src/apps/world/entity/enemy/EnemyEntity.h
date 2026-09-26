@@ -54,8 +54,8 @@ namespace mm2hack::apps::world::entity::enemy
         std::int32_t facing_texture_offset_left{};     // Added to the current tile while facing left
         // 0 = invincible (immune to every weapon, HP never moves); N = dies
         // after N hits' worth of accumulated normal-shot power.
-        std::int32_t toughness{ 1 };
-        std::int32_t hp{ 1 };                          // Current HP (meaningless/always full when toughness == 0)
+        std::int32_t toughness{ 0x01 };
+        std::int32_t hp{ 0x01 };                       // Current HP (meaningless/always full when toughness == 0)
         foundation::math::Vec2 half_size{ 8.0, 8.0 };
         // Independent of half_size, the same way ProjectileEntity/PlayerEntity
         // keep a hit box separate from their render footprint -- see
@@ -264,7 +264,7 @@ namespace mm2hack::apps::world::entity::enemy
         // actual visible top.
         double _hitbox_offset_y{ 0.0 };
         systems::combat::HealthComponent _health{};     // HP + per-weapon resistance
-        int _toughness{ 1 };                            // Raw tuning value driving _health's (max_hp, table); saved as-is
+        int _toughness{ 0x01 };                         // Raw tuning value driving _health's (max_hp, table); saved as-is
         animation::AnimationStatePlayer _animator{};    // Drives which tile is currently shown
 
         double _spawn_x{ 0.0 };                         // Original spawn X (unused for behavior currently; see EnemyEntityState::spawn_x)

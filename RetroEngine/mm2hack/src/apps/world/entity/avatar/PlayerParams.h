@@ -67,7 +67,7 @@ namespace mm2hack::apps::world::entity::avatar
     // deals 1, so this is "28 hits" worth of vitality).
     struct PlayerVitalityTuning
     {
-        int maxHp{ 28 };
+        int maxHp{ 0x1C };
     };
 
     // Head-impact effect drawn alongside the player while in knockback (see
