@@ -30,6 +30,7 @@
 #include "apps/world/entity/EntityManager.h"
 #include "apps/world/entity/EntityStateFactory.h"
 #include "apps/world/entity/IEntity.h"
+#include "apps/world/stage/StageDefinitionLoader.h"
 #include "config/GameAssets.h"
 #include "config/PathDefsJsonProps.h"
 #include "core/assembly/FilteredJoystickInputProvider.h"
@@ -41,7 +42,7 @@ namespace mm2hack::apps::scenes
 {
     namespace
     {
-        constexpr std::uint32_t kDemoStage2StateVersion = 3;
+        constexpr std::uint32_t kDemoStage2StateVersion = 4; // 4: + enemy spawn director state
 
         enum class DemoStage2PhaseType : std::uint8_t
         {
@@ -399,10 +400,21 @@ namespace mm2hack::apps::scenes
         bgTileManager.SetMapSize(SystemConfig::kTileCountX, SystemConfig::kTileCountY);     // 16x15 tiles
         // Load map data.
         bgRoomBank.Load(kStageMapBinary);
+
+        // Stage logic data (BD-006 .def): player start and enemy placements.
+        std::string def_error;
+        if (!world::stage::StageDefinitionLoader::LoadFromFile(std::wstring(kStageObjectDefine), _stageData, def_error))
+        {
+            utils::debug_log(kClassName + L": failed to load stage definition: " + utils::utf8_to_wstring(def_error));
+            return false;
+        }
+
+        // An explicit RoomNo (e.g. picked from the backdoor menu) wins over
+        // the .def's own start room.
         auto roomNo = params.Get<int>(L"RoomNo");
         if (roomNo == std::nullopt)
         {
-            roomNo = 0; // Default to room 0 if not specified.
+            roomNo = _stageData.start ? _stageData.start->room_id : 0;
         }
         if (auto idx = bgRoomBank.FindIndexByRoomId(static_cast<uint8_t>(*roomNo)); idx)
         {
@@ -632,7 +644,12 @@ namespace mm2hack::apps::scenes
         phases::StageDefinition def{};
         def.map_binary_path = std::wstring(kStageMapBinary);
         def.start_page_index = _startPageIndex;
-        def.start_local_pos = { 128.0, 183.0 }; // TODO: This should be loaded from a external def-file instead of hardcoded.
+        // .def points are feet-center; the player's pos is its 32x32 sprite's center.
+        constexpr double kPlayerSpriteHalfHeight = 16.0;
+        def.start_local_pos = _stageData.start
+            ? foundation::math::Vec2{ _stageData.start->local_pos.x, _stageData.start->local_pos.y - kPlayerSpriteHalfHeight }
+            : foundation::math::Vec2{ 128.0, 183.0 };
+        def.enemy_placements = _stageData.enemies;
 
         // Create build config.
         phases::ActionStageBuildConfig build{};

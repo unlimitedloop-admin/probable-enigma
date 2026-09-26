@@ -4,14 +4,12 @@
 
 #include "apps/rendering/bg/BGTileMapProvider.h"
 #include "apps/resources/ResourceManager.h"
-#include "apps/runtime/GameContext.h"
 #include "apps/systems/physics/LadderService.h"
 #include "apps/systems/physics/PageGridIndex.h"
 #include "apps/systems/physics/TileQueryService.h"
 #include "apps/systems/scrolling/atomic/Camera.h"
 #include "apps/systems/scrolling/atomic/ScrollController.h"
 #include "apps/world/entity/avatar/PlayerEntity.h"
-#include "apps/world/entity/enemy/EnemyEntity.h"
 #include "apps/world/entity/EntityManager.h"
 #include "apps/world/stage/RoomGraphAdapter.h"
 #include "config/SystemConfig.h"
@@ -151,36 +149,8 @@ namespace mm2hack::apps::scenes::phases
 
         player->texture = 0;
 
-        // TODO(enemy verification): temporary hardcoded Met placement to verify
-        // the animation/collision/palette/gravity pipeline end-to-end before
-        // real level/enemy placement exists. Remove/replace once that lands.
-        // Only the default palette preset is spawned for now -- the recolor
-        // pipeline itself (yellow/blue/red) was already verified separately and
-        // doesn't need a live instance of each cluttering every behavior test.
-        using world::entity::enemy::EnemyEntity;
-        using world::entity::enemy::EnemyKind;
-        const auto* metall_def =
-            runtime::GameContext::GetInstance().GetResourceManager().GetEnemyDefinitionCatalog().Find(EnemyKind::Met);
-        if (metall_def != nullptr)
-        {
-            // Only WHERE (and in which color) is decided here -- everything
-            // Met is capable of (HP, attack power, sizes, speed, ...) comes
-            // from its own definition file's "abilities" block (METALL.json).
-            const double metall_spawn_y = player->pos.y - 32.0; // above the floor; gravity does the rest
-            constexpr int kDefaultPresetIndex = 0;
-
-            rendering::sprite::SpriteManager::Id metall_sprite_id{};
-            if (ctx.asset_provider->TryEnemySprite(EnemyKind::Met, kDefaultPresetIndex, metall_sprite_id))
-            {
-                auto& metall = ctx.entity_mgr->Spawn<EnemyEntity>(
-                    EnemyKind::Met,
-                    foundation::math::Vec2{ player->pos.x + 96.0, metall_spawn_y },
-                    metall_sprite_id,
-                    kDefaultPresetIndex,
-                    metall_def,
-                    ctx.asset_provider->EnemyProjectileSprite());
-                metall.SetTerrainProbe(ctx.terrain_probe.get());
-            }
-        }
+        // Enemies aren't spawned here: EnemySpawnDirector brings each one in
+        // as its placement point scrolls into view.
+        ctx.enemy_placements = def.enemy_placements;
     }
 }

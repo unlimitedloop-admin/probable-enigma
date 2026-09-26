@@ -162,6 +162,10 @@ namespace mm2hack::apps::world::entity::enemy
 
         [[nodiscard]] EnemyKind Kind() const noexcept { return _kind; }
 
+        // Initial facing from placement data (-1 left, +1 right). A state with
+        // track_player_facing re-aims at the player on its own every Update().
+        void SetFacing(int facing) noexcept { _facing = facing < 0 ? -1 : 1; }
+
         // Wired externally after construction/restoration (mirrors PlayerEntity::
         // SetTerrainProbe()) -- not part of saved state. Without it, Update()
         // simply skips gravity for the frame (see SimpleGravityBody::Tick()).

@@ -11,6 +11,7 @@
 //==============================================================================
 #pragma once
 
+#include <string_view>
 #include <unordered_map>
 
 #include "AnimationTypes.h"
@@ -27,6 +28,10 @@ namespace mm2hack::apps::world::entity::enemy::animation
         bool LoadForKind(EnemyKind kind, const std::wstring& filepath);
 
         [[nodiscard]] const EnemyDefinition* Find(EnemyKind kind) const noexcept;
+        // Looks a loaded definition up by its JSON "id" (e.g. "metall") -- how
+        // stage placement data names a kind. Also reports the kind it's
+        // registered under. nullptr if no loaded definition has that id.
+        [[nodiscard]] const EnemyDefinition* FindById(std::string_view id, EnemyKind& out_kind) const noexcept;
 
         // Drops every loaded definition (e.g. between stage loads).
         void Clear() noexcept { _definitions.clear(); }

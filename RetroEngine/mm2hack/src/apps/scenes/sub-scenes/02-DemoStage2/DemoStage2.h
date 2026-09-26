@@ -30,6 +30,7 @@
 #include "apps/scenes/phases/IStageScript.h"
 #include "apps/scenes/SceneChangeMediator.h"
 #include "apps/world/entity/enemy/lists/EnemyLists.h"
+#include "apps/world/stage/StagePlacement.h"
 #include "core/assembly/StateProvider.h"
 
 namespace mm2hack::apps::resources::parameters
@@ -125,8 +126,9 @@ namespace mm2hack::apps::scenes
 
         const std::wstring kMapName{ L"SAMPLESTAGE2" };
         const std::wstring_view kStageMapBinary{ L"assets\\_exams\\bg\\SAMPLESTAGE2.bin" };
-        // HACK: The stage definition file is not used in this implementation, but it is kept here for reference.
+        // Stage logic data (BD-006): player start and enemy placements.
         const std::wstring_view kStageObjectDefine{ L"assets\\_exams\\bg\\SAMPLESTAGE2.def" };
+        world::stage::StageDefinitionData _stageData{};                 // Loaded once from kStageObjectDefine; reused by every restart
 
         struct RoomState
         {

@@ -134,6 +134,8 @@
     <ClCompile Include="src\utils\decimal_decoder.cpp" />
     <ClCompile Include="src\apps\systems\physics\LadderService.cpp" />
     <ClCompile Include="src\apps\world\stage\RoomGraphAdapter.cpp" />
+    <ClCompile Include="src\apps\world\stage\StageDefinitionLoader.cpp" />
+    <ClCompile Include="src\apps\scenes\phases\EnemySpawnDirector.cpp" />
     <ClCompile Include="src\apps\systems\scrolling\atomic\ScrollFreezeState.cpp" />
     <ClCompile Include="src\apps\systems\scrolling\atomic\FixedScrollDriver.cpp" />
     <ClCompile Include="src\apps\systems\scrolling\atomic\ScrollNeighborResolver.cpp" />
@@ -305,6 +307,9 @@
     <ClInclude Include="src\apps\resources\bg\MapPageCache.h" />
     <ClInclude Include="src\apps\resources\bg\AddressScraper.h" />
     <ClInclude Include="src\apps\world\stage\RoomGraphAdapter.h" />
+    <ClInclude Include="src\apps\world\stage\StagePlacement.h" />
+    <ClInclude Include="src\apps\world\stage\StageDefinitionLoader.h" />
+    <ClInclude Include="src\apps\scenes\phases\EnemySpawnDirector.h" />
     <ClInclude Include="src\apps\systems\scrolling\atomic\ScrollController.h" />
     <ClInclude Include="src\apps\systems\scrolling\atomic\ScrollTypes.h" />
     <ClInclude Include="src\apps\systems\scrolling\atomic\IScrollRuleProvider.h" />

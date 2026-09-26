@@ -373,6 +373,25 @@ namespace mm2hack::apps::world::entity
         _pending_add.clear();
     }
 
+    IEntity* EntityManager::FindByInstanceId(EntityInstanceId id) noexcept
+    {
+        if (id == 0)
+        {
+            return nullptr;
+        }
+        for (auto* list : { &_entities, &_pending_add })
+        {
+            for (auto& e : *list)
+            {
+                if (e && e->StateInstanceId() == id)
+                {
+                    return e.get();
+                }
+            }
+        }
+        return nullptr;
+    }
+
     void EntityManager::removeDead_()
     {
         std::erase_if(_entities, [](const std::unique_ptr<IEntity>& e)

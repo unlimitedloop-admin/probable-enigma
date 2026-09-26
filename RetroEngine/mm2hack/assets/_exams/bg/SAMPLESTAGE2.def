@@ -2,7 +2,12 @@
   "version": "1.0",
   "stage": {
     "id": 0,
-    "name": "SAMPLESTAGE2"
+    "name": "SAMPLESTAGE2",
+    "start": {
+      "roomId": 0,
+      "x": 128,
+      "y": 199
+    }
   },
   "nodes": [
     {
@@ -70,6 +75,21 @@
       "z": 0,
       "enabled": true,
       "remarks": "\u4E0A\u306E\u53F0\u306B\u4F55\u304B\u306E\u30A2\u30A4\u30C6\u30E0\u3092\u914D\u7F6E"
+    }
+  ],
+  "entities": [
+    {
+      "type": "enemy",
+      "id": "met_room0_a",
+      "roomId": 0,
+      "position": {
+        "x": 224,
+        "y": 199
+      },
+      "properties": {
+        "kind": "metall",
+        "palette": "default"
+      }
     }
   ]
 }

@@ -137,7 +137,8 @@ namespace mm2hack::apps::scenes::phases
             writer.WriteF64(player_previous_position.y) &&
             ready_ui.Save(writer) &&
             scroll.Save(writer) &&
-            writer.WriteU64(enemy_attack_pattern_counter);
+            writer.WriteU64(enemy_attack_pattern_counter) &&
+            enemy_spawns.Save(writer);
     }
 
     bool AbstractActionPhaseState::Load(core::save::StateReader& reader)
@@ -154,7 +155,8 @@ namespace mm2hack::apps::scenes::phases
             !reader.ReadF64(loaded.player_previous_position.y) ||
             !loaded.ready_ui.Load(reader) ||
             !loaded.scroll.Load(reader) ||
-            !reader.ReadU64(loaded.enemy_attack_pattern_counter))
+            !reader.ReadU64(loaded.enemy_attack_pattern_counter) ||
+            !loaded.enemy_spawns.Load(reader))
         {
             return false;
         }
@@ -201,7 +203,8 @@ namespace mm2hack::apps::scenes::phases
             player_position_valid &&
             phase_consistent &&
             ready_ui.IsValid() &&
-            scroll.IsValid();
+            scroll.IsValid() &&
+            enemy_spawns.IsValid();
     }
 
     AbstractActionPhase::AbstractActionPhase(std::unique_ptr<StageRuntimeContext> ctx, IStageScript* script, IPhaseHost& host) noexcept
@@ -245,6 +248,7 @@ namespace mm2hack::apps::scenes::phases
             .ready_ui = _ready_ui.CaptureState(),
             .scroll = _ctx->scroll->CaptureState(),
             .enemy_attack_pattern_counter = _enemy_attack_pattern_counter,
+            .enemy_spawns = _enemy_spawner.CaptureState(),
         };
         return state.IsValid();
     }
@@ -321,7 +325,10 @@ namespace mm2hack::apps::scenes::phases
     bool AbstractActionPhase::RestoreRuntimeState(
         const AbstractActionPhaseState& state) noexcept
     {
+        // The spawner goes first: it's the one that can refuse a structurally
+        // valid state (one saved against a .def with different placements).
         if (!state.IsValid() || !_ctx || !_ctx->scroll ||
+            !_enemy_spawner.RestoreState(state.enemy_spawns) ||
             !_ready_ui.RestoreState(state.ready_ui))
         {
             return false;
@@ -420,6 +427,8 @@ namespace mm2hack::apps::scenes::phases
         }
 
         _ready_ui.Begin(3.0);   // 3 seconds duration for "READY" blink
+
+        _enemy_spawner.Build(*_ctx);
 
         ui::hud::HealthMeterStyle style{};
         if (!ui::hud::HealthMeterUI::LoadStyle(kHealthMeterStylePath, style))
@@ -629,6 +638,9 @@ namespace mm2hack::apps::scenes::phases
 
         auto* player = _ctx->entity_mgr->FindFirst<avatar::PlayerEntity>();
 
+        // Placements already in view at stage start are out through READY too.
+        _enemy_spawner.Tick(*_ctx, player != nullptr ? player->pos : Vec2::Zero());
+
         switch (_intro.step)
         {
             case ActionIntroStep::ReadyBlink:
@@ -810,6 +822,7 @@ namespace mm2hack::apps::scenes::phases
                 advanceSharedAttackCounter_();
 
                 resolveEntityCollisions_();
+                _enemy_spawner.Tick(*_ctx, player->pos);
 
                 // Vitality ran out on this pass: the miss starts this very
                 // tick, before the (now moot) knockback reaction ever shows.
@@ -910,6 +923,7 @@ namespace mm2hack::apps::scenes::phases
         spawnEnemyProjectiles_();
         advanceSharedAttackCounter_();
         resolveEntityCollisions_();
+        _enemy_spawner.Tick(*_ctx, _miss_origin);
 
         ++_miss_frames;
         if (_retry_requested || _miss_frames < _miss_fade_out_delay_frames || _host == nullptr)

@@ -21,6 +21,7 @@
 #include "apps/ui/productions/StageIntroUI.h"
 #include "apps/world/entity/avatar/PlayerFrameOutput.h"
 #include "core/save/StateIO.h"
+#include "EnemySpawnDirector.h"
 #include "IPhaseHost.h"
 #include "PhaseResult.h"
 #include "StageRuntimeContext.h"
@@ -100,6 +101,8 @@ namespace mm2hack::apps::scenes::phases
         // Saved so a parity-gated attack pattern (e.g. Met's jump/walk split)
         // stays deterministic across a save/load, same as everything else replay cares about.
         std::uint64_t enemy_attack_pattern_counter{ 0 };
+        // Which placed enemies are out, defeated, or waiting to respawn.
+        EnemySpawnDirectorState enemy_spawns{};
 
         bool Save(core::save::StateWriter& writer) const;
         bool Load(core::save::StateReader& reader);
@@ -238,6 +241,7 @@ namespace mm2hack::apps::scenes::phases
         // Player vitality meter. Presentation only, never saved: it snaps to
         // the player's HP on Initialize() and on every save-state restore.
         ui::hud::HealthMeterUI _health_meter{};
+        EnemySpawnDirector _enemy_spawner{};                // Spawns/removes the stage's placed enemies
 
         // ======== debug info ========
         int _page_index_debug{ 0 };

@@ -24,6 +24,7 @@
 #include "apps/systems/scrolling/atomic/ScrollController.h"
 #include "apps/world/entity/EntityManager.h"
 #include "apps/world/stage/RoomGraphAdapter.h"
+#include "apps/world/stage/StagePlacement.h"
 #include "core/assembly/StateProvider.h"
 
 namespace mm2hack::apps::scenes::phases
@@ -52,5 +53,7 @@ namespace mm2hack::apps::scenes::phases
         systems::physics::CollisionSystem collision{};                                  // Entity-vs-entity collision resolver (default matrix)
 
         const scenes::IStageAssetProvider* asset_provider{ nullptr };                   // Reference to stage asset provider
+
+        std::vector<world::stage::EnemyPlacement> enemy_placements{};                   // From the stage's .def; spawned by EnemySpawnDirector
     };
 }

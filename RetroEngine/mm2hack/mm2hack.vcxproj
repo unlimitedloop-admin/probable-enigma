@@ -274,6 +274,8 @@
     <ClCompile Include="src\apps\world\entity\common\AnimeStepper.cpp" />
     <ClCompile Include="src\apps\world\entity\common\FrameGate.cpp" />
     <ClCompile Include="src\apps\world\stage\RoomGraphAdapter.cpp" />
+    <ClCompile Include="src\apps\world\stage\StageDefinitionLoader.cpp" />
+    <ClCompile Include="src\apps\scenes\phases\EnemySpawnDirector.cpp" />
     <ClCompile Include="src\config\ConfigUIManager.cpp" />
     <ClCompile Include="src\config\EnvironmentConfig.cpp" />
     <ClCompile Include="src\config\SystemConfig.cpp" />
@@ -466,6 +468,9 @@
     <ClInclude Include="src\apps\rendering\bg\BGTileManager.h" />
     <ClInclude Include="src\apps\rendering\common\DividedGraphLoader.h" />
     <ClInclude Include="src\apps\world\stage\RoomGraphAdapter.h" />
+    <ClInclude Include="src\apps\world\stage\StagePlacement.h" />
+    <ClInclude Include="src\apps\world\stage\StageDefinitionLoader.h" />
+    <ClInclude Include="src\apps\scenes\phases\EnemySpawnDirector.h" />
     <ClInclude Include="src\apps\rendering\effects\FadeIOTexture.h" />
     <ClInclude Include="src\apps\rendering\fonts\FontTileManager.h" />
     <ClInclude Include="src\apps\rendering\sprite\SpriteAtlas.h" />

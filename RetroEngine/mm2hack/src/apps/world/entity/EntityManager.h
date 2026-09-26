@@ -90,6 +90,12 @@ namespace mm2hack::apps::world::entity
         // Removes all entities immediately
         void Clear() noexcept;
 
+        // Finds an entity by its StateInstanceId(), INCLUDING one already
+        // killed but not yet removed (removal happens at the end of the next
+        // UpdateAll()) -- so a caller can still tell how it died. nullptr if
+        // no such entity is held anymore.
+        [[nodiscard]] IEntity* FindByInstanceId(EntityInstanceId id) noexcept;
+
         // Finds the first entity of type T (dynamic_cast). Returns nullptr if not found
         template <typename T>
         T* FindFirst() noexcept;
