@@ -11,6 +11,15 @@
         "sprite_half_size": { "x": 16.0, "y": 16.0 },
         "hitbox_half_size": { "x": 9.0, "y": 8.0 },
         "hitbox_offset_y": 10.0,
+        "tile_hitboxes": [
+            { "tiles": [1],          "half_size": { "x": 9.0, "y": 8.5 },  "offset_y": 9.5 },
+            { "tiles": [2],          "half_size": { "x": 9.0, "y": 11.5 }, "offset_y": 6.5 },
+            { "tiles": [3],          "half_size": { "x": 9.0, "y": 10.0 }, "offset_y": 8.0 },
+            { "tiles": [4, 5, 6, 7], "half_size": { "x": 9.0, "y": 10.5 }, "offset_y": 7.5 },
+            { "tiles": [8],          "half_size": { "x": 9.0, "y": 12.0 }, "offset_y": 6.0 },
+            { "tiles": [9, 11],      "half_size": { "x": 9.0, "y": 12.5 }, "offset_y": 5.5 },
+            { "tiles": [10],         "half_size": { "x": 9.0, "y": 13.5 }, "offset_y": 4.5 }
+        ],
         "facing_texture_offset_left": 12,
         "projectile_hit_half_size": { "x": 2.0, "y": 2.0 },
         "projectile_spawn_offset_y": 5.0

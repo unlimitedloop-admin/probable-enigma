@@ -385,8 +385,20 @@ namespace mm2hack::apps::world::entity::enemy
 
     EnemyEntity::RectF EnemyEntity::Bounds() const
     {
-        const double center_y = pos.y + _hitbox_offset_y;
-        return { pos.x - _hitbox_half.x, center_y - _hitbox_half.y, _hitbox_half.x * 2.0, _hitbox_half.y * 2.0 };
+        // The box follows the tile currently shown (base tile, before the
+        // facing offset), so a kind whose silhouette grows/shrinks mid-
+        // animation is hit where it's actually drawn -- see
+        // EnemyAbilities::tile_hitboxes. Derived every call, never saved.
+        Vec2 half = _hitbox_half;
+        double offset_y = _hitbox_offset_y;
+        if (const auto* tile_box = abilities_().FindTileHitbox(_animator.CurrentTile()))
+        {
+            half = tile_box->half_size;
+            offset_y = tile_box->offset_y;
+        }
+
+        const double center_y = pos.y + offset_y;
+        return { pos.x - half.x, center_y - half.y, half.x * 2.0, half.y * 2.0 };
     }
 
     void EnemyEntity::OnEntityCollision(IEntity& other)

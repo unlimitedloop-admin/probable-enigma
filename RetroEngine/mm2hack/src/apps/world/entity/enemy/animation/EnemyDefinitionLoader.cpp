@@ -2,6 +2,7 @@
 
 #include "EnemyDefinitionLoader.h"
 
+#include <algorithm>
 #include <cmath>
 #include <fstream>
 #include <iterator>
@@ -161,6 +162,40 @@ namespace mm2hack::apps::world::entity::enemy::animation
             return try_read_double(object, key, default_value, out) && out >= minimum && out <= maximum;
         }
 
+        // One "tile_hitboxes" entry: { "tiles": [..], "half_size": {x,y},
+        // "offset_y": n } -- flattened into one EnemyTileHitbox per listed
+        // tile. A tile already claimed by an earlier entry is an error.
+        bool try_parse_tile_hitbox(const json& source, double minimum_half, double maximum_half,
+            std::vector<EnemyTileHitbox>& out)
+        {
+            if (!source.is_object()) return false;
+
+            const auto tiles = source.find("tiles");
+            if (tiles == source.end() || !tiles->is_array() || tiles->empty()) return false;
+
+            EnemyTileHitbox box{};
+            if (source.find("half_size") == source.end() || source.find("offset_y") == source.end() ||
+                !try_read_vec2(source, "half_size", minimum_half, maximum_half, box.half_size, box.half_size) ||
+                !try_read_bounded_double(source, "offset_y", -maximum_half, maximum_half, 0.0, box.offset_y))
+            {
+                return false;
+            }
+
+            for (const auto& tile_json : *tiles)
+            {
+                if (!tile_json.is_number_integer()) return false;
+                const std::int64_t tile = tile_json.get<std::int64_t>();
+                if (tile < 0 || tile > 65'535) return false;
+
+                box.tile = static_cast<int>(tile);
+                const bool already_listed = std::any_of(out.begin(), out.end(),
+                    [&box](const EnemyTileHitbox& existing) { return existing.tile == box.tile; });
+                if (already_listed) return false;
+                out.push_back(box);
+            }
+            return true;
+        }
+
         // The optional "abilities" block (see EnemyAbilities). Any key left
         // out keeps EnemyAbilities' own default. Bounds mirror what
         // EnemyEntityState::IsValid() will later accept on a save/load.
@@ -192,6 +227,16 @@ namespace mm2hack::apps::world::entity::enemy::animation
                     defaults.projectile_spawn_offset_y, out.projectile_spawn_offset_y))
             {
                 return false;
+            }
+
+            const auto tile_hitboxes = source.find("tile_hitboxes");
+            if (tile_hitboxes != source.end())
+            {
+                if (!tile_hitboxes->is_array()) return false;
+                for (const auto& entry : *tile_hitboxes)
+                {
+                    if (!try_parse_tile_hitbox(entry, kMinimumHalfSize, kMaximumHalfSize, out.tile_hitboxes)) return false;
+                }
             }
             return true;
         }

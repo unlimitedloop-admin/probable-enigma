@@ -199,6 +199,14 @@ namespace mm2hack::apps::world::entity::enemy::animation
         std::vector<EnemyPaletteMapping> mappings;
     };
 
+    // Hit box override for one animation tile (see EnemyAbilities::tile_hitboxes).
+    struct EnemyTileHitbox final
+    {
+        int tile{ 0 };                                  // Base tile, BEFORE facing_texture_offset_left
+        foundation::math::Vec2 half_size{ 8.0, 8.0 };
+        double offset_y{ 0.0 };
+    };
+
     // A kind's own fixed capabilities -- the "abilities" block of its JSON
     // definition. Deliberately kind-wide only: WHERE an enemy is placed (and
     // its facing/color there) belongs to the stage's placement data, never
@@ -224,6 +232,24 @@ namespace mm2hack::apps::world::entity::enemy::animation
         foundation::math::Vec2 sprite_half_size{ 8.0, 8.0 };    // Render anchor / probe footprint
         foundation::math::Vec2 hitbox_half_size{ 8.0, 8.0 };    // Entity-collision box, independent of the sprite
         double hitbox_offset_y{ 0.0 };                          // Shifts the hit box's center down (+) from pos
+        // Per-tile overrides of the two above, for kinds whose silhouette
+        // grows/shrinks mid-animation. The hit box follows whatever tile is
+        // currently shown; a tile not listed uses hitbox_half_size /
+        // hitbox_offset_y. Keyed by base tile, so one entry covers both
+        // facings. At most one entry per tile (the loader rejects repeats).
+        std::vector<EnemyTileHitbox> tile_hitboxes;
+
+        [[nodiscard]] const EnemyTileHitbox* FindTileHitbox(int tile) const noexcept
+        {
+            for (const auto& entry : tile_hitboxes)
+            {
+                if (entry.tile == tile)
+                {
+                    return &entry;
+                }
+            }
+            return nullptr;
+        }
         // Added to the current tile while facing left, for sheets with
         // separate mirrored tiles (0 if symmetric / no mirrored set).
         int facing_texture_offset_left{ 0x00 };
