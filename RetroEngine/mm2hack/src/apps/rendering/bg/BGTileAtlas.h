@@ -40,10 +40,13 @@ namespace mm2hack::apps::rendering::bg
 
         // draw tile index in the atlas (0..tiles_x*tiles_y-1)
         void DrawTile(int variant, int tile_index, int x, int y) const noexcept;
-        // Creates a palette variant graph for a specific tile.
+        // Creates a palette variant for a specific tile -- one graph per fade
+        // step (VariantCount()), so the recolored tile fades with the rest of
+        // the BG. Returns the new palette variant's index, or -1 on failure.
         [[nodiscard]] int CreateTilePaletteVariant(int tile_index, std::span<const BGPaletteColorMapping> mappings);
-        // Draws a specific tile using its local palette variant.
-        void DrawTilePaletteVariant(int tile_index, int palette_variant, int x, int y) const noexcept;
+        // Draws a specific tile using its local palette variant, at fade step
+        // `fade_variant` (the same step DrawTile() takes as `variant`).
+        void DrawTilePaletteVariant(int tile_index, int palette_variant, int fade_variant, int x, int y) const noexcept;
 
     private:
         void dispose_() noexcept;
@@ -56,6 +59,7 @@ namespace mm2hack::apps::rendering::bg
         int _soft_image{ -1 };
         std::vector<std::vector<int>> _graphs_by_variant;   // [variant][tile_index]
 
-        std::unordered_map<int, std::vector<int>> _tile_palette_variants{}; // [tile_index] -> [palette_variant_graphs]
+        // [tile_index] -> [palette_variant][fade_variant] -> graph handle
+        std::unordered_map<int, std::vector<std::vector<int>>> _tile_palette_variants{};
     };
 }
