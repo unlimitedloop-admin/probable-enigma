@@ -41,6 +41,7 @@
 #include "core/winapi/WindowManager.h"  // Use for scaling the debug HUD's hit box outlines
 #include "core/save/StateIO.h"
 #include "input/Jpbtn.h"
+#include "utils/output_debug.h"
 #include "IPhaseHost.h"
 #include "IStageScript.h"
 #include "PhaseResult.h"
@@ -74,6 +75,15 @@ namespace mm2hack::apps::scenes::phases
             ChargeParticleStep{   0, 8 },
             ChargeParticleStep{   9, 8 },
         };
+
+        // ======== Health meter ========
+        const std::wstring kHealthMeterStylePath{ L"assets\\data\\ui\\HEALTH_METER.json" };
+        // TODO(weapons): only the Rock Buster exists yet -- take these from
+        // the equipped weapon once weapon switching lands.
+        constexpr std::wstring_view kHudWeaponInitials{ L"RB" };
+        // TODO(lives): placeholder until a lives counter exists (it will
+        // outlive a single phase, so it belongs to the scene/sequence side).
+        constexpr int kProvisionalLives = 3;
 
         // ======== Miss sequence ========
         // Ticks from the miss until the restart's fade-out begins, per cause.
@@ -331,6 +341,13 @@ namespace mm2hack::apps::scenes::phases
         _retry_requested = false;
         setBgmMissVoicesMuted_(false);
 
+        // The meter isn't saved; just show the restored HP as-is (no refill
+        // or chip trail animating in from whatever it showed before).
+        if (const auto* player = _ctx->entity_mgr->FindFirst<world::entity::avatar::PlayerEntity>())
+        {
+            _health_meter.Reset(player->CurrentHP(), player->MaxHP());
+        }
+
         // Audio and charge particles are presentation state. Rebuild them from
         // the player's next frame output instead of serializing channel state.
         _charge_sound_playing = false;
@@ -403,6 +420,17 @@ namespace mm2hack::apps::scenes::phases
         }
 
         _ready_ui.Begin(3.0);   // 3 seconds duration for "READY" blink
+
+        ui::hud::HealthMeterStyle style{};
+        if (!ui::hud::HealthMeterUI::LoadStyle(kHealthMeterStylePath, style))
+        {
+            utils::debug_log(kClassName + L": failed to load " + kHealthMeterStylePath + L", using built-in health meter style.");
+        }
+        _health_meter.SetStyle(style);
+        if (const auto* player = _ctx->entity_mgr->FindFirst<world::entity::avatar::PlayerEntity>())
+        {
+            _health_meter.Reset(player->CurrentHP(), player->MaxHP());
+        }
     }
 
     PhaseResult AbstractActionPhase::Update()
@@ -423,16 +451,19 @@ namespace mm2hack::apps::scenes::phases
         if (_state == ActionPhaseState::Intro)
         {
             updateIntro_();
+            updateHealthMeter_();
             return PhaseResult::None();
         }
 
         if (_state == ActionPhaseState::Miss)
         {
             updateMiss_();
+            updateHealthMeter_();
             return PhaseResult::None();
         }
 
         updateActive_();
+        updateHealthMeter_();
 
         const bool verified = false; // TODO: replace with real trigger
         if (verified && _host != nullptr)
@@ -475,6 +506,24 @@ namespace mm2hack::apps::scenes::phases
         };
         _ctx->entity_mgr->RenderLayer(ctx, systems::view::Layer::Actors);
         _ctx->entity_mgr->RenderLayer(ctx, systems::view::Layer::Effects);
+
+        // Hidden through READY/warp-in; appears once the player is in control
+        // and stays up through a miss (showing the HP it ended on).
+        if (_state != ActionPhaseState::Intro)
+        {
+            _health_meter.Render(_ctx->asset_provider->HealthMeterSprite(), kHudWeaponInitials, kProvisionalLives);
+        }
+    }
+
+    void AbstractActionPhase::updateHealthMeter_()
+    {
+        // No player during a miss (it's been removed) -- the meter just keeps
+        // animating toward the last HP it was given (see beginMiss_()).
+        if (const auto* player = _ctx->entity_mgr->FindFirst<world::entity::avatar::PlayerEntity>())
+        {
+            _health_meter.SetTarget(player->CurrentHP(), player->MaxHP());
+        }
+        _health_meter.Tick();
     }
 
     void AbstractActionPhase::RenderOverlay()
@@ -908,6 +957,9 @@ namespace mm2hack::apps::scenes::phases
         auto& audio = runtime::GameContext::GetInstance().GetResourceManager().GetAudioManager();
         const Vec2 origin = player.pos;
         _miss_origin = origin;
+        // Last HP the meter will ever get from this player (it's removed
+        // below), so the lethal hit still drains the fill to 0.
+        _health_meter.SetTarget(player.CurrentHP(), player.MaxHP());
 
         // The charge loop would otherwise keep running (and its particles keep
         // hovering around nobody) through the whole sequence.

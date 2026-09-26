@@ -148,6 +148,7 @@
     <ClCompile Include="src\apps\world\entity\common\FrameGate.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\states\AttackActionState.cpp" />
     <ClCompile Include="src\apps\ui\productions\StageIntroUI.cpp" />
+    <ClCompile Include="src\apps\ui\hud\HealthMeterUI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
@@ -402,6 +403,8 @@
     <ClInclude Include="src\apps\resources\assets\StageSpriteBank.h" />
     <ClInclude Include="src\apps\scenes\IStageAssetProvider.h" />
     <ClInclude Include="src\apps\ui\productions\StageIntroUI.h" />
+    <ClInclude Include="src\apps\ui\hud\HealthMeterUI.h" />
+    <ClInclude Include="src\utils\hex_parser.h" />
     <ClInclude Include="src\apps\resources\bg\BGPageHeader.h" />
     <ClInclude Include="src\apps\world\entity\common\FrameGate.h" />
     <ClInclude Include="src\apps\rendering\bg\BGTileAnimator.h" />

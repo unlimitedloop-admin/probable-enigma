@@ -17,6 +17,7 @@
 
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/systems/scrolling/atomic/ScrollController.h"
+#include "apps/ui/hud/HealthMeterUI.h"
 #include "apps/ui/productions/StageIntroUI.h"
 #include "apps/world/entity/avatar/PlayerFrameOutput.h"
 #include "core/save/StateIO.h"
@@ -145,6 +146,7 @@ namespace mm2hack::apps::scenes::phases
         void updateIntro_();                                // Handles the intro state update
         void updateActive_();                               // Handles the active state update
         void updateMiss_();                                 // Handles the miss state update
+        void updateHealthMeter_();                          // Feeds the player's HP to the meter and ticks it
         // Hands every enemy the position to track/attack and the shared attack
         // pattern counter for this tick (before UpdateAll()).
         void feedEnemies_(const Vec2& player_pos);
@@ -233,6 +235,9 @@ namespace mm2hack::apps::scenes::phases
         Vec2 _miss_origin{};                                // Where the player was lost; enemies keep targeting it during the miss
         bool _retry_requested{ false };                     // Restart already requested from the host this miss
         ui::productions::StageIntroUI _ready_ui{};          // UI for the intro sequence
+        // Player vitality meter. Presentation only, never saved: it snaps to
+        // the player's HP on Initialize() and on every save-state restore.
+        ui::hud::HealthMeterUI _health_meter{};
 
         // ======== debug info ========
         int _page_index_debug{ 0 };

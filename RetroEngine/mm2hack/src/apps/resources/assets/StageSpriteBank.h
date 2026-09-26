@@ -29,6 +29,7 @@ namespace mm2hack::apps::resources::assets
         SpriteManagerId charge_effect{};
         SpriteManagerId small_explosion_effect{};
         SpriteManagerId miss_bubble_effect{};
+        SpriteManagerId health_meter{};
         SpriteManagerId enemy_projectile{};
 
         std::unordered_map<world::entity::enemy::EnemyKind, SpriteManagerId> enemies{};

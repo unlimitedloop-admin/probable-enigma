@@ -10,6 +10,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include "utils/hex_parser.h"
 #include "utils/string_converter.h"
 
 using json = nlohmann::json;
@@ -81,29 +82,6 @@ namespace mm2hack::apps::world::entity::enemy::animation
             return true;
         }
 
-        // Parses a "0x"-prefixed hex string ("0x0A") -- the notation the
-        // definition files use for gameplay integers (HP, attack power, ...).
-        bool try_parse_hex_string(const std::string& text, std::int64_t& out)
-        {
-            if (text.size() < 3 || text.size() > 10 || text[0] != '0' || (text[1] != 'x' && text[1] != 'X'))
-            {
-                return false;
-            }
-            std::int64_t value = 0;
-            for (std::size_t i = 2; i < text.size(); ++i)
-            {
-                const char c = text[i];
-                int digit = 0;
-                if (c >= '0' && c <= '9') digit = c - '0';
-                else if (c >= 'a' && c <= 'f') digit = c - 'a' + 10;
-                else if (c >= 'A' && c <= 'F') digit = c - 'A' + 10;
-                else return false;
-                value = value * 16 + digit;
-            }
-            out = value;
-            return true;
-        }
-
         // Optional integer that may be written either as a plain JSON number
         // or as a "0x.." hex string; missing -> `default_value`.
         bool try_read_hex_int(const json& object, const char* key, int minimum, int maximum, int default_value, int& out)
@@ -120,7 +98,7 @@ namespace mm2hack::apps::world::entity::enemy::animation
             {
                 parsed = value->get<std::int64_t>();
             }
-            else if (!value->is_string() || !try_parse_hex_string(value->get<std::string>(), parsed))
+            else if (!value->is_string() || !utils::try_parse_hex(value->get<std::string>(), parsed))
             {
                 return false;
             }

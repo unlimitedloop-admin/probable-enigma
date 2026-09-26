@@ -1,0 +1,27 @@
+{
+    "position": { "x": 8, "y": 8 },
+    "initials": { "x": 4, "y": 3 },
+    "lives": { "x": 4, "y": 12 },
+    "bar": {
+        "x": 28,
+        "y": 8,
+        "length_px": 112,
+        "slant_px": 1,
+        "row_roles": [ "light", "highlight", "main", "main", "main", "dark", "dark", "dark" ]
+    },
+    "tones": [
+        { "above_percent": 50, "light": "0x3A", "main": "0x2A", "dark": "0x1A" },
+        { "above_percent": 25, "light": "0x38", "main": "0x28", "dark": "0x18" },
+        { "above_percent": 0,  "light": "0x26", "main": "0x16", "dark": "0x06" }
+    ],
+    "highlight": "0x30",
+    "chip_flash": "0x30",
+    "chip": "0x26",
+    "chip_hold_frames": 24,
+    "chip_flash_frames": 12,
+    "chip_drain_interval": 2,
+    "refill_interval": 3,
+    "low_hp_threshold": "0x04",
+    "low_hp_flash": "0x30",
+    "low_hp_blink_frames": 8
+}

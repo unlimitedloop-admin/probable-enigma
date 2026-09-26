@@ -496,6 +496,12 @@ namespace mm2hack::apps::scenes
             MM2H_GRAPHPROPS(MissBubble));
         if (_spriteBank.miss_bubble_effect == SpriteManagerId(-1)) return false;
 
+        _spriteBank.health_meter = spriteLoader.Load(
+            L"HealthMeter",
+            MM2H_GRAPHICS(HealthMeter),
+            MM2H_GRAPHPROPS(HealthMeter));
+        if (_spriteBank.health_meter == SpriteManagerId(-1)) return false;
+
         const auto metall_sprite = spriteLoader.Load(
             L"MetallArmy",
             MM2H_GRAPHICS(MetallArmy),
