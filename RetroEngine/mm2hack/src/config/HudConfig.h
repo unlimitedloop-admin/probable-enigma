@@ -17,5 +17,6 @@ namespace mm2hack::config
         bool showFrameTime;     // Show frame time in milliseconds
         bool showScrollLine;    // Show scroll line indicator
         bool showPlayerPosition;// Show player position coordinates
+        bool showHitboxes;      // Outline every entity's collision box (ICollider::Bounds())
     };
 }

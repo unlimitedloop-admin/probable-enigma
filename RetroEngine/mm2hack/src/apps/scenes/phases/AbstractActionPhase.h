@@ -202,6 +202,9 @@ namespace mm2hack::apps::scenes::phases
         // every transient effect entity and pauses SE (rising), or resumes SE
         // (falling). No-op mid-lock or mid-unlock.
         void handleScrollLockTransition_(bool locked_now);
+        // Debug HUD: outlines every live collider's Bounds(), colored by
+        // collision layer (grey while not collidable, e.g. invincibility).
+        void renderHitboxes_() const;
 
     private:
         const std::wstring kClassName{ L"AbstractActionPhase" };

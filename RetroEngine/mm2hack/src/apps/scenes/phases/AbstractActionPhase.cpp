@@ -38,6 +38,7 @@
 #include "apps/world/entity/EntityStateFactory.h"
 #include "config/ConfigUIManager.h"
 #include "core/overlay/DebugHud.h"
+#include "core/winapi/WindowManager.h"  // Use for scaling the debug HUD's hit box outlines
 #include "core/save/StateIO.h"
 #include "input/Jpbtn.h"
 #include "IPhaseHost.h"
@@ -497,6 +498,58 @@ namespace mm2hack::apps::scenes::phases
         }
 
         _ctx->scroll->DebugHudRender(hud.showScrollLine);
+
+        if (hud.showHitboxes)
+        {
+            renderHitboxes_();
+        }
+    }
+
+    void AbstractActionPhase::renderHitboxes_() const
+    {
+        using systems::physics::CollisionLayer;
+
+        std::vector<systems::physics::ICollider*> colliders;
+        _ctx->entity_mgr->CollectColliders(colliders);
+
+        // Same screen mapping as ScrollController::DebugHudRender(): game
+        // pixels relative to the view, scaled up to the window.
+        const auto& view = _ctx->scroll->GetView();
+        const double rate = core::winapi::WindowManager::GetInstance().GetViewerRate();
+        const auto to_screen = [rate](double game_px) { return static_cast<int>(std::floor(game_px * rate)); };
+
+        for (const auto* collider : colliders)
+        {
+            if (collider == nullptr)
+            {
+                continue;
+            }
+
+            unsigned int color = 0xFF808080; // not collidable right now
+            if (collider->IsCollidable())
+            {
+                switch (collider->Layer())
+                {
+                case CollisionLayer::Player:           color = 0xFF00FF00; break; // green
+                case CollisionLayer::Enemy:            color = 0xFFFF3030; break; // red
+                case CollisionLayer::ProjectilePlayer: color = 0xFF00FFFF; break; // cyan
+                case CollisionLayer::ProjectileEnemy:  color = 0xFFFFFF00; break; // yellow
+                case CollisionLayer::Item:
+                case CollisionLayer::Trap:
+                default:                               color = 0xFFFF80FF; break; // magenta
+                }
+            }
+
+            const auto box = collider->Bounds();
+            const double left = box.x - view.viewWorldX;
+            const double top = box.y - view.viewWorldY;
+            // DrawBox's right/bottom are exclusive, so the outline sits exactly
+            // on the box's own edges.
+            ::DxLib::DrawBox(
+                to_screen(left), to_screen(top),
+                to_screen(left + box.w), to_screen(top + box.h),
+                color, FALSE);
+        }
     }
 
     void AbstractActionPhase::SetEnableOperatePhase(bool enable)
