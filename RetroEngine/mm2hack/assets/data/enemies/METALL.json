@@ -2,6 +2,19 @@
     "id": "metall",
     "enemy_type": "minion",
     "name": "METALL",
+    "abilities": {
+        "hp": "0x03",
+        "contact_power": "0x01",
+        "projectile_power": "0x01",
+        "move_speed_px_per_sec": 20.0,
+        "gravity_scale": 1.0,
+        "sprite_half_size": { "x": 16.0, "y": 16.0 },
+        "hitbox_half_size": { "x": 9.0, "y": 8.0 },
+        "hitbox_offset_y": 10.0,
+        "facing_texture_offset_left": 12,
+        "projectile_hit_half_size": { "x": 2.0, "y": 2.0 },
+        "projectile_spawn_offset_y": 5.0
+    },
     "initial_state": "idle",
     "states": [
         {

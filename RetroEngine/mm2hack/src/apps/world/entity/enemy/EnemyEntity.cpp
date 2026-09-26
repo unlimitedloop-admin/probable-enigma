@@ -137,52 +137,56 @@ namespace mm2hack::apps::world::entity::enemy
         Vec2 spawn_pos,
         rendering::sprite::SpriteManager::Id sprite_id,
         int palette_preset_index,
-        const animation::EnemyAnimationDef* animation_def,
-        int facing_texture_offset_left,
-        int toughness,
-        Vec2 half_size,
-        Vec2 hitbox_half_size,
-        double hitbox_offset_y,
-        double move_speed_scale,
-        double gravity_scale,
+        const animation::EnemyDefinition* definition,
         rendering::sprite::SpriteManager::Id projectile_sprite_id)
-        : _kind(kind), _id(sprite_id), _palette_preset_index(palette_preset_index),
-          _facing_texture_offset_left(facing_texture_offset_left), _half(half_size),
-          _hitbox_half(hitbox_half_size), _hitbox_offset_y(hitbox_offset_y),
-          _toughness(toughness), _projectile_sprite_id(projectile_sprite_id)
+        : _kind(kind), _definition(definition), _id(sprite_id), _palette_preset_index(palette_preset_index),
+          _projectile_sprite_id(projectile_sprite_id)
     {
+        const auto& abilities = abilities_();
+        _facing_texture_offset_left = abilities.facing_texture_offset_left;
+        _half = abilities.sprite_half_size;
+        _hitbox_half = abilities.hitbox_half_size;
+        _hitbox_offset_y = abilities.hitbox_offset_y;
+        _toughness = abilities.hp;
+
         pos = spawn_pos;
         _spawn_x = spawn_pos.x;
-        _move_speed = kDefaultPatrolSpeedPxPerSec * std::max(0.0, move_speed_scale);
+        _move_speed = std::max(0.0, abilities.move_speed_px_per_sec);
 
-        const double scale = std::max(0.0, gravity_scale);
+        const double scale = std::max(0.0, abilities.gravity_scale);
         _gravity = systems::physics::SimpleGravityBody(
             kDefaultGravityPerFrame * scale, kDefaultTerminalVelocityPerFrame * scale);
 
-        const auto [max_hp, table] = HealthForToughness(toughness);
+        const auto [max_hp, table] = HealthForToughness(_toughness);
         _health = systems::combat::HealthComponent(max_hp, table);
 
-        if (animation_def != nullptr)
+        if (definition != nullptr)
         {
-            _animator = animation::AnimationStatePlayer(*animation_def);
+            _animator = animation::AnimationStatePlayer(definition->animation);
         }
     }
 
     EnemyEntity::EnemyEntity(
         const EnemyEntityState& state,
         rendering::sprite::SpriteManager::Id sprite_id,
-        const animation::EnemyAnimationDef* animation_def,
+        const animation::EnemyDefinition* definition,
         rendering::sprite::SpriteManager::Id projectile_sprite_id)
-        : _id(sprite_id), _projectile_sprite_id(projectile_sprite_id)
+        : _definition(definition), _id(sprite_id), _projectile_sprite_id(projectile_sprite_id)
     {
         RestoreState(state);
-        if (animation_def != nullptr)
+        if (definition != nullptr)
         {
             _animator.RestoreState(
                 state.anim_state_index, state.anim_frame_index,
                 state.anim_frame_elapsed, state.anim_state_elapsed,
-                *animation_def);
+                definition->animation);
         }
+    }
+
+    const animation::EnemyAbilities& EnemyEntity::abilities_() const noexcept
+    {
+        static const animation::EnemyAbilities kFallback{};
+        return _definition != nullptr ? _definition->abilities : kFallback;
     }
 
     bool EnemyEntity::SaveState(core::save::StateWriter& writer) const
@@ -344,15 +348,15 @@ namespace mm2hack::apps::world::entity::enemy
                 const double speed_px_per_sec = spec.speed_px_per_frame * kFramesPerSecond;
 
                 common::SpawnProjectileCommand cmd{};
-                cmd.spawnPos = pos + Vec2{ 0.0, kDefaultProjectileSpawnOffsetY };
+                cmd.spawnPos = pos + Vec2{ 0.0, abilities_().projectile_spawn_offset_y };
                 cmd.velocity = Vec2{ dir_x * speed_px_per_sec, dir_y * speed_px_per_sec };
                 cmd.drawLayer = Layer::Effects;
                 cmd.spriteId = _projectile_sprite_id;
                 cmd.baseTexture = 0;
                 cmd.visual = common::ProjectileVisual::Normal;
                 cmd.lifeSec = -1.0; // alive until it leaves the active view, same sentinel as the player's shots
-                cmd.power = kDefaultProjectilePower;
-                cmd.hitHalfSize = kDefaultProjectileHitHalfSize;
+                cmd.power = abilities_().projectile_power;
+                cmd.hitHalfSize = abilities_().projectile_hit_half_size;
                 cmd.collisionLayer = CollisionLayer::ProjectileEnemy;
                 cmd.weapon = systems::physics::WeaponId::EnemyShot;
 

@@ -80,6 +80,122 @@ namespace mm2hack::apps::world::entity::enemy::animation
             return true;
         }
 
+        // Parses a "0x"-prefixed hex string ("0x0A") -- the notation the
+        // definition files use for gameplay integers (HP, attack power, ...).
+        bool try_parse_hex_string(const std::string& text, std::int64_t& out)
+        {
+            if (text.size() < 3 || text.size() > 10 || text[0] != '0' || (text[1] != 'x' && text[1] != 'X'))
+            {
+                return false;
+            }
+            std::int64_t value = 0;
+            for (std::size_t i = 2; i < text.size(); ++i)
+            {
+                const char c = text[i];
+                int digit = 0;
+                if (c >= '0' && c <= '9') digit = c - '0';
+                else if (c >= 'a' && c <= 'f') digit = c - 'a' + 10;
+                else if (c >= 'A' && c <= 'F') digit = c - 'A' + 10;
+                else return false;
+                value = value * 16 + digit;
+            }
+            out = value;
+            return true;
+        }
+
+        // Optional integer that may be written either as a plain JSON number
+        // or as a "0x.." hex string; missing -> `default_value`.
+        bool try_read_hex_int(const json& object, const char* key, int minimum, int maximum, int default_value, int& out)
+        {
+            const auto value = object.find(key);
+            if (value == object.end())
+            {
+                out = default_value;
+                return true;
+            }
+
+            std::int64_t parsed = 0;
+            if (value->is_number_integer())
+            {
+                parsed = value->get<std::int64_t>();
+            }
+            else if (!value->is_string() || !try_parse_hex_string(value->get<std::string>(), parsed))
+            {
+                return false;
+            }
+            if (parsed < minimum || parsed > maximum) return false;
+            out = static_cast<int>(parsed);
+            return true;
+        }
+
+        // Optional { "x": .., "y": .. } object; missing -> `default_value`.
+        // Both components must be finite and within [minimum, maximum].
+        bool try_read_vec2(const json& object, const char* key, double minimum, double maximum,
+            foundation::math::Vec2 default_value, foundation::math::Vec2& out)
+        {
+            const auto value = object.find(key);
+            if (value == object.end())
+            {
+                out = default_value;
+                return true;
+            }
+            if (!value->is_object()) return false;
+
+            const auto x = value->find("x");
+            const auto y = value->find("y");
+            if (x == value->end() || y == value->end() || !x->is_number() || !y->is_number()) return false;
+            const double parsed_x = x->get<double>();
+            const double parsed_y = y->get<double>();
+            if (!std::isfinite(parsed_x) || !std::isfinite(parsed_y) ||
+                parsed_x < minimum || parsed_x > maximum || parsed_y < minimum || parsed_y > maximum)
+            {
+                return false;
+            }
+            out = { parsed_x, parsed_y };
+            return true;
+        }
+
+        bool try_read_bounded_double(const json& object, const char* key, double minimum, double maximum,
+            double default_value, double& out)
+        {
+            return try_read_double(object, key, default_value, out) && out >= minimum && out <= maximum;
+        }
+
+        // The optional "abilities" block (see EnemyAbilities). Any key left
+        // out keeps EnemyAbilities' own default. Bounds mirror what
+        // EnemyEntityState::IsValid() will later accept on a save/load.
+        bool try_parse_abilities(const json& source, EnemyAbilities& out)
+        {
+            if (!source.is_object()) return false;
+
+            constexpr double kMaximumHalfSize = 256.0;
+            constexpr double kMinimumHalfSize = 0.5;
+            const EnemyAbilities defaults{};
+
+            if (!try_read_hex_int(source, "hp", 0, 1'000, defaults.hp, out.hp) ||
+                !try_read_hex_int(source, "contact_power", 0, 1'000, defaults.contact_power, out.contact_power) ||
+                !try_read_hex_int(source, "projectile_power", 0, 1'000, defaults.projectile_power, out.projectile_power) ||
+                !try_read_bounded_double(source, "move_speed_px_per_sec", 0.0, 1'000.0,
+                    defaults.move_speed_px_per_sec, out.move_speed_px_per_sec) ||
+                !try_read_bounded_double(source, "gravity_scale", 0.0, 16.0, defaults.gravity_scale, out.gravity_scale) ||
+                !try_read_vec2(source, "sprite_half_size", kMinimumHalfSize, kMaximumHalfSize,
+                    defaults.sprite_half_size, out.sprite_half_size) ||
+                !try_read_vec2(source, "hitbox_half_size", kMinimumHalfSize, kMaximumHalfSize,
+                    defaults.hitbox_half_size, out.hitbox_half_size) ||
+                !try_read_bounded_double(source, "hitbox_offset_y", -kMaximumHalfSize, kMaximumHalfSize,
+                    defaults.hitbox_offset_y, out.hitbox_offset_y) ||
+                !try_read_hex_int(source, "facing_texture_offset_left", -65'535, 65'535,
+                    defaults.facing_texture_offset_left, out.facing_texture_offset_left) ||
+                !try_read_vec2(source, "projectile_hit_half_size", kMinimumHalfSize, kMaximumHalfSize,
+                    defaults.projectile_hit_half_size, out.projectile_hit_half_size) ||
+                !try_read_bounded_double(source, "projectile_spawn_offset_y", -kMaximumHalfSize, kMaximumHalfSize,
+                    defaults.projectile_spawn_offset_y, out.projectile_spawn_offset_y))
+            {
+                return false;
+            }
+            return true;
+        }
+
         bool try_parse_frame(const json& source, AnimationFrame& out)
         {
             if (!source.is_object()) return false;
@@ -266,6 +382,12 @@ namespace mm2hack::apps::world::entity::enemy::animation
                 !try_read_string(source, "enemy_type", out.enemy_type) ||
                 !try_read_string(source, "name", out.name) ||
                 !try_read_string(source, "initial_state", out.animation.initial_state))
+            {
+                return false;
+            }
+
+            const auto abilities = source.find("abilities");
+            if (abilities != source.end() && !try_parse_abilities(*abilities, out.abilities))
             {
                 return false;
             }

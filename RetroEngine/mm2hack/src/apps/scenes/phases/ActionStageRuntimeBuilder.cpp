@@ -163,20 +163,9 @@ namespace mm2hack::apps::scenes::phases
             runtime::GameContext::GetInstance().GetResourceManager().GetEnemyDefinitionCatalog().Find(EnemyKind::Met);
         if (metall_def != nullptr)
         {
-            constexpr double kMetallHalfHeight = 16.0; // 32x32 tile
-            // Hit box, independent of the render half-size above -- measured
-            // against METALL_ARMY_N0_ALL_PATTERN.png's opaque pixels, which
-            // span roughly x=7-25 across every pose. Height is trickier: the
-            // silhouette is bottom-anchored (y≈29-31) across every pose, but
-            // the top varies a lot -- y=21 while idle/cooldown (helmet down,
-            // crouched -- also Met's deflecting states, see DeflectsAttacks())
-            // vs. y=7-13 while rising/walking/jumping. A box centered on pos
-            // would either loom way above the idle/helmet silhouette or clip
-            // the active one, so kMetallHitboxOffsetY nudges the box down
-            // instead of centering it, trimming that overhang while still
-            // reaching up into most of the active poses.
-            constexpr foundation::math::Vec2 kMetallHitboxHalfSize{ 9.0, 8.0 };
-            constexpr double kMetallHitboxOffsetY = 10.0;
+            // Only WHERE (and in which color) is decided here -- everything
+            // Met is capable of (HP, attack power, sizes, speed, ...) comes
+            // from its own definition file's "abilities" block (METALL.json).
             const double metall_spawn_y = player->pos.y - 32.0; // above the floor; gravity does the rest
             constexpr int kDefaultPresetIndex = 0;
 
@@ -188,14 +177,7 @@ namespace mm2hack::apps::scenes::phases
                     foundation::math::Vec2{ player->pos.x + 96.0, metall_spawn_y },
                     metall_sprite_id,
                     kDefaultPresetIndex,
-                    &metall_def->animation,
-                    /* facing_texture_offset_left */ 12,
-                    /* toughness */ 3,
-                    foundation::math::Vec2{ kMetallHalfHeight, kMetallHalfHeight },
-                    kMetallHitboxHalfSize,
-                    kMetallHitboxOffsetY,
-                    /* move_speed_scale */ 1.0,
-                    /* gravity_scale */ 1.0,
+                    metall_def,
                     ctx.asset_provider->EnemyProjectileSprite());
                 metall.SetTerrainProbe(ctx.terrain_probe.get());
             }

@@ -62,10 +62,10 @@ namespace mm2hack::apps::world::entity::enemy
         // EnemyEntity::_hitbox_half.
         foundation::math::Vec2 hitbox_half_size{ 8.0, 8.0 };
         // Shifts the hit box's center down from pos (Y only, same idea as
-        // kDefaultProjectileSpawnOffsetY) -- see EnemyEntity::_hitbox_offset_y.
+        // EnemyAbilities::projectile_spawn_offset_y) -- see EnemyEntity::_hitbox_offset_y.
         double hitbox_offset_y{ 0.0 };
         double spawn_x{};                              // Original spawn X, kept for future leash/return-to-post AI; independent of the live, moving pos.x
-        double move_speed_px_per_sec{};                // Already includes the spawn-time speed scale
+        double move_speed_px_per_sec{};                // From EnemyAbilities::move_speed_px_per_sec at spawn
         std::int32_t facing{ 1 };                       // +1 = moving right, -1 = moving left
         // AnimationStatePlayer snapshot. Only structurally sanity-checked here
         // (IsValid() has no EnemyAnimationDef to check bounds against) -- the
@@ -74,7 +74,7 @@ namespace mm2hack::apps::world::entity::enemy
         std::int32_t anim_frame_index{ 0 };
         std::int32_t anim_frame_elapsed{ 0 };
         std::int32_t anim_state_elapsed{ 0 };
-        // Already includes the spawn-time gravity_scale (same idea as
+        // Already includes EnemyAbilities::gravity_scale (same idea as
         // move_speed_px_per_sec above -- the scale itself isn't needed again
         // once these are computed).
         double gravity_per_frame{ 0.0 };
@@ -106,63 +106,23 @@ namespace mm2hack::apps::world::entity::enemy
 
     public:
         static constexpr std::uint16_t kStateVersion{ 1 };
-        // Base horizontal speed (px/sec at scale=1.0) for whatever locomotion
-        // the current animation state allows (e.g. Met's hop toward the player
-        // during its "jump" state). Not yet per-kind; a placeholder until real
-        // per-kind movement AI lands.
-        static constexpr double kDefaultPatrolSpeedPxPerSec{ 20.0 };
         // Same per-frame values as PlayerTuning's normal (non-underwater)
         // gravity/terminalVelocity -- see SimpleGravityBody.h for why this is a
         // separate, independent constant rather than a shared reference to
-        // PlayerTuning itself.
+        // PlayerTuning itself. Shared by every kind; a kind scales both via
+        // EnemyAbilities::gravity_scale.
         static constexpr double kDefaultGravityPerFrame{ 0.25 };
         static constexpr double kDefaultTerminalVelocityPerFrame{ 19.0 };
-        // Shared across every shooting enemy for now (see AnimationTransition::
-        // projectile_spawns) -- revisit as a per-spawn parameter if a second
-        // kind needs a different value.
-        static constexpr int kDefaultProjectilePower{ 1 };
-        // Contact damage (touching this enemy's body directly, no projectile
-        // involved). Shared across every kind for now, same reasoning as
-        // kDefaultProjectilePower above -- revisit as a per-spawn parameter if
-        // a second kind needs a different value. Only actually dealt while
-        // NOT deflecting -- see AttackPower().
-        static constexpr int kDefaultContactDamagePower{ 1 };
-        // The ring sprite's actual opaque pixels only cover an 8x8 area centered
-        // in its 16x16 tile (ENEMY_PROJECTILES_N0_ALL_PATTERN.png); {3,3} (a 6x6
-        // box) covered 75% of that, far stricter than the player's own Rock
-        // Buster pellet (a 4x4 box against an ~11x6 visible sprite -- see
-        // AttackActionState::AttackTuning::normalHitHalfSize). Matched to the
-        // Buster's box size so an enemy shot is at least as forgiving to the
-        // player as the player's own shot is to enemies.
-        static constexpr Vec2 kDefaultProjectileHitHalfSize{ 2.0, 2.0 };
-        // Muzzle offset from pos, applied before facing/angle rotation (Y only
-        // for now -- positive = down, since screen Y grows downward). Tuning
-        // knob for "the shot spawns a bit above/below the sprite's visual
-        // center"; revisit as a per-spawn parameter if a second kind needs a
-        // different value (same reasoning as kDefaultProjectilePower above).
-        static constexpr double kDefaultProjectileSpawnOffsetY{ 5.0 };
 
         // Fresh placement (level/test spawn).
         // `palette_preset_index`: which of the kind's EnemyDefinition::
         // palette_presets `sprite_id` was already recolored to match (purely
         // for save-round-tripping -- rendering just uses `sprite_id` as-is).
-        // `animation_def`: this kind's animation state graph, from
-        // EnemyDefinitionCatalog; owned externally, must outlive this entity.
-        // A null def degrades gracefully to always showing tile 0.
-        // `toughness`: 0 = invincible, N = dies after N hits' worth of
-        // accumulated normal-shot power (1 = one-hit kill).
-        // `facing_texture_offset_left`: added to the animator's current tile
-        // while facing left, for sheets with separate mirrored tiles (0 if
-        // the sheet has none, or the art is symmetric).
-        // `move_speed_scale`: multiplies kDefaultPatrolSpeedPxPerSec.
-        // `gravity_scale`: multiplies both kDefaultGravityPerFrame and
-        // kDefaultTerminalVelocityPerFrame, so heavier/floatier enemies can
-        // fall faster/slower than the player without a second knob.
-        // `hitbox_half_size`: entity-collision box (ICollider::Bounds()),
-        // independent of `half_size` (render/probe footprint) -- see _hitbox_half.
-        // `hitbox_offset_y`: shifts that box's center down from pos (0.0 for
-        // kinds whose silhouette is already centered in the tile) -- see
-        // _hitbox_offset_y.
+        // `definition`: this kind's definition from EnemyDefinitionCatalog --
+        // its animation state graph and every per-kind ability (HP, attack
+        // power, sizes, speed, ...; see animation::EnemyAbilities). Owned
+        // externally, must outlive this entity. A null definition degrades
+        // gracefully to EnemyAbilities' defaults and always showing tile 0.
         // `projectile_sprite_id`: sprite for shots this enemy's animation graph
         // fires (see AnimationTransition::projectile_spawns); default (-1) is
         // fine for enemies whose graph never carries projectile_spawns.
@@ -171,24 +131,18 @@ namespace mm2hack::apps::world::entity::enemy
             Vec2 spawn_pos,
             rendering::sprite::SpriteManager::Id sprite_id,
             int palette_preset_index,
-            const animation::EnemyAnimationDef* animation_def,
-            int facing_texture_offset_left,
-            int toughness,
-            Vec2 half_size,
-            Vec2 hitbox_half_size,
-            double hitbox_offset_y = 0.0,
-            double move_speed_scale = 1.0,
-            double gravity_scale = 1.0,
+            const animation::EnemyDefinition* definition,
             rendering::sprite::SpriteManager::Id projectile_sprite_id =
                 static_cast<rendering::sprite::SpriteManager::Id>(-1));
         // Reconstruction from saved state (kind/toughness/etc. all come from
-        // `state`). `animation_def` is resolved externally the same way as
+        // `state`). `definition` is resolved externally the same way as
         // `sprite_id` -- by `state.kind`, via EnemyDefinitionCatalog; same for
-        // `projectile_sprite_id`.
+        // `projectile_sprite_id`. Only the abilities not captured in `state`
+        // (attack powers, projectile shape) are read from it.
         EnemyEntity(
             const EnemyEntityState& state,
             rendering::sprite::SpriteManager::Id sprite_id,
-            const animation::EnemyAnimationDef* animation_def,
+            const animation::EnemyDefinition* definition,
             rendering::sprite::SpriteManager::Id projectile_sprite_id =
                 static_cast<rendering::sprite::SpriteManager::Id>(-1));
 
@@ -276,7 +230,7 @@ namespace mm2hack::apps::world::entity::enemy
         // being immune to the Buster in that state.
         [[nodiscard]] int AttackPower() const noexcept override
         {
-            return DeflectsAttacks() ? 0 : kDefaultContactDamagePower;
+            return DeflectsAttacks() ? 0 : abilities_().contact_power;
         }
         [[nodiscard]] systems::physics::WeaponId Weapon() const noexcept override
         {
@@ -284,7 +238,12 @@ namespace mm2hack::apps::world::entity::enemy
         }
 
     private:
+        // This kind's abilities, or EnemyAbilities' defaults without a definition.
+        [[nodiscard]] const animation::EnemyAbilities& abilities_() const noexcept;
+
+    private:
         EnemyKind _kind{ EnemyKind::Met };
+        const animation::EnemyDefinition* _definition{ nullptr }; // Not saved; re-resolved by kind on restore
         rendering::sprite::SpriteManager::Id _id{};    // Object sprite id (already the correct color/recolor)
         int _palette_preset_index{ 0 };                 // Which preset produced _id (save-only, see EnemyEntityState)
         int _facing_texture_offset_left{ 0 };           // Added to the animator's tile while facing left
@@ -296,7 +255,7 @@ namespace mm2hack::apps::world::entity::enemy
         // register while still visibly outside the sprite.
         Vec2 _hitbox_half{ 8.0, 8.0 };
         // Shifts the hit box's center down (+) from pos, Y only for now (same
-        // reasoning as kDefaultProjectileSpawnOffsetY). Met's own silhouette
+        // reasoning as EnemyAbilities::projectile_spawn_offset_y). Met's own silhouette
         // sits low in its tile and consistently bottom-anchored across every
         // pose while its top varies a lot (crouched under its helmet vs.
         // reared back mid-attack) -- a plain symmetric half-size around pos
@@ -309,7 +268,7 @@ namespace mm2hack::apps::world::entity::enemy
         animation::AnimationStatePlayer _animator{};    // Drives which tile is currently shown
 
         double _spawn_x{ 0.0 };                         // Original spawn X (unused for behavior currently; see EnemyEntityState::spawn_x)
-        double _move_speed{ 0.0 };                      // px/sec, already includes the spawn-time scale
+        double _move_speed{ 0.0 };                      // px/sec, from EnemyAbilities::move_speed_px_per_sec
         int _facing{ 1 };                                // +1 right, -1 left; tracks the player every frame once SetPlayerPosition() has been called (see Update())
 
         systems::physics::SimpleGravityBody _gravity{};  // Vertical physics (see SetTerrainProbe())

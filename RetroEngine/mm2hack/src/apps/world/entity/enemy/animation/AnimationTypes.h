@@ -15,6 +15,8 @@
 #include <string>
 #include <vector>
 
+#include "apps/foundation/math/CoordinateTypes.h"
+
 namespace mm2hack::apps::world::entity::enemy::animation
 {
     // Recognized transition triggers, all driven by whatever
@@ -197,12 +199,46 @@ namespace mm2hack::apps::world::entity::enemy::animation
         std::vector<EnemyPaletteMapping> mappings;
     };
 
+    // A kind's own fixed capabilities -- the "abilities" block of its JSON
+    // definition. Deliberately kind-wide only: WHERE an enemy is placed (and
+    // its facing/color there) belongs to the stage's placement data, never
+    // here, and the same kind never varies these per placement. A future
+    // difficulty setting is meant to scale these at spawn time rather than
+    // fork them per stage. Defaults below apply to any key the JSON omits.
+    struct EnemyAbilities final
+    {
+        // 0 = invincible (every weapon immune, HP never moves); N = dies after
+        // N hits' worth of accumulated normal-shot power.
+        int hp{ 0x01 };
+        int contact_power{ 0x01 };      // Damage dealt by touching its body (never while deflecting)
+        int projectile_power{ 0x01 };   // Damage carried by each shot its animation graph fires
+
+        // Base horizontal speed for whatever locomotion the current animation
+        // state allows (AnimationState::move_speed_multiplier scales it).
+        double move_speed_px_per_sec{ 20.0 };
+        // Multiplies both the shared gravity and terminal velocity (see
+        // EnemyEntity::kDefaultGravityPerFrame), so heavier/floatier kinds
+        // fall faster/slower without a second knob.
+        double gravity_scale{ 1.0 };
+
+        foundation::math::Vec2 sprite_half_size{ 8.0, 8.0 };    // Render anchor / probe footprint
+        foundation::math::Vec2 hitbox_half_size{ 8.0, 8.0 };    // Entity-collision box, independent of the sprite
+        double hitbox_offset_y{ 0.0 };                          // Shifts the hit box's center down (+) from pos
+        // Added to the current tile while facing left, for sheets with
+        // separate mirrored tiles (0 if symmetric / no mirrored set).
+        int facing_texture_offset_left{ 0x00 };
+
+        foundation::math::Vec2 projectile_hit_half_size{ 2.0, 2.0 }; // Each shot's hit box
+        double projectile_spawn_offset_y{ 0.0 };                     // Muzzle offset from pos (+ = down)
+    };
+
     // Everything loaded from one enemy kind's JSON definition file.
     struct EnemyDefinition final
     {
         std::string id;
         std::string enemy_type;
         std::string name;
+        EnemyAbilities abilities;
         EnemyAnimationDef animation;
         std::vector<EnemyPalettePreset> palette_presets;
 
