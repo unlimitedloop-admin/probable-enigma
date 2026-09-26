@@ -155,8 +155,8 @@ namespace mm2hack::apps::scenes::phases
         // page scroll taking over, i.e. into a pit with no room beneath it.
         [[nodiscard]] bool hasFallenOutOfStage_(const world::entity::avatar::PlayerEntity& player) const;
         // Enters ActionPhaseState::Miss: removes the player, scatters the
-        // bubbles from its position, plays the miss SE and drops the BGM's
-        // pulse voices.
+        // bubbles from its position (not for a pit miss), plays the miss SE
+        // and drops the BGM's pulse voices.
         void beginMiss_(world::entity::avatar::PlayerEntity& player, MissCause cause);
         // Mutes/unmutes the BGM's pulse1/pulse2 voices (the ones the miss SE
         // takes over), leaving triangle, noise and DPCM playing.

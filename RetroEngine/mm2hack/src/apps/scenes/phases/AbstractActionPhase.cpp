@@ -76,8 +76,8 @@ namespace mm2hack::apps::scenes::phases
 
         // ======== Miss sequence ========
         // Ticks from the miss until the restart's fade-out begins, per cause.
-        // A pit miss has little to watch (the bubbles start off-screen), so it
-        // cuts to the restart sooner.
+        // A pit miss has nothing to watch (no bubbles, see beginMiss_()), so
+        // it cuts to the restart sooner.
         constexpr int kMissOutOfVitalityFadeOutDelayFrames = 0xC8;  // 200
         constexpr int kMissFellIntoPitFadeOutDelayFrames = 0x5A;    // 90
 
@@ -869,8 +869,11 @@ namespace mm2hack::apps::scenes::phases
 
         player.Kill();
 
+        // A pit miss scatters nothing: the player simply dropped out of view,
+        // and the sequence just waits out its (shorter) delay.
         const auto sprite_id = _ctx->asset_provider->MissBubbleEffectSprite();
-        if (sprite_id != static_cast<rendering::sprite::SpriteManager::Id>(-1))
+        if (cause != MissCause::FellIntoPit &&
+            sprite_id != static_cast<rendering::sprite::SpriteManager::Id>(-1))
         {
             for (const double speed : { kMissOuterRingSpeed, kMissInnerRingSpeed })
             {
