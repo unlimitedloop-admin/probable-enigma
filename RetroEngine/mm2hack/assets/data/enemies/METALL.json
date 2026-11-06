@@ -35,8 +35,8 @@
                 { "tile": 0, "wait": "hold" }
             ],
             "transitions": [
-                { "when": "player_near", "x": 80, "y": 24, "to": "rise", "parity": "even", "increments_shared_counter": true },
-                { "when": "player_near", "x": 80, "y": 24, "to": "rise_walk", "parity": "odd", "increments_shared_counter": true }
+                { "when": "player_near", "x": 80, "y": 160, "to": "rise", "parity": "even", "increments_shared_counter": true },
+                { "when": "player_near", "x": 80, "y": 160, "to": "rise_walk", "parity": "odd", "increments_shared_counter": true }
             ]
         },
         {

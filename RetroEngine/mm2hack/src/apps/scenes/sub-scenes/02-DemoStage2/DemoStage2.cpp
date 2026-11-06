@@ -27,6 +27,7 @@
 #include "apps/systems/audio/SeTransportState.h"
 #include "apps/systems/physics/TileAttribute.h"
 #include "apps/world/entity/enemy/lists/EnemyLists.h"
+#include "apps/world/entity/avatar/PlayerParams.h"
 #include "apps/world/entity/EntityManager.h"
 #include "apps/world/entity/EntityStateFactory.h"
 #include "apps/world/entity/IEntity.h"
@@ -644,10 +645,12 @@ namespace mm2hack::apps::scenes
         phases::StageDefinition def{};
         def.map_binary_path = std::wstring(kStageMapBinary);
         def.start_page_index = _startPageIndex;
-        // .def points are feet-center; the player's pos is its 32x32 sprite's center.
-        constexpr double kPlayerSpriteHalfHeight = 16.0;
+        // .def points are feet-center. Align the ground probe, rather than the
+        // sprite's bottom edge (which includes transparent padding), to that point.
+        // Keep it 1px above the editor point to avoid embedding side probes in the floor.
+        const double ground_offset = world::entity::avatar::PlayerTuning{}.probeOffsets.groundLineOffsetY;
         def.start_local_pos = _stageData.start
-            ? foundation::math::Vec2{ _stageData.start->local_pos.x, _stageData.start->local_pos.y - kPlayerSpriteHalfHeight }
+            ? foundation::math::Vec2{ _stageData.start->local_pos.x, _stageData.start->local_pos.y - ground_offset - 1.0 }
             : foundation::math::Vec2{ 128.0, 183.0 };
         def.enemy_placements = _stageData.enemies;
 

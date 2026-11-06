@@ -5,8 +5,8 @@
     "name": "SAMPLESTAGE2",
     "start": {
       "roomId": 0,
-      "x": 128,
-      "y": 199
+      "x": 136,
+      "y": 193
     }
   },
   "nodes": [
@@ -80,15 +80,38 @@
   "entities": [
     {
       "type": "enemy",
-      "id": "met_room0_a",
-      "roomId": 0,
+      "id": "metall_4",
+      "roomId": 1,
       "position": {
-        "x": 224,
-        "y": 199
+        "x": 88,
+        "y": 193
       },
       "properties": {
-        "kind": "metall",
-        "palette": "default"
+        "kind": "metall"
+      }
+    },
+    {
+      "type": "enemy",
+      "id": "metall_1",
+      "roomId": 2,
+      "position": {
+        "x": 56,
+        "y": 193
+      },
+      "properties": {
+        "kind": "metall"
+      }
+    },
+    {
+      "type": "enemy",
+      "id": "metall_3",
+      "roomId": 2,
+      "position": {
+        "x": 200,
+        "y": 49
+      },
+      "properties": {
+        "kind": "metall"
       }
     }
   ]
