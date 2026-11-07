@@ -4,6 +4,7 @@
 
 #include <cmath>
 #include <cstdlib>
+#include <string_view>
 #include <vector>
 
 #include "apps/foundation/math/CoordinateTypes.h"
@@ -16,9 +17,11 @@
 #include "apps/systems/audio/SeTransportState.h"
 #include "apps/systems/audio/SoundChannel.h"
 #include "apps/systems/combat/IDamageable.h"
+#include "apps/systems/physics/CollisionLayer.h"
 #include "apps/systems/physics/ICollider.h"
 #include "apps/systems/scrolling/atomic/ScrollController.h"
 #include "apps/systems/view/RenderContext.h"
+#include "apps/ui/hud/HealthMeterUI.h"
 #include "apps/world/entity/avatar/AvatarStatus.h"
 #include "apps/world/entity/avatar/PlayerContext.h"
 #include "apps/world/entity/avatar/PlayerEntity.h"
@@ -36,16 +39,17 @@
 #include "apps/world/entity/enemy/EnemyEntity.h"
 #include "apps/world/entity/EntityManager.h"
 #include "apps/world/entity/EntityStateFactory.h"
+#include "apps/world/entity/IEntity.h"
 #include "config/ConfigUIManager.h"
 #include "core/overlay/DebugHud.h"
-#include "core/winapi/WindowManager.h"  // Use for scaling the debug HUD's hit box outlines
 #include "core/save/StateIO.h"
+#include "core/winapi/WindowManager.h"  // Use for scaling the debug HUD's hit box outlines
 #include "input/Jpbtn.h"
-#include "utils/output_debug.h"
 #include "IPhaseHost.h"
 #include "IStageScript.h"
 #include "PhaseResult.h"
 #include "StageRuntimeContext.h"
+#include "utils/output_debug.h"
 
 namespace mm2hack::apps::scenes::phases
 {
@@ -81,9 +85,6 @@ namespace mm2hack::apps::scenes::phases
         // TODO(weapons): only the Rock Buster exists yet -- take these from
         // the equipped weapon once weapon switching lands.
         constexpr std::wstring_view kHudWeaponInitials{ L"RB" };
-        // TODO(lives): placeholder until a lives counter exists (it will
-        // outlive a single phase, so it belongs to the scene/sequence side).
-        constexpr int kProvisionalLives = 3;
 
         // ======== Miss sequence ========
         // Ticks from the miss until the restart's fade-out begins, per cause.
@@ -520,7 +521,8 @@ namespace mm2hack::apps::scenes::phases
         // and stays up through a miss (showing the HP it ended on).
         if (_state != ActionPhaseState::Intro)
         {
-            _health_meter.Render(_ctx->asset_provider->HealthMeterSprite(), kHudWeaponInitials, kProvisionalLives);
+            const int hud_lives = _host != nullptr ? _host->Session().DisplayLives() : 0;
+            _health_meter.Render(_ctx->asset_provider->HealthMeterSprite(), kHudWeaponInitials, hud_lives);
         }
     }
 
@@ -550,8 +552,14 @@ namespace mm2hack::apps::scenes::phases
 
         if (hud.showPlayerPosition)
         {
+            const auto* session = _host != nullptr ? &_host->Session() : nullptr;
             core::overlay::DebugHud::GetInstance().SetPlayerPositionContext(
-                { _page_index_debug, _player_pos_x_debug, _player_pos_y_debug, _player_hp_debug, _player_max_hp_debug }
+                {
+                    _page_index_debug, _player_pos_x_debug, _player_pos_y_debug,
+                    _player_hp_debug, _player_max_hp_debug,
+                    session != nullptr ? session->Lives() : 0,
+                    session != nullptr ? session->DisplayLives() : 0,
+                }
             );
         }
 
@@ -637,6 +645,7 @@ namespace mm2hack::apps::scenes::phases
             [view = &_ctx->scroll->GetView(), dt](enemy::EnemyEntity& e) { e.Update(view, dt); });
 
         auto* player = _ctx->entity_mgr->FindFirst<avatar::PlayerEntity>();
+        if (player == nullptr) { return; }
 
         // Placements already in view at stage start are out through READY too.
         _enemy_spawner.Tick(*_ctx, player != nullptr ? player->pos : Vec2::Zero());
@@ -1141,8 +1150,7 @@ namespace mm2hack::apps::scenes::phases
         return snapshot;
     }
 
-    void AbstractActionPhase::spawnHitEffectsForTheSurvivors_(
-        const std::vector<DamageableHpSnapshot>& before)
+    void AbstractActionPhase::spawnHitEffectsForTheSurvivors_(const std::vector<DamageableHpSnapshot>& before)
     {
         // A kill is destruction's job (spawnDestructionEffectsForTheDead_);
         // this is only for a hit that didn't finish the target off. Split by
@@ -1153,7 +1161,7 @@ namespace mm2hack::apps::scenes::phases
         bool player_hit = false;
         for (const auto& snap : before)
         {
-            if (snap.damageable->IsDead() || snap.damageable->CurrentHP() >= snap.hp_before)
+            if (snap.damageable == nullptr || snap.damageable->IsDead() || snap.damageable->CurrentHP() >= snap.hp_before)
             {
                 continue;
             }

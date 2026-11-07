@@ -94,7 +94,7 @@ namespace mm2hack::apps::world::entity::effects
             remaining_ticks -= kStages[stage_index].duration;
             ++stage_index;
         }
-        const Stage& stage = kStages[stage_index];
+        const Stage& stage = kStages[std::min(stage_index, static_cast<int>(kStages.size()) - 1)];
 
         const auto& view = *ctx.view;
         auto& sprites = runtime::GameContext::GetInstance().GetResourceManager().GetSpriteManager();

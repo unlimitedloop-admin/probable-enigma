@@ -67,6 +67,8 @@ namespace mm2hack::apps::scenes
         // === IPhaseHost implementations ===
         // Request a phase transition
         void RequestTransition(const std::wstring& next_key, const PhaseFadePlan& plan, const Parameters& params) override;
+        // Lives etc. -- owned here because a miss rebuilds the phase
+        world::session::PlayerSession& Session() noexcept override { return _session; }
 
         // === IStageAssetProvider implementations ===
         SpriteManagerId PlayerSprite() const noexcept override { return _spriteBank.player; }
@@ -148,6 +150,7 @@ namespace mm2hack::apps::scenes
         bool _pendingRestart{ false };
         Parameters _enterParams{};                                      // Scene-entry parameters (bgm_key, ...), replayed into a restarted phase
         int _startPageIndex{ 0 };                                       // Page the stage (and every restart) begins on
+        world::session::PlayerSession _session{};                       // Lives; survives restarts, saved with the scene
 
         PhaseFadeController _fader{};                                   // Fade controller for transitions
         const int _fadeDurationFrames{ 16 };                            // Duration of fade in frames

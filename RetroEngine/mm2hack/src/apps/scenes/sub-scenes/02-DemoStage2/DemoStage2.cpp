@@ -43,7 +43,7 @@ namespace mm2hack::apps::scenes
 {
     namespace
     {
-        constexpr std::uint32_t kDemoStage2StateVersion = 4; // 4: + enemy spawn director state
+        constexpr std::uint32_t kDemoStage2StateVersion = 5; // 5: + player session (lives)
 
         enum class DemoStage2PhaseType : std::uint8_t
         {
@@ -59,13 +59,14 @@ namespace mm2hack::apps::scenes
             world::entity::EntityManagerState entities{};
             systems::audio::BgmTransportState bgm{};
             systems::audio::SeTransportState se{};
+            world::session::PlayerSessionState session{};
 
             [[nodiscard]] bool IsValid() const
             {
                 if (phase_type != DemoStage2PhaseType::AbstractAction ||
                     page_index != phase.scroll.page_index ||
                     !phase.IsValid() || !entities.IsValid() ||
-                    !bgm.IsValid() || !se.IsValid())
+                    !bgm.IsValid() || !se.IsValid() || !session.IsValid())
                 {
                     return false;
                 }
@@ -93,7 +94,7 @@ namespace mm2hack::apps::scenes
                     writer.WriteU32(page_index) &&
                     background_animation.Save(writer) &&
                     phase.Save(writer) && entities.Save(writer) &&
-                    bgm.Save(writer) && se.Save(writer);
+                    bgm.Save(writer) && se.Save(writer) && session.Save(writer);
             }
 
             bool Load(core::save::StateReader& reader)
@@ -106,7 +107,8 @@ namespace mm2hack::apps::scenes
                     !reader.ReadU32(loaded.page_index) ||
                     !loaded.background_animation.Load(reader) ||
                     !loaded.phase.Load(reader) || !loaded.entities.Load(reader) ||
-                    !loaded.bgm.Load(reader) || !loaded.se.Load(reader))
+                    !loaded.bgm.Load(reader) || !loaded.se.Load(reader) ||
+                    !loaded.session.Load(reader))
                 {
                     return false;
                 }
@@ -278,6 +280,7 @@ namespace mm2hack::apps::scenes
         }
 
         state.page_index = state.phase.scroll.page_index;
+        state.session = _session.CaptureState();
         state.background_animation = _resource->GetBGTileManager().CaptureAnimationState();
         core::save::StateWriter writer(out);
         return state.Save(writer);
@@ -325,6 +328,7 @@ namespace mm2hack::apps::scenes
         phase->RestoreChargePresentationState(state.se);
 
         _roomState.pageIndex = static_cast<int>(state.page_index);
+        _session.RestoreState(state.session);
         _pendingPhase.reset();
         _pendingPlan = {};
         _nextScene = SceneID::None;
@@ -351,6 +355,7 @@ namespace mm2hack::apps::scenes
 
         _startPageIndex = _roomState.pageIndex;
         _enterParams = params;
+        _session.Reset();
 
         // Create filtered joystick input provider.
         _input = &gc.Input();
@@ -741,7 +746,11 @@ namespace mm2hack::apps::scenes
         // NOTE: Dispatch the transition request based on the next_key.
         if (next_key == L"Retry")
         {
-            // Player missed: start the stage over from its beginning.
+            // Player missed: costs a life, then the stage starts over from its
+            // beginning. TODO(game over): LoseLife() returns false when that was
+            // the last life -- the GAME OVER screen doesn't exist yet, so for now
+            // the stage still restarts (with the count held at 0).
+            _session.LoseLife();
             requestRestart_(plan);
             return;
         }

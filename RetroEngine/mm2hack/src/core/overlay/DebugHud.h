@@ -22,6 +22,9 @@ namespace mm2hack::core::overlay
         // player damage; no real HUD gauge exists yet).
         int hp = 0;
         int maxHp = 0;
+        // Same piggyback: PlayerSession::Lives() and its HUD-style spare count.
+        int lives = 0;
+        int displayLives = 0;
     };
 
     // Debug HUD for displaying debug information on the screen

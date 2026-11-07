@@ -22,6 +22,7 @@
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/systems/physics/CollisionLayer.h"
+#include "apps/systems/physics/IAttackInfo.h"
 #include "apps/systems/physics/ILadderService.h"
 #include "apps/systems/physics/ITerrainProbe.h"
 #include "apps/systems/physics/PageGridIndex.h"
