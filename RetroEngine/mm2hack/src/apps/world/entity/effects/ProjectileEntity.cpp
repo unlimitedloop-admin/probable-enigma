@@ -28,8 +28,24 @@ namespace mm2hack::apps::world::entity::effects
         // to pos: too large a half-size here shifts the visible sprite away from
         // its true (collision-accurate) position, making contact look like it
         // happens too early/too close for a shot travelling toward that side.
-        foundation::math::Vec2 RenderHalfSizeForVisual(common::ProjectileVisual visual) noexcept
+        // Tiles of the deflected ("bounced") graphic, relative to the shot's
+        // base_texture (so the left-facing half of the sheet, +32, works too).
+        constexpr int kDeflectedTileSmall = 2;  // normal shot, charge level 1
+        constexpr int kDeflectedTileLarge = 3;  // charge level 2
+
+        // The charge level 2 block is drawn 8px above where a plain centered
+        // draw would put it (its visible center sits at pos.y - 8). The
+        // deflected graphic keeps that same center so the shot doesn't jump
+        // down by 8px at the moment it bounces.
+        constexpr int kChargeLevel2CenterOffsetY = -8;
+
+        foundation::math::Vec2 RenderHalfSizeForVisual(common::ProjectileVisual visual, bool deflected) noexcept
         {
+            if (deflected)
+            {
+                return { 8.0, 8.0 };    // single 16x16 tile whatever the original shot was
+            }
+
             switch (visual)
             {
             case common::ProjectileVisual::ChargeLevel1:
@@ -59,7 +75,8 @@ namespace mm2hack::apps::world::entity::effects
             writer.WriteF64(hit_half_size.y) &&
             writer.WriteU8(static_cast<std::uint8_t>(collision_layer)) &&
             writer.WriteU8(static_cast<std::uint8_t>(weapon)) &&
-            writer.WriteBool(terrain_collision_enabled);
+            writer.WriteBool(terrain_collision_enabled) &&
+            writer.WriteBool(deflected_visual);
     }
 
     bool ProjectileEntityState::Load(core::save::StateReader& reader)
@@ -83,7 +100,8 @@ namespace mm2hack::apps::world::entity::effects
             !reader.ReadF64(loaded.hit_half_size.y) ||
             !reader.ReadU8(encoded_collision_layer) ||
             !reader.ReadU8(encoded_weapon) ||
-            !reader.ReadBool(loaded.terrain_collision_enabled))
+            !reader.ReadBool(loaded.terrain_collision_enabled) ||
+            !reader.ReadBool(loaded.deflected_visual))
         {
             return false;
         }
@@ -137,7 +155,7 @@ namespace mm2hack::apps::world::entity::effects
         _life_sec = std::max(0.0, cmd.lifeSec);
         _age_sec = 0.0;
 
-        _half = RenderHalfSizeForVisual(_visual);
+        _half = RenderHalfSizeForVisual(_visual, false);
 
         _power = cmd.power;
         _hit_half_size = cmd.hitHalfSize;
@@ -152,7 +170,7 @@ namespace mm2hack::apps::world::entity::effects
         : _id(sprite_id)
     {
         RestoreState(state);
-        _half = RenderHalfSizeForVisual(_visual);
+        _half = RenderHalfSizeForVisual(_visual, _deflected_visual);
     }
 
     bool ProjectileEntity::SaveState(core::save::StateWriter& writer) const
@@ -177,6 +195,7 @@ namespace mm2hack::apps::world::entity::effects
             .collision_layer = _collision_layer,
             .weapon = _weapon,
             .terrain_collision_enabled = _terrain_collision_enabled,
+            .deflected_visual = _deflected_visual,
         };
     }
 
@@ -199,6 +218,7 @@ namespace mm2hack::apps::world::entity::effects
         _collision_layer = state.collision_layer;
         _weapon = state.weapon;
         _terrain_collision_enabled = state.terrain_collision_enabled;
+        _deflected_visual = state.deflected_visual;
         return true;
     }
 
@@ -328,6 +348,14 @@ namespace mm2hack::apps::world::entity::effects
         vel.y = speed * std::sin(kDeflectAngleRad);
         _pending_deflected = true;
 
+        // The player's shot turns into the small "bounced" graphic. Enemy shots
+        // use another sheet (no such tiles there), so they keep their own look.
+        if (_collision_layer == CollisionLayer::ProjectilePlayer)
+        {
+            _deflected_visual = true;
+            _half = RenderHalfSizeForVisual(_visual, true);
+        }
+
         // No position change -- deliberately. An earlier version nudged pos
         // to guarantee clearing the deflector's Bounds() the same frame, but
         // that read as a visible teleport/warp at the moment of impact. A
@@ -358,6 +386,14 @@ namespace mm2hack::apps::world::entity::effects
         const int x = static_cast<int>(screenX);
         const int y = static_cast<int>(screenY);
 
+        if (_deflected_visual)
+        {
+            const bool large = (_visual == common::ProjectileVisual::ChargeLevel2);
+            const int tile = _base_texture + (large ? kDeflectedTileLarge : kDeflectedTileSmall);
+            sprites.UseById(_id, tile, x, large ? y + kChargeLevel2CenterOffsetY : y);
+            return;
+        }
+
         if (_visual == common::ProjectileVisual::ChargeLevel1)
         {
             const int frame = static_cast<int>((_elapsed_ticks / 3u) % 2u);
@@ -371,8 +407,7 @@ namespace mm2hack::apps::world::entity::effects
         {
             const int frame = static_cast<int>((_elapsed_ticks / 3u) % 4u);
             const int top_left = _base_texture + 16 + frame * 2;
-            constexpr int kCenterOffsetY = -8;
-            const int centered_y = y + kCenterOffsetY;
+            const int centered_y = y + kChargeLevel2CenterOffsetY;
             sprites.UseById(_id, top_left, x, centered_y);
             sprites.UseById(_id, top_left + 1, x + 16, centered_y);
             sprites.UseById(_id, top_left + 8, x, centered_y + 16);
