@@ -2,6 +2,10 @@
 
 #include "AnimationStatePlayer.h"
 
+#include <cstddef>
+
+#include "AnimationTypes.h"
+
 namespace mm2hack::apps::world::entity::enemy::animation
 {
     AnimationStatePlayer::AnimationStatePlayer(const EnemyAnimationDef& def) noexcept
@@ -14,7 +18,7 @@ namespace mm2hack::apps::world::entity::enemy::animation
     void AnimationStatePlayer::Tick(const AnimationConditionInputs& inputs) noexcept
     {
         _pending_jump_impulse = 0.0;
-        _pending_projectile_spawns.clear();
+        _pending_projectile_spawns = {};
         _pending_counter_increment_requested = false;
 
         if (_def == nullptr || _def->states.empty() ||

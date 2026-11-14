@@ -290,27 +290,25 @@ namespace mm2hack::apps::systems::audio
 
         for (std::size_t voice_index = 0; voice_index < kApuVoiceCount; ++voice_index)
         {
-            const ApuVoice voice = static_cast<ApuVoice>(voice_index);
-            const ApuVoiceOwner* owner = _voiceArbiter.GetOwner(voice);
-            if (owner == nullptr || captured_names.contains(owner->name)) continue;
+            const auto channel = _channelToSeName.find(static_cast<int>(voice_index));
+            if (channel == _channelToSeName.end()) continue;
+            const auto& name = channel->second;
+            if (!captured_names.emplace(name).second) continue;
 
-            const auto data_it = _seData.find(owner->name);
+            const auto data_it = _seData.find(name);
             if (data_it == _seData.end()) return false;
             const SeData& data = data_it->second;
-            captured_names.emplace(owner->name);
             if (data.restorePolicy != SeRestorePolicy::Continuous) continue;
 
             ContinuousSeTransportState instance{};
-            instance.name = owner->name;
+            instance.name = name;
             bool paused = false;
             bool pause_status_set = false;
             for (const ApuVoice configured_voice : data.voices)
             {
                 const std::size_t index = ToIndex(configured_voice);
-                const ApuVoiceOwner* configured_owner = _voiceArbiter.GetOwner(configured_voice);
                 const auto channel_it = _channelToSeName.find(static_cast<int>(index));
-                if (configured_owner == nullptr || configured_owner->name != owner->name ||
-                    channel_it == _channelToSeName.end() || channel_it->second != owner->name)
+                if (channel_it == _channelToSeName.end() || channel_it->second != name)
                 {
                     return false;
                 }
@@ -385,6 +383,7 @@ namespace mm2hack::apps::systems::audio
                 {
                     _seChannels.Pause(static_cast<int>(index));
                     _pausedVoices[index] = true;
+                    _voiceArbiter.Release(voice_state.voice, instance.name);
                 }
             }
         }

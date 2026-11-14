@@ -7,6 +7,9 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
+#ifdef _DEBUG
+#include <crtdbg.h>
+#endif
 #include <exception>
 #include <filesystem>
 #include <fstream>
@@ -21,6 +24,7 @@
 #include <vector>
 
 #include "apps/foundation/math/CoordinateTypes.h"
+#include "apps/rendering/bg/BGTileAnimator.h"
 #include "apps/scenes/IBaseScene.h"
 #include "apps/scenes/IStageAssetProvider.h"
 #include "apps/scenes/phases/AbstractActionPhase.h"
@@ -47,6 +51,7 @@
 #include "apps/world/entity/enemy/lists/EnemyLists.h"
 #include "apps/world/entity/EntityManager.h"
 #include "apps/world/entity/EntityStateFactory.h"
+#include "apps/world/session/PlayerSession.h"
 #include "core/assembly/InputTypes.h"
 #include "core/assembly/StateProvider.h"
 #include "core/save/SaveData.h"
@@ -104,7 +109,7 @@ namespace mm2hack::test
         using core::save::StateReader;
         using core::save::StateWriter;
 
-        constexpr std::uint32_t kDemoStage2StateVersion = 3;
+        constexpr std::uint32_t kDemoStage2StateVersion = 5;
         constexpr std::uint8_t kAbstractActionPhaseType = 1;
 
         class TestRunner final
@@ -659,14 +664,16 @@ namespace mm2hack::test
                 }
             };
 
+            const apps::rendering::bg::BGTileAnimatorState background_animation{};
+            const apps::world::session::PlayerSessionState session{};
             std::ostringstream stream(std::ios::out | std::ios::binary);
             StateWriter writer(stream);
             if (!writer.WriteU32(kDemoStage2StateVersion) ||
                 !writer.WriteU8(kAbstractActionPhaseType) ||
                 !writer.WriteU32(phase.scroll.page_index) ||
-                !writer.WriteU32(1234) ||
+                !background_animation.Save(writer) ||
                 !phase.Save(writer) || !entities.Save(writer) ||
-                !bgm.Save(writer) || !se.Save(writer) || !stream.good())
+                !bgm.Save(writer) || !se.Save(writer) || !session.Save(writer) || !stream.good())
             {
                 return false;
             }
@@ -1144,15 +1151,20 @@ namespace mm2hack::test
 
             SeTransportState snapshot{};
             const bool captured = source.CaptureState(snapshot);
-            runner.Check(
+            const bool capture_matches =
                 source_ready && captured && snapshot.IsValid() &&
                 snapshot.master_volume == 200 &&
                 snapshot.continuous_instances.size() == 1 &&
+                snapshot.continuous_instances.front().voices.size() == 1 &&
                 snapshot.continuous_instances.front().name == L"charge" &&
                 snapshot.continuous_instances.front().playback_status ==
                     SePlaybackStatus::Paused &&
-                snapshot.continuous_instances.front().voices.front().logical_volume == 180,
-                L"capture only configured continuous SE");
+                snapshot.continuous_instances.front().voices.front().logical_volume == 180;
+            runner.Check(capture_matches, L"capture only configured continuous SE");
+            if (!capture_matches)
+            {
+                return;
+            }
 
             snapshot.continuous_instances.front().voices.front().position_milliseconds = 1234;
             std::ostringstream encoded_stream(std::ios::out | std::ios::binary);
@@ -1201,7 +1213,7 @@ namespace mm2hack::test
             runner.Check(
                 target_ready && restored_ok && recaptured &&
                 EqualSeTransport(snapshot, round_trip) &&
-                restored.IsVoiceOwnedBySe(ApuVoice::Pulse2) &&
+                !restored.IsVoiceOwnedBySe(ApuVoice::Pulse2) &&
                 !restored.IsVoiceOwnedBySe(ApuVoice::Noise),
                 L"restore continuous SE and discard transient ownership");
 
@@ -1447,8 +1459,17 @@ namespace mm2hack::test
     {
         const bool attached_to_parent_console =
             ::AttachConsole(ATTACH_PARENT_PROCESS) != FALSE;
-        FILE* console_error{};
-        (void)freopen_s(&console_error, "CONOUT$", "w", stderr);
+        if (attached_to_parent_console)
+        {
+            FILE* console_error{};
+            (void)freopen_s(&console_error, "CONOUT$", "w", stderr);
+        }
+
+#ifdef _DEBUG
+        // Send CRT assertions to stderr so unattended runs cannot wait on a dialog.
+        _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_FILE);
+        _CrtSetReportFile(_CRT_ASSERT, _CRTDBG_FILE_STDERR);
+#endif
 
         TestRunner runner{};
         try

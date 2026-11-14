@@ -25,7 +25,6 @@
 #include "animation/AnimationTypes.h"
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/rendering/sprite/SpriteManager.h"
-#include "apps/systems/combat/DamageTable.h"
 #include "apps/systems/combat/HealthComponent.h"
 #include "apps/systems/combat/IDamageable.h"
 #include "apps/systems/physics/CollisionLayer.h"
@@ -64,7 +63,7 @@ namespace mm2hack::apps::world::entity::enemy
         // Shifts the hit box's center down from pos (Y only, same idea as
         // EnemyAbilities::projectile_spawn_offset_y) -- see EnemyEntity::_hitbox_offset_y.
         double hitbox_offset_y{ 0.0 };
-        double spawn_x{};                              // Original spawn X, kept for future leash/return-to-post AI; independent of the live, moving pos.x
+        double spawn_x{};                              // Legacy V1 save field; unused by enemy behavior.
         double move_speed_px_per_sec{};                // From EnemyAbilities::move_speed_px_per_sec at spawn
         std::int32_t facing{ 1 };                       // +1 = moving right, -1 = moving left
         // AnimationStatePlayer snapshot. Only structurally sanity-checked here
@@ -102,7 +101,6 @@ namespace mm2hack::apps::world::entity::enemy
         using Vec2 = foundation::math::Vec2;
         using CollisionLayer = systems::physics::CollisionLayer;
         using TileAttribute = systems::physics::TileAttribute;
-        using DamageTable = systems::combat::DamageTable;
 
     public:
         static constexpr std::uint16_t kStateVersion{ 1 };
@@ -160,8 +158,6 @@ namespace mm2hack::apps::world::entity::enemy
         [[nodiscard]] EnemyEntityState CaptureState() const noexcept;
         bool RestoreState(const EnemyEntityState& state) noexcept;
 
-        [[nodiscard]] EnemyKind Kind() const noexcept { return _kind; }
-
         // Initial facing from placement data (-1 left, +1 right). A state with
         // track_player_facing re-aims at the player on its own every Update().
         void SetFacing(int facing) noexcept { _facing = facing < 0 ? -1 : 1; }
@@ -170,7 +166,6 @@ namespace mm2hack::apps::world::entity::enemy
         // SetTerrainProbe()) -- not part of saved state. Without it, Update()
         // simply skips gravity for the frame (see SimpleGravityBody::Tick()).
         void SetTerrainProbe(const systems::physics::ITerrainProbe* terrain) noexcept { _terrain = terrain; }
-        [[nodiscard]] bool IsOnGround() const noexcept { return _gravity.IsOnGround(); }
 
         // Wired externally once per frame, before Update() (see
         // AbstractActionPhase::updateActive_(), which calls this on every alive
@@ -271,7 +266,6 @@ namespace mm2hack::apps::world::entity::enemy
         int _toughness{ 0x01 };                         // Raw tuning value driving _health's (max_hp, table); saved as-is
         animation::AnimationStatePlayer _animator{};    // Drives which tile is currently shown
 
-        double _spawn_x{ 0.0 };                         // Original spawn X (unused for behavior currently; see EnemyEntityState::spawn_x)
         double _move_speed{ 0.0 };                      // px/sec, from EnemyAbilities::move_speed_px_per_sec
         int _facing{ 1 };                                // +1 right, -1 left; tracks the player every frame once SetPlayerPosition() has been called (see Update())
 

@@ -51,7 +51,11 @@ namespace mm2hack::apps::scenes
 
     void SceneManager::Release()
     {
-        _currentScene.reset();
+        if (_currentScene)
+        {
+            _currentScene->Finalize();
+            _currentScene.reset();
+        }
     }
 
     int SceneManager::GetCurrentSceneID() const
@@ -138,12 +142,7 @@ namespace mm2hack::apps::scenes
             return;
         }
 
-        // Finalize the current scene before switching to the next one.
-        if (_currentScene)
-        {
-            _currentScene->Finalize();
-        }
-
+        Release();
         next->Initialize(params);
         _currentScene = std::move(next);
     }

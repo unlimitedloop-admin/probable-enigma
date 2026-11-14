@@ -13,7 +13,6 @@
 #include <cstdint>
 #include <memory>
 #include <string>
-#include <vector>
 
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/systems/scrolling/atomic/ScrollController.h"
@@ -44,16 +43,6 @@ namespace mm2hack::apps::world::entity
 namespace mm2hack::apps::systems::audio
 {
     struct SeTransportState;
-}
-
-namespace mm2hack::apps::systems::physics
-{
-    struct ICollider;
-}
-
-namespace mm2hack::apps::systems::combat
-{
-    struct IDamageable;
 }
 
 namespace mm2hack::apps::scenes::phases
@@ -153,9 +142,6 @@ namespace mm2hack::apps::scenes::phases
         // Hands every enemy the position to track/attack and the shared attack
         // pattern counter for this tick (before UpdateAll()).
         void feedEnemies_(const Vec2& player_pos);
-        // Entity-vs-entity collision pass plus the destruction/hit/deflect
-        // presentation it triggers.
-        void resolveEntityCollisions_();
         // True once the player fell fully below the current page without a
         // page scroll taking over, i.e. into a pit with no room beneath it.
         [[nodiscard]] bool hasFallenOutOfStage_(const world::entity::avatar::PlayerEntity& player) const;
@@ -170,39 +156,8 @@ namespace mm2hack::apps::scenes::phases
         void updateChargePresentation_(
             const world::entity::avatar::PlayerEntity& player,
             const world::entity::avatar::ChargeStatus& charge);
-        // Fires the small-explosion VFX/SFX once for every collider that was alive
-        // when `colliders` was snapshotted but died during the collision pass just
-        // run against it (i.e. any combat::IDamageable that just hit 0 HP).
-        void spawnDestructionEffectsForTheDead_(
-            const std::vector<systems::physics::ICollider*>& colliders);
-
-        // HP of one combat::IDamageable, captured before a collision pass so a
-        // non-lethal hit can be told apart from "nothing happened".
-        struct DamageableHpSnapshot final
-        {
-            systems::combat::IDamageable* damageable{};
-            int hp_before{};
-        };
-        [[nodiscard]] std::vector<DamageableHpSnapshot> captureDamageableHp_(
-            const std::vector<systems::physics::ICollider*>& colliders) const;
-        // Plays the "hit_attack" SE once if any snapshotted IDamageable took
-        // damage this pass but is still alive (a lethal hit is destruction's job,
-        // via spawnDestructionEffectsForTheDead_() above).
-        void spawnHitEffectsForTheSurvivors_(const std::vector<DamageableHpSnapshot>& before);
-        // Drains every ProjectileEntity's ConsumeDeflected() (set by
-        // ProjectileEntity::OnEntityCollision() when it bounces off an
-        // IDeflector, e.g. Met hidden under its helmet) and plays "defend_shot"
-        // once if anything deflected this pass.
-        void spawnDeflectEffectsForTheBounced_(const std::vector<systems::physics::ICollider*>& colliders);
-        // Drains every alive EnemyEntity's ConsumePendingProjectileSpawns() and
-        // actually Spawn()s them -- the entity itself has no EntityManager
-        // access (see AnimationTransition::projectile_spawns).
-        void spawnEnemyProjectiles_();
-        // Drains every alive EnemyEntity's ConsumeAttackCounterIncrementRequest()
-        // and bumps _enemy_attack_pattern_counter once per request -- the
-        // entity itself holds no authoritative counter, only a per-frame
-        // snapshot (see AnimationTransition::increments_shared_counter).
-        void advanceSharedAttackCounter_();
+        /// Applies enemy outputs, resolves collisions, then updates placement lifetimes.
+        void finishCombatTick_(const Vec2& player_pos);
         // Detects the scroll-lock rising/falling edge and, once per edge: clears
         // every transient effect entity and pauses SE (rising), or resumes SE
         // (falling). No-op mid-lock or mid-unlock.

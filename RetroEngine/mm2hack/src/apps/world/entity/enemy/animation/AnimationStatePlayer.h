@@ -14,6 +14,8 @@
 
 #include "AnimationTypes.h"
 
+#include <span>
+
 namespace mm2hack::apps::world::entity::enemy::animation
 {
     class AnimationStatePlayer final
@@ -50,10 +52,9 @@ namespace mm2hack::apps::world::entity::enemy::animation
         // transition carrying a jump_impulse fired (see AnimationTransition::
         // jump_impulse) -- read this right after calling Tick(), same frame.
         [[nodiscard]] double LastJumpImpulse() const noexcept { return _pending_jump_impulse; }
-        // Empty normally; holds the firing transition's projectile_spawns
-        // immediately after a Tick() where one fired -- read this right after
-        // calling Tick(), same frame (see AnimationTransition::projectile_spawns).
-        [[nodiscard]] const std::vector<ProjectileSpawnSpec>& LastProjectileSpawns() const noexcept
+        /// Views the projectile specs owned by the definition after a firing transition.
+        /// Read immediately after Tick(), while the definition is still loaded.
+        [[nodiscard]] std::span<const ProjectileSpawnSpec> LastProjectileSpawns() const noexcept
         {
             return _pending_projectile_spawns;
         }
@@ -85,7 +86,7 @@ namespace mm2hack::apps::world::entity::enemy::animation
         int _frame_elapsed{ 0 };    // Ticks spent on the current frame
         int _state_elapsed{ 0 };    // Ticks spent in the current state (drives Timer)
         double _pending_jump_impulse{ 0.0 }; // See LastJumpImpulse(); reset every Tick()
-        std::vector<ProjectileSpawnSpec> _pending_projectile_spawns{}; // See LastProjectileSpawns(); reset every Tick()
+        std::span<const ProjectileSpawnSpec> _pending_projectile_spawns{}; // See LastProjectileSpawns(); reset every Tick()
         bool _pending_counter_increment_requested{ false }; // See LastRequestedCounterIncrement(); reset every Tick()
     };
 }

@@ -2,8 +2,23 @@
 
 #include "EnemySpawnDirector.h"
 
-#include "apps/runtime/GameContext.h"
+#include <cstddef>
+#include <cstdint>
+#include <optional>
+#include <string>
+#include <utility>
+
+#include "apps/foundation/math/CoordinateTypes.h"
+#include "apps/rendering/sprite/SpriteManager.h"
+#include "apps/resources/bg/AddressScraper.h"
+#include "apps/scenes/IStageAssetProvider.h"
+#include "apps/systems/physics/PageGridIndex.h"
+#include "apps/systems/scrolling/atomic/ScrollController.h"
+#include "apps/world/entity/EntityManager.h"
+#include "apps/world/entity/enemy/animation/AnimationTypes.h"
+#include "apps/world/entity/enemy/animation/EnemyDefinitionCatalog.h"
 #include "apps/world/entity/enemy/EnemyEntity.h"
+#include "apps/world/stage/StagePlacement.h"
 #include "core/save/StateIO.h"
 #include "StageRuntimeContext.h"
 #include "utils/output_debug.h"
@@ -83,11 +98,11 @@ namespace mm2hack::apps::scenes::phases
         return slots.size() <= kMaximumSlots;
     }
 
-    void EnemySpawnDirector::Build(const StageRuntimeContext& ctx)
+    void EnemySpawnDirector::Build(const StageRuntimeContext& ctx,
+        const world::entity::enemy::animation::EnemyDefinitionCatalog& catalog)
     {
         _slots.clear();
         _slots.reserve(ctx.enemy_placements.size());
-        const auto& catalog = runtime::GameContext::GetInstance().GetResourceManager().GetEnemyDefinitionCatalog();
 
         for (const auto& placement : ctx.enemy_placements)
         {

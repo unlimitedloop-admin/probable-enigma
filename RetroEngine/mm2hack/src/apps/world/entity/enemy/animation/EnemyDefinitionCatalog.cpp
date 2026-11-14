@@ -2,6 +2,13 @@
 
 #include "EnemyDefinitionCatalog.h"
 
+#include <string>
+#include <string_view>
+#include <utility>
+
+#include "AnimationTypes.h"
+#include "apps/world/entity/enemy/lists/EnemyLists.h"
+
 #include "EnemyDefinitionLoader.h"
 
 namespace mm2hack::apps::world::entity::enemy::animation

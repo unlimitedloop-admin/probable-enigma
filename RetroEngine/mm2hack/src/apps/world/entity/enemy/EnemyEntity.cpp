@@ -4,11 +4,15 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <utility>
 
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/runtime/GameContext.h"
+#include "apps/systems/combat/DamageTable.h"
+#include "apps/systems/combat/HealthComponent.h"
+#include "apps/world/entity/common/SpawnProjectileCommand.h"
 #include "apps/systems/physics/IAttackInfo.h"
 #include "apps/systems/view/RenderContext.h"
 #include "apps/systems/view/ViewState.h"
@@ -26,7 +30,7 @@ namespace mm2hack::apps::world::entity::enemy
         // 0 = invincible (every weapon immune, HP never moves); N = dies after N
         // hits' worth of accumulated normal-shot power. Shared by both
         // constructors so a fresh spawn and a save/load restore always agree.
-        std::pair<int, DamageTable> HealthForToughness(int toughness) noexcept
+        std::pair<int, DamageTable> health_for_toughness(int toughness) noexcept
         {
             if (toughness <= 0)
             {
@@ -150,14 +154,13 @@ namespace mm2hack::apps::world::entity::enemy
         _toughness = abilities.hp;
 
         pos = spawn_pos;
-        _spawn_x = spawn_pos.x;
         _move_speed = std::max(0.0, abilities.move_speed_px_per_sec);
 
         const double scale = std::max(0.0, abilities.gravity_scale);
         _gravity = systems::physics::SimpleGravityBody(
             kDefaultGravityPerFrame * scale, kDefaultTerminalVelocityPerFrame * scale);
 
-        const auto [max_hp, table] = HealthForToughness(_toughness);
+        const auto [max_hp, table] = health_for_toughness(_toughness);
         _health = systems::combat::HealthComponent(max_hp, table);
 
         if (definition != nullptr)
@@ -206,7 +209,6 @@ namespace mm2hack::apps::world::entity::enemy
             .half_size = _half,
             .hitbox_half_size = _hitbox_half,
             .hitbox_offset_y = _hitbox_offset_y,
-            .spawn_x = _spawn_x,
             .move_speed_px_per_sec = _move_speed,
             .facing = _facing,
             .anim_state_index = _animator.StateIndex(),
@@ -230,7 +232,7 @@ namespace mm2hack::apps::world::entity::enemy
         // Toughness (not the saved HealthComponent bytes -- there are none here)
         // is the single source of truth for (max_hp, resistance table), so a
         // restored invincible enemy is guaranteed to still be invincible.
-        const auto [max_hp, table] = HealthForToughness(state.toughness);
+        const auto [max_hp, table] = health_for_toughness(state.toughness);
         const systems::combat::HealthComponentState hp_state{
             max_hp, std::clamp(state.hp, 1, max_hp)
         };
@@ -246,7 +248,6 @@ namespace mm2hack::apps::world::entity::enemy
         _half = state.half_size;
         _hitbox_half = state.hitbox_half_size;
         _hitbox_offset_y = state.hitbox_offset_y;
-        _spawn_x = state.spawn_x;
         _move_speed = state.move_speed_px_per_sec;
         _facing = state.facing;
 

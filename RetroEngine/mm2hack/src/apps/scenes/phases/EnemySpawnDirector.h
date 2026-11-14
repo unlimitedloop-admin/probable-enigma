@@ -13,7 +13,6 @@
 //==============================================================================
 #pragma once
 
-#include <cstdint>
 #include <vector>
 
 #include "apps/foundation/math/CoordinateTypes.h"
@@ -22,6 +21,11 @@
 #include "apps/world/entity/IEntity.h"
 #include "apps/world/stage/StagePlacement.h"
 #include "core/save/StateIO.h"
+
+namespace mm2hack::apps::world::entity::enemy::animation
+{
+    class EnemyDefinitionCatalog;
+}
 
 namespace mm2hack::apps::scenes::phases
 {
@@ -55,7 +59,8 @@ namespace mm2hack::apps::scenes::phases
         // map and enemy definitions. One that can't be resolved (unknown room
         // or kind) is logged and kept as an inert slot, so slot indices --
         // and saved state -- always line up with the .def's order.
-        void Build(const StageRuntimeContext& ctx);
+        void Build(const StageRuntimeContext& ctx,
+            const world::entity::enemy::animation::EnemyDefinitionCatalog& catalog);
         // Run once per tick AFTER the entity collision pass: anything that
         // died in it is still held by the EntityManager (it's only removed
         // during the next UpdateAll()), so a kill can be told from a despawn.

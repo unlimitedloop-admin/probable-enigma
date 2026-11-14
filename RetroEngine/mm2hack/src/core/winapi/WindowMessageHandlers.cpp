@@ -6,8 +6,10 @@
 #include <filesystem>
 
 #include "../resource.h"
+#include "apps/resources/ResourceManager.h"
 #include "apps/runtime/GameContext.h"
 #include "apps/sequence/SequenceManager.h"
+#include "apps/systems/audio/AudioManager.h"
 #include "config/ConfigUIManager.h"
 #include "config/HudConfig.h"
 #include "core/assembly/ScreenshotManager.h"
@@ -201,6 +203,8 @@ namespace mm2hack::core::winapi
                 }
                 if (seq.LoadState(data))
                 {
+                    // The menu only loads while paused. The restored audio can be playing.
+                    apps::runtime::GameContext::GetInstance().GetResourceManager().GetAudioManager().Pause();
                     MessageBox(hWnd, (L"Loaded from " + path).c_str(), L"Load", MB_OK);
                     break;
                 }

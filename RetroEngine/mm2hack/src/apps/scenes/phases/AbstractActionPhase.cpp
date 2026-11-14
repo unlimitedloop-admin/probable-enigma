@@ -2,21 +2,29 @@
 
 #include "AbstractActionPhase.h"
 
+#include <algorithm>
+#include <array>
 #include <cmath>
+#include <cstdint>
 #include <cstdlib>
+#include <memory>
+#include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
+
+#include <DxLib.h>
 
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/resources/parameters/Parameters.h"
+#include "apps/resources/ResourceManager.h"
 #include "apps/runtime/GameContext.h"
 #include "apps/scenes/PhaseFadeController.h"
 #include "apps/systems/audio/ApuVoice.h"
 #include "apps/systems/audio/AudioManager.h"
 #include "apps/systems/audio/SeTransportState.h"
 #include "apps/systems/audio/SoundChannel.h"
-#include "apps/systems/combat/IDamageable.h"
 #include "apps/systems/physics/CollisionLayer.h"
 #include "apps/systems/physics/ICollider.h"
 #include "apps/systems/scrolling/atomic/ScrollController.h"
@@ -29,17 +37,16 @@
 #include "apps/world/entity/common/SpawnChargeEffectCommand.h"
 #include "apps/world/entity/common/SpawnMissBubbleEffectCommand.h"
 #include "apps/world/entity/common/SpawnSlidingDustEffectCommand.h"
-#include "apps/world/entity/common/SpawnSmallExplosionEffectCommand.h"
 #include "apps/world/entity/effects/ChargeEffectEntity.h"
 #include "apps/world/entity/effects/MissBubbleEffectEntity.h"
 #include "apps/world/entity/effects/ProjectileEntity.h"
 #include "apps/world/entity/effects/SlidingDustEffectEntity.h"
-#include "apps/world/entity/effects/SmallExplosionEffectEntity.h"
 #include "apps/world/entity/effects/SplashEffectEntity.h"
 #include "apps/world/entity/enemy/EnemyEntity.h"
 #include "apps/world/entity/EntityManager.h"
 #include "apps/world/entity/EntityStateFactory.h"
 #include "apps/world/entity/IEntity.h"
+#include "combat_collision_presentation.h"
 #include "config/ConfigUIManager.h"
 #include "core/overlay/DebugHud.h"
 #include "core/save/StateIO.h"
@@ -429,7 +436,8 @@ namespace mm2hack::apps::scenes::phases
 
         _ready_ui.Begin(3.0);   // 3 seconds duration for "READY" blink
 
-        _enemy_spawner.Build(*_ctx);
+        const auto& catalog = runtime::GameContext::GetInstance().GetResourceManager().GetEnemyDefinitionCatalog();
+        _enemy_spawner.Build(*_ctx, catalog);
 
         ui::hud::HealthMeterStyle style{};
         if (!ui::hud::HealthMeterUI::LoadStyle(kHealthMeterStylePath, style))
@@ -827,11 +835,7 @@ namespace mm2hack::apps::scenes::phases
 
                 _ctx->entity_mgr->UpdateAll(&_ctx->scroll->GetView(), dt);
                 consumePlayerOutput_(*player);
-                spawnEnemyProjectiles_();
-                advanceSharedAttackCounter_();
-
-                resolveEntityCollisions_();
-                _enemy_spawner.Tick(*_ctx, player->pos);
+                finishCombatTick_(player->pos);
 
                 // Vitality ran out on this pass: the miss starts this very
                 // tick, before the (now moot) knockback reaction ever shows.
@@ -905,19 +909,6 @@ namespace mm2hack::apps::scenes::phases
             });
     }
 
-    void AbstractActionPhase::resolveEntityCollisions_()
-    {
-        // Entity-vs-entity hit detection (projectiles vs enemies/traps, player vs
-        // items/traps, etc.). Runs after positions are finalized for this tick.
-        std::vector<systems::physics::ICollider*> colliders;
-        _ctx->entity_mgr->CollectColliders(colliders);
-        const auto damageable_hp_before = captureDamageableHp_(colliders);
-        _ctx->collision.ResolveEntities(colliders);
-        spawnDestructionEffectsForTheDead_(colliders);
-        spawnHitEffectsForTheSurvivors_(damageable_hp_before);
-        spawnDeflectEffectsForTheBounced_(colliders);
-    }
-
     void AbstractActionPhase::updateMiss_()
     {
         // The rest of the world carries on as if the player were still
@@ -929,10 +920,7 @@ namespace mm2hack::apps::scenes::phases
         const double dt = runtime::GameContext::GetInstance().Time().DeltaSeconds();
         feedEnemies_(_miss_origin);
         _ctx->entity_mgr->UpdateAll(&_ctx->scroll->GetView(), dt);
-        spawnEnemyProjectiles_();
-        advanceSharedAttackCounter_();
-        resolveEntityCollisions_();
-        _enemy_spawner.Tick(*_ctx, _miss_origin);
+        finishCombatTick_(_miss_origin);
 
         ++_miss_frames;
         if (_retry_requested || _miss_frames < _miss_fade_out_delay_frames || _host == nullptr)
@@ -1087,127 +1075,18 @@ namespace mm2hack::apps::scenes::phases
             });
     }
 
-    void AbstractActionPhase::spawnDestructionEffectsForTheDead_(
-        const std::vector<systems::physics::ICollider*>& colliders)
-    {
-        using systems::combat::IDamageable;
-
-        const auto sprite_id = _ctx->asset_provider->SmallExplosionEffectSprite();
-        if (sprite_id == static_cast<rendering::sprite::SpriteManager::Id>(-1))
-        {
-            return;
-        }
-
-        auto& audio = runtime::GameContext::GetInstance().GetResourceManager().GetAudioManager();
-
-        for (auto* collider : colliders)
-        {
-            // `colliders` was snapshotted alive just before ResolveEntities() ran
-            // above, so a now-dead entry died on this exact pass -- fire its
-            // destruction effect exactly once, right here.
-            if (collider == nullptr || collider->OwnerEntity().IsAlive())
-            {
-                continue;
-            }
-
-            // Only entities with an HP pool (combat::IDamageable) get a destruction
-            // effect -- e.g. a projectile despawning on its own isn't "destroyed".
-            if (dynamic_cast<IDamageable*>(collider) == nullptr)
-            {
-                continue;
-            }
-
-            const auto center = collider->Bounds().center();
-            _ctx->entity_mgr->Spawn<world::entity::effects::SmallExplosionEffectEntity>(
-                world::entity::common::SpawnSmallExplosionEffectCommand{
-                    .spawnPos = Vec2{ center.x, center.y },
-                    .spriteId = sprite_id,
-                    .baseTexture = 0,
-                });
-            audio.PlaySe(L"enemy_small_explosion");
-        }
-    }
-
-    std::vector<AbstractActionPhase::DamageableHpSnapshot> AbstractActionPhase::captureDamageableHp_(
-        const std::vector<systems::physics::ICollider*>& colliders) const
-    {
-        using systems::combat::IDamageable;
-
-        std::vector<DamageableHpSnapshot> snapshot;
-        snapshot.reserve(colliders.size());
-        for (auto* collider : colliders)
-        {
-            if (collider == nullptr)
-            {
-                continue;
-            }
-
-            if (auto* damageable = dynamic_cast<IDamageable*>(collider))
-            {
-                snapshot.push_back({ damageable, damageable->CurrentHP() });
-            }
-        }
-        return snapshot;
-    }
-
-    void AbstractActionPhase::spawnHitEffectsForTheSurvivors_(const std::vector<DamageableHpSnapshot>& before)
-    {
-        // A kill is destruction's job (spawnDestructionEffectsForTheDead_);
-        // this is only for a hit that didn't finish the target off. Split by
-        // whether the target was the player -- "be_damaged" is the player's
-        // own hit-reaction SE, distinct from "hit_attack" (an enemy taking a
-        // non-lethal hit from the player's own weapon).
-        bool any_enemy_hit = false;
-        bool player_hit = false;
-        for (const auto& snap : before)
-        {
-            if (snap.damageable == nullptr || snap.damageable->IsDead() || snap.damageable->CurrentHP() >= snap.hp_before)
-            {
-                continue;
-            }
-            if (dynamic_cast<world::entity::avatar::PlayerEntity*>(snap.damageable) != nullptr)
-            {
-                player_hit = true;
-            }
-            else
-            {
-                any_enemy_hit = true;
-            }
-        }
-
-        auto& audio = runtime::GameContext::GetInstance().GetResourceManager().GetAudioManager();
-        // One shot per frame regardless of how many things got hit -- a single
-        // SE channel pair, no point stacking retriggers.
-        if (any_enemy_hit) { audio.PlaySe(L"hit_attack"); }
-        if (player_hit) { audio.PlaySe(L"be_damaged"); }
-    }
-
-    void AbstractActionPhase::spawnDeflectEffectsForTheBounced_(
-        const std::vector<systems::physics::ICollider*>& colliders)
-    {
-        bool any_deflected = false;
-        for (auto* collider : colliders)
-        {
-            auto* projectile = dynamic_cast<world::entity::effects::ProjectileEntity*>(collider);
-            if (projectile != nullptr && projectile->ConsumeDeflected())
-            {
-                any_deflected = true;
-            }
-        }
-
-        if (any_deflected)
-        {
-            runtime::GameContext::GetInstance().GetResourceManager().GetAudioManager().PlaySe(L"defend_shot");
-        }
-    }
-
-    void AbstractActionPhase::spawnEnemyProjectiles_()
+    void AbstractActionPhase::finishCombatTick_(const Vec2& player_pos)
     {
         auto& audio = runtime::GameContext::GetInstance().GetResourceManager().GetAudioManager();
         _ctx->entity_mgr->ForEachAlive<world::entity::enemy::EnemyEntity>(
             [this, &audio](world::entity::enemy::EnemyEntity& enemy)
             {
-                auto spawns = enemy.ConsumePendingProjectileSpawns();
+                if (enemy.ConsumeAttackCounterIncrementRequest())
+                {
+                    ++_enemy_attack_pattern_counter;
+                }
+
+                const auto spawns = enemy.ConsumePendingProjectileSpawns();
                 if (spawns.empty())
                 {
                     return;
@@ -1217,24 +1096,15 @@ namespace mm2hack::apps::scenes::phases
                 // e.g. Met's 3-way volley on waking up is a single "it fired"
                 // cue, not three overlapping copies of the same SE.
                 audio.PlaySe(L"enemy_fire");
-                for (auto& cmd : spawns)
+                for (const auto& cmd : spawns)
                 {
                     auto& projectile = _ctx->entity_mgr->Spawn<world::entity::effects::ProjectileEntity>(cmd);
                     projectile.SetTerrainProbe(_ctx->terrain_probe.get());
                 }
             });
-    }
 
-    void AbstractActionPhase::advanceSharedAttackCounter_()
-    {
-        _ctx->entity_mgr->ForEachAlive<world::entity::enemy::EnemyEntity>(
-            [this](world::entity::enemy::EnemyEntity& enemy)
-            {
-                if (enemy.ConsumeAttackCounterIncrementRequest())
-                {
-                    ++_enemy_attack_pattern_counter;
-                }
-            });
+        resolve_combat_collisions(*_ctx, audio);
+        _enemy_spawner.Tick(*_ctx, player_pos);
     }
 
     void AbstractActionPhase::handleScrollLockTransition_(bool locked_now)
