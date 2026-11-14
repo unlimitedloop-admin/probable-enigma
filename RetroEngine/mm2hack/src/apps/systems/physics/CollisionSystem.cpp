@@ -24,6 +24,9 @@ namespace mm2hack::apps::systems::physics
                 if (!_matrix.Test(a->Layer(), b->Layer())) continue;
 
                 resolvePair_(*a, *b);
+
+                // A collision can consume or deflect the outer collider.
+                if (!a->IsCollidable() || !a->OwnerEntity().IsAlive()) break;
             }
         }
     }
