@@ -1250,9 +1250,14 @@ namespace mm2hack::apps::scenes::phases
         if (locked_now)
         {
             // Page-scroll transition just started: drop every transient effect --
-            // including a Rock Buster shot that wandered off-screen -- but leave
-            // the player and persistent level objects (e.g. BreakableBlock) alone.
+            // including a Rock Buster shot that wandered off-screen -- and every
+            // enemy (they belong to the page being left; the spawn director
+            // brings the next page's back as its placements scroll into view,
+            // and sees these as despawned, not defeated, so its respawn rules
+            // still apply). Leave the player and persistent level objects (e.g.
+            // BreakableBlock) alone.
             static constexpr std::array kEffectTypes{
+                world::entity::EntityTypeId::Enemy,
                 world::entity::EntityTypeId::Projectile,
                 world::entity::EntityTypeId::ChargeEffect,
                 world::entity::EntityTypeId::SlidingDustEffect,
