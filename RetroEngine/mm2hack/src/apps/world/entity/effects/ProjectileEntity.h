@@ -44,7 +44,7 @@ namespace mm2hack::apps::world::entity::effects
         systems::physics::CollisionLayer collision_layer{ systems::physics::CollisionLayer::ProjectilePlayer };
         systems::physics::WeaponId weapon{ systems::physics::WeaponId::Buster };
         bool terrain_collision_enabled{ false };
-        bool deflected_visual{ false };
+        bool deflected{ false };
 
         bool Save(core::save::StateWriter& writer) const;
         bool Load(core::save::StateReader& reader);
@@ -61,7 +61,7 @@ namespace mm2hack::apps::world::entity::effects
         using TileAttribute = systems::physics::TileAttribute;
 
     public:
-        static constexpr std::uint16_t kStateVersion{ 4 };   // 4: + deflected_visual
+        static constexpr std::uint16_t kStateVersion{ 4 };   // 4: + deflected
 
         explicit ProjectileEntity(const common::SpawnProjectileCommand& cmd);
         ProjectileEntity(
@@ -89,7 +89,9 @@ namespace mm2hack::apps::world::entity::effects
         IEntity& OwnerEntity() noexcept override { return *this; }
         const IEntity& OwnerEntity() const noexcept override { return *this; }
         RectF Bounds() const override;
-        bool IsCollidable() const noexcept override { return IsAlive(); }
+        // A deflected shot is spent: it flies off harmless and touches nothing
+        // more (neither the deflector again nor anything else on its way).
+        bool IsCollidable() const noexcept override { return IsAlive() && !_deflected; }
         CollisionLayer Layer() const noexcept override { return _collision_layer; }
         void OnTileCollision(const Vec2& normal, TileAttribute attr) override;
         void OnEntityCollision(IEntity& other) override;
@@ -119,12 +121,13 @@ namespace mm2hack::apps::world::entity::effects
         [[nodiscard]] bool checkTerrainCollision_() const;
         // Redirects this shot's velocity off an IDeflector instead of dying --
         // keeps its speed, reverses horizontal direction (back the way it
-        // came), and arcs it upward. Same graphic, new trajectory; no change
-        // to collisionLayer/weapon, so it can still hit something else along
-        // the new path. Also arms _deflect_grace_frames (see its declaration).
-        // A player shot additionally switches to the deflected graphic (see
-        // _deflected_visual).
+        // came), and arcs it upward. The shot is then spent: _deflected turns
+        // its collision off (IsCollidable()), and a player shot additionally
+        // switches to the deflected graphic.
         void deflect_() noexcept;
+        // Whether Render() draws the deflected graphic: deflected, and a
+        // player shot (the only kind whose sheet has those tiles).
+        [[nodiscard]] bool usesDeflectedGraphic_() const noexcept;
 
     private:
         systems::view::Layer _draw_layer{ systems::view::Layer::Actors }; // Drawing layer
@@ -146,23 +149,18 @@ namespace mm2hack::apps::world::entity::effects
         systems::physics::WeaponId _weapon{ systems::physics::WeaponId::Buster };
         bool _terrain_collision_enabled{ false };       // Per-shot opt-in; see SpawnProjectileCommand::terrainCollisionEnabled
 
-        // Set by deflect_() for the player's own shots: Render() then draws the
-        // small "bounced" tile from the same sheet (base_texture + 2 for a
-        // normal / charge-level-1 shot, + 3 for charge level 2) instead of the
-        // shot graphic. The tile is single 16x16 and symmetric, so it's the
-        // same whichever way the shot now flies. Saved.
-        bool _deflected_visual{ false };
+        // Set by deflect_(), for good: the shot has bounced off a deflector, so
+        // IsCollidable() is false from then on. (This is also what stops it
+        // re-deflecting every frame while it still overlaps the deflector's
+        // Bounds() -- which used to take a few frames' grace period.) For the
+        // player's own shots Render() additionally draws the small "bounced"
+        // tile from the same sheet (base_texture + 2 for a normal / charge-
+        // level-1 shot, + 3 for charge level 2) instead of the shot graphic;
+        // it's a single symmetric 16x16, so it's the same whichever way the
+        // shot now flies. Saved.
+        bool _deflected{ false };
 
         const systems::physics::ITerrainProbe* _terrain{ nullptr }; // Not saved; re-wired externally
         bool _pending_deflected{ false };               // Not saved; see ConsumeDeflected()
-        // Frames left to ignore further OnEntityCollision() calls after a
-        // deflection. Without this, the shot -- still alive/collidable, still
-        // overlapping the deflector's Bounds() for a few frames while it
-        // drifts away at its (comparatively slow) redirected velocity -- gets
-        // re-processed by CollisionSystem every one of those frames and
-        // re-deflects the already-deflected velocity each time, reading as an
-        // erratic S-curve. Not saved -- short-lived (a handful of frames),
-        // same reasoning as _pending_deflected above.
-        int _deflect_grace_frames{ 0 };
     };
 }

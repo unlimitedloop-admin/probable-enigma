@@ -76,7 +76,7 @@ namespace mm2hack::apps::world::entity::effects
             writer.WriteU8(static_cast<std::uint8_t>(collision_layer)) &&
             writer.WriteU8(static_cast<std::uint8_t>(weapon)) &&
             writer.WriteBool(terrain_collision_enabled) &&
-            writer.WriteBool(deflected_visual);
+            writer.WriteBool(deflected);
     }
 
     bool ProjectileEntityState::Load(core::save::StateReader& reader)
@@ -101,7 +101,7 @@ namespace mm2hack::apps::world::entity::effects
             !reader.ReadU8(encoded_collision_layer) ||
             !reader.ReadU8(encoded_weapon) ||
             !reader.ReadBool(loaded.terrain_collision_enabled) ||
-            !reader.ReadBool(loaded.deflected_visual))
+            !reader.ReadBool(loaded.deflected))
         {
             return false;
         }
@@ -170,7 +170,7 @@ namespace mm2hack::apps::world::entity::effects
         : _id(sprite_id)
     {
         RestoreState(state);
-        _half = RenderHalfSizeForVisual(_visual, _deflected_visual);
+        _half = RenderHalfSizeForVisual(_visual, usesDeflectedGraphic_());
     }
 
     bool ProjectileEntity::SaveState(core::save::StateWriter& writer) const
@@ -195,7 +195,7 @@ namespace mm2hack::apps::world::entity::effects
             .collision_layer = _collision_layer,
             .weapon = _weapon,
             .terrain_collision_enabled = _terrain_collision_enabled,
-            .deflected_visual = _deflected_visual,
+            .deflected = _deflected,
         };
     }
 
@@ -218,7 +218,7 @@ namespace mm2hack::apps::world::entity::effects
         _collision_layer = state.collision_layer;
         _weapon = state.weapon;
         _terrain_collision_enabled = state.terrain_collision_enabled;
-        _deflected_visual = state.deflected_visual;
+        _deflected = state.deflected;
         return true;
     }
 
@@ -237,10 +237,6 @@ namespace mm2hack::apps::world::entity::effects
         pos += vel * dt;
         _age_sec += dt;
         ++_elapsed_ticks;
-        if (_deflect_grace_frames > 0)
-        {
-            --_deflect_grace_frames;
-        }
 
         // A non-positive lifetime is the existing sentinel for an entity that
         // remains alive until it leaves the active view.
@@ -309,14 +305,6 @@ namespace mm2hack::apps::world::entity::effects
 
     void ProjectileEntity::OnEntityCollision(IEntity& other)
     {
-        // Still drifting clear from a very recent deflection -- ignore every
-        // collision (not just another deflect) until then, see
-        // _deflect_grace_frames's declaration comment for why.
-        if (_deflect_grace_frames > 0)
-        {
-            return;
-        }
-
         // A deflector (Met hidden under its helmet) bounces the shot instead
         // of consuming it -- queried the same way a receiver queries
         // IAttackInfo. The deflector's own OnEntityCollision() independently
@@ -348,23 +336,26 @@ namespace mm2hack::apps::world::entity::effects
         vel.y = speed * std::sin(kDeflectAngleRad);
         _pending_deflected = true;
 
-        // The player's shot turns into the small "bounced" graphic. Enemy shots
+        // The shot is spent: no more collisions (see IsCollidable()). The
+        // CollisionSystem re-checks that per pair, so it takes effect at once,
+        // even within this same pass.
+        _deflected = true;
+
+        // A player shot turns into the small "bounced" graphic. Enemy shots
         // use another sheet (no such tiles there), so they keep their own look.
-        if (_collision_layer == CollisionLayer::ProjectilePlayer)
-        {
-            _deflected_visual = true;
-            _half = RenderHalfSizeForVisual(_visual, true);
-        }
+        _half = RenderHalfSizeForVisual(_visual, usesDeflectedGraphic_());
 
         // No position change -- deliberately. An earlier version nudged pos
         // to guarantee clearing the deflector's Bounds() the same frame, but
-        // that read as a visible teleport/warp at the moment of impact. A
-        // grace period (ignore further collisions for a few frames instead,
-        // see OnEntityCollision()) fixes the same re-deflect bug without
-        // moving the sprite at all -- it just flies out under its own
-        // (admittedly modest) redirected velocity like it looks like it should.
-        constexpr int kDeflectGraceFrames = 12;
-        _deflect_grace_frames = kDeflectGraceFrames;
+        // that read as a visible teleport/warp at the moment of impact. With
+        // collision off, the shot needn't clear it at all: it just flies out
+        // under its own (admittedly modest) redirected velocity like it looks
+        // like it should.
+    }
+
+    bool ProjectileEntity::usesDeflectedGraphic_() const noexcept
+    {
+        return _deflected && _collision_layer == CollisionLayer::ProjectilePlayer;
     }
 
     void ProjectileEntity::Render(RenderContext& ctx)
@@ -386,7 +377,7 @@ namespace mm2hack::apps::world::entity::effects
         const int x = static_cast<int>(screenX);
         const int y = static_cast<int>(screenY);
 
-        if (_deflected_visual)
+        if (usesDeflectedGraphic_())
         {
             const bool large = (_visual == common::ProjectileVisual::ChargeLevel2);
             const int tile = _base_texture + (large ? kDeflectedTileLarge : kDeflectedTileSmall);
