@@ -114,7 +114,7 @@ namespace mm2hack::apps::world::entity::avatar::states
     class AttackActionState final
     {
     public:
-        AttackActionState(rendering::sprite::SpriteManager::Id id) : _id(id) {}
+        AttackActionState() = default;
 
         void PreUpdate(PlayerContext& cx, core::assembly::StateProvider* in, bool can_spawn) noexcept;
         ActionUpdateResult PostUpdate(PlayerContext& cx, core::assembly::StateProvider* in, const AttackTuning& tuning, double dt);
@@ -136,7 +136,6 @@ namespace mm2hack::apps::world::entity::avatar::states
     private:
         const std::wstring kClassName{ L"AttackActionState" };
 
-        rendering::sprite::SpriteManager::Id _id{}; // Weapon sprite id
         bool _is_attacking{ false };                // Whether currently attacking
         double _pose_time_sec{ 10.0 };              // Time spent in shot pose
         RockBusterTuning rb_tuning{};               // Rock Buster tuning

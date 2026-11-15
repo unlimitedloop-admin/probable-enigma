@@ -18,6 +18,19 @@
 
 namespace mm2hack::apps::world::entity::common
 {
+    // Persistent IDs: append only; never renumber or reuse.
+    enum class ProjectileAppearance : std::uint16_t
+    {
+        Invalid = 0,
+        PlayerBuster = 1,
+        EnemyEnergy = 2
+    };
+
+    constexpr bool IsKnownProjectileAppearance(ProjectileAppearance id) noexcept
+    {
+        return id == ProjectileAppearance::PlayerBuster || id == ProjectileAppearance::EnemyEnergy;
+    }
+
     enum class ProjectileVisual : std::uint8_t
     {
         Normal,
@@ -32,7 +45,7 @@ namespace mm2hack::apps::world::entity::common
         foundation::math::Vec2 velocity{};                                  // Initial velocity of the projectile
         systems::view::Layer drawLayer{ systems::view::Layer::Effects };    // Which drawing layer to use
 
-        rendering::sprite::SpriteManager::Id spriteId{};                    // Which sprite-set to use for drawing (same as PlayerEntity::_id etc.)
+        ProjectileAppearance appearance{ ProjectileAppearance::Invalid };                    // Stable sprite-sheet identity; runtime handles are resolved by the stage.
         int baseTexture{ 0 };                                               // Base texture index for the projectile
         ProjectileVisual visual{ ProjectileVisual::Normal };                // Single-tile or composite drawing pattern
         std::int32_t animFrames{ 1 };                                       // Number of animation frames for the projectile

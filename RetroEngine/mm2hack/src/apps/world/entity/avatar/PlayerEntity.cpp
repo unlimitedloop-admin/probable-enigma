@@ -46,7 +46,7 @@ namespace mm2hack::apps::world::entity::avatar
           _half{ 16.0, 16.0 },
           _health(PlayerVitalityTuning{}.maxHp, systems::combat::DamageTable::Neutral())
     {
-        _attackAction = std::make_unique<states::AttackActionState>(weaponId);
+        _attackAction = std::make_unique<states::AttackActionState>();
         SetTuning(PlayerTuning{});
     }
 

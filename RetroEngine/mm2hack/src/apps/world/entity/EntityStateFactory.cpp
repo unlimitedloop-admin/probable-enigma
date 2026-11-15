@@ -230,12 +230,12 @@ namespace mm2hack::apps::world::entity
         case EntityTypeId::Projectile:
         {
             effects::ProjectileEntityState state{};
-            const auto sprite_id = _assets.EffectsSprite();
-            if (!ParseProjectile(record, state) || !IsValidSpriteId(sprite_id))
+            if (!ParseProjectile(record, state) ||
+                !IsValidSpriteId(_assets.ProjectileSprite(state.appearance)))
             {
                 return nullptr;
             }
-            return std::make_unique<effects::ProjectileEntity>(state, sprite_id);
+            return std::make_unique<effects::ProjectileEntity>(state, _assets);
         }
         case EntityTypeId::ChargeEffect:
         {

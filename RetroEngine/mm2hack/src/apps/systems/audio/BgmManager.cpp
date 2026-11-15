@@ -25,6 +25,11 @@ namespace mm2hack::apps::systems::audio
 
     bool BgmManager::Play(const std::wstring& name)
     {
+        return loadTrack_(name, false);
+    }
+
+    bool BgmManager::loadTrack_(const std::wstring& name, bool startPaused)
+    {
         auto it = _bgmData.find(name);
         if (it == _bgmData.end()) return false;
 
@@ -59,13 +64,15 @@ namespace mm2hack::apps::systems::audio
         // Play all channels with loop.
         for (size_t i = 0; i < config.filepaths.size(); ++i)
         {
-            _channels.Play(static_cast<int>(ToIndex(config.voices[i])), true);
+            const int channel = static_cast<int>(ToIndex(config.voices[i]));
+            if (startPaused) _channels.PreparePaused(channel, 0);
+            else _channels.Play(channel, true);
         }
 
         _loopStart = config.loopStart;
         _loopEnd = config.loopEnd;
         _isPlaying = true;
-        _isPaused = false;
+        _isPaused = startPaused;
 
         SetMasterVolume(_masterVolume);
 
@@ -185,7 +192,8 @@ namespace mm2hack::apps::systems::audio
             _fadeTarget = state.fade_target;
             return true;
         }
-        if (!Play(state.track_name)) return false;
+        // Hydrate while stopped: paused restores must never briefly play.
+        if (!loadTrack_(state.track_name, true)) return false;
 
         _masterVolume = state.master_volume;
         _loopStart = state.loop_start_seconds;
@@ -202,9 +210,9 @@ namespace mm2hack::apps::systems::audio
                 static_cast<int>(index), voice_state.position_milliseconds);
         }
         RefreshOutputVolumes();
-        if (state.playback_status == BgmPlaybackStatus::Paused)
+        if (state.playback_status == BgmPlaybackStatus::Playing)
         {
-            Pause();
+            Resume();
         }
         return true;
     }

@@ -26,12 +26,15 @@
 #include "apps/world/entity/IEntity.h"
 #include "core/save/StateIO.h"
 
+namespace mm2hack::apps::scenes { struct IStageAssetProvider; }
+
 namespace mm2hack::apps::world::entity::effects
 {
     struct ProjectileEntityState final
     {
         EntityKinematicState kinematic{};
         systems::view::Layer draw_layer{ systems::view::Layer::Effects };
+        common::ProjectileAppearance appearance{ common::ProjectileAppearance::Invalid };
         std::int32_t base_texture{};
         common::ProjectileVisual visual{ common::ProjectileVisual::Normal };
         std::int32_t animation_frames{ 1 };
@@ -61,12 +64,14 @@ namespace mm2hack::apps::world::entity::effects
         using TileAttribute = systems::physics::TileAttribute;
 
     public:
-        static constexpr std::uint16_t kStateVersion{ 4 };   // 4: + deflected
+        static constexpr std::uint16_t kStateVersion{ 5 };   // 5: persistent appearance ID; older records rejected
 
-        explicit ProjectileEntity(const common::SpawnProjectileCommand& cmd);
+        ProjectileEntity(const common::SpawnProjectileCommand& cmd, const scenes::IStageAssetProvider& assets);
         ProjectileEntity(
             const ProjectileEntityState& state,
-            rendering::sprite::SpriteManager::Id sprite_id);
+            const scenes::IStageAssetProvider& assets);
+
+        [[nodiscard]] rendering::sprite::SpriteManager::Id SpriteId() const noexcept { return _id; }
 
         // Get drawing layer (IRenderable)
         systems::view::Layer DrawLayer() const noexcept override;
@@ -133,6 +138,8 @@ namespace mm2hack::apps::world::entity::effects
         systems::view::Layer _draw_layer{ systems::view::Layer::Actors }; // Drawing layer
         foundation::math::Vec2 _half{};                 // Half-size of the sprite's draw footprint (rendering only)
 
+        const scenes::IStageAssetProvider& _assets;
+        common::ProjectileAppearance _appearance{ common::ProjectileAppearance::Invalid };
         rendering::sprite::SpriteManager::Id _id{};     // Object sprite id
         int _base_texture{ 0 };                         // Base texture index
         common::ProjectileVisual _visual{ common::ProjectileVisual::Normal };

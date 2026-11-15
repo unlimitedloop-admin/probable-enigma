@@ -74,6 +74,7 @@ namespace mm2hack::apps::systems::audio
         void SetSeManager(SeManager* manager) { _seManager = manager; }
 
     private:
+        bool loadTrack_(const std::wstring& name, bool startPaused);
         void applyFade_();           // Apply fade effect if active
         void checkAndApplyLoop_();   // Check and apply loop points if necessary
         int effectiveVolume_(ApuVoice voice, int logicalVolume) const;

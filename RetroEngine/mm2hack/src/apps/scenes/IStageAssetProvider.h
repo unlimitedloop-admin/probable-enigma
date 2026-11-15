@@ -11,6 +11,7 @@
 #include "apps/rendering/bg/BGTileManager.h"
 #include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/world/entity/enemy/lists/EnemyLists.h"
+#include "apps/world/entity/common/SpawnProjectileCommand.h"
 
 namespace mm2hack::apps::scenes
 {
@@ -26,6 +27,17 @@ namespace mm2hack::apps::scenes
         virtual SpriteManagerId PlayerChargeLevel1Sprite() const noexcept = 0;
         virtual SpriteManagerId PlayerChargeLevel2Sprite() const noexcept = 0;
         virtual SpriteManagerId PlayerAttackSprite() const noexcept = 0;
+        // Shared by live spawns and restoration; never substitute another image.
+        virtual SpriteManagerId ProjectileSprite(world::entity::common::ProjectileAppearance appearance) const noexcept
+        {
+            using world::entity::common::ProjectileAppearance;
+            switch (appearance)
+            {
+            case ProjectileAppearance::PlayerBuster: return PlayerAttackSprite();
+            case ProjectileAppearance::EnemyEnergy: return EnemyProjectileSprite();
+            default: return static_cast<SpriteManagerId>(-1);
+            }
+        }
         virtual SpriteManagerId EffectsSprite() const noexcept = 0;
         virtual SpriteManagerId SlidingDustEffectSprite() const noexcept = 0;
         virtual SpriteManagerId ChargeEffectSprite() const noexcept = 0;

@@ -55,6 +55,7 @@ namespace mm2hack::apps::systems::audio
 
     void SoundChannel::Pause()
     {
+        if (_wasPaused) return; // Repeated pause must preserve resumable transport.
         if (_handle != -1)
         {
             if (DxLib::CheckSoundMem(_handle) == 1)
@@ -68,6 +69,15 @@ namespace mm2hack::apps::systems::audio
                 _wasPaused = false;
             }
         }
+    }
+
+    void SoundChannel::PreparePaused(std::int64_t position)
+    {
+        if (_handle == -1 || position < 0) return;
+        DxLib::StopSoundMem(_handle);
+        _paused_position_milliseconds = position;
+        DxLib::SetSoundCurrentTime(position, _handle);
+        _wasPaused = true;
     }
 
     void SoundChannel::Resume(bool loop)

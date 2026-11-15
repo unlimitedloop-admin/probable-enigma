@@ -758,7 +758,7 @@ namespace mm2hack::apps::scenes::phases
 
         if (output.projectile.has_value())
         {
-            auto& projectile = _ctx->entity_mgr->Spawn<world::entity::effects::ProjectileEntity>(*output.projectile);
+            auto& projectile = _ctx->entity_mgr->Spawn<world::entity::effects::ProjectileEntity>(*output.projectile, *_ctx->asset_provider);
             projectile.SetTerrainProbe(_ctx->terrain_probe.get());
         }
 
@@ -1098,7 +1098,7 @@ namespace mm2hack::apps::scenes::phases
                 audio.PlaySe(L"enemy_fire");
                 for (const auto& cmd : spawns)
                 {
-                    auto& projectile = _ctx->entity_mgr->Spawn<world::entity::effects::ProjectileEntity>(cmd);
+                    auto& projectile = _ctx->entity_mgr->Spawn<world::entity::effects::ProjectileEntity>(cmd, *_ctx->asset_provider);
                     projectile.SetTerrainProbe(_ctx->terrain_probe.get());
                 }
             });

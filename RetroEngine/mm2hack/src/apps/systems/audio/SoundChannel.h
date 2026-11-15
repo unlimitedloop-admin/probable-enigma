@@ -40,6 +40,7 @@ namespace mm2hack::apps::systems::audio
         void Stop() override;
         // Pause the sound
         void Pause() override;
+        void PreparePaused(std::int64_t position) override;
         // Resume the sound
         void Resume(bool loop) override;
         // Set volume (0-255)

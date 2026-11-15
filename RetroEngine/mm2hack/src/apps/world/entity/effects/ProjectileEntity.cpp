@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include "ProjectileEntity.h"
+#include "apps/scenes/IStageAssetProvider.h"
 
 #include <cmath>
 
@@ -63,6 +64,7 @@ namespace mm2hack::apps::world::entity::effects
     {
         return IsValid() && kinematic.Save(writer) &&
             writer.WriteU8(static_cast<std::uint8_t>(draw_layer)) &&
+            writer.WriteU16(static_cast<std::uint16_t>(appearance)) &&
             writer.WriteI32(base_texture) &&
             writer.WriteU8(static_cast<std::uint8_t>(visual)) &&
             writer.WriteI32(animation_frames) &&
@@ -82,12 +84,14 @@ namespace mm2hack::apps::world::entity::effects
     bool ProjectileEntityState::Load(core::save::StateReader& reader)
     {
         ProjectileEntityState loaded{};
+        std::uint16_t encoded_appearance{};
         std::uint8_t encoded_layer{};
         std::uint8_t encoded_visual{};
         std::uint8_t encoded_collision_layer{};
         std::uint8_t encoded_weapon{};
         if (!loaded.kinematic.Load(reader) ||
             !reader.ReadU8(encoded_layer) ||
+            !reader.ReadU16(encoded_appearance) ||
             !reader.ReadI32(loaded.base_texture) ||
             !reader.ReadU8(encoded_visual) ||
             !reader.ReadI32(loaded.animation_frames) ||
@@ -105,6 +109,7 @@ namespace mm2hack::apps::world::entity::effects
         {
             return false;
         }
+        loaded.appearance = static_cast<common::ProjectileAppearance>(encoded_appearance);
         loaded.draw_layer = static_cast<systems::view::Layer>(encoded_layer);
         loaded.visual = static_cast<common::ProjectileVisual>(encoded_visual);
         loaded.collision_layer = static_cast<systems::physics::CollisionLayer>(encoded_collision_layer);
@@ -121,7 +126,7 @@ namespace mm2hack::apps::world::entity::effects
     {
         constexpr double kMaximumDurationSeconds = 3'600.0;
         constexpr double kMaximumHitHalfSize = 256.0;
-        return kinematic.IsValid() &&
+        return kinematic.IsValid() && common::IsKnownProjectileAppearance(appearance) &&
             draw_layer >= systems::view::Layer::Background &&
             draw_layer <= systems::view::Layer::Overlay &&
             base_texture >= 0 && base_texture <= 65'535 &&
@@ -140,12 +145,16 @@ namespace mm2hack::apps::world::entity::effects
             weapon < systems::physics::WeaponId::Count;
     }
 
-    ProjectileEntity::ProjectileEntity(const common::SpawnProjectileCommand& cmd)
+    ProjectileEntity::ProjectileEntity(const common::SpawnProjectileCommand& cmd, const scenes::IStageAssetProvider& assets)
+        : _assets(assets)
     {
         pos = cmd.spawnPos;
         vel = cmd.velocity;
 
-        _id = cmd.spriteId;
+        _appearance = cmd.appearance;
+        _id = _assets.ProjectileSprite(_appearance);
+        if (!common::IsKnownProjectileAppearance(_appearance) ||
+            _id == static_cast<rendering::sprite::SpriteManager::Id>(-1)) Kill();
         _draw_layer = cmd.drawLayer;
         _base_texture = cmd.baseTexture;
         _visual = cmd.visual;
@@ -166,10 +175,10 @@ namespace mm2hack::apps::world::entity::effects
 
     ProjectileEntity::ProjectileEntity(
         const ProjectileEntityState& state,
-        rendering::sprite::SpriteManager::Id sprite_id)
-        : _id(sprite_id)
+        const scenes::IStageAssetProvider& assets)
+        : _assets(assets)
     {
-        RestoreState(state);
+        if (!RestoreState(state)) Kill();
         _half = RenderHalfSizeForVisual(_visual, usesDeflectedGraphic_());
     }
 
@@ -183,6 +192,7 @@ namespace mm2hack::apps::world::entity::effects
         return ProjectileEntityState{
             .kinematic = CaptureKinematicState(),
             .draw_layer = _draw_layer,
+            .appearance = _appearance,
             .base_texture = _base_texture,
             .visual = _visual,
             .animation_frames = _anim_frames,
@@ -201,10 +211,14 @@ namespace mm2hack::apps::world::entity::effects
 
     bool ProjectileEntity::RestoreState(const ProjectileEntityState& state) noexcept
     {
-        if (!state.IsValid() || !RestoreKinematicState(state.kinematic))
+        const auto sprite = _assets.ProjectileSprite(state.appearance);
+        if (!state.IsValid() || sprite == static_cast<rendering::sprite::SpriteManager::Id>(-1) ||
+            !RestoreKinematicState(state.kinematic))
         {
             return false;
         }
+        _id = sprite;
+        _appearance = state.appearance;
         _draw_layer = state.draw_layer;
         _base_texture = state.base_texture;
         _visual = state.visual;
@@ -219,6 +233,8 @@ namespace mm2hack::apps::world::entity::effects
         _weapon = state.weapon;
         _terrain_collision_enabled = state.terrain_collision_enabled;
         _deflected = state.deflected;
+        _pending_deflected = false;
+        _half = RenderHalfSizeForVisual(_visual, usesDeflectedGraphic_());
         return true;
     }
 
@@ -355,7 +371,7 @@ namespace mm2hack::apps::world::entity::effects
 
     bool ProjectileEntity::usesDeflectedGraphic_() const noexcept
     {
-        return _deflected && _collision_layer == CollisionLayer::ProjectilePlayer;
+        return _deflected && _appearance == common::ProjectileAppearance::PlayerBuster;
     }
 
     void ProjectileEntity::Render(RenderContext& ctx)

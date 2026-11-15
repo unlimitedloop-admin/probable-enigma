@@ -352,7 +352,7 @@ namespace mm2hack::apps::world::entity::enemy
                 cmd.spawnPos = pos + Vec2{ 0.0, abilities_().projectile_spawn_offset_y };
                 cmd.velocity = Vec2{ dir_x * speed_px_per_sec, dir_y * speed_px_per_sec };
                 cmd.drawLayer = Layer::Effects;
-                cmd.spriteId = _projectile_sprite_id;
+                cmd.appearance = common::ProjectileAppearance::EnemyEnergy;
                 cmd.baseTexture = 0;
                 cmd.visual = common::ProjectileVisual::Normal;
                 cmd.lifeSec = -1.0; // alive until it leaves the active view, same sentinel as the player's shots

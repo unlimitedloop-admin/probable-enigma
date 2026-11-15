@@ -51,6 +51,7 @@
 #include "apps/world/entity/enemy/lists/EnemyLists.h"
 #include "apps/world/entity/EntityManager.h"
 #include "apps/world/entity/EntityStateFactory.h"
+#include "apps/world/entity/effects/ProjectileEntity.h"
 #include "apps/world/session/PlayerSession.h"
 #include "core/assembly/InputTypes.h"
 #include "core/assembly/StateProvider.h"
@@ -169,6 +170,7 @@ namespace mm2hack::test
         class FakeSoundChannel final : public ISoundChannel
         {
         public:
+            int play_calls = 0;
             bool Load(const std::wstring& filepath) override
             {
                 _loaded = !filepath.empty();
@@ -181,6 +183,7 @@ namespace mm2hack::test
             {
                 (void)loop;
                 if (!_loaded) return;
+                ++play_calls;
                 _position_milliseconds = 0;
                 _playing = true;
                 _paused = false;
@@ -194,6 +197,13 @@ namespace mm2hack::test
             void Pause() override
             {
                 if (!_playing) return;
+                _playing = false;
+                _paused = true;
+            }
+            void PreparePaused(std::int64_t position) override
+            {
+                if (!_loaded) return;
+                _position_milliseconds = position;
                 _playing = false;
                 _paused = true;
             }
@@ -384,7 +394,7 @@ namespace mm2hack::test
             }
         };
 
-        class TestAssets final : public apps::scenes::IStageAssetProvider
+        class TestAssets : public apps::scenes::IStageAssetProvider
         {
         public:
             SpriteManagerId PlayerSprite() const noexcept override { return 1; }
@@ -714,6 +724,94 @@ namespace mm2hack::test
             player.SetLadderService(&ladder);
             player.SetScrollContext(&scroll_rules, 0);
             player.SetViewBounds({ -10'000.0, 10'000.0, -10'000.0, 10'000.0 });
+        }
+
+        void TestProjectileAppearanceRestoration(TestRunner& runner)
+        {
+            using namespace apps::world::entity;
+            using common::ProjectileAppearance;
+            using common::ProjectileVisual;
+            using apps::systems::physics::CollisionLayer;
+            TestAssets assets;
+            struct ReloadedAssets : TestAssets
+            {
+                SpriteManagerId PlayerAttackSprite() const noexcept override { return 104; }
+                SpriteManagerId EnemyProjectileSprite() const noexcept override { return 110; }
+            } reloaded;
+            struct MissingAssets : TestAssets
+            {
+                SpriteManagerId EnemyProjectileSprite() const noexcept override { return static_cast<SpriteManagerId>(-1); }
+            } missing;
+            EntityStateFactory factory(reloaded);
+            for (auto appearance : { ProjectileAppearance::PlayerBuster, ProjectileAppearance::EnemyEnergy })
+            for (auto visual : { ProjectileVisual::Normal, ProjectileVisual::ChargeLevel1, ProjectileVisual::ChargeLevel2 })
+            for (bool deflected : { false, true })
+            {
+                if (appearance == ProjectileAppearance::EnemyEnergy && visual != ProjectileVisual::Normal) continue;
+                common::SpawnProjectileCommand cmd;
+                cmd.appearance = appearance;
+                cmd.visual = visual;
+                cmd.baseTexture = appearance == ProjectileAppearance::PlayerBuster ? 32 : 0;
+                cmd.collisionLayer = appearance == ProjectileAppearance::PlayerBuster
+                    ? CollisionLayer::ProjectilePlayer : CollisionLayer::ProjectileEnemy;
+                effects::ProjectileEntity source(cmd, assets);
+                auto state = source.CaptureState();
+                state.deflected = deflected;
+                state.elapsed_ticks = 17;
+                state.age_seconds = 0.25;
+                runner.Check(source.RestoreState(state), L"prepare projectile presentation state");
+                std::ostringstream bytes(std::ios::out | std::ios::binary);
+                core::save::StateWriter writer(bytes);
+                runner.Check(source.SaveState(writer), L"save projectile appearance");
+                EntityStateRecord record;
+                record.type = EntityTypeId::Projectile;
+                record.instance_id = 1;
+                record.component_version = effects::ProjectileEntity::kStateVersion;
+                const auto payload = bytes.str();
+                record.payload.assign(payload.begin(), payload.end());
+                for (std::size_t size = 0; size < record.payload.size(); ++size)
+                {
+                    auto truncated = record;
+                    truncated.payload.resize(size);
+                    runner.Check(!EntityStateFactory::ValidateRecord(truncated) && !factory.Create(truncated),
+                        L"truncated projectile record rejected");
+                }
+                auto unknown = record;
+                // Four F64 kinematic values and one draw-layer byte precede the U16 appearance.
+                unknown.payload[33] = 0xff;
+                unknown.payload[34] = 0xff;
+                runner.Check(!EntityStateFactory::ValidateRecord(unknown) && !factory.Create(unknown),
+                    L"unknown serialized appearance rejected");
+                auto restored = factory.Create(record);
+                auto* projectile = dynamic_cast<effects::ProjectileEntity*>(restored.get());
+                runner.Check(projectile && projectile->SpriteId() == reloaded.ProjectileSprite(appearance) &&
+                    projectile->SpriteId() != source.SpriteId(), L"restore logical appearance with newly allocated sprite IDs");
+                if (projectile)
+                {
+                    std::ostringstream after(std::ios::out | std::ios::binary);
+                    core::save::StateWriter after_writer(after);
+                    runner.Check(projectile->SaveState(after_writer) && after.str() == payload,
+                        L"projectile tiles animation direction and deflection round-trip");
+                    // Collision ownership is deliberately independent of appearance.
+                    auto changed = projectile->CaptureState();
+                    changed.collision_layer = CollisionLayer::ProjectileEnemy;
+                    runner.Check(projectile->RestoreState(changed) &&
+                        projectile->SpriteId() == reloaded.ProjectileSprite(appearance),
+                        L"collision ownership cannot change projectile appearance");
+                    changed.appearance = static_cast<ProjectileAppearance>(65535);
+                    runner.Check(!projectile->RestoreState(changed) &&
+                        projectile->SpriteId() == reloaded.ProjectileSprite(appearance),
+                        L"unknown appearance rejected without replacing live sprite");
+                }
+                if (appearance == ProjectileAppearance::EnemyEnergy)
+                    runner.Check(!EntityStateFactory(missing).Create(record), L"missing projectile asset rejects restore");
+                record.component_version = 4;
+                runner.Check(!EntityStateFactory::ValidateRecord(record) && !factory.Create(record),
+                    L"legacy projectile records rejected explicitly");
+            }
+            common::SpawnProjectileCommand invalid;
+            effects::ProjectileEntity invalid_spawn(invalid, assets);
+            runner.Check(!invalid_spawn.IsAlive(), L"unregistered spawn appearance never falls back");
         }
 
         void TestRestoredChargeInputReconciliation(TestRunner& runner)
@@ -1053,6 +1151,36 @@ namespace mm2hack::test
                 EqualBgmTransport(snapshot, round_trip),
                 L"restore logical BGM transport by stable voice IDs");
 
+            // Restore repeatedly into the already-paused manager, without a reset.
+            for (int attempt = 0; attempt < 3; ++attempt)
+            {
+                runner.Check(source.RestoreState(snapshot), L"restore BGM into same paused manager");
+                source.Pause();
+                runner.Check(!source_channels.IsPlaying(0) && !source_channels.IsPlaying(3),
+                    L"immediate reload stays paused");
+                source.Resume();
+                runner.Check(source_channels.IsPlaying(0) && source_channels.IsPlaying(3),
+                    L"immediate reload resumes on request");
+                source.Pause();
+                runner.Check(!source_channels.IsPlaying(0) && !source_channels.IsPlaying(3),
+                    L"pause works again after immediate reload");
+            }
+            ChannelManager observed_channels{0};
+            auto observed = std::make_unique<FakeSoundChannel>();
+            auto* observed_ptr = observed.get();
+            observed_channels.AddChannel(std::move(observed));
+            AddFakeApuChannels(observed_channels);
+            BgmManager observed_bgm(observed_channels);
+            observed_bgm.RegisterBgm(L"track", files, volumes, voices, 1.5, 2.5);
+            runner.Check(observed_bgm.RestoreState(snapshot) && observed_ptr->play_calls == 0,
+                L"paused restoration never starts backend playback");
+            auto playing_snapshot = snapshot;
+            playing_snapshot.playback_status = BgmPlaybackStatus::Playing;
+            BgmTransportState playing_round_trip;
+            runner.Check(observed_bgm.RestoreState(playing_snapshot) &&
+                observed_channels.IsPlaying(0) && observed_bgm.CaptureState(playing_round_trip) &&
+                EqualBgmTransport(playing_snapshot, playing_round_trip),
+                L"playing restoration starts at saved transport position");
             const BgmTransportState before_rejection = round_trip;
             auto invalid = snapshot;
             invalid.voices.push_back(invalid.voices.front());
@@ -1455,6 +1583,51 @@ namespace mm2hack::test
         }
     }
 
+    int RunBgmBackendTests()
+    {
+        DxLib::SetWindowVisibleFlag(FALSE);
+        DxLib::SetNotDrawFlag(TRUE);
+        DxLib::SetAlwaysRunFlag(TRUE);
+        DxLib::ChangeWindowMode(TRUE);
+        DxLib::SetOutApplicationLogValidFlag(FALSE);
+        if (DxLib::DxLib_Init() < 0) return 2;
+        int result = 0;
+        {
+            std::ofstream log("bgm-backend-test.txt");
+            ChannelManager channels;
+            BgmManager bgm(channels);
+            const std::vector<std::wstring> files{
+                L"src/resources/exams/audio/wav/bgm/sample2_pulse1.wav",
+                L"src/resources/exams/audio/wav/bgm/sample2_triangle.wav"
+            };
+            bgm.RegisterBgm(L"test", files, {0, 0}, {ApuVoice::Pulse1, ApuVoice::Triangle}, 1.0, 3.0);
+            if (!bgm.Play(L"test")) result = 3;
+            bgm.Pause();
+            BgmTransportState snapshot;
+            if (!bgm.CaptureState(snapshot)) result = 4;
+            for (int attempt = 0; attempt < 3 && result == 0; ++attempt)
+            {
+                if (attempt == 2)
+                {
+                    bgm.Release(); // Reset path, contrasted with the two in-place restores.
+                    bgm.RegisterBgm(L"test", files, {0, 0}, {ApuVoice::Pulse1, ApuVoice::Triangle}, 1.0, 3.0);
+                }
+                if (!bgm.RestoreState(snapshot)) { result = 5; break; }
+                bgm.Pause(); // Window load command also pauses.
+                for (int tick = 0; tick < 10; ++tick) { DxLib::ProcessMessage(); ::Sleep(10); }
+                const bool playing = channels.IsPlaying(0) || channels.IsPlaying(2);
+                log << "restore " << attempt << " playing=" << playing << std::endl;
+                if (playing) result = 6;
+                bgm.Resume();
+                if (!channels.IsPlaying(0) || !channels.IsPlaying(2)) result = 7;
+                bgm.Pause();
+                if (channels.IsPlaying(0) || channels.IsPlaying(2)) result = 8;
+            }
+        }
+        DxLib::DxLib_End();
+        return result;
+    }
+
     int RunSaveStateTests() noexcept
     {
         const bool attached_to_parent_console =
@@ -1479,6 +1652,7 @@ namespace mm2hack::test
             TestBgmTransportState(runner);
             TestSeTransportState(runner);
             TestSaveFileEnvelope(runner);
+            TestProjectileAppearanceRestoration(runner);
             TestRestoredChargeInputReconciliation(runner);
             TestCorruptionValidation(runner);
             TestInvalidRestoreIsNonDestructive(runner);

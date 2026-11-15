@@ -123,7 +123,7 @@ namespace mm2hack::apps::world::entity::avatar::states
         {
             result.spawnProjectile.emplace();
             result.spawnProjectile->drawLayer = systems::view::Layer::Effects;
-            result.spawnProjectile->spriteId = _id;
+            result.spawnProjectile->appearance = common::ProjectileAppearance::PlayerBuster;
             result.spawnProjectile->visual = _requested_visual;
 
             const bool is_left = (cx.facingLR == AvatarDirection::Left);
