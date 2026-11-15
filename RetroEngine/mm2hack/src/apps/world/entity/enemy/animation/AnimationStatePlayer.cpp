@@ -2,8 +2,6 @@
 
 #include "AnimationStatePlayer.h"
 
-#include <cstddef>
-
 #include "AnimationTypes.h"
 
 namespace mm2hack::apps::world::entity::enemy::animation
@@ -28,7 +26,8 @@ namespace mm2hack::apps::world::entity::enemy::animation
         }
 
         const AnimationState& state = _def->states[static_cast<std::size_t>(_state_index)];
-        ++_state_elapsed;
+        // Timer definitions are bounded to 36,000 ticks; larger ages are equivalent.
+        if (_state_elapsed < 36'000) ++_state_elapsed;
 
         // Advance the clip. `clip_finished_this_tick` is a one-tick pulse, true
         // only on the exact tick a non-looping clip's last frame completes its

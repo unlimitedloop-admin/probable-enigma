@@ -5,18 +5,26 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <cstdlib>
 #include <utility>
 
+#include "animation/AnimationStatePlayer.h"
+#include "animation/AnimationTypes.h"
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/runtime/GameContext.h"
 #include "apps/systems/combat/DamageTable.h"
 #include "apps/systems/combat/HealthComponent.h"
-#include "apps/world/entity/common/SpawnProjectileCommand.h"
+#include "apps/systems/physics/CollisionLayer.h"
 #include "apps/systems/physics/IAttackInfo.h"
+#include "apps/systems/physics/SimpleGravityBody.h"
+#include "apps/systems/physics/WeaponId.h"
 #include "apps/systems/view/RenderContext.h"
 #include "apps/systems/view/ViewState.h"
+#include "apps/world/entity/common/SpawnProjectileCommand.h"
+#include "apps/world/entity/IEntity.h"
 #include "core/save/StateIO.h"
+#include "lists/EnemyLists.h"
 
 namespace mm2hack::apps::world::entity::enemy
 {
@@ -176,13 +184,13 @@ namespace mm2hack::apps::world::entity::enemy
         rendering::sprite::SpriteManager::Id projectile_sprite_id)
         : _definition(definition), _id(sprite_id), _projectile_sprite_id(projectile_sprite_id)
     {
-        RestoreState(state);
-        if (definition != nullptr)
-        {
-            _animator.RestoreState(
+        if (!RestoreState(state) || definition == nullptr ||
+            !_animator.RestoreState(
                 state.anim_state_index, state.anim_frame_index,
                 state.anim_frame_elapsed, state.anim_state_elapsed,
-                definition->animation);
+                definition->animation))
+        {
+            Kill();
         }
     }
 

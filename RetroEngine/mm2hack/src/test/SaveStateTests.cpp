@@ -51,6 +51,7 @@
 #include "apps/world/entity/enemy/lists/EnemyLists.h"
 #include "apps/world/entity/EntityManager.h"
 #include "apps/world/entity/EntityStateFactory.h"
+#include "apps/world/entity/enemy/EnemyEntity.h"
 #include "apps/world/entity/effects/ProjectileEntity.h"
 #include "apps/world/session/PlayerSession.h"
 #include "core/assembly/InputTypes.h"
@@ -724,6 +725,37 @@ namespace mm2hack::test
             player.SetLadderService(&ladder);
             player.SetScrollContext(&scroll_rules, 0);
             player.SetViewBounds({ -10'000.0, 10'000.0, -10'000.0, 10'000.0 });
+        }
+
+        void TestEnemyRestoreBoundaries(TestRunner& runner)
+        {
+            using namespace apps::world::entity::enemy;
+            animation::EnemyDefinition definition;
+            definition.animation.initial_state = "idle";
+            animation::AnimationState idle;
+            idle.id = "idle";
+            idle.clip.frames.push_back({0, animation::AnimationFrame::kHoldFrames});
+            definition.animation.states.push_back(idle);
+            animation::AnimationStatePlayer animator(definition.animation);
+            for (int i = 0; i < 100'000; ++i) animator.Tick({});
+            EnemyEntity source(EnemyKind::Met, {0,0}, 1, 0, &definition, 2);
+            auto state = source.CaptureState();
+            state.anim_state_elapsed = animator.StateElapsed();
+            std::ostringstream bytes;
+            core::save::StateWriter writer(bytes);
+            runner.Check(state.Save(writer), L"long enemy idle remains serializable");
+            EnemyEntity restored(state, 1, &definition, 2);
+            runner.Check(restored.IsAlive() && restored.CaptureState().anim_state_elapsed == 36'000,
+                L"long enemy idle restores");
+            state.anim_state_index = 123;
+            EnemyEntity invalid_state(state, 1, &definition, 2);
+            runner.Check(!invalid_state.IsAlive(), L"reject missing animation state");
+            state.anim_state_index = 0;
+            state.anim_frame_index = 123;
+            EnemyEntity invalid_frame(state, 1, &definition, 2);
+            runner.Check(!invalid_frame.IsAlive(), L"reject missing animation frame");
+            EnemyEntity missing_definition(source.CaptureState(), 1, nullptr, 2);
+            runner.Check(!missing_definition.IsAlive(), L"reject missing enemy definition");
         }
 
         void TestProjectileAppearanceRestoration(TestRunner& runner)
@@ -1652,6 +1684,7 @@ namespace mm2hack::test
             TestBgmTransportState(runner);
             TestSeTransportState(runner);
             TestSaveFileEnvelope(runner);
+            TestEnemyRestoreBoundaries(runner);
             TestProjectileAppearanceRestoration(runner);
             TestRestoredChargeInputReconciliation(runner);
             TestCorruptionValidation(runner);

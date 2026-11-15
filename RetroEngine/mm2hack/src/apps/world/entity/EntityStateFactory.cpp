@@ -12,11 +12,11 @@
 #include "apps/world/entity/avatar/PlayerEntity.h"
 #include "apps/world/entity/avatar/PlayerEntityState.h"
 #include "apps/world/entity/effects/ChargeEffectEntity.h"
-#include "apps/world/entity/enemy/EnemyEntity.h"
 #include "apps/world/entity/effects/ProjectileEntity.h"
 #include "apps/world/entity/effects/SlidingDustEffectEntity.h"
 #include "apps/world/entity/effects/SmallExplosionEffectEntity.h"
 #include "apps/world/entity/effects/SplashEffectEntity.h"
+#include "apps/world/entity/enemy/EnemyEntity.h"
 #include "apps/world/entity/hazards/BreakableBlockEntity.h"
 #include "core/save/StateIO.h"
 #include "EntityBase.h"
@@ -316,8 +316,10 @@ namespace mm2hack::apps::world::entity
             {
                 return nullptr;
             }
-            return std::make_unique<enemy::EnemyEntity>(
+            auto restored = std::make_unique<enemy::EnemyEntity>(
                 state, sprite_id, enemy_def, _assets.EnemyProjectileSprite());
+            if (!restored->IsAlive()) return nullptr;
+            return restored;
         }
         case EntityTypeId::SmallExplosionEffect:
         {
