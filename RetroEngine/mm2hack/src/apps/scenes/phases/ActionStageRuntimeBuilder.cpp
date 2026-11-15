@@ -148,5 +148,9 @@ namespace mm2hack::apps::scenes::phases
         }
 
         player->texture = 0;
+
+        // Enemies aren't spawned here: EnemySpawnDirector brings each one in
+        // as its placement point scrolls into view.
+        ctx.enemy_placements = def.enemy_placements;
     }
 }

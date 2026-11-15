@@ -7,6 +7,7 @@
 #include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/runtime/GameContext.h"
 #include "apps/systems/physics/CollisionLayer.h"
+#include "apps/systems/physics/IAttackInfo.h"
 #include "apps/systems/physics/TileAttribute.h"
 #include "apps/systems/scrolling/atomic/ScrollController.h"
 #include "apps/systems/scrolling/atomic/ScrollTypes.h"
@@ -42,9 +43,10 @@ namespace mm2hack::apps::world::entity::avatar
           _effects_id(effectsId),
           _charge_level1_id(chargeLevel1Id),
           _charge_level2_id(chargeLevel2Id),
-          _half{ 16.0, 16.0 }
+          _half{ 16.0, 16.0 },
+          _health(PlayerVitalityTuning{}.maxHp, systems::combat::DamageTable::Neutral())
     {
-        _attackAction = std::make_unique<states::AttackActionState>(weaponId);
+        _attackAction = std::make_unique<states::AttackActionState>();
         SetTuning(PlayerTuning{});
     }
 
@@ -58,6 +60,7 @@ namespace mm2hack::apps::world::entity::avatar
         return _attackAction != nullptr && _frame_output.events.empty() &&
             !_frame_output.projectile.has_value() &&
             !_frame_output.splashEffect.has_value() &&
+            !_pending_knockback_hit &&
             _scroll_page_index <= 65'535;
     }
 
@@ -66,6 +69,9 @@ namespace mm2hack::apps::world::entity::avatar
         return PlayerEntityState{
             .kinematic = CaptureKinematicState(),
             .collidable = _collidable,
+            .hp = _health.CurrentHP(),
+            .invincible_frames_remaining = _invincible_frames_remaining,
+            .damage_effect = _damage_effect,
             .on_ground = onGround,
             .facing = facingLR,
             .base_texture = baseTexture,
@@ -99,7 +105,16 @@ namespace mm2hack::apps::world::entity::avatar
             return false;
         }
 
+        const systems::combat::HealthComponentState health_state{ PlayerVitalityTuning{}.maxHp, state.hp };
+        if (!_health.RestoreState(health_state, systems::combat::DamageTable::Neutral()))
+        {
+            return false;
+        }
+
         _collidable = state.collidable;
+        _invincible_frames_remaining = state.invincible_frames_remaining;
+        _damage_effect = state.damage_effect;
+        _pending_knockback_hit = false;
         onGround = state.on_ground;
         facingLR = state.facing;
         baseTexture = state.base_texture;
@@ -126,6 +141,8 @@ namespace mm2hack::apps::world::entity::avatar
         if (!IsAlive()) return;
 
         PlayerContext cx = makeContext_();
+        consumePendingHit_(cx, _environment_controller.CurrentTuning());
+        tickInvincibility_();
         refreshProbes_(cx);
         const PlayerEnvironmentUpdate environment = processEnvironment_();
 
@@ -141,7 +158,7 @@ namespace mm2hack::apps::world::entity::avatar
         return PlayerContext{
             pos, vel,
             onGround, /* justLanded */ false, /* isHitCeiling */ false, /* prevOnGround */ onGround, facingLR,
-            baseTexture, /* textureAdd */ 0, _anime_stepper, /* probes */ _probes, /* prelimProbes */ _probes,
+            baseTexture, /* textureAdd */ 0, /* damageEffectTile */ -1, _anime_stepper, /* probes */ _probes, /* prelimProbes */ _probes,
             _page_origin_px, _terrain_probe, _ladder_service, /* lockClimbMove */ false, _v_bounds, _scroll_rules, _scroll_page_index,
             /* pendingFixedScroll */ { _fixed_scroll_available, ScrollDir::None, 0.0 },
             /* jumpEdge */ false, /* dashEdge */ false, _frame_output
@@ -191,7 +208,15 @@ namespace mm2hack::apps::world::entity::avatar
             _dash_buffered = true;
         }
 
-        _attackAction->PreUpdate(cx, _input, _entityContext.canSpawnProjectile);
+        // Attack input/pose is entirely suppressed while a forced reaction
+        // (knockback) owns the player -- "no operations at all" per spec,
+        // not just locomotion. Without this gate, PreUpdate()/PostUpdate()
+        // would keep reading input and could still fire a buffered shot.
+        const bool control_locked = IsControlLocked();
+        if (!control_locked)
+        {
+            _attackAction->PreUpdate(cx, _input, _entityContext.canSpawnProjectile);
+        }
 
         if (!skipPhysics)
         {
@@ -202,14 +227,17 @@ namespace mm2hack::apps::world::entity::avatar
             _state_machine.Update(cx, _input, tuning, dt);
         }
 
-        auto action = _attackAction->PostUpdate(cx, _input, _attack_tuning, dt);
-        _charge_status = cx.output.charge;
-        cx.textureAdd += action.textureAdd;
-        cx.lockClimbMove = cx.lockClimbMove || action.lockClimbMove;
-        _rock_buster = action.rockBuster;
-        if (action.spawnProjectile.has_value())
+        if (!control_locked)
         {
-            _frame_output.projectile = std::move(action.spawnProjectile);
+            auto action = _attackAction->PostUpdate(cx, _input, _attack_tuning, dt);
+            _charge_status = cx.output.charge;
+            cx.textureAdd += action.textureAdd;
+            cx.lockClimbMove = cx.lockClimbMove || action.lockClimbMove;
+            _rock_buster = action.rockBuster;
+            if (action.spawnProjectile.has_value())
+            {
+                _frame_output.projectile = std::move(action.spawnProjectile);
+            }
         }
 
         _state_machine.CommitTransition(cx, _input, tuning);
@@ -230,6 +258,8 @@ namespace mm2hack::apps::world::entity::avatar
         baseTexture = cx.basePose;
         attackTexture = cx.textureAdd;
         facingLR = cx.facingLR;
+        _damage_effect.visible = cx.damageEffectTile >= 0;
+        _damage_effect.texture = cx.damageEffectTile;
         composeFinalTexture_();
     }
 
@@ -288,28 +318,41 @@ namespace mm2hack::apps::world::entity::avatar
 
         const auto render_sprite_id = renderSpriteId_();
         auto& sprites = res.GetSpriteManager();
-        if (render_sprite_id == _id)
+        const bool visible_this_frame = isVisibleThisFrame_();
+        if (visible_this_frame)
         {
-            sprites.UseById(_id, texture, static_cast<int>(screenPos.x), static_cast<int>(screenPos.y));
-        }
-        else
-        {
-            sprites.UseByIdVariant(render_sprite_id, 0, texture, static_cast<int>(screenPos.x), static_cast<int>(screenPos.y));
-        }
-
-        // Draw rock buster arm if visible
-        if (_rock_buster.visible)
-        {
-            const Vec2 armWorldPos = pos + _rock_buster.offset;
-            const auto armScreenPos = toScreenPos(armWorldPos);
             if (render_sprite_id == _id)
             {
-                sprites.UseById(_id, _rock_buster.armTexture, static_cast<int>(armScreenPos.x), static_cast<int>(armScreenPos.y));
+                sprites.UseById(_id, texture, static_cast<int>(screenPos.x), static_cast<int>(screenPos.y));
             }
             else
             {
-                sprites.UseByIdVariant(render_sprite_id, 0, _rock_buster.armTexture, static_cast<int>(armScreenPos.x), static_cast<int>(armScreenPos.y));
+                sprites.UseByIdVariant(render_sprite_id, 0, texture, static_cast<int>(screenPos.x), static_cast<int>(screenPos.y));
             }
+
+            // Draw rock buster arm if visible
+            if (_rock_buster.visible)
+            {
+                const Vec2 armWorldPos = pos + _rock_buster.offset;
+                const auto armScreenPos = toScreenPos(armWorldPos);
+                if (render_sprite_id == _id)
+                {
+                    sprites.UseById(_id, _rock_buster.armTexture, static_cast<int>(armScreenPos.x), static_cast<int>(armScreenPos.y));
+                }
+                else
+                {
+                    sprites.UseByIdVariant(render_sprite_id, 0, _rock_buster.armTexture, static_cast<int>(armScreenPos.x), static_cast<int>(armScreenPos.y));
+                }
+            }
+        }
+
+        // Damage-reaction head effect (EFFECT01/_effects_id sheet), independent
+        // of the blink above -- only active during the 28-frame knockback itself.
+        if (_damage_effect.visible && _effects_id != static_cast<SpriteManagerId>(-1))
+        {
+            const Vec2 kDamageEffectOffset{ 0.0, -20.0 }; // A few px above the sprite's own paint; first-pass guess, expect tuning.
+            const auto effectScreenPos = toScreenPos(pos + kDamageEffectOffset);
+            sprites.UseById(_effects_id, _damage_effect.texture, static_cast<int>(effectScreenPos.x), static_cast<int>(effectScreenPos.y));
         }
     }
 
@@ -319,8 +362,11 @@ namespace mm2hack::apps::world::entity::avatar
 
     PlayerEntity::RectF PlayerEntity::Bounds() const
     {
-        return { pos.x - _half.x, pos.y - _half.y,
-                 pos.x + _half.x, pos.y + _half.y };
+        // RectF is {x, y, w, h}, not {left, top, right, bottom} -- width/height must be
+        // the full box size (2 * half-extent), not an absolute coordinate.
+        // Deliberately _hitbox_half, not _half (the sprite tile's own half-size)
+        // -- see _hitbox_half's declaration comment.
+        return { pos.x - _hitbox_half.x, pos.y - _hitbox_half.y, _hitbox_half.x * 2.0, _hitbox_half.y * 2.0 };
     }
 
     bool PlayerEntity::IsCollidable() const noexcept { return _collidable; }
@@ -337,8 +383,66 @@ namespace mm2hack::apps::world::entity::avatar
 
     void PlayerEntity::OnEntityCollision(IEntity& other)
     {
-        (void)other;
-        // TODO: Item acquisition, enemy damage, etc. goes here
+        // TODO: Item acquisition still goes here.
+
+        if (!IsAlive()) return;
+
+        // Mirrors EnemyEntity::OnEntityCollision()'s shape: only a collider
+        // carrying an attack payload (an enemy projectile today) can hurt the
+        // player. Deliberately NOT calling Kill() on a lethal ApplyAttack()
+        // result yet -- HealthComponent clamps at 0 and IsDead() reports
+        // true, but what happens next (a miss, lives, respawn) is its own
+        // later step; for now the player simply stays alive at 0 HP.
+        auto* attack = dynamic_cast<systems::physics::IAttackInfo*>(&other);
+        if (attack == nullptr) return;
+
+        const int hp_before = _health.CurrentHP();
+        ApplyAttack(*attack);
+        if (_health.CurrentHP() >= hp_before) return; // Fully resisted/immune -- no reaction.
+
+        // Knockback/invincibility start immediately (both are plain field
+        // writes with no PlayerContext dependency); the locomotion state
+        // machine transition itself needs a PlayerContext, so that part is
+        // deferred to the top of the next Update() -- see consumePendingHit_().
+        _pending_knockback_hit = true;
+        _invincible_frames_remaining = kInvincibleFrames;
+        _collidable = false;
+    }
+
+    bool PlayerEntity::ApplyAttack(const systems::physics::IAttackInfo& attack) noexcept
+    {
+        return _health.ApplyAttack(attack);
+    }
+
+    void PlayerEntity::consumePendingHit_(PlayerContext& cx, const PlayerTuning& tuning) noexcept
+    {
+        if (!_pending_knockback_hit) return;
+        _pending_knockback_hit = false;
+
+        _attackAction->Cancel(); // Don't let an in-progress attack pose leak into the knockback tile.
+        _rock_buster = {};       // Hide the Buster arm immediately -- updateActions_() won't touch this while locked.
+        _charge_status = {};
+        _state_machine.ForceTransition(AvatarStatus::Setback, cx, _input, tuning);
+    }
+
+    void PlayerEntity::tickInvincibility_() noexcept
+    {
+        if (_invincible_frames_remaining > 0)
+        {
+            --_invincible_frames_remaining;
+        }
+        _collidable = (_invincible_frames_remaining == 0);
+    }
+
+    bool PlayerEntity::isVisibleThisFrame_() const noexcept
+    {
+        constexpr std::uint8_t kBlinkWindowFrames = kInvincibleFrames - 28; // Frames 29-84: controllable + blinking.
+        if (_invincible_frames_remaining == 0 || _invincible_frames_remaining > kBlinkWindowFrames)
+        {
+            return true; // Not invincible, or still mid-knockback (solid, no blink).
+        }
+        const std::uint8_t blink_elapsed = kBlinkWindowFrames - _invincible_frames_remaining;
+        return (blink_elapsed / 2) % 2 == 0;
     }
 
     IEntity& PlayerEntity::OwnerEntity() noexcept { return *this; }

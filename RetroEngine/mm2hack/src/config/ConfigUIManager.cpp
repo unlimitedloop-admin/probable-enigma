@@ -211,6 +211,7 @@ namespace mm2hack::config
         WritePrivateProfileString(L"Hud", L"ShowFrameTime", config.showFrameTime ? L"1" : L"0", path.c_str());
         WritePrivateProfileString(L"Hud", L"ShowScrollLine", config.showScrollLine ? L"1" : L"0", path.c_str());
         WritePrivateProfileString(L"Hud", L"ShowPlayerPosition", config.showPlayerPosition ? L"1" : L"0", path.c_str());
+        WritePrivateProfileString(L"Hud", L"ShowHitboxes", config.showHitboxes ? L"1" : L"0", path.c_str());
 
     }
 
@@ -226,6 +227,8 @@ namespace mm2hack::config
         config.showScrollLine = (_wtoi(buffer) != 0);
         GetPrivateProfileString(L"Hud", L"ShowPlayerPosition", L"0", buffer, 32, path.c_str());
         config.showPlayerPosition = (_wtoi(buffer) != 0);
+        GetPrivateProfileString(L"Hud", L"ShowHitboxes", L"0", buffer, 32, path.c_str());
+        config.showHitboxes = (_wtoi(buffer) != 0);
 
         // Cache the loaded configuration.
         _cachedHudConfig = config;

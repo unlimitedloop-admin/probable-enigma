@@ -156,17 +156,58 @@ namespace mm2hack::apps::systems::audio
     {
         for (const auto& [channel_index, name] : _channelToSeName)
         {
-            (void)name;
             if (_seChannels.IsPlaying(channel_index))
             {
                 _seChannels.Pause(channel_index);
-                _pausedVoices[static_cast<std::size_t>(channel_index)] = true;
+                const auto index = static_cast<std::size_t>(channel_index);
+                _pausedVoices[index] = true;
+
+                // The Famicom has exactly one physical line per logical voice: a
+                // paused (silent) SE must give that voice back to BGM, not just go
+                // quiet while still blocking it. Resume() reclaims it below before
+                // unpausing, so BGM ducks back out the instant the SE is audible
+                // again.
+                _voiceArbiter.Release(static_cast<ApuVoice>(index), name);
             }
         }
+        applyBgmOwnership_();
     }
 
     void SeManager::Resume()
     {
+        // Reclaim ownership first, one atomic Acquire() per SE name (exactly like
+        // PlaySe() would) so a multi-voice SE gets all its voices back together
+        // rather than one call displacing the voice(s) a previous call just
+        // reacquired for the same name.
+        std::unordered_set<std::wstring> reacquired;
+        for (const auto& [channel_index, name] : _channelToSeName)
+        {
+            if (!_pausedVoices[static_cast<std::size_t>(channel_index)] ||
+                !reacquired.insert(name).second)
+            {
+                continue;
+            }
+
+            const auto data_it = _seData.find(name);
+            if (data_it == _seData.end())
+            {
+                continue;
+            }
+
+            const auto& se = data_it->second;
+            std::vector<ApuVoiceClaim> claims;
+            claims.reserve(se.voices.size());
+            for (std::size_t i = 0; i < se.voices.size(); ++i)
+            {
+                claims.push_back({ se.voices[i], se.priority[i] });
+            }
+            // Nothing else could have claimed these voices while everything was
+            // paused together, so this is expected to always succeed; if it
+            // somehow doesn't, the channel just stays silently paused rather than
+            // fighting whatever now legitimately owns the voice.
+            _voiceArbiter.Acquire(name, claims);
+        }
+
         for (const auto& [channel_index, name] : _channelToSeName)
         {
             (void)name;
@@ -177,6 +218,7 @@ namespace mm2hack::apps::systems::audio
                 _pausedVoices[index] = false;
             }
         }
+        applyBgmOwnership_();
     }
 
     void SeManager::Update()
@@ -248,27 +290,25 @@ namespace mm2hack::apps::systems::audio
 
         for (std::size_t voice_index = 0; voice_index < kApuVoiceCount; ++voice_index)
         {
-            const ApuVoice voice = static_cast<ApuVoice>(voice_index);
-            const ApuVoiceOwner* owner = _voiceArbiter.GetOwner(voice);
-            if (owner == nullptr || captured_names.contains(owner->name)) continue;
+            const auto channel = _channelToSeName.find(static_cast<int>(voice_index));
+            if (channel == _channelToSeName.end()) continue;
+            const auto& name = channel->second;
+            if (!captured_names.emplace(name).second) continue;
 
-            const auto data_it = _seData.find(owner->name);
+            const auto data_it = _seData.find(name);
             if (data_it == _seData.end()) return false;
             const SeData& data = data_it->second;
-            captured_names.emplace(owner->name);
             if (data.restorePolicy != SeRestorePolicy::Continuous) continue;
 
             ContinuousSeTransportState instance{};
-            instance.name = owner->name;
+            instance.name = name;
             bool paused = false;
             bool pause_status_set = false;
             for (const ApuVoice configured_voice : data.voices)
             {
                 const std::size_t index = ToIndex(configured_voice);
-                const ApuVoiceOwner* configured_owner = _voiceArbiter.GetOwner(configured_voice);
                 const auto channel_it = _channelToSeName.find(static_cast<int>(index));
-                if (configured_owner == nullptr || configured_owner->name != owner->name ||
-                    channel_it == _channelToSeName.end() || channel_it->second != owner->name)
+                if (channel_it == _channelToSeName.end() || channel_it->second != name)
                 {
                     return false;
                 }
@@ -343,6 +383,7 @@ namespace mm2hack::apps::systems::audio
                 {
                     _seChannels.Pause(static_cast<int>(index));
                     _pausedVoices[index] = true;
+                    _voiceArbiter.Release(voice_state.voice, instance.name);
                 }
             }
         }

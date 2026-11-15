@@ -5,6 +5,7 @@
 #include <limits>
 #include <span>
 
+#include "apps/systems/physics/ICollider.h"
 #include "apps/systems/view/RenderContext.h"
 #include "apps/systems/view/ViewState.h"
 #include "core/save/StateIO.h"
@@ -21,7 +22,7 @@ namespace mm2hack::apps::world::entity
 
         bool IsKnownEntityType(EntityTypeId type) noexcept
         {
-            return type >= EntityTypeId::Player && type <= EntityTypeId::SplashEffect;
+            return type >= EntityTypeId::Player && type <= EntityTypeId::Enemy;
         }
     }
 
@@ -215,6 +216,41 @@ namespace mm2hack::apps::world::entity
         }
     }
 
+    void EntityManager::CollectColliders(std::vector<systems::physics::ICollider*>& out) const
+    {
+        out.clear();
+        out.reserve(_entities.size());
+        for (const auto& e : _entities)
+        {
+            if (!e || !e->IsAlive())
+            {
+                continue;
+            }
+
+            if (auto* c = dynamic_cast<systems::physics::ICollider*>(e.get()))
+            {
+                out.push_back(c);
+            }
+        }
+    }
+
+    void EntityManager::KillAllOfTypes(std::span<const EntityTypeId> types) noexcept
+    {
+        for (auto& e : _entities)
+        {
+            if (!e || !e->IsAlive())
+            {
+                continue;
+            }
+
+            const auto id = e->StateTypeId();
+            if (std::find(types.begin(), types.end(), id) != types.end())
+            {
+                e->Kill();
+            }
+        }
+    }
+
     void EntityManager::Clear() noexcept
     {
         _pending_add.clear();
@@ -335,6 +371,25 @@ namespace mm2hack::apps::world::entity
             _entities.emplace_back(std::move(e));
         }
         _pending_add.clear();
+    }
+
+    IEntity* EntityManager::FindByInstanceId(EntityInstanceId id) noexcept
+    {
+        if (id == 0)
+        {
+            return nullptr;
+        }
+        for (auto* list : { &_entities, &_pending_add })
+        {
+            for (auto& e : *list)
+            {
+                if (e && e->StateInstanceId() == id)
+                {
+                    return e.get();
+                }
+            }
+        }
+        return nullptr;
     }
 
     void EntityManager::removeDead_()

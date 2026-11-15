@@ -66,6 +66,12 @@ namespace mm2hack::apps::rendering::sprite
         if (!_catalog.IsValid(id)) return 0; return _catalog.GetAtlas(id).VariantCount();
     }
 
+    int SpriteManager::FrameCountById(Id id) const
+    {
+        if (!_catalog.IsValid(id)) return 0;
+        return _catalog.GetAtlas(id).FrameCount();
+    }
+
     void SpriteManager::SetGlobalVariantClamped(int v) noexcept
     {
         // clamp to [0, MaxVariant()]

@@ -6,8 +6,10 @@
 #include <filesystem>
 
 #include "../resource.h"
+#include "apps/resources/ResourceManager.h"
 #include "apps/runtime/GameContext.h"
 #include "apps/sequence/SequenceManager.h"
+#include "apps/systems/audio/AudioManager.h"
 #include "config/ConfigUIManager.h"
 #include "config/HudConfig.h"
 #include "core/assembly/ScreenshotManager.h"
@@ -85,6 +87,9 @@ namespace mm2hack::core::winapi
         CheckMenuItem(hMenu, ID_HUD_PLAYERPOSITION,
             config::ConfigUIManager::GetCurrentHudConfig().showPlayerPosition ? MF_BYCOMMAND | MF_CHECKED : MF_BYCOMMAND | MF_UNCHECKED
         );  // Set the player position display state based on the HUD configuration.
+        CheckMenuItem(hMenu, ID_HUD_HITBOXES,
+            config::ConfigUIManager::GetCurrentHudConfig().showHitboxes ? MF_BYCOMMAND | MF_CHECKED : MF_BYCOMMAND | MF_UNCHECKED
+        );  // Set the hit box outline display state based on the HUD configuration.
     }
 
     void HandleDestroy(HWND hWnd)
@@ -198,6 +203,8 @@ namespace mm2hack::core::winapi
                 }
                 if (seq.LoadState(data))
                 {
+                    // The menu only loads while paused. The restored audio can be playing.
+                    apps::runtime::GameContext::GetInstance().GetResourceManager().GetAudioManager().Pause();
                     MessageBox(hWnd, (L"Loaded from " + path).c_str(), L"Load", MB_OK);
                     break;
                 }
@@ -338,6 +345,19 @@ namespace mm2hack::core::winapi
             // Add check/uncheck the HUD => Player Position menu item.
             HMENU hMenu = GetMenu(hWnd);
             CheckMenuItem(hMenu, ID_HUD_PLAYERPOSITION, MF_BYCOMMAND | (newConfig.showPlayerPosition ? MF_CHECKED : MF_UNCHECKED));
+            break;
+        }
+
+        case ID_HUD_HITBOXES:
+        {
+            using confUI = config::ConfigUIManager;
+            auto& hudConfig = confUI::GetCurrentHudConfig();
+            config::HudConfig newConfig = hudConfig;
+            newConfig.showHitboxes = !newConfig.showHitboxes;
+            confUI::SetCurrentHudConfig(newConfig);
+            // Add check/uncheck the HUD => Hit boxes menu item.
+            HMENU hMenu = GetMenu(hWnd);
+            CheckMenuItem(hMenu, ID_HUD_HITBOXES, MF_BYCOMMAND | (newConfig.showHitboxes ? MF_CHECKED : MF_UNCHECKED));
             break;
         }
 

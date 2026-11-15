@@ -11,14 +11,22 @@
 #include "apps/world/entity/EntityBase.h"
 
 #include <cstdint>
+#include <utility>
 
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/rendering/sprite/SpriteManager.h"
+#include "apps/systems/physics/CollisionLayer.h"
+#include "apps/systems/physics/IAttackInfo.h"
+#include "apps/systems/physics/ICollider.h"
+#include "apps/systems/physics/ITerrainProbe.h"
+#include "apps/systems/physics/TileAttribute.h"
 #include "apps/systems/view/RenderContext.h"
 #include "apps/systems/view/ViewState.h"
 #include "apps/world/entity/common/SpawnProjectileCommand.h"
 #include "apps/world/entity/IEntity.h"
 #include "core/save/StateIO.h"
+
+namespace mm2hack::apps::scenes { struct IStageAssetProvider; }
 
 namespace mm2hack::apps::world::entity::effects
 {
@@ -26,6 +34,7 @@ namespace mm2hack::apps::world::entity::effects
     {
         EntityKinematicState kinematic{};
         systems::view::Layer draw_layer{ systems::view::Layer::Effects };
+        common::ProjectileAppearance appearance{ common::ProjectileAppearance::Invalid };
         std::int32_t base_texture{};
         common::ProjectileVisual visual{ common::ProjectileVisual::Normal };
         std::int32_t animation_frames{ 1 };
@@ -33,6 +42,12 @@ namespace mm2hack::apps::world::entity::effects
         double lifetime_seconds{ 1.0 };
         double age_seconds{};
         std::uint32_t elapsed_ticks{};
+        std::int32_t power{ 0x01 };
+        foundation::math::Vec2 hit_half_size{ 2.0, 2.0 };
+        systems::physics::CollisionLayer collision_layer{ systems::physics::CollisionLayer::ProjectilePlayer };
+        systems::physics::WeaponId weapon{ systems::physics::WeaponId::Buster };
+        bool terrain_collision_enabled{ false };
+        bool deflected{ false };
 
         bool Save(core::save::StateWriter& writer) const;
         bool Load(core::save::StateReader& reader);
@@ -40,17 +55,23 @@ namespace mm2hack::apps::world::entity::effects
     };
 
     // Entity representing a projectile (bullet, shot, etc.)
-    class ProjectileEntity final : public EntityBase
+    class ProjectileEntity final : public EntityBase, public systems::physics::ICollider, public systems::physics::IAttackInfo
     {
-        using Layer = systems::view::Layer;
+        // NOTE: no `Layer` alias here -- it would collide with ICollider::Layer() below.
+        using RectF = foundation::math::RectF;
+        using Vec2 = foundation::math::Vec2;
+        using CollisionLayer = systems::physics::CollisionLayer;
+        using TileAttribute = systems::physics::TileAttribute;
 
     public:
-        static constexpr std::uint16_t kStateVersion{ 1 };
+        static constexpr std::uint16_t kStateVersion{ 5 };   // 5: persistent appearance ID; older records rejected
 
-        explicit ProjectileEntity(const common::SpawnProjectileCommand& cmd);
+        ProjectileEntity(const common::SpawnProjectileCommand& cmd, const scenes::IStageAssetProvider& assets);
         ProjectileEntity(
             const ProjectileEntityState& state,
-            rendering::sprite::SpriteManager::Id sprite_id);
+            const scenes::IStageAssetProvider& assets);
+
+        [[nodiscard]] rendering::sprite::SpriteManager::Id SpriteId() const noexcept { return _id; }
 
         // Get drawing layer (IRenderable)
         systems::view::Layer DrawLayer() const noexcept override;
@@ -64,10 +85,61 @@ namespace mm2hack::apps::world::entity::effects
         [[nodiscard]] ProjectileEntityState CaptureState() const noexcept;
         bool RestoreState(const ProjectileEntityState& state) noexcept;
 
-    private:
-        Layer _draw_layer{ Layer::Actors };             // Drawing layer
-        foundation::math::Vec2 _half{};                 // Half-size of the bounding box
+        // Wired externally after construction/restoration (mirrors EnemyEntity::
+        // SetTerrainProbe()) -- not part of saved state. Without it, Update()
+        // simply skips terrain collision for the frame (the shot flies through walls).
+        void SetTerrainProbe(const systems::physics::ITerrainProbe* terrain) noexcept { _terrain = terrain; }
 
+        // ICollider
+        IEntity& OwnerEntity() noexcept override { return *this; }
+        const IEntity& OwnerEntity() const noexcept override { return *this; }
+        RectF Bounds() const override;
+        // A deflected shot is spent: it flies off harmless and touches nothing
+        // more (neither the deflector again nor anything else on its way).
+        bool IsCollidable() const noexcept override { return IsAlive() && !_deflected; }
+        CollisionLayer Layer() const noexcept override { return _collision_layer; }
+        void OnTileCollision(const Vec2& normal, TileAttribute attr) override;
+        void OnEntityCollision(IEntity& other) override;
+
+        // Drains (and clears) whether this shot deflected off an
+        // IDeflector-implementing collider since the last call. Polled by
+        // AbstractActionPhase right after collision resolution to play
+        // "defend_shot" once per frame -- this entity has no AudioManager
+        // access of its own, same reasoning as every other entity-side SE.
+        // Not saved (see CanCaptureState()-style reasoning elsewhere): this
+        // flag never survives more than a fraction of a frame in practice.
+        [[nodiscard]] bool ConsumeDeflected() noexcept
+        {
+            return std::exchange(_pending_deflected, false);
+        }
+
+        // IAttackInfo
+        [[nodiscard]] int AttackPower() const noexcept override { return _power; }
+        // A charged Rock Buster shot is still the Buster -- charge level only
+        // changes AttackPower(), not the weapon (see SpawnProjectileCommand::weapon).
+        [[nodiscard]] systems::physics::WeaponId Weapon() const noexcept override { return _weapon; }
+
+    private:
+        // Samples the terrain at the hit box's leading edge (in the direction of
+        // travel) and reports whether it has run into a solid tile. No-op (false)
+        // when no ITerrainProbe has been wired -- see SetTerrainProbe().
+        [[nodiscard]] bool checkTerrainCollision_() const;
+        // Redirects this shot's velocity off an IDeflector instead of dying --
+        // keeps its speed, reverses horizontal direction (back the way it
+        // came), and arcs it upward. The shot is then spent: _deflected turns
+        // its collision off (IsCollidable()), and a player shot additionally
+        // switches to the deflected graphic.
+        void deflect_() noexcept;
+        // Whether Render() draws the deflected graphic: deflected, and a
+        // player shot (the only kind whose sheet has those tiles).
+        [[nodiscard]] bool usesDeflectedGraphic_() const noexcept;
+
+    private:
+        systems::view::Layer _draw_layer{ systems::view::Layer::Actors }; // Drawing layer
+        foundation::math::Vec2 _half{};                 // Half-size of the sprite's draw footprint (rendering only)
+
+        const scenes::IStageAssetProvider& _assets;
+        common::ProjectileAppearance _appearance{ common::ProjectileAppearance::Invalid };
         rendering::sprite::SpriteManager::Id _id{};     // Object sprite id
         int _base_texture{ 0 };                         // Base texture index
         common::ProjectileVisual _visual{ common::ProjectileVisual::Normal };
@@ -77,5 +149,25 @@ namespace mm2hack::apps::world::entity::effects
         double _life_sec{ 1.0 };                        // Lifetime in seconds
         double _age_sec{ 0.0 };                         // Age in seconds
         std::uint32_t _elapsed_ticks{ 0 };
+
+        int _power{ 0x01 };                             // Attack power carried on contact
+        foundation::math::Vec2 _hit_half_size{ 2.0, 2.0 }; // Half-size of the attack hit judgement box (independent of _half)
+        CollisionLayer _collision_layer{ CollisionLayer::ProjectilePlayer };
+        systems::physics::WeaponId _weapon{ systems::physics::WeaponId::Buster };
+        bool _terrain_collision_enabled{ false };       // Per-shot opt-in; see SpawnProjectileCommand::terrainCollisionEnabled
+
+        // Set by deflect_(), for good: the shot has bounced off a deflector, so
+        // IsCollidable() is false from then on. (This is also what stops it
+        // re-deflecting every frame while it still overlaps the deflector's
+        // Bounds() -- which used to take a few frames' grace period.) For the
+        // player's own shots Render() additionally draws the small "bounced"
+        // tile from the same sheet (base_texture + 2 for a normal / charge-
+        // level-1 shot, + 3 for charge level 2) instead of the shot graphic;
+        // it's a single symmetric 16x16, so it's the same whichever way the
+        // shot now flies. Saved.
+        bool _deflected{ false };
+
+        const systems::physics::ITerrainProbe* _terrain{ nullptr }; // Not saved; re-wired externally
+        bool _pending_deflected{ false };               // Not saved; see ConsumeDeflected()
     };
 }

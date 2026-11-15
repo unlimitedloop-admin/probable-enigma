@@ -16,6 +16,7 @@
 #include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/resources/bg/BGRoomBank.h"
 #include "apps/systems/audio/AudioManager.h"
+#include "apps/world/entity/enemy/animation/EnemyDefinitionCatalog.h"
 #include "ResourceFadeBindings.h"
 
 namespace mm2hack::apps::resources
@@ -30,6 +31,7 @@ namespace mm2hack::apps::resources
         using FontTileManager = rendering::fonts::FontTileManager;
         using AudioManager  = apps::systems::audio::AudioManager;
         using FadeIOTexture = rendering::effects::FadeIOTexture;
+        using EnemyDefinitionCatalog = apps::world::entity::enemy::animation::EnemyDefinitionCatalog;
 
     public:
         ResourceManager()
@@ -56,6 +58,8 @@ namespace mm2hack::apps::resources
         const FontTileManager& GetFontTileManager() const noexcept { return _fontTileManager; }
         AudioManager& GetAudioManager() noexcept { return _audioManager; }
         const AudioManager& GetAudioManager() const noexcept { return _audioManager; }
+        EnemyDefinitionCatalog& GetEnemyDefinitionCatalog() noexcept { return _enemyDefinitions; }
+        const EnemyDefinitionCatalog& GetEnemyDefinitionCatalog() const noexcept { return _enemyDefinitions; }
 
         // Releases all resources managed by the ResourceManager
         void Release();
@@ -68,6 +72,7 @@ namespace mm2hack::apps::resources
         BGRoomBank _bgRoomBank;             // Instance of BGRoomBank
         FontTileManager _fontTileManager;   // Instance of FontTileManager
         AudioManager  _audioManager;        // Instance of AudioManager
+        EnemyDefinitionCatalog _enemyDefinitions; // Per-EnemyKind animation/palette definitions
 
         ResourceFadeBindings _fades;        // Manages fade-in/out effects for sprites and BG tiles
     };

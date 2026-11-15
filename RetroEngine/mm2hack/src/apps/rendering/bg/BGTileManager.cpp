@@ -202,7 +202,7 @@ namespace mm2hack::apps::rendering::bg
 
                 if (palette_variant >= 0)
                 {
-                    atlas.DrawTilePaletteVariant(static_cast<int>(drawing_tile), palette_variant, draw_x, draw_y);
+                    atlas.DrawTilePaletteVariant(static_cast<int>(drawing_tile), palette_variant, _global_variant, draw_x, draw_y);
                 }
                 else
                 {

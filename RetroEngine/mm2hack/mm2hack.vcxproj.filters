@@ -83,6 +83,7 @@
     <ClCompile Include="src\apps\scenes\sub-scenes\90-BackdoorMenu\BackdoorMenu.cpp" />
     <ClCompile Include="src\apps\rendering\fonts\FontTileManager.cpp" />
     <ClCompile Include="src\apps\scenes\sub-scenes\90-BackdoorMenu\BackdoorMenuPhase.cpp" />
+    <ClCompile Include="src\apps\scenes\sub-scenes\90-BackdoorMenu\SpriteTestPhase.cpp" />
     <ClCompile Include="src\apps\rendering\effects\FadeIOTexture.cpp" />
     <ClCompile Include="src\apps\scenes\PhaseFadeController.cpp" />
     <ClCompile Include="src\apps\vfx\cursor\TwinkleCursorAnimator.cpp" />
@@ -100,17 +101,27 @@
     <ClCompile Include="src\apps\systems\scrolling\atomic\ScrollController.cpp" />
     <ClCompile Include="src\apps\systems\physics\CollisionLayer.cpp" />
     <ClCompile Include="src\apps\systems\physics\CollisionSystem.cpp" />
+    <ClCompile Include="src\apps\systems\physics\SimpleGravityBody.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\PlayerEntity.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\PlayerEntityState.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\PlayerEnvironmentController.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\PlayerStateMachine.cpp" />
     <ClCompile Include="src\apps\world\entity\effects\ProjectileEntity.cpp" />
+    <ClCompile Include="src\apps\world\entity\hazards\BreakableBlockEntity.cpp" />
+    <ClCompile Include="src\apps\world\entity\enemy\EnemyEntity.cpp" />
+    <ClCompile Include="src\apps\world\entity\enemy\animation\EnemyDefinitionLoader.cpp" />
+    <ClCompile Include="src\apps\world\entity\enemy\animation\AnimationStatePlayer.cpp" />
+    <ClCompile Include="src\apps\world\entity\enemy\animation\EnemyDefinitionCatalog.cpp" />
+    <ClCompile Include="src\apps\systems\combat\HealthComponent.cpp" />
     <ClCompile Include="src\apps\world\entity\effects\SplashEffectEntity.cpp" />
+    <ClCompile Include="src\apps\world\entity\effects\SmallExplosionEffectEntity.cpp" />
+    <ClCompile Include="src\apps\world\entity\effects\MissBubbleEffectEntity.cpp" />
     <ClCompile Include="src\apps\world\entity\effects\SlidingDustEffectEntity.cpp" />
     <ClCompile Include="src\apps\world\entity\effects\ChargeEffectEntity.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\states\StandingState.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\states\RunningState.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\states\DashingState.cpp" />
+    <ClCompile Include="src\apps\world\entity\avatar\states\SetbackState.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\states\SlidingState.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\states\HoveringState.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\states\LaunchRunState.cpp" />
@@ -123,6 +134,9 @@
     <ClCompile Include="src\utils\decimal_decoder.cpp" />
     <ClCompile Include="src\apps\systems\physics\LadderService.cpp" />
     <ClCompile Include="src\apps\world\stage\RoomGraphAdapter.cpp" />
+    <ClCompile Include="src\apps\world\stage\StageDefinitionLoader.cpp" />
+    <ClCompile Include="src\apps\scenes\phases\EnemySpawnDirector.cpp" />
+    <ClCompile Include="src\apps\scenes\phases\combat_collision_presentation.cpp" />
     <ClCompile Include="src\apps\systems\scrolling\atomic\ScrollFreezeState.cpp" />
     <ClCompile Include="src\apps\systems\scrolling\atomic\FixedScrollDriver.cpp" />
     <ClCompile Include="src\apps\systems\scrolling\atomic\ScrollNeighborResolver.cpp" />
@@ -137,6 +151,7 @@
     <ClCompile Include="src\apps\world\entity\common\FrameGate.cpp" />
     <ClCompile Include="src\apps\world\entity\avatar\states\AttackActionState.cpp" />
     <ClCompile Include="src\apps\ui\productions\StageIntroUI.cpp" />
+    <ClCompile Include="src\apps\ui\hud\HealthMeterUI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mm2hack.props" />
@@ -277,6 +292,7 @@
     <ClInclude Include="src\apps\rendering\effects\FadeIOTexture.h" />
     <ClInclude Include="src\apps\resources\ResourceFadeBindings.h" />
     <ClInclude Include="src\apps\scenes\sub-scenes\90-BackdoorMenu\BackdoorMenuPhase.h" />
+    <ClInclude Include="src\apps\scenes\sub-scenes\90-BackdoorMenu\SpriteTestPhase.h" />
     <ClInclude Include="src\apps\scenes\PhaseFadeController.h" />
     <ClInclude Include="src\config\PathDefsJsonProps.h" />
     <ClInclude Include="src\apps\vfx\cursor\TwinkleCursorAnimator.h" />
@@ -292,6 +308,10 @@
     <ClInclude Include="src\apps\resources\bg\MapPageCache.h" />
     <ClInclude Include="src\apps\resources\bg\AddressScraper.h" />
     <ClInclude Include="src\apps\world\stage\RoomGraphAdapter.h" />
+    <ClInclude Include="src\apps\world\stage\StagePlacement.h" />
+    <ClInclude Include="src\apps\world\stage\StageDefinitionLoader.h" />
+    <ClInclude Include="src\apps\scenes\phases\EnemySpawnDirector.h" />
+    <ClInclude Include="src\apps\scenes\phases\combat_collision_presentation.h" />
     <ClInclude Include="src\apps\systems\scrolling\atomic\ScrollController.h" />
     <ClInclude Include="src\apps\systems\scrolling\atomic\ScrollTypes.h" />
     <ClInclude Include="src\apps\systems\scrolling\atomic\IScrollRuleProvider.h" />
@@ -310,12 +330,28 @@
     <ClInclude Include="src\apps\systems\physics\ICollider.h" />
     <ClInclude Include="src\apps\systems\physics\ITileMapProvider.h" />
     <ClInclude Include="src\apps\systems\physics\CollisionSystem.h" />
+    <ClInclude Include="src\apps\systems\physics\SimpleGravityBody.h" />
     <ClInclude Include="src\apps\world\entity\avatar\PlayerEntity.h" />
     <ClInclude Include="src\apps\world\entity\avatar\PlayerEntityState.h" />
     <ClInclude Include="src\apps\world\entity\avatar\PlayerEnvironmentController.h" />
     <ClInclude Include="src\apps\world\entity\avatar\PlayerStateMachine.h" />
     <ClInclude Include="src\apps\world\entity\effects\ProjectileEntity.h" />
+    <ClInclude Include="src\apps\world\entity\hazards\BreakableBlockEntity.h" />
+    <ClInclude Include="src\apps\world\entity\enemy\EnemyEntity.h" />
+    <ClInclude Include="src\apps\world\entity\enemy\animation\AnimationTypes.h" />
+    <ClInclude Include="src\apps\world\entity\enemy\animation\EnemyDefinitionLoader.h" />
+    <ClInclude Include="src\apps\world\entity\enemy\animation\AnimationStatePlayer.h" />
+    <ClInclude Include="src\apps\world\entity\enemy\animation\EnemyDefinitionCatalog.h" />
+    <ClInclude Include="src\apps\systems\physics\IAttackInfo.h" />
+    <ClInclude Include="src\apps\systems\physics\IDeflector.h" />
+    <ClInclude Include="src\apps\world\session\PlayerSession.h" />
+    <ClInclude Include="src\apps\systems\physics\WeaponId.h" />
+    <ClInclude Include="src\apps\systems\combat\DamageTable.h" />
+    <ClInclude Include="src\apps\systems\combat\IDamageable.h" />
+    <ClInclude Include="src\apps\systems\combat\HealthComponent.h" />
     <ClInclude Include="src\apps\world\entity\effects\SplashEffectEntity.h" />
+    <ClInclude Include="src\apps\world\entity\effects\SmallExplosionEffectEntity.h" />
+    <ClInclude Include="src\apps\world\entity\effects\MissBubbleEffectEntity.h" />
     <ClInclude Include="src\apps\world\entity\avatar\AvatarStatus.h" />
     <ClInclude Include="src\apps\world\entity\avatar\PlayerParams.h" />
     <ClInclude Include="src\apps\systems\physics\ILadderService.h" />
@@ -323,6 +359,7 @@
     <ClInclude Include="src\apps\world\entity\avatar\states\StandingState.h" />
     <ClInclude Include="src\apps\world\entity\avatar\states\RunningState.h" />
     <ClInclude Include="src\apps\world\entity\avatar\states\DashingState.h" />
+    <ClInclude Include="src\apps\world\entity\avatar\states\SetbackState.h" />
     <ClInclude Include="src\apps\world\entity\avatar\states\SlidingState.h" />
     <ClInclude Include="src\apps\world\entity\avatar\states\HoveringState.h" />
     <ClInclude Include="src\apps\world\entity\common\AnimeStepper.h" />
@@ -364,6 +401,8 @@
     <ClInclude Include="src\apps\world\entity\common\SpawnSplashEffectCommand.h" />
     <ClInclude Include="src\apps\world\entity\common\SpawnSlidingDustEffectCommand.h" />
     <ClInclude Include="src\apps\world\entity\common\SpawnChargeEffectCommand.h" />
+    <ClInclude Include="src\apps\world\entity\common\SpawnSmallExplosionEffectCommand.h" />
+    <ClInclude Include="src\apps\world\entity\common\SpawnMissBubbleEffectCommand.h" />
     <ClInclude Include="src\apps\world\entity\effects\SlidingDustEffectEntity.h" />
     <ClInclude Include="src\apps\world\entity\effects\ChargeEffectEntity.h" />
     <ClInclude Include="src\apps\world\entity\avatar\states\AttackActionState.h" />
@@ -372,6 +411,8 @@
     <ClInclude Include="src\apps\resources\assets\StageSpriteBank.h" />
     <ClInclude Include="src\apps\scenes\IStageAssetProvider.h" />
     <ClInclude Include="src\apps\ui\productions\StageIntroUI.h" />
+    <ClInclude Include="src\apps\ui\hud\HealthMeterUI.h" />
+    <ClInclude Include="src\utils\hex_parser.h" />
     <ClInclude Include="src\apps\resources\bg\BGPageHeader.h" />
     <ClInclude Include="src\apps\world\entity\common\FrameGate.h" />
     <ClInclude Include="src\apps\rendering\bg\BGTileAnimator.h" />

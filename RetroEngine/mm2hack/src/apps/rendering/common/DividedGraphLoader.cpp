@@ -11,71 +11,12 @@ namespace
 {
     using DivSettings = mm2hack::apps::rendering::common::DivSettings;
 
-    struct RGBA8 final
-    {
-        unsigned char r{ 0 };
-        unsigned char g{ 0 };
-        unsigned char b{ 0 };
-        unsigned char a{ 255 };
-    };
-
     [[nodiscard]] int mul_safe(int a, int b) noexcept
     {
         const long long value = 1LL * a * b;
         if (value > std::numeric_limits<int>::max()) return std::numeric_limits<int>::max();
         if (value < 0) return 0;
         return static_cast<int>(value);
-    }
-
-    [[nodiscard]] bool get_palette_256(int soft_image, std::array<RGBA8, 256>& out) noexcept
-    {
-        for (int i = 0; i < 256; ++i)
-        {
-            int r = 0;
-            int g = 0;
-            int b = 0;
-            int a = 255;
-            if (::DxLib::GetPaletteSoftImage(soft_image, i, &r, &g, &b, &a) != 0) return false;
-            out[static_cast<std::size_t>(i)] = RGBA8{
-                static_cast<unsigned char>(r),
-                static_cast<unsigned char>(g),
-                static_cast<unsigned char>(b),
-                static_cast<unsigned char>(a)
-            };
-        }
-        return true;
-    }
-
-    void set_palette_256(int soft_image, const std::array<RGBA8, 256>& palette) noexcept
-    {
-        for (int i = 0; i < 256; ++i)
-        {
-            const auto& color = palette[static_cast<std::size_t>(i)];
-            ::DxLib::SetPaletteSoftImage(soft_image, i, color.r, color.g, color.b, color.a);
-        }
-    }
-
-    void make_fade_palette(
-        const std::array<RGBA8, 256>& base,
-        int variant,
-        int variant_count,
-        std::array<RGBA8, 256>& out) noexcept
-    {
-        const int max_variant = std::max(variant_count - 1, 1);
-        const float scale = 1.0f - (std::clamp(variant, 0, max_variant) / static_cast<float>(max_variant));
-        for (std::size_t i = 0; i < base.size(); ++i)
-        {
-            const int r = static_cast<int>(std::lround(base[i].r * scale));
-            const int g = static_cast<int>(std::lround(base[i].g * scale));
-            const int b = static_cast<int>(std::lround(base[i].b * scale));
-            out[i] = RGBA8{
-                static_cast<unsigned char>(std::clamp(r, 0, 255)),
-                static_cast<unsigned char>(std::clamp(g, 0, 255)),
-                static_cast<unsigned char>(std::clamp(b, 0, 255)),
-                base[i].a
-            };
-            if (i == 0) out[i].a = 0;
-        }
     }
 
     void create_divided_graphs(
@@ -152,6 +93,57 @@ namespace
 
 namespace mm2hack::apps::rendering::common
 {
+    bool get_palette_256(int soft_image, Palette256& out) noexcept
+    {
+        for (int i = 0; i < 256; ++i)
+        {
+            int r = 0;
+            int g = 0;
+            int b = 0;
+            int a = 255;
+            if (::DxLib::GetPaletteSoftImage(soft_image, i, &r, &g, &b, &a) != 0) return false;
+            out[static_cast<std::size_t>(i)] = RGBA8{
+                static_cast<unsigned char>(r),
+                static_cast<unsigned char>(g),
+                static_cast<unsigned char>(b),
+                static_cast<unsigned char>(a)
+            };
+        }
+        return true;
+    }
+
+    void set_palette_256(int soft_image, const Palette256& palette) noexcept
+    {
+        for (int i = 0; i < 256; ++i)
+        {
+            const auto& color = palette[static_cast<std::size_t>(i)];
+            ::DxLib::SetPaletteSoftImage(soft_image, i, color.r, color.g, color.b, color.a);
+        }
+    }
+
+    void make_fade_palette(
+        const Palette256& base,
+        int variant,
+        int variant_count,
+        Palette256& out) noexcept
+    {
+        const int max_variant = std::max(variant_count - 1, 1);
+        const float scale = 1.0f - (std::clamp(variant, 0, max_variant) / static_cast<float>(max_variant));
+        for (std::size_t i = 0; i < base.size(); ++i)
+        {
+            const int r = static_cast<int>(std::lround(base[i].r * scale));
+            const int g = static_cast<int>(std::lround(base[i].g * scale));
+            const int b = static_cast<int>(std::lround(base[i].b * scale));
+            out[i] = RGBA8{
+                static_cast<unsigned char>(std::clamp(r, 0, 255)),
+                static_cast<unsigned char>(std::clamp(g, 0, 255)),
+                static_cast<unsigned char>(std::clamp(b, 0, 255)),
+                base[i].a
+            };
+            if (i == 0) out[i].a = 0;
+        }
+    }
+
     DividedGraphData load_divided_graph(
         const std::wstring& png_path,
         const std::wstring& json_path,

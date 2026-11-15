@@ -18,6 +18,7 @@
 #include "states/LandingState.h"
 #include "states/LaunchRunState.h"
 #include "states/RunningState.h"
+#include "states/SetbackState.h"
 #include "states/SlidingState.h"
 #include "states/StandingState.h"
 
@@ -38,6 +39,7 @@ namespace mm2hack::apps::world::entity::avatar
             case AvatarStatus::Laddering:
             case AvatarStatus::Sliding:
             case AvatarStatus::Dashing:
+            case AvatarStatus::Setback:
                 return true;
             default:
                 return false;
@@ -53,7 +55,10 @@ namespace mm2hack::apps::world::entity::avatar
             writer.WriteU8(sliding_elapsed_frames) &&
             writer.WriteU8(dashing_elapsed_frames) &&
             writer.WriteI32(static_cast<std::int32_t>(dashing_direction)) &&
-            writer.WriteBool(dash_jump_active);
+            writer.WriteBool(dash_jump_active) &&
+            writer.WriteU8(setback_elapsed_frames) &&
+            writer.WriteBool(setback_airborne) &&
+            writer.WriteBool(setback_rising);
     }
 
     bool PlayerStateMachineState::Load(core::save::StateReader& reader)
@@ -67,7 +72,10 @@ namespace mm2hack::apps::world::entity::avatar
             !reader.ReadU8(loaded.sliding_elapsed_frames) ||
             !reader.ReadU8(loaded.dashing_elapsed_frames) ||
             !reader.ReadI32(encoded_direction) ||
-            !reader.ReadBool(loaded.dash_jump_active))
+            !reader.ReadBool(loaded.dash_jump_active) ||
+            !reader.ReadU8(loaded.setback_elapsed_frames) ||
+            !reader.ReadBool(loaded.setback_airborne) ||
+            !reader.ReadBool(loaded.setback_rising))
         {
             return false;
         }
@@ -86,7 +94,8 @@ namespace mm2hack::apps::world::entity::avatar
     {
         return IsRegisteredStatus(status) && IsRegisteredStatus(next_status) &&
             (dashing_direction == AvatarDirection::Left ||
-             dashing_direction == AvatarDirection::Right);
+             dashing_direction == AvatarDirection::Right) &&
+            setback_elapsed_frames <= 28;
     }
 
     PlayerStateMachine::PlayerStateMachine()
@@ -100,6 +109,7 @@ namespace mm2hack::apps::world::entity::avatar
         registerState_(std::make_unique<states::LandingState>());
         registerState_(std::make_unique<states::SlidingState>());
         registerState_(std::make_unique<states::DashingState>());
+        registerState_(std::make_unique<states::SetbackState>());
     }
 
     void PlayerStateMachine::Update(PlayerContext& cx, core::assembly::StateProvider* input, const PlayerTuning& tuning, double dt)
@@ -122,6 +132,18 @@ namespace mm2hack::apps::world::entity::avatar
         findState_(_status).OnEnter(cx, input, tuning);
     }
 
+    void PlayerStateMachine::ForceTransition(
+        AvatarStatus target,
+        PlayerContext& cx,
+        core::assembly::StateProvider* input,
+        const PlayerTuning& tuning) noexcept
+    {
+        findState_(_status).OnExit(cx, input, tuning);
+        _status = target;
+        _next_status = target;
+        findState_(_status).OnEnter(cx, input, tuning);
+    }
+
     void PlayerStateMachine::TickAnimation(AnimeContext& ax, core::assembly::StateProvider* input, const PlayerTuning& tuning, double dt)
     {
         findState_(_status).TickAnimationOnly(ax, input, tuning, dt);
@@ -135,6 +157,8 @@ namespace mm2hack::apps::world::entity::avatar
             findState_(AvatarStatus::Dashing));
         const auto& hovering = static_cast<const states::HoveringState&>(
             findState_(AvatarStatus::Hovering));
+        const auto& setback = static_cast<const states::SetbackState&>(
+            findState_(AvatarStatus::Setback));
         return PlayerStateMachineState{
             .status = _status,
             .next_status = _next_status,
@@ -142,6 +166,9 @@ namespace mm2hack::apps::world::entity::avatar
             .dashing_elapsed_frames = dashing.ElapsedFrames(),
             .dashing_direction = dashing.Direction(),
             .dash_jump_active = hovering.DashJumpActive(),
+            .setback_elapsed_frames = setback.ElapsedFrames(),
+            .setback_airborne = setback.Airborne(),
+            .setback_rising = setback.Rising(),
         };
     }
 
@@ -158,7 +185,10 @@ namespace mm2hack::apps::world::entity::avatar
             findState_(AvatarStatus::Dashing));
         auto& hovering = static_cast<states::HoveringState&>(
             findState_(AvatarStatus::Hovering));
-        if (!dashing.RestoreState(state.dashing_elapsed_frames, state.dashing_direction))
+        auto& setback = static_cast<states::SetbackState&>(
+            findState_(AvatarStatus::Setback));
+        if (!dashing.RestoreState(state.dashing_elapsed_frames, state.dashing_direction) ||
+            !setback.RestoreState(state.setback_elapsed_frames, state.setback_airborne, state.setback_rising))
         {
             return false;
         }

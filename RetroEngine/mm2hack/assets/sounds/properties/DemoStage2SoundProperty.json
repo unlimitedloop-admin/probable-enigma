@@ -43,6 +43,22 @@
                 }
             ]
         },
+        "be_damaged": {
+            "channels": [
+                {
+                    "file": "assets/sounds/SoundEffects/DAMAGED_EFFECT_N0_SE_Square2.wav",
+                    "volume": 255,
+                    "voice": "pulse2",
+                    "priority": 2
+                },
+                {
+                    "file": "assets/sounds/SoundEffects/DAMAGED_EFFECT_N0_SE_Noise.wav",
+                    "volume": 255,
+                    "voice": "noise",
+                    "priority": 2
+                }
+            ]
+        },
         "rock_buster_bang": {
             "channels": [
                 {
@@ -92,19 +108,86 @@
                 }
             ]
         },
+        "hit_attack": {
+            "channels": [
+                {
+                    "file": "assets/sounds/SoundEffects/HITATTACK_EFFECT_N0_SE_Square2.wav",
+                    "volume": 255,
+                    "voice": "pulse2",
+                    "priority": 1
+                },
+                {
+                    "file": "assets/sounds/SoundEffects/HITATTACK_EFFECT_N0_SE_Noise.wav",
+                    "volume": 255,
+                    "voice": "noise",
+                    "priority": 1
+                }
+            ]
+        },
+        "defend_shot": {
+            "channels": [
+                {
+                    "file": "assets/sounds/SoundEffects/DEFENSIVE_FLIPSHOT2_EFFECT_N0_SE_Square2.wav",
+                    "volume": 255,
+                    "voice": "pulse2",
+                    "priority": 2
+                },
+                {
+                    "file": "assets/sounds/SoundEffects/DEFENSIVE_FLIPSHOT2_EFFECT_N0_SE_Triangle.wav",
+                    "volume": 255,
+                    "voice": "triangle",
+                    "priority": 2
+                }]
+        },
+        "enemy_small_explosion": {
+            "channels": [
+                {
+                    "file": "assets/sounds/SoundEffects/ENEMYLITTLEBOOM_EFFECT_N0_SE_Noise.wav",
+                    "volume": 255,
+                    "voice": "noise",
+                    "priority": 2
+                }
+            ]
+        },
+        "enemy_fire": {
+            "channels": [
+                {
+                    "file": "assets/sounds/SoundEffects/ENEMYFIRE_EFFECT_N0_SE_Square2.wav",
+                    "volume": 255,
+                    "voice": "pulse2",
+                    "priority": 0
+                }
+            ]
+        },
+        "terrible_scatter": {
+            "channels": [
+                {
+                    "file": "assets/sounds/SoundEffects/TERRIBLESCATTER_EFFECT_N0_SE_Square1.wav",
+                    "volume": 255,
+                    "voice": "pulse1",
+                    "priority": 2
+                },
+                {
+                    "file": "assets/sounds/SoundEffects/TERRIBLESCATTER_EFFECT_N0_SE_Square2.wav",
+                    "volume": 255,
+                    "voice": "pulse2",
+                    "priority": 2
+                }
+            ]
+        },
         "onstage_thump": {
             "channels": [
                 {
                     "file": "assets/sounds/SoundEffects/ONSTAGE_EFFECT_N0_SE_Square2.wav",
                     "volume": 255,
                     "voice": "pulse2",
-                    "priority": 2
+                    "priority": 0
                 },
                 {
                     "file": "assets/sounds/SoundEffects/ONSTAGE_EFFECT_N0_SE_Noise.wav",
                     "volume": 255,
                     "voice": "noise",
-                    "priority": 2
+                    "priority": 0
                 }
             ]
         }

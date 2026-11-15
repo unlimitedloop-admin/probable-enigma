@@ -1,0 +1,481 @@
+#include "pch.h"
+
+#include "EnemyDefinitionLoader.h"
+
+#include <algorithm>
+#include <cmath>
+#include <fstream>
+#include <iterator>
+#include <unordered_set>
+
+#include <nlohmann/json.hpp>
+
+#include "utils/hex_parser.h"
+#include "utils/string_converter.h"
+
+using json = nlohmann::json;
+
+namespace mm2hack::apps::world::entity::enemy::animation
+{
+    namespace
+    {
+        bool try_read_string(const json& object, const char* key, std::string& out)
+        {
+            const auto value = object.find(key);
+            if (value == object.end() || !value->is_string()) return false;
+            out = value->get<std::string>();
+            return !out.empty();
+        }
+
+        bool try_read_bool(const json& object, const char* key, bool default_value, bool& out)
+        {
+            const auto value = object.find(key);
+            if (value == object.end())
+            {
+                out = default_value;
+                return true;
+            }
+            if (!value->is_boolean()) return false;
+            out = value->get<bool>();
+            return true;
+        }
+
+        bool try_read_int(const json& object, const char* key, int minimum, int maximum, int& out)
+        {
+            const auto value = object.find(key);
+            if (value == object.end() || !value->is_number_integer()) return false;
+            const std::int64_t parsed = value->get<std::int64_t>();
+            if (parsed < minimum || parsed > maximum) return false;
+            out = static_cast<int>(parsed);
+            return true;
+        }
+
+        bool try_read_nonnegative_double(const json& object, const char* key, double default_value, double& out)
+        {
+            const auto value = object.find(key);
+            if (value == object.end())
+            {
+                out = default_value;
+                return true;
+            }
+            if (!value->is_number()) return false;
+            const double parsed = value->get<double>();
+            if (!std::isfinite(parsed) || parsed < 0.0) return false;
+            out = parsed;
+            return true;
+        }
+
+        // Like try_read_nonnegative_double, but any finite sign (e.g. a jump
+        // impulse is conventionally negative -- upward).
+        bool try_read_double(const json& object, const char* key, double default_value, double& out)
+        {
+            const auto value = object.find(key);
+            if (value == object.end())
+            {
+                out = default_value;
+                return true;
+            }
+            if (!value->is_number()) return false;
+            const double parsed = value->get<double>();
+            if (!std::isfinite(parsed)) return false;
+            out = parsed;
+            return true;
+        }
+
+        // Optional integer that may be written either as a plain JSON number
+        // or as a "0x.." hex string; missing -> `default_value`.
+        bool try_read_hex_int(const json& object, const char* key, int minimum, int maximum, int default_value, int& out)
+        {
+            const auto value = object.find(key);
+            if (value == object.end())
+            {
+                out = default_value;
+                return true;
+            }
+
+            std::int64_t parsed = 0;
+            if (value->is_number_integer())
+            {
+                parsed = value->get<std::int64_t>();
+            }
+            else if (!value->is_string() || !utils::try_parse_hex(value->get<std::string>(), parsed))
+            {
+                return false;
+            }
+            if (parsed < minimum || parsed > maximum) return false;
+            out = static_cast<int>(parsed);
+            return true;
+        }
+
+        // Optional { "x": .., "y": .. } object; missing -> `default_value`.
+        // Both components must be finite and within [minimum, maximum].
+        bool try_read_vec2(const json& object, const char* key, double minimum, double maximum,
+            foundation::math::Vec2 default_value, foundation::math::Vec2& out)
+        {
+            const auto value = object.find(key);
+            if (value == object.end())
+            {
+                out = default_value;
+                return true;
+            }
+            if (!value->is_object()) return false;
+
+            const auto x = value->find("x");
+            const auto y = value->find("y");
+            if (x == value->end() || y == value->end() || !x->is_number() || !y->is_number()) return false;
+            const double parsed_x = x->get<double>();
+            const double parsed_y = y->get<double>();
+            if (!std::isfinite(parsed_x) || !std::isfinite(parsed_y) ||
+                parsed_x < minimum || parsed_x > maximum || parsed_y < minimum || parsed_y > maximum)
+            {
+                return false;
+            }
+            out = { parsed_x, parsed_y };
+            return true;
+        }
+
+        bool try_read_bounded_double(const json& object, const char* key, double minimum, double maximum,
+            double default_value, double& out)
+        {
+            return try_read_double(object, key, default_value, out) && out >= minimum && out <= maximum;
+        }
+
+        // One "tile_hitboxes" entry: { "tiles": [..], "half_size": {x,y},
+        // "offset_y": n } -- flattened into one EnemyTileHitbox per listed
+        // tile. A tile already claimed by an earlier entry is an error.
+        bool try_parse_tile_hitbox(const json& source, double minimum_half, double maximum_half,
+            std::vector<EnemyTileHitbox>& out)
+        {
+            if (!source.is_object()) return false;
+
+            const auto tiles = source.find("tiles");
+            if (tiles == source.end() || !tiles->is_array() || tiles->empty()) return false;
+
+            EnemyTileHitbox box{};
+            if (source.find("half_size") == source.end() || source.find("offset_y") == source.end() ||
+                !try_read_vec2(source, "half_size", minimum_half, maximum_half, box.half_size, box.half_size) ||
+                !try_read_bounded_double(source, "offset_y", -maximum_half, maximum_half, 0.0, box.offset_y))
+            {
+                return false;
+            }
+
+            for (const auto& tile_json : *tiles)
+            {
+                if (!tile_json.is_number_integer()) return false;
+                const std::int64_t tile = tile_json.get<std::int64_t>();
+                if (tile < 0 || tile > 65'535) return false;
+
+                box.tile = static_cast<int>(tile);
+                const bool already_listed = std::any_of(out.begin(), out.end(),
+                    [&box](const EnemyTileHitbox& existing) { return existing.tile == box.tile; });
+                if (already_listed) return false;
+                out.push_back(box);
+            }
+            return true;
+        }
+
+        // The optional "abilities" block (see EnemyAbilities). Any key left
+        // out keeps EnemyAbilities' own default. Bounds mirror what
+        // EnemyEntityState::IsValid() will later accept on a save/load.
+        bool try_parse_abilities(const json& source, EnemyAbilities& out)
+        {
+            if (!source.is_object()) return false;
+
+            constexpr double kMaximumHalfSize = 256.0;
+            constexpr double kMinimumHalfSize = 0.5;
+            const EnemyAbilities defaults{};
+
+            if (!try_read_hex_int(source, "hp", 0, 1'000, defaults.hp, out.hp) ||
+                !try_read_hex_int(source, "contact_power", 0, 1'000, defaults.contact_power, out.contact_power) ||
+                !try_read_hex_int(source, "projectile_power", 0, 1'000, defaults.projectile_power, out.projectile_power) ||
+                !try_read_bounded_double(source, "move_speed_px_per_sec", 0.0, 1'000.0,
+                    defaults.move_speed_px_per_sec, out.move_speed_px_per_sec) ||
+                !try_read_bounded_double(source, "gravity_scale", 0.0, 16.0, defaults.gravity_scale, out.gravity_scale) ||
+                !try_read_vec2(source, "sprite_half_size", kMinimumHalfSize, kMaximumHalfSize,
+                    defaults.sprite_half_size, out.sprite_half_size) ||
+                !try_read_vec2(source, "hitbox_half_size", kMinimumHalfSize, kMaximumHalfSize,
+                    defaults.hitbox_half_size, out.hitbox_half_size) ||
+                !try_read_bounded_double(source, "hitbox_offset_y", -kMaximumHalfSize, kMaximumHalfSize,
+                    defaults.hitbox_offset_y, out.hitbox_offset_y) ||
+                !try_read_hex_int(source, "facing_texture_offset_left", -65'535, 65'535,
+                    defaults.facing_texture_offset_left, out.facing_texture_offset_left) ||
+                !try_read_vec2(source, "projectile_hit_half_size", kMinimumHalfSize, kMaximumHalfSize,
+                    defaults.projectile_hit_half_size, out.projectile_hit_half_size) ||
+                !try_read_bounded_double(source, "projectile_spawn_offset_y", -kMaximumHalfSize, kMaximumHalfSize,
+                    defaults.projectile_spawn_offset_y, out.projectile_spawn_offset_y))
+            {
+                return false;
+            }
+
+            const auto tile_hitboxes = source.find("tile_hitboxes");
+            if (tile_hitboxes != source.end())
+            {
+                if (!tile_hitboxes->is_array()) return false;
+                for (const auto& entry : *tile_hitboxes)
+                {
+                    if (!try_parse_tile_hitbox(entry, kMinimumHalfSize, kMaximumHalfSize, out.tile_hitboxes)) return false;
+                }
+            }
+            return true;
+        }
+
+        bool try_parse_frame(const json& source, AnimationFrame& out)
+        {
+            if (!source.is_object()) return false;
+            if (!try_read_int(source, "tile", 0, 65'535, out.tile)) return false;
+
+            const auto wait = source.find("wait");
+            if (wait == source.end()) return false;
+            if (wait->is_string())
+            {
+                if (wait->get<std::string>() != "hold") return false;
+                out.wait_frames = AnimationFrame::kHoldFrames;
+                return true;
+            }
+            if (!wait->is_number_integer()) return false;
+            const std::int64_t parsed = wait->get<std::int64_t>();
+            if (parsed < 1 || parsed > 3'600) return false;
+            out.wait_frames = static_cast<int>(parsed);
+            return true;
+        }
+
+        bool try_parse_projectile_spawn(const json& source, ProjectileSpawnSpec& out)
+        {
+            if (!source.is_object()) return false;
+            return try_read_double(source, "angle_deg", 0.0, out.angle_deg) &&
+                out.angle_deg >= -180.0 && out.angle_deg <= 180.0 &&
+                try_read_nonnegative_double(source, "speed_px_per_frame", 0.0, out.speed_px_per_frame) &&
+                out.speed_px_per_frame > 0.0 && out.speed_px_per_frame <= 100.0;
+        }
+
+        bool try_parse_transition(const json& source, AnimationTransition& out)
+        {
+            if (!source.is_object()) return false;
+
+            std::string when;
+            if (!try_read_string(source, "when", when) || !try_read_string(source, "to", out.to_state) ||
+                !try_read_double(source, "jump_impulse", 0.0, out.jump_impulse) ||
+                !try_read_bool(source, "increments_shared_counter", false, out.increments_shared_counter))
+            {
+                return false;
+            }
+
+            const auto parity = source.find("parity");
+            if (parity != source.end())
+            {
+                if (!parity->is_string()) return false;
+                const std::string parity_str = parity->get<std::string>();
+                if (parity_str == "even") out.required_parity = CounterParity::Even;
+                else if (parity_str == "odd") out.required_parity = CounterParity::Odd;
+                else return false;
+            }
+
+            const auto spawns = source.find("projectile_spawns");
+            if (spawns != source.end())
+            {
+                if (!spawns->is_array()) return false;
+                for (const auto& spawn_json : *spawns)
+                {
+                    ProjectileSpawnSpec spawn{};
+                    if (!try_parse_projectile_spawn(spawn_json, spawn)) return false;
+                    out.projectile_spawns.push_back(spawn);
+                }
+            }
+
+            if (when == "timer")
+            {
+                out.condition = AnimationCondition::Timer;
+                return try_read_int(source, "frames", 1, 36'000, out.param_frames);
+            }
+            if (when == "clip_finished")
+            {
+                out.condition = AnimationCondition::ClipFinished;
+                return true;
+            }
+            if (when == "player_near")
+            {
+                out.condition = AnimationCondition::PlayerNear;
+                return try_read_nonnegative_double(source, "x", 0.0, out.param_x) &&
+                    try_read_nonnegative_double(source, "y", 0.0, out.param_y);
+            }
+            if (when == "grounded")
+            {
+                out.condition = AnimationCondition::Grounded;
+                return true;
+            }
+            if (when == "airborne")
+            {
+                out.condition = AnimationCondition::Airborne;
+                return true;
+            }
+            return false;
+        }
+
+        bool try_parse_state(const json& source, AnimationState& out)
+        {
+            if (!source.is_object() || !try_read_string(source, "id", out.id)) return false;
+
+            if (!try_read_bool(source, "loop", false, out.clip.loop)) return false;
+            if (!try_read_bool(source, "allow_movement", true, out.allow_movement)) return false;
+            if (!try_read_nonnegative_double(source, "move_speed_multiplier", 1.0, out.move_speed_multiplier)) return false;
+            if (!try_read_bool(source, "track_player_facing", true, out.track_player_facing)) return false;
+            if (!try_read_bool(source, "deflects_attacks", false, out.deflects_attacks)) return false;
+
+            const auto frames = source.find("frames");
+            if (frames == source.end() || !frames->is_array() || frames->empty()) return false;
+            for (const auto& frame_json : *frames)
+            {
+                AnimationFrame frame{};
+                if (!try_parse_frame(frame_json, frame)) return false;
+                out.clip.frames.push_back(frame);
+            }
+
+            const auto transitions = source.find("transitions");
+            if (transitions != source.end())
+            {
+                if (!transitions->is_array()) return false;
+                for (const auto& transition_json : *transitions)
+                {
+                    AnimationTransition transition{};
+                    if (!try_parse_transition(transition_json, transition)) return false;
+                    out.transitions.push_back(std::move(transition));
+                }
+            }
+            return true;
+        }
+
+        bool try_parse_palette_mapping(const json& source, EnemyPaletteMapping& out)
+        {
+            if (!source.is_object()) return false;
+            return try_read_int(source, "source", 0, 63, out.source_index) &&
+                try_read_int(source, "target", 0, 63, out.target_index);
+        }
+
+        bool try_parse_palette_preset(const json& source, EnemyPalettePreset& out)
+        {
+            if (!source.is_object() || !try_read_string(source, "id", out.id)) return false;
+
+            const auto mappings = source.find("mappings");
+            if (mappings == source.end()) return true;
+            if (!mappings->is_array()) return false;
+            for (const auto& mapping_json : *mappings)
+            {
+                EnemyPaletteMapping mapping{};
+                if (!try_parse_palette_mapping(mapping_json, mapping)) return false;
+                out.mappings.push_back(mapping);
+            }
+            return true;
+        }
+
+        // Cross-references between states (initial_state, every transition's
+        // `to`) can only be checked once every state id is known -- do that
+        // here, after the whole graph has been parsed.
+        bool validate_state_graph(const EnemyAnimationDef& animation)
+        {
+            std::unordered_set<std::string> ids;
+            for (const auto& state : animation.states)
+            {
+                if (!ids.insert(state.id).second) return false; // duplicate id
+            }
+            if (!ids.contains(animation.initial_state)) return false;
+            for (const auto& state : animation.states)
+            {
+                for (const auto& transition : state.transitions)
+                {
+                    if (!ids.contains(transition.to_state)) return false;
+                }
+            }
+            return true;
+        }
+
+        bool validate_palette_presets(const std::vector<EnemyPalettePreset>& presets)
+        {
+            std::unordered_set<std::string> ids;
+            for (const auto& preset : presets)
+            {
+                if (!ids.insert(preset.id).second) return false; // duplicate id
+            }
+            return true;
+        }
+
+        bool try_parse_definition(const json& source, EnemyDefinition& out)
+        {
+            if (!source.is_object() ||
+                !try_read_string(source, "id", out.id) ||
+                !try_read_string(source, "enemy_type", out.enemy_type) ||
+                !try_read_string(source, "name", out.name) ||
+                !try_read_string(source, "initial_state", out.animation.initial_state))
+            {
+                return false;
+            }
+
+            const auto abilities = source.find("abilities");
+            if (abilities != source.end() && !try_parse_abilities(*abilities, out.abilities))
+            {
+                return false;
+            }
+
+            const auto states = source.find("states");
+            if (states == source.end() || !states->is_array() || states->empty()) return false;
+            for (const auto& state_json : *states)
+            {
+                AnimationState state{};
+                if (!try_parse_state(state_json, state)) return false;
+                out.animation.states.push_back(std::move(state));
+            }
+            if (!validate_state_graph(out.animation)) return false;
+
+            const auto presets = source.find("palette_presets");
+            if (presets != source.end())
+            {
+                if (!presets->is_array()) return false;
+                for (const auto& preset_json : *presets)
+                {
+                    EnemyPalettePreset preset{};
+                    if (!try_parse_palette_preset(preset_json, preset)) return false;
+                    out.palette_presets.push_back(std::move(preset));
+                }
+                if (!validate_palette_presets(out.palette_presets)) return false;
+            }
+
+            return true;
+        }
+    }
+
+    bool EnemyDefinitionLoader::LoadFromFile(const std::wstring& filepath, EnemyDefinition& out)
+    {
+        try
+        {
+            std::ifstream stream(utils::wstring_to_utf8(filepath), std::ios::binary);
+            if (!stream.is_open()) return false;
+
+            const std::string source{
+                std::istreambuf_iterator<char>(stream),
+                std::istreambuf_iterator<char>()
+            };
+            if (stream.bad()) return false;
+            return LoadFromJson(source, out);
+        }
+        catch (const std::exception&)
+        {
+            return false;
+        }
+    }
+
+    bool EnemyDefinitionLoader::LoadFromJson(std::string_view source, EnemyDefinition& out)
+    {
+        try
+        {
+            const json document = json::parse(source.begin(), source.end());
+            EnemyDefinition parsed{};
+            if (!try_parse_definition(document, parsed)) return false;
+
+            out = std::move(parsed);
+            return true;
+        }
+        catch (const std::exception&)
+        {
+            return false;
+        }
+    }
+}

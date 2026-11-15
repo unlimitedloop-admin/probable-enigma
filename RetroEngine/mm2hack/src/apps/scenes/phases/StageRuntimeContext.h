@@ -10,10 +10,12 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "apps/resources/bg/AddressScraper.h"
 #include "apps/resources/bg/MapPageCache.h"
 #include "apps/scenes/IStageAssetProvider.h"
+#include "apps/systems/physics/CollisionSystem.h"
 #include "apps/systems/physics/ILadderService.h"
 #include "apps/systems/physics/ITerrainProbe.h"
 #include "apps/systems/physics/ITileMapProvider.h"
@@ -23,6 +25,7 @@
 #include "apps/systems/scrolling/atomic/ScrollController.h"
 #include "apps/world/entity/EntityManager.h"
 #include "apps/world/stage/RoomGraphAdapter.h"
+#include "apps/world/stage/StagePlacement.h"
 #include "core/assembly/StateProvider.h"
 
 namespace mm2hack::apps::scenes::phases
@@ -48,7 +51,10 @@ namespace mm2hack::apps::scenes::phases
         std::unique_ptr<systems::physics::ILadderService> ladder_service{};             // Unique ILadderService for physics
 
         std::unique_ptr<world::entity::EntityManager> entity_mgr{};                     // Unique EntityManager for entities
+        systems::physics::CollisionSystem collision{};                                  // Entity-vs-entity collision resolver (default matrix)
 
         const scenes::IStageAssetProvider* asset_provider{ nullptr };                   // Reference to stage asset provider
+
+        std::vector<world::stage::EnemyPlacement> enemy_placements{};                   // From the stage's .def; spawned by EnemySpawnDirector
     };
 }

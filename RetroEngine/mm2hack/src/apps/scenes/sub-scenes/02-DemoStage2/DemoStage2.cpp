@@ -27,20 +27,23 @@
 #include "apps/systems/audio/SeTransportState.h"
 #include "apps/systems/physics/TileAttribute.h"
 #include "apps/world/entity/enemy/lists/EnemyLists.h"
+#include "apps/world/entity/avatar/PlayerParams.h"
 #include "apps/world/entity/EntityManager.h"
 #include "apps/world/entity/EntityStateFactory.h"
 #include "apps/world/entity/IEntity.h"
+#include "apps/world/stage/StageDefinitionLoader.h"
 #include "config/GameAssets.h"
 #include "config/PathDefsJsonProps.h"
 #include "core/assembly/FilteredJoystickInputProvider.h"
 #include "core/save/StateIO.h"
 #include "utils/output_debug.h"
+#include "utils/string_converter.h"
 
 namespace mm2hack::apps::scenes
 {
     namespace
     {
-        constexpr std::uint32_t kDemoStage2StateVersion = 3;
+        constexpr std::uint32_t kDemoStage2StateVersion = 5; // 5: + player session (lives)
 
         enum class DemoStage2PhaseType : std::uint8_t
         {
@@ -56,13 +59,14 @@ namespace mm2hack::apps::scenes
             world::entity::EntityManagerState entities{};
             systems::audio::BgmTransportState bgm{};
             systems::audio::SeTransportState se{};
+            world::session::PlayerSessionState session{};
 
             [[nodiscard]] bool IsValid() const
             {
                 if (phase_type != DemoStage2PhaseType::AbstractAction ||
                     page_index != phase.scroll.page_index ||
                     !phase.IsValid() || !entities.IsValid() ||
-                    !bgm.IsValid() || !se.IsValid())
+                    !bgm.IsValid() || !se.IsValid() || !session.IsValid())
                 {
                     return false;
                 }
@@ -90,7 +94,7 @@ namespace mm2hack::apps::scenes
                     writer.WriteU32(page_index) &&
                     background_animation.Save(writer) &&
                     phase.Save(writer) && entities.Save(writer) &&
-                    bgm.Save(writer) && se.Save(writer);
+                    bgm.Save(writer) && se.Save(writer) && session.Save(writer);
             }
 
             bool Load(core::save::StateReader& reader)
@@ -103,7 +107,8 @@ namespace mm2hack::apps::scenes
                     !reader.ReadU32(loaded.page_index) ||
                     !loaded.background_animation.Load(reader) ||
                     !loaded.phase.Load(reader) || !loaded.entities.Load(reader) ||
-                    !loaded.bgm.Load(reader) || !loaded.se.Load(reader))
+                    !loaded.bgm.Load(reader) || !loaded.se.Load(reader) ||
+                    !loaded.session.Load(reader))
                 {
                     return false;
                 }
@@ -218,6 +223,23 @@ namespace mm2hack::apps::scenes
         return true;
     }
 
+    bool DemoStage2::TryEnemySprite(
+        world::entity::enemy::EnemyKind kind, int palette_preset_index, SpriteManagerId& out) const noexcept
+    {
+        const auto kind_it = _spriteBank.enemy_palette_variants.find(kind);
+        if (kind_it == _spriteBank.enemy_palette_variants.end())
+        {
+            return false;
+        }
+        const auto preset_it = kind_it->second.find(palette_preset_index);
+        if (preset_it == kind_it->second.end())
+        {
+            return false;
+        }
+        out = preset_it->second;
+        return true;
+    }
+
     void DemoStage2::QueuePhase(std::unique_ptr<phases::IPhase> next, PhaseFadePlan nextPlan)
     {
         _pendingPhase = std::move(next);
@@ -234,7 +256,7 @@ namespace mm2hack::apps::scenes
     {
         const auto* phase = dynamic_cast<const phases::AbstractActionPhase*>(_phase.get());
         return phase != nullptr && phase->CanCaptureState() &&
-            _pendingPhase == nullptr && _nextScene == SceneID::None &&
+            _pendingPhase == nullptr && !_pendingRestart && _nextScene == SceneID::None &&
             _stageScript == nullptr && _resource != nullptr &&
             _fader.Current() == PhaseFadeController::State::Interactive;
     }
@@ -258,6 +280,7 @@ namespace mm2hack::apps::scenes
         }
 
         state.page_index = state.phase.scroll.page_index;
+        state.session = _session.CaptureState();
         state.background_animation = _resource->GetBGTileManager().CaptureAnimationState();
         core::save::StateWriter writer(out);
         return state.Save(writer);
@@ -276,7 +299,7 @@ namespace mm2hack::apps::scenes
         core::save::StateReader reader(in);
         if (!state.Load(reader) || _resource == nullptr ||
             _stageScript != nullptr || _pendingPhase != nullptr ||
-            _nextScene != SceneID::None)
+            _pendingRestart || _nextScene != SceneID::None)
         {
             return false;
         }
@@ -305,6 +328,7 @@ namespace mm2hack::apps::scenes
         phase->RestoreChargePresentationState(state.se);
 
         _roomState.pageIndex = static_cast<int>(state.page_index);
+        _session.RestoreState(state.session);
         _pendingPhase.reset();
         _pendingPlan = {};
         _nextScene = SceneID::None;
@@ -329,36 +353,17 @@ namespace mm2hack::apps::scenes
             THROW_EXCEPTION(L"Failed to initialize resources", kClassName);
         }
 
-        // Construct the Action Stage Runtime Context.
-        // Create definition.
-        phases::StageDefinition def{};
-        def.map_binary_path = std::wstring(kStageMapBinary);
-        def.start_page_index = _roomState.pageIndex;
-        def.start_local_pos = { 128.0, 183.0 }; // TODO: This should be loaded from a external def-file instead of hardcoded.
-
-        // Create build config.
-        phases::ActionStageBuildConfig build{};
-        build.map_name = std::wstring(kMapName);
-        build.tile_px = config::SystemConfig::kTileSize;
-        build.asset_provider = this;
+        _startPageIndex = _roomState.pageIndex;
+        _enterParams = params;
+        _session.Reset();
 
         // Create filtered joystick input provider.
         _input = &gc.Input();
-        // Build the context using the builder.
-        auto ctx = _actionBuilder.Build(resource, *_input, def, build, L"AreaA");
         // Create the initial phase.
-        _phase = std::make_unique<phases::AbstractActionPhase>(std::move(ctx), _stageScript.get(), *this);
+        _phase = buildActionPhase_();
 
         // Start with a fade-in.
-        PhaseFadePlan first(
-            20,     // preBlackHold
-            20,     // fadeInFrames
-            0,      // preFadeOutHold
-            12,     // fadeOutFrames
-            20,     // postFadeOutHold
-            FadeLayerMask::All  // layers
-        );
-        _fader.BeginPhase(first, resource);
+        _fader.BeginPhase(stageEntryPlan_(), resource);
 
         _phase->Initialize(params);
 
@@ -401,10 +406,21 @@ namespace mm2hack::apps::scenes
         bgTileManager.SetMapSize(SystemConfig::kTileCountX, SystemConfig::kTileCountY);     // 16x15 tiles
         // Load map data.
         bgRoomBank.Load(kStageMapBinary);
+
+        // Stage logic data (BD-006 .def): player start and enemy placements.
+        std::string def_error;
+        if (!world::stage::StageDefinitionLoader::LoadFromFile(std::wstring(kStageObjectDefine), _stageData, def_error))
+        {
+            utils::debug_log(kClassName + L": failed to load stage definition: " + utils::utf8_to_wstring(def_error));
+            return false;
+        }
+
+        // An explicit RoomNo (e.g. picked from the backdoor menu) wins over
+        // the .def's own start room.
         auto roomNo = params.Get<int>(L"RoomNo");
         if (roomNo == std::nullopt)
         {
-            roomNo = 0; // Default to room 0 if not specified.
+            roomNo = _stageData.start ? _stageData.start->room_id : 0;
         }
         if (auto idx = bgRoomBank.FindIndexByRoomId(static_cast<uint8_t>(*roomNo)); idx)
         {
@@ -486,6 +502,78 @@ namespace mm2hack::apps::scenes
             MM2H_GRAPHPROPS(ChargeEffect));
         if (_spriteBank.charge_effect == SpriteManagerId(-1)) return false;
 
+        _spriteBank.small_explosion_effect = spriteLoader.Load(
+            L"SmallExplosionEffect",
+            MM2H_GRAPHICS(SmallExplosion),
+            MM2H_GRAPHPROPS(SmallExplosion));
+        if (_spriteBank.small_explosion_effect == SpriteManagerId(-1)) return false;
+
+        _spriteBank.miss_bubble_effect = spriteLoader.Load(
+            L"MissBubbleEffect",
+            MM2H_GRAPHICS(MissBubble),
+            MM2H_GRAPHPROPS(MissBubble));
+        if (_spriteBank.miss_bubble_effect == SpriteManagerId(-1)) return false;
+
+        _spriteBank.health_meter = spriteLoader.Load(
+            L"HealthMeter",
+            MM2H_GRAPHICS(HealthMeter),
+            MM2H_GRAPHPROPS(HealthMeter));
+        if (_spriteBank.health_meter == SpriteManagerId(-1)) return false;
+
+        const auto metall_sprite = spriteLoader.Load(
+            L"MetallArmy",
+            MM2H_GRAPHICS(MetallArmy),
+            MM2H_GRAPHPROPS(MetallArmy));
+        if (metall_sprite == SpriteManagerId(-1)) return false;
+        _spriteBank.enemies[world::entity::enemy::EnemyKind::Met] = metall_sprite;
+
+        // Animation state graph + palette presets for Met, then one recolored
+        // sprite id per preset (index 0 is always `metall_sprite` itself --
+        // preset 0 is required to have empty mappings, i.e. the sheet's
+        // original colors -- see EnemyDefinitionLoader).
+        {
+            using world::entity::enemy::EnemyKind;
+            auto& enemyDefs = resource.GetEnemyDefinitionCatalog();
+            if (!enemyDefs.LoadForKind(EnemyKind::Met, L"assets\\data\\enemies\\METALL.json"))
+            {
+                return false;
+            }
+            const auto* met_def = enemyDefs.Find(EnemyKind::Met);
+            if (met_def == nullptr) return false;
+
+            auto& variants = _spriteBank.enemy_palette_variants[EnemyKind::Met];
+            for (std::size_t i = 0; i < met_def->palette_presets.size(); ++i)
+            {
+                const auto& preset = met_def->palette_presets[i];
+                if (preset.mappings.empty())
+                {
+                    variants[static_cast<int>(i)] = metall_sprite;
+                    continue;
+                }
+
+                const std::wstring variant_name = L"MetallArmy_" + utils::utf8_to_wstring(preset.id);
+                const auto variant_id = spriteLoader.Load(
+                    variant_name, MM2H_GRAPHICS(MetallArmy), MM2H_GRAPHPROPS(MetallArmy));
+                if (variant_id == SpriteManagerId(-1)) return false;
+
+                std::vector<rendering::sprite::SpriteAtlas::PaletteColorMapping> mappings;
+                mappings.reserve(preset.mappings.size());
+                for (const auto& mapping : preset.mappings)
+                {
+                    mappings.push_back({ mapping.source_index, mapping.target_index });
+                }
+                if (!spriteLoader.ReplacePixelColorsById(variant_id, mappings)) return false;
+
+                variants[static_cast<int>(i)] = variant_id;
+            }
+        }
+
+        _spriteBank.enemy_projectile = spriteLoader.Load(
+            L"EnemyProjectiles",
+            MM2H_GRAPHICS(EnemyProjectiles),
+            MM2H_GRAPHPROPS(EnemyProjectiles));
+        if (_spriteBank.enemy_projectile == SpriteManagerId(-1)) return false;
+
         const int sprvmax = spriteLoader.VariantCountById(_spriteBank.player);
         spriteLoader.SetGlobalVariant(sprvmax);
         resource.FadeInSprite(_fadeDurationFrames);
@@ -553,6 +641,59 @@ namespace mm2hack::apps::scenes
         return true;
     }
 
+    std::unique_ptr<phases::IPhase> DemoStage2::buildActionPhase_()
+    {
+        auto& resource = runtime::GameContext::GetInstance().GetResourceManager();
+
+        // Construct the Action Stage Runtime Context.
+        // Create definition.
+        phases::StageDefinition def{};
+        def.map_binary_path = std::wstring(kStageMapBinary);
+        def.start_page_index = _startPageIndex;
+        // .def points are feet-center. Align the ground probe, rather than the
+        // sprite's bottom edge (which includes transparent padding), to that point.
+        // Keep it 1px above the editor point to avoid embedding side probes in the floor.
+        const double ground_offset = world::entity::avatar::PlayerTuning{}.probeOffsets.groundLineOffsetY;
+        def.start_local_pos = _stageData.start
+            ? foundation::math::Vec2{ _stageData.start->local_pos.x, _stageData.start->local_pos.y - ground_offset - 1.0 }
+            : foundation::math::Vec2{ 128.0, 183.0 };
+        def.enemy_placements = _stageData.enemies;
+
+        // Create build config.
+        phases::ActionStageBuildConfig build{};
+        build.map_name = std::wstring(kMapName);
+        build.tile_px = config::SystemConfig::kTileSize;
+        build.asset_provider = this;
+
+        // Build the context using the builder.
+        auto ctx = _actionBuilder.Build(resource, *_input, def, build, L"AreaA");
+        return std::make_unique<phases::AbstractActionPhase>(std::move(ctx), _stageScript.get(), *this);
+    }
+
+    PhaseFadePlan DemoStage2::stageEntryPlan_() const noexcept
+    {
+        return PhaseFadePlan(
+            20,     // preBlackHold
+            20,     // fadeInFrames
+            0,      // preFadeOutHold
+            12,     // fadeOutFrames
+            20,     // postFadeOutHold
+            FadeLayerMask::All  // layers
+        );
+    }
+
+    void DemoStage2::requestRestart_(const PhaseFadePlan& plan)
+    {
+        _pendingRestart = true;
+        _pendingPlan = plan;
+
+        if (_fader.Current() == PhaseFadeController::State::Interactive)
+        {
+            auto& res = apps::runtime::GameContext::GetInstance().GetResourceManager();
+            _fader.RequestFadeOut(res);
+        }
+    }
+
     void DemoStage2::applyPendingPhaseIfReady_()
     {
         using namespace apps::runtime;
@@ -560,6 +701,25 @@ namespace mm2hack::apps::scenes
 
         if (!_fader.ReadyToSwitchPhase())
         {
+            return;
+        }
+
+        if (_pendingRestart)
+        {
+            _pendingRestart = false;
+
+            // Tear the old stage down first (its entities, scroll and page
+            // cache) so the rebuild starts from a clean slate -- enemies
+            // included, just like entering the stage anew.
+            _phase.reset();
+            _roomState.pageIndex = _startPageIndex;
+            _phase = buildActionPhase_();
+
+            _fader.BeginPhase(_pendingPlan, res);
+            _pendingPlan = {};
+
+            // Replays bgm_key, so the BGM restarts from the top with every voice back.
+            _phase->Initialize(_enterParams);
             return;
         }
 
@@ -584,6 +744,17 @@ namespace mm2hack::apps::scenes
     void DemoStage2::dispatchTransition_(const std::wstring& next_key, const PhaseFadePlan& plan, const Parameters& params)
     {
         // NOTE: Dispatch the transition request based on the next_key.
+        if (next_key == L"Retry")
+        {
+            // Player missed: costs a life, then the stage starts over from its
+            // beginning. TODO(game over): LoseLife() returns false when that was
+            // the last life -- the GAME OVER screen doesn't exist yet, so for now
+            // the stage still restarts (with the count held at 0).
+            _session.LoseLife();
+            requestRestart_(plan);
+            return;
+        }
+
         //if (next_key == L"Intro")
         //{
             // QueuePhase(std::make_unique<TopMenuPhase>(*this /* host */), plan);

@@ -3,7 +3,7 @@
 ## Common Information
 
 ### System Requirements
-- OS: Windows 10 or later
+- OS: Windows 11 (64-bit)
 - CPU: Intel Core i3 or equivalent
 - RAM: 4 GB
 - GPU: DirectX 11 compatible
@@ -17,11 +17,55 @@
 3. Run the `mm2hack.exe` (or `mm2hack_x86.exe`) file to start the application.
   - Caution : Already existing `mm2hack.ini` file will not be overwritten. Delete or rename it if you want to reset the configuration.
 
+### Save Data Compatibility
+- While the application is under development, save data created by an older version is not guaranteed to load. After an update, an older save may be rejected; start again from a new save.
+
 ### Troubleshooting
 - If you don't start the application, make sure you have the required Visual C++ Redistributable installed.
 - Uncontrollable input behavior may occur when using multiple input devices. Try disconnecting unnecessary devices.
 - If you encounter crashes or freezes, try running the application as an administrator.
 - For further assistance, please visit the [GitHub Issues page](https://github.com/unlimitedloop-admin/probable-enigma/issues).
+
+---
+
+## v0.0.3 - 2026/11/15
+
+### Highlights
+- ⚔️ Added the first combat loop: enemies, hit detection, player damage, the miss sequence and lives.
+- 🎮 Added Met (Metall) with its own attack patterns and helmet deflection, enemy placement from the stage definition, a player damage system with knockback and invincibility frames, a vitality meter HUD, and lives that carry over across restarts.
+
+### Downloads
+- 🪟 Windows (ZIP): [probable-enigma_mm2hack_demo_v003.zip](https://www.loopunlimited-rootone.com/50000/publisher/softwares/probable-enigma/probable-enigma_mm2hack_demo_v003.zip)
+- ❌ Sorry for not supported Mac OS ;(
+- 🐈‍⬛ Get the source code: [GitHub Repository](https://github.com/unlimitedloop-admin/probable-enigma)
+
+### What's Changed (Summary)
+- **Features**:
+  - Enemies, starting with Met, placed from the stage definition (`.def`) with respawn rules.
+  - Shots bounce off a Met hidden under its helmet.
+  - Taking a hit now causes knockback and a short invincibility. A vitality meter shows the player's HP.
+  - Running out of HP or falling into a pit is a miss: the stage restarts and costs one life.
+  - Debug tools: a hit box overlay (HUD menu) and the SPRITE TEST screen (backdoor menu).
+- **Improvements**:
+  - Fixed page scrolls now clear enemies as well as shots and effects.
+  - Fixed several audio and save-state restoration issues.
+- **Compatibility**:
+  - Save data from earlier versions can no longer be loaded.
+
+### Known Issues
+- GAME OVER is not implemented. The stage restarts even when no lives remain.
+- There is no way to gain extra lives yet (1UP items, score thresholds).
+- Enemies have no invulnerability window after taking a hit.
+- Weapon switching is not implemented. The HUD always shows the Rock Buster.
+- Some gameplay constants remain hard-coded, including the player's projectile limit.
+- Migration of stage definition (`.def`) data is incomplete. Player start and enemy placements are migrated; other entity types are not.
+- Charged shots cannot be fired in a chosen direction while the player is in `LadderingState`.
+- Some debug-menu entries, validation rules, and persistence behavior remain hard-coded or incomplete.
+- Some stage-navigation checks still depend on the legacy scroll-type definitions.
+- Stage completion triggers and item acquisition are not yet implemented.
+
+### Checksums
+- B6B2894AB1D0F51B086C28003FF9DDEA6493181C7CB282628EEF03A94E4125B8  *probable-enigma_mm2hack_demo_v003.zip
 
 ---
 
