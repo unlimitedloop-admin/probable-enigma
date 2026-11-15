@@ -10,11 +10,12 @@ Each third-party component remains subject to its own license terms.
 - Author: Niels Lohmann
 - Source: https://github.com/nlohmann/json
 - License: MIT License
-- License text: `LICENSES/nlohmann-json-MIT.txt`
+- Copyright: 2013-2025 Niels Lohmann
+- License text: `nlohmann-json-MIT.txt` (in the `licenses` folder of the distribution package)
 
 The bundled `json.hpp` also contains code derived from Google Abseil.
-The applicable Apache License 2.0 text is available at
-`LICENSES/Apache-2.0.txt`.
+The applicable Apache License 2.0 text is available as `Apache-2.0.txt`
+(in the `licenses` folder of the distribution package).
 
 ## Project License Scope
 

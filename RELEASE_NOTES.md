@@ -3,7 +3,7 @@
 ## Common Information
 
 ### System Requirements
-- OS: Windows 10 or later
+- OS: Windows 11 (64-bit)
 - CPU: Intel Core i3 or equivalent
 - RAM: 4 GB
 - GPU: DirectX 11 compatible
@@ -65,7 +65,7 @@
 - Stage completion triggers and item acquisition are not yet implemented.
 
 ### Checksums
-- TBD (fill in after the ZIP is built)  *probable-enigma_mm2hack_demo_v003.zip
+- B6B2894AB1D0F51B086C28003FF9DDEA6493181C7CB282628EEF03A94E4125B8  *probable-enigma_mm2hack_demo_v003.zip
 
 ---
 
