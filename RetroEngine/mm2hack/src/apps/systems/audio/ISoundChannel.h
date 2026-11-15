@@ -27,6 +27,8 @@ namespace mm2hack::apps::systems::audio
         virtual void Stop() = 0;
         // Pause the sound
         virtual void Pause() = 0;
+        // Prepare resumable transport without ever starting playback.
+        virtual void PreparePaused(std::int64_t position) = 0;
         // Resume the sound
         virtual void Resume(bool loop) = 0;
         // Set volume (0-255)

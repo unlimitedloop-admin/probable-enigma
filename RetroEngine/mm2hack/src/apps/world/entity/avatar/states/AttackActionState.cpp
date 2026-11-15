@@ -123,7 +123,7 @@ namespace mm2hack::apps::world::entity::avatar::states
         {
             result.spawnProjectile.emplace();
             result.spawnProjectile->drawLayer = systems::view::Layer::Effects;
-            result.spawnProjectile->spriteId = _id;
+            result.spawnProjectile->appearance = common::ProjectileAppearance::PlayerBuster;
             result.spawnProjectile->visual = _requested_visual;
 
             const bool is_left = (cx.facingLR == AvatarDirection::Left);
@@ -134,17 +134,29 @@ namespace mm2hack::apps::world::entity::avatar::states
             result.spawnProjectile->animFps = tuning.projectileAnimFps;
             result.spawnProjectile->lifeSec = tuning.projectileLifeSec;
 
-            const auto offset = is_left ? tuning.projectileSpawnOffsetPxLeft : tuning.projectileSpawnOffsetPxRight;
+            auto offset = is_left ? tuning.projectileSpawnOffsetPxLeft : tuning.projectileSpawnOffsetPxRight;
+            if (_requested_visual == common::ProjectileVisual::ChargeLevel2)
+            {
+                // Centered on the player vertically instead of at the muzzle -- see
+                // AttackTuning::chargeLevel2SpawnOffsetPxY for the derivation.
+                offset.y = tuning.chargeLevel2SpawnOffsetPxY;
+            }
             result.spawnProjectile->spawnPos = cx.pos + offset;
             const double dir = static_cast<double>(cx.facingLR);
             double speed = tuning.projectileSpeedPxPerSec;
+            result.spawnProjectile->power = tuning.normalPower;
+            result.spawnProjectile->hitHalfSize = tuning.normalHitHalfSize;
             if (_requested_visual == common::ProjectileVisual::ChargeLevel1)
             {
                 speed = tuning.chargeLevel1SpeedPxPerSec;
+                result.spawnProjectile->power = tuning.chargeLevel1Power;
+                result.spawnProjectile->hitHalfSize = tuning.chargeLevel1HitHalfSize;
             }
             else if (_requested_visual == common::ProjectileVisual::ChargeLevel2)
             {
                 speed = tuning.chargeLevel2SpeedPxPerSec;
+                result.spawnProjectile->power = tuning.chargeLevel2Power;
+                result.spawnProjectile->hitHalfSize = tuning.chargeLevel2HitHalfSize;
             }
             result.spawnProjectile->velocity = foundation::math::Vec2{ speed * dir, 0.0 };
 

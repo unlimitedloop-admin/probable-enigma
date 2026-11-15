@@ -1,0 +1,451 @@
+#include "pch.h"
+
+#include "EnemyEntity.h"
+
+#include <algorithm>
+#include <cmath>
+#include <cstdint>
+#include <cstdlib>
+#include <utility>
+
+#include "animation/AnimationStatePlayer.h"
+#include "animation/AnimationTypes.h"
+#include "apps/foundation/math/CoordinateTypes.h"
+#include "apps/rendering/sprite/SpriteManager.h"
+#include "apps/runtime/GameContext.h"
+#include "apps/systems/combat/DamageTable.h"
+#include "apps/systems/combat/HealthComponent.h"
+#include "apps/systems/physics/CollisionLayer.h"
+#include "apps/systems/physics/IAttackInfo.h"
+#include "apps/systems/physics/SimpleGravityBody.h"
+#include "apps/systems/physics/WeaponId.h"
+#include "apps/systems/view/RenderContext.h"
+#include "apps/systems/view/ViewState.h"
+#include "apps/world/entity/common/SpawnProjectileCommand.h"
+#include "apps/world/entity/IEntity.h"
+#include "core/save/StateIO.h"
+#include "lists/EnemyLists.h"
+
+namespace mm2hack::apps::world::entity::enemy
+{
+    using systems::combat::DamageTable;
+    using systems::view::Layer;
+    using systems::view::RenderContext;
+    using systems::view::ViewState;
+
+    namespace
+    {
+        // 0 = invincible (every weapon immune, HP never moves); N = dies after N
+        // hits' worth of accumulated normal-shot power. Shared by both
+        // constructors so a fresh spawn and a save/load restore always agree.
+        std::pair<int, DamageTable> health_for_toughness(int toughness) noexcept
+        {
+            if (toughness <= 0)
+            {
+                return { 1, DamageTable::Invincible() };
+            }
+            return { toughness, DamageTable::Neutral() };
+        }
+    }
+
+    bool EnemyEntityState::Save(core::save::StateWriter& writer) const
+    {
+        return IsValid() && kinematic.Save(writer) &&
+            writer.WriteU16(static_cast<std::uint16_t>(kind)) &&
+            writer.WriteI32(palette_preset_index) &&
+            writer.WriteI32(facing_texture_offset_left) &&
+            writer.WriteI32(toughness) &&
+            writer.WriteI32(hp) &&
+            writer.WriteF64(half_size.x) &&
+            writer.WriteF64(half_size.y) &&
+            writer.WriteF64(hitbox_half_size.x) &&
+            writer.WriteF64(hitbox_half_size.y) &&
+            writer.WriteF64(hitbox_offset_y) &&
+            writer.WriteF64(spawn_x) &&
+            writer.WriteF64(move_speed_px_per_sec) &&
+            writer.WriteI32(facing) &&
+            writer.WriteI32(anim_state_index) &&
+            writer.WriteI32(anim_frame_index) &&
+            writer.WriteI32(anim_frame_elapsed) &&
+            writer.WriteI32(anim_state_elapsed) &&
+            writer.WriteF64(gravity_per_frame) &&
+            writer.WriteF64(terminal_velocity_per_frame) &&
+            writer.WriteF64(gravity_vel_y) &&
+            writer.WriteBool(on_ground);
+    }
+
+    bool EnemyEntityState::Load(core::save::StateReader& reader)
+    {
+        EnemyEntityState loaded{};
+        std::uint16_t encoded_kind{};
+        if (!loaded.kinematic.Load(reader) ||
+            !reader.ReadU16(encoded_kind) ||
+            !reader.ReadI32(loaded.palette_preset_index) ||
+            !reader.ReadI32(loaded.facing_texture_offset_left) ||
+            !reader.ReadI32(loaded.toughness) ||
+            !reader.ReadI32(loaded.hp) ||
+            !reader.ReadF64(loaded.half_size.x) ||
+            !reader.ReadF64(loaded.half_size.y) ||
+            !reader.ReadF64(loaded.hitbox_half_size.x) ||
+            !reader.ReadF64(loaded.hitbox_half_size.y) ||
+            !reader.ReadF64(loaded.hitbox_offset_y) ||
+            !reader.ReadF64(loaded.spawn_x) ||
+            !reader.ReadF64(loaded.move_speed_px_per_sec) ||
+            !reader.ReadI32(loaded.facing) ||
+            !reader.ReadI32(loaded.anim_state_index) ||
+            !reader.ReadI32(loaded.anim_frame_index) ||
+            !reader.ReadI32(loaded.anim_frame_elapsed) ||
+            !reader.ReadI32(loaded.anim_state_elapsed) ||
+            !reader.ReadF64(loaded.gravity_per_frame) ||
+            !reader.ReadF64(loaded.terminal_velocity_per_frame) ||
+            !reader.ReadF64(loaded.gravity_vel_y) ||
+            !reader.ReadBool(loaded.on_ground))
+        {
+            return false;
+        }
+        loaded.kind = static_cast<EnemyKind>(encoded_kind);
+        if (!loaded.IsValid())
+        {
+            return false;
+        }
+        *this = loaded;
+        return true;
+    }
+
+    bool EnemyEntityState::IsValid() const noexcept
+    {
+        constexpr double kMaximumHalfSize = 256.0;
+        constexpr double kMaximumCoordinate = 1'000'000.0;
+        constexpr double kMaximumSpeed = 10'000.0;
+        constexpr int kMaximumAnimCounter = 36'000;
+
+        return kinematic.IsValid() &&
+            kind <= EnemyKind::FlyBoy &&
+            palette_preset_index >= 0 && palette_preset_index <= 255 &&
+            facing_texture_offset_left >= -65'535 && facing_texture_offset_left <= 65'535 &&
+            toughness >= 0 && toughness <= 1'000 &&
+            hp >= 1 && hp <= std::max(1, toughness) &&
+            std::isfinite(half_size.x) && half_size.x > 0.0 && half_size.x <= kMaximumHalfSize &&
+            std::isfinite(half_size.y) && half_size.y > 0.0 && half_size.y <= kMaximumHalfSize &&
+            std::isfinite(hitbox_half_size.x) && hitbox_half_size.x > 0.0 && hitbox_half_size.x <= kMaximumHalfSize &&
+            std::isfinite(hitbox_half_size.y) && hitbox_half_size.y > 0.0 && hitbox_half_size.y <= kMaximumHalfSize &&
+            std::isfinite(hitbox_offset_y) && std::abs(hitbox_offset_y) <= kMaximumHalfSize &&
+            std::isfinite(spawn_x) && std::abs(spawn_x) <= kMaximumCoordinate &&
+            std::isfinite(move_speed_px_per_sec) &&
+            move_speed_px_per_sec >= 0.0 && move_speed_px_per_sec <= kMaximumSpeed &&
+            (facing == 1 || facing == -1) &&
+            anim_state_index >= 0 && anim_state_index <= kMaximumAnimCounter &&
+            anim_frame_index >= 0 && anim_frame_index <= kMaximumAnimCounter &&
+            anim_frame_elapsed >= 0 && anim_frame_elapsed <= kMaximumAnimCounter &&
+            anim_state_elapsed >= 0 && anim_state_elapsed <= kMaximumAnimCounter &&
+            std::isfinite(gravity_per_frame) && gravity_per_frame >= 0.0 && gravity_per_frame <= 100.0 &&
+            std::isfinite(terminal_velocity_per_frame) &&
+            terminal_velocity_per_frame >= 0.0 && terminal_velocity_per_frame <= 1'000.0 &&
+            std::isfinite(gravity_vel_y) && std::abs(gravity_vel_y) <= 1'000.0;
+    }
+
+    EnemyEntity::EnemyEntity(
+        EnemyKind kind,
+        Vec2 spawn_pos,
+        rendering::sprite::SpriteManager::Id sprite_id,
+        int palette_preset_index,
+        const animation::EnemyDefinition* definition,
+        rendering::sprite::SpriteManager::Id projectile_sprite_id)
+        : _kind(kind), _definition(definition), _id(sprite_id), _palette_preset_index(palette_preset_index),
+          _projectile_sprite_id(projectile_sprite_id)
+    {
+        const auto& abilities = abilities_();
+        _facing_texture_offset_left = abilities.facing_texture_offset_left;
+        _half = abilities.sprite_half_size;
+        _hitbox_half = abilities.hitbox_half_size;
+        _hitbox_offset_y = abilities.hitbox_offset_y;
+        _toughness = abilities.hp;
+
+        pos = spawn_pos;
+        _move_speed = std::max(0.0, abilities.move_speed_px_per_sec);
+
+        const double scale = std::max(0.0, abilities.gravity_scale);
+        _gravity = systems::physics::SimpleGravityBody(
+            kDefaultGravityPerFrame * scale, kDefaultTerminalVelocityPerFrame * scale);
+
+        const auto [max_hp, table] = health_for_toughness(_toughness);
+        _health = systems::combat::HealthComponent(max_hp, table);
+
+        if (definition != nullptr)
+        {
+            _animator = animation::AnimationStatePlayer(definition->animation);
+        }
+    }
+
+    EnemyEntity::EnemyEntity(
+        const EnemyEntityState& state,
+        rendering::sprite::SpriteManager::Id sprite_id,
+        const animation::EnemyDefinition* definition,
+        rendering::sprite::SpriteManager::Id projectile_sprite_id)
+        : _definition(definition), _id(sprite_id), _projectile_sprite_id(projectile_sprite_id)
+    {
+        if (!RestoreState(state) || definition == nullptr ||
+            !_animator.RestoreState(
+                state.anim_state_index, state.anim_frame_index,
+                state.anim_frame_elapsed, state.anim_state_elapsed,
+                definition->animation))
+        {
+            Kill();
+        }
+    }
+
+    const animation::EnemyAbilities& EnemyEntity::abilities_() const noexcept
+    {
+        static const animation::EnemyAbilities kFallback{};
+        return _definition != nullptr ? _definition->abilities : kFallback;
+    }
+
+    bool EnemyEntity::SaveState(core::save::StateWriter& writer) const
+    {
+        return CaptureState().Save(writer);
+    }
+
+    EnemyEntityState EnemyEntity::CaptureState() const noexcept
+    {
+        return EnemyEntityState{
+            .kinematic = CaptureKinematicState(),
+            .kind = _kind,
+            .palette_preset_index = _palette_preset_index,
+            .facing_texture_offset_left = _facing_texture_offset_left,
+            .toughness = _toughness,
+            .hp = _health.CurrentHP(),
+            .half_size = _half,
+            .hitbox_half_size = _hitbox_half,
+            .hitbox_offset_y = _hitbox_offset_y,
+            .move_speed_px_per_sec = _move_speed,
+            .facing = _facing,
+            .anim_state_index = _animator.StateIndex(),
+            .anim_frame_index = _animator.FrameIndex(),
+            .anim_frame_elapsed = _animator.FrameElapsed(),
+            .anim_state_elapsed = _animator.StateElapsed(),
+            .gravity_per_frame = _gravity.GravityPerFrame(),
+            .terminal_velocity_per_frame = _gravity.TerminalVelocityPerFrame(),
+            .gravity_vel_y = _gravity.VerticalVelocity(),
+            .on_ground = _gravity.IsOnGround(),
+        };
+    }
+
+    bool EnemyEntity::RestoreState(const EnemyEntityState& state) noexcept
+    {
+        if (!state.IsValid() || !RestoreKinematicState(state.kinematic))
+        {
+            return false;
+        }
+
+        // Toughness (not the saved HealthComponent bytes -- there are none here)
+        // is the single source of truth for (max_hp, resistance table), so a
+        // restored invincible enemy is guaranteed to still be invincible.
+        const auto [max_hp, table] = health_for_toughness(state.toughness);
+        const systems::combat::HealthComponentState hp_state{
+            max_hp, std::clamp(state.hp, 1, max_hp)
+        };
+        if (!hp_state.IsValid() || !_health.RestoreState(hp_state, table))
+        {
+            return false;
+        }
+
+        _kind = state.kind;
+        _toughness = state.toughness;
+        _palette_preset_index = state.palette_preset_index;
+        _facing_texture_offset_left = state.facing_texture_offset_left;
+        _half = state.half_size;
+        _hitbox_half = state.hitbox_half_size;
+        _hitbox_offset_y = state.hitbox_offset_y;
+        _move_speed = state.move_speed_px_per_sec;
+        _facing = state.facing;
+
+        _gravity = systems::physics::SimpleGravityBody(
+            state.gravity_per_frame, state.terminal_velocity_per_frame);
+        if (!_gravity.RestoreState({ state.gravity_vel_y, state.on_ground }))
+        {
+            return false;
+        }
+        // NOTE: _animator itself is (re)attached by the reconstruction
+        // constructor, which has the EnemyAnimationDef this needs and this
+        // method doesn't. A fresh RestoreState() call on an already-live entity
+        // (not currently done anywhere) would leave the animator as-is.
+        return true;
+    }
+
+    Layer EnemyEntity::DrawLayer() const noexcept
+    {
+        return Layer::Actors;
+    }
+
+    void EnemyEntity::Update(const ViewState* view, double dt)
+    {
+        (void)view;
+
+        if (!IsAlive())
+        {
+            return;
+        }
+
+        // Re-aim at the player, independent of AllowsMovement() -- e.g. Met is
+        // still "idle" (no locomotion) when it needs to already be facing the
+        // right way for the shots its next "rise" fires. Gated by
+        // TracksPlayerFacing() (see AnimationState::track_player_facing) so a
+        // committed attack -- Met's rise/jump/cooldown -- keeps whatever
+        // facing it locked in when the attack started, even if the player
+        // crosses to the other side mid-attack; it only re-aims once back in
+        // a state that allows it (idle). Left alone (at whatever it was,
+        // default +1) until the first SetPlayerPosition() call arrives.
+        if (_has_player_pos && _animator.TracksPlayerFacing())
+        {
+            _facing = (_player_pos.x < pos.x) ? -1 : 1;
+        }
+
+        // Horizontal locomotion (e.g. Met's hop during its "jump" state) in
+        // the facing direction above. Gated by the current animation state
+        // (see AnimationState::allow_movement) -- e.g. Met holds still while
+        // hidden under its helmet. No patrol range/turnaround here anymore:
+        // since facing now always tracks the player instead of bouncing
+        // between fixed bounds, clamping position would fight that.
+        if (_animator.AllowsMovement())
+        {
+            pos.x += static_cast<double>(_facing) * _move_speed * _animator.MoveSpeedMultiplier() * dt;
+        }
+
+        // Vertical physics: gravity + ground snap. The player's own sprite
+        // sits 1px into the floor by design (confirmed correct in this
+        // project), so a ground-resting enemy gets the same nudge whenever
+        // SimpleGravityBody reports a (physics-flush) landing.
+        constexpr double kVisualFloorSinkPx = 1.0;
+        const double resolved_bottom_y = _gravity.Tick(_terrain, pos.x, pos.y + _half.y);
+        pos.y = resolved_bottom_y - _half.y + (_gravity.IsOnGround() ? kVisualFloorSinkPx : 0.0);
+
+        animation::AnimationConditionInputs anim_inputs{
+            .grounded = _gravity.IsOnGround(),
+            .shared_counter = _shared_attack_counter,
+        };
+        if (_has_player_pos)
+        {
+            anim_inputs.player_dx = std::abs(_player_pos.x - pos.x);
+            anim_inputs.player_dy = std::abs(_player_pos.y - pos.y);
+        }
+        _animator.Tick(anim_inputs);
+        _pending_counter_increment_requested = _animator.LastRequestedCounterIncrement();
+
+        // A transition that just fired may carry a jump impulse (see
+        // AnimationTransition::jump_impulse) -- e.g. Met's periodic hop while
+        // walking. Applied after this tick's gravity resolution above so it
+        // takes effect starting next frame, not retroactively this one.
+        const double jump_impulse = _animator.LastJumpImpulse();
+        if (jump_impulse != 0.0)
+        {
+            _gravity.Jump(jump_impulse);
+        }
+
+        // Likewise, a transition may carry one or more projectile_spawns (e.g.
+        // Met's 3-way shot on waking up). Queued here for AbstractActionPhase to
+        // actually Spawn() -- this entity has no EntityManager access itself.
+        if (_projectile_sprite_id != static_cast<rendering::sprite::SpriteManager::Id>(-1))
+        {
+            constexpr double kDegToRad = 3.14159265358979323846 / 180.0;
+            constexpr double kFramesPerSecond = 60.0; // matches every other frame-stepped assumption in this codebase
+
+            for (const auto& spec : _animator.LastProjectileSpawns())
+            {
+                const double rad = spec.angle_deg * kDegToRad;
+                const double dir_x = static_cast<double>(_facing) * std::cos(rad);
+                const double dir_y = std::sin(rad);
+                const double speed_px_per_sec = spec.speed_px_per_frame * kFramesPerSecond;
+
+                common::SpawnProjectileCommand cmd{};
+                cmd.spawnPos = pos + Vec2{ 0.0, abilities_().projectile_spawn_offset_y };
+                cmd.velocity = Vec2{ dir_x * speed_px_per_sec, dir_y * speed_px_per_sec };
+                cmd.drawLayer = Layer::Effects;
+                cmd.appearance = common::ProjectileAppearance::EnemyEnergy;
+                cmd.baseTexture = 0;
+                cmd.visual = common::ProjectileVisual::Normal;
+                cmd.lifeSec = -1.0; // alive until it leaves the active view, same sentinel as the player's shots
+                cmd.power = abilities_().projectile_power;
+                cmd.hitHalfSize = abilities_().projectile_hit_half_size;
+                cmd.collisionLayer = CollisionLayer::ProjectileEnemy;
+                cmd.weapon = systems::physics::WeaponId::EnemyShot;
+
+                _pending_projectile_spawns.push_back(cmd);
+            }
+        }
+    }
+
+    void EnemyEntity::Render(RenderContext& ctx)
+    {
+        if (!IsAlive() || ctx.view == nullptr)
+        {
+            return;
+        }
+
+        const auto& view = *ctx.view;
+        const int x = static_cast<int>(pos.x - view.viewWorldX - _half.x);
+        const int y = static_cast<int>(pos.y - view.viewWorldY - _half.y);
+
+        const int texture = _animator.CurrentTile() +
+            (_facing < 0 ? _facing_texture_offset_left : 0);
+
+        auto& res = runtime::GameContext::GetInstance().GetResourceManager();
+        res.GetSpriteManager().UseById(_id, texture, x, y);
+    }
+
+    EnemyEntity::RectF EnemyEntity::Bounds() const
+    {
+        // The box follows the tile currently shown (base tile, before the
+        // facing offset), so a kind whose silhouette grows/shrinks mid-
+        // animation is hit where it's actually drawn -- see
+        // EnemyAbilities::tile_hitboxes. Derived every call, never saved.
+        Vec2 half = _hitbox_half;
+        double offset_y = _hitbox_offset_y;
+        if (const auto* tile_box = abilities_().FindTileHitbox(_animator.CurrentTile()))
+        {
+            half = tile_box->half_size;
+            offset_y = tile_box->offset_y;
+        }
+
+        const double center_y = pos.y + offset_y;
+        return { pos.x - half.x, center_y - half.y, half.x * 2.0, half.y * 2.0 };
+    }
+
+    void EnemyEntity::OnEntityCollision(IEntity& other)
+    {
+        if (!IsAlive())
+        {
+            return;
+        }
+
+        // Only a collider that carries an attack payload damages the enemy (a
+        // player projectile). This enemy's own IAttackInfo (contact damage
+        // against the player) is handled the other way around, generically,
+        // by PlayerEntity::OnEntityCollision() -- nothing to special-case here.
+        auto* attack = dynamic_cast<systems::physics::IAttackInfo*>(&other);
+        if (attack == nullptr)
+        {
+            return;
+        }
+
+        // Deflecting (Met hidden under its helmet) takes no damage at all --
+        // the attacking collider itself decides how to bounce off (see
+        // ProjectileEntity::OnEntityCollision()); nothing to do on this side.
+        if (DeflectsAttacks())
+        {
+            return;
+        }
+
+        if (ApplyAttack(*attack))
+        {
+            // Destruction VFX/SFX and the non-lethal "hit" SE are both fired
+            // generically from AbstractActionPhase off IDamageable -- nothing
+            // more to do here than die.
+            Kill();
+        }
+    }
+
+    bool EnemyEntity::ApplyAttack(const systems::physics::IAttackInfo& attack) noexcept
+    {
+        return _health.ApplyAttack(attack);
+    }
+}

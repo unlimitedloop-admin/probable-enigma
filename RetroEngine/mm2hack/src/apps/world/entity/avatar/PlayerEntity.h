@@ -8,6 +8,8 @@
 //==============================================================================
 #pragma once
 
+#include "apps/systems/combat/HealthComponent.h"
+#include "apps/systems/combat/IDamageable.h"
 #include "apps/systems/physics/ICollider.h"
 #include "apps/world/entity/EntityBase.h"
 
@@ -20,6 +22,7 @@
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/rendering/sprite/SpriteManager.h"
 #include "apps/systems/physics/CollisionLayer.h"
+#include "apps/systems/physics/IAttackInfo.h"
 #include "apps/systems/physics/ILadderService.h"
 #include "apps/systems/physics/ITerrainProbe.h"
 #include "apps/systems/physics/PageGridIndex.h"
@@ -49,7 +52,10 @@ namespace mm2hack::core::assembly
 namespace mm2hack::apps::world::entity::avatar
 {
     // User player character entity
-    class PlayerEntity final : public EntityBase, public systems::physics::ICollider
+    class PlayerEntity final :
+        public EntityBase,
+        public systems::physics::ICollider,
+        public systems::combat::IDamageable
     {
         using AnimeStepper              = common::AnimeStepper;
         using RectF                     = foundation::math::RectF;
@@ -70,6 +76,11 @@ namespace mm2hack::apps::world::entity::avatar
     public:
         using ScrollDir                 = systems::scrolling::atomic::PageScroll::Dir;
         static constexpr std::uint16_t kStateVersion{ 1 };
+        // Total invincibility on taking a hit, including the 28-frame
+        // knockback (states::SetbackState::kDurationFrames) at the start of
+        // it -- see tickInvincibility_(). The remaining 56 frames are the
+        // controllable, blinking tail (2 frames on / 2 frames off).
+        static constexpr std::uint8_t kInvincibleFrames{ 84 };
 
         PlayerEntity(
             SpriteManagerId id,
@@ -106,6 +117,12 @@ namespace mm2hack::apps::world::entity::avatar
         // Entity collision reaction (ICollider)
         void OnEntityCollision(IEntity& other) override;
 
+        // IDamageable
+        bool ApplyAttack(const systems::physics::IAttackInfo& attack) noexcept override;
+        [[nodiscard]] int CurrentHP() const noexcept override { return _health.CurrentHP(); }
+        [[nodiscard]] int MaxHP() const noexcept override { return _health.MaxHP(); }
+        [[nodiscard]] bool IsDead() const noexcept override { return _health.IsDead(); }
+
         // Return the owner entity
         IEntity& OwnerEntity() noexcept override;
         const IEntity& OwnerEntity() const noexcept override;
@@ -121,6 +138,12 @@ namespace mm2hack::apps::world::entity::avatar
 
         // Set collidable
         void SetCollidable(bool v) noexcept;
+
+        // True while a forced, uncontrollable reaction (currently: knockback)
+        // owns the player -- movement/attack input is ignored. Exposed for any
+        // future input-consuming feature (e.g. a START-key weapon-select menu)
+        // that needs to refuse to open during this window too.
+        [[nodiscard]] bool IsControlLocked() const noexcept { return _state_machine.Status() == AvatarStatus::Setback; }
 
         // Set/Get view boundaries
         void SetViewBounds(const systems::scrolling::atomic::ViewBounds& b) noexcept;
@@ -166,6 +189,20 @@ namespace mm2hack::apps::world::entity::avatar
         void requestScroll_(FixedScrollRequest req) noexcept;       // Request fixed page scrolling
         [[nodiscard]] SpriteManagerId renderSpriteId_() const noexcept;
 
+        // If a hit landed since the last Update(), forces the state machine
+        // into Setback right now (see PlayerStateMachine::ForceTransition())
+        // and cancels any in-progress attack pose -- called at the very top of
+        // Update(), before the normal per-frame flow, so knockback starts the
+        // same frame with zero lag.
+        void consumePendingHit_(PlayerContext& cx, const PlayerTuning& tuning) noexcept;
+        // Advances _invincible_frames_remaining and derives this frame's
+        // collidability + blink visibility from it.
+        void tickInvincibility_() noexcept;
+        // Whether the player sprite (and Rock Buster arm) should actually be
+        // drawn this frame -- always true outside the post-knockback blink
+        // window (frames 29-84 of invincibility), alternates every 2 frames within it.
+        [[nodiscard]] bool isVisibleThisFrame_() const noexcept;
+
     private:
         const std::wstring kClassName{ L"PlayerEntity" };
 
@@ -186,8 +223,27 @@ namespace mm2hack::apps::world::entity::avatar
         SpriteManagerId _effects_id{};                              // Effect sprite Id
         SpriteManagerId _charge_level1_id{ static_cast<SpriteManagerId>(-1) };
         SpriteManagerId _charge_level2_id{ static_cast<SpriteManagerId>(-1) };
-        Vec2 _half{};                                               // Half-size of the bounding box
+        Vec2 _half{};                                               // Half-size of the sprite tile (render anchor, probe layout) -- NOT the hit box, see _hitbox_half
+        // Half-size of the entity-collision box (ICollider::Bounds(), used for
+        // item pickup / trap / enemy / enemy-shot hits) -- independent of
+        // _half, the same way ProjectileEntity keeps its hit box independent
+        // of its render footprint. The player sprite's own opaque pixels only
+        // cover a 21x24 area centered in the 32x32 tile (PLAYER_N0_ALL_
+        // PATTERN.png); using the full tile as the hit box meant an enemy
+        // shot could register a hit while still visibly outside the sprite.
+        Vec2 _hitbox_half{ 10.0, 12.0 };
         bool _collidable{ true };                                   // Whether collision is enabled
+        systems::combat::HealthComponent _health{};                 // Vitality; see PlayerVitalityTuning
+        // Set by OnEntityCollision() the instant a hit lands; consumed (and
+        // cleared) at the top of the very next Update() -- see consumePendingHit_().
+        // Not saved (CanCaptureState() refuses a save while true instead).
+        bool _pending_knockback_hit{ false };
+        // Counts down from 84 (see PlayerVitalityTuning-adjacent knockback
+        // spec) to 0 on every Update(). >0 means _collidable is false; once
+        // <=56 (i.e. past the 28-frame knockback) the player also blinks --
+        // see tickInvincibility_()/isVisibleThisFrame_().
+        std::uint8_t _invincible_frames_remaining{ 0 };
+        DamageEffectDrawInfo _damage_effect{};                      // Head-impact effect; see PlayerContext::damageEffectTile
         PlayerStateMachine _state_machine{};                        // Locomotion state ownership and transitions
         std::unique_ptr<states::AttackActionState> _attackAction{}; // Attack action state handler
         states::RockBusterDrawInfo _rock_buster{};                  // Rock Buster drawing info

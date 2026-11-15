@@ -53,6 +53,13 @@ namespace mm2hack::apps::world::entity::avatar
         AvatarDirection& facingLR;                          // avatar facing direction (-1: left, +1: right)
         int basePose{ 0 };                                 // Base pose for the avatar
         int textureAdd{ 0 };                                // Texture index addition for rendering
+        // Head-impact effect tile for the current frame (EFFECT01/_effects_id
+        // sheet), or -1 if nothing should be drawn. Set by SetbackState::
+        // Update(), read by PlayerEntity::applyContext_() -- same plumbing
+        // shape as basePose, for a sprite PlayerEntity draws itself in
+        // Render() rather than a spawned effect entity (see
+        // PlayerEntity::_damage_effect).
+        int damageEffectTile{ -1 };
 
         AnimeStepper& animeStepper;                         // Animation counter (local)
         Probes& probes;                                     // All probes

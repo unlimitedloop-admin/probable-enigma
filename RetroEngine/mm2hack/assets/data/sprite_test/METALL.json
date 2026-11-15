@@ -1,0 +1,20 @@
+{
+    "id": "metall",
+    "patterns": [
+        { "label": "1: RISE", "loop": false, "frames": [
+            { "tile": 0, "wait": 6 },
+            { "tile": 1, "wait": 6 },
+            { "tile": 2, "wait": 6 },
+            { "tile": 3, "wait": 6 },
+            { "tile": 4, "wait": 40 },
+            { "tile": 1, "wait": 6 },
+            { "tile": 0, "wait": "hold" }
+        ] },
+        { "label": "2: WALK", "loop": true, "frames": [
+            { "tile": 4, "wait": 6 },
+            { "tile": 5, "wait": 6 },
+            { "tile": 6, "wait": 6 },
+            { "tile": 7, "wait": 6 }
+        ] }
+    ]
+}

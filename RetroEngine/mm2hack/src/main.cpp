@@ -31,6 +31,9 @@ INT APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
         return mm2hack::test::RunSaveStateTests();
     }
 
+    if (std::wstring_view(lpCmdLine) == L"--bgm-backend-tests")
+        return mm2hack::test::RunBgmBackendTests();
+
     // Initialize the application environment.
     Bootstrapper(lpCmdLine);
 

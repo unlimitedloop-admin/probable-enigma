@@ -72,13 +72,37 @@ namespace mm2hack::apps::world::entity::avatar::states
         double projectileSpeedPxPerSec{ 240.0 };
         double chargeLevel1SpeedPxPerSec{ 300.0 };
         double chargeLevel2SpeedPxPerSec{ 360.0 };
-        foundation::math::Vec2 projectileSpawnOffsetPxRight{ 32.0, 5.0 };
-        foundation::math::Vec2 projectileSpawnOffsetPxLeft{ -16.0, 5.0 };
+        // Y was 5.0 for both, tuned back when ProjectileEntity's render half-size
+        // was a flat {16,16} guess (drawing 8px too high). Now that the render
+        // half-size matches each visual's real footprint (ProjectileEntity.cpp),
+        // that accidental compensation is gone, so Y is nudged by the same 8px
+        // to keep the on-screen muzzle position where it was.
+        // X started asymmetric (32/-16, following the arm sprite's own offset --
+        // see RockBusterOffsetTable.h), but play-testing against the hit-box range
+        // landed on a symmetric +-22px instead.
+        foundation::math::Vec2 projectileSpawnOffsetPxRight{ 22.0, -3.0 };
+        foundation::math::Vec2 projectileSpawnOffsetPxLeft{ -22.0, -3.0 };
+
+        // ChargeLevel2 is drawn as a 32x32 block, vertically centered on the
+        // player rather than at the muzzle -- see ProjectileEntity::Render()'s
+        // ChargeLevel2 branch (_half.y=16, then a further kCenterOffsetY=-8).
+        // Working through that math, spawnPos.y - 8 lands the block's own
+        // vertical center, so +8 here makes it equal the player's pos.y.
+        double chargeLevel2SpawnOffsetPxY{ 5.0 };
 
         int rockBusterTexture{ 0 };
         int projectileAnimFrames{ 1 };
         double projectileAnimFps{ 12.0 };
         double projectileLifeSec{ -1.0 };
+
+        // Attack power and hit judgement box per charge level (placeholders; tune to taste).
+        // The charged shot intentionally carries more power and a wider hit box than the normal shot.
+        int normalPower{ 0x01 };
+        int chargeLevel1Power{ 0x02 };
+        int chargeLevel2Power{ 0x03 };
+        foundation::math::Vec2 normalHitHalfSize{ 2.0, 2.0 };
+        foundation::math::Vec2 chargeLevel1HitHalfSize{ 5.0, 5.0 };
+        foundation::math::Vec2 chargeLevel2HitHalfSize{ 7.0, 7.0 };
 
         // Attack timing
         double attackDurationSec{ 0.18 };
@@ -90,7 +114,7 @@ namespace mm2hack::apps::world::entity::avatar::states
     class AttackActionState final
     {
     public:
-        AttackActionState(rendering::sprite::SpriteManager::Id id) : _id(id) {}
+        AttackActionState() = default;
 
         void PreUpdate(PlayerContext& cx, core::assembly::StateProvider* in, bool can_spawn) noexcept;
         ActionUpdateResult PostUpdate(PlayerContext& cx, core::assembly::StateProvider* in, const AttackTuning& tuning, double dt);
@@ -112,7 +136,6 @@ namespace mm2hack::apps::world::entity::avatar::states
     private:
         const std::wstring kClassName{ L"AttackActionState" };
 
-        rendering::sprite::SpriteManager::Id _id{}; // Weapon sprite id
         bool _is_attacking{ false };                // Whether currently attacking
         double _pose_time_sec{ 10.0 };              // Time spent in shot pose
         RockBusterTuning rb_tuning{};               // Rock Buster tuning

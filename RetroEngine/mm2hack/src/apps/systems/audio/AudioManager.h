@@ -68,6 +68,12 @@ namespace mm2hack::apps::systems::audio
         void Pause();
         // Resume a all sounds
         void Resume();
+        // Pause SE playback only (BGM keeps playing) -- e.g. across a page-scroll
+        // transition, so a continuous SE (the charge loop) doesn't keep advancing
+        // while gameplay itself is frozen.
+        void PauseSe();
+        // Resume SE playback only (counterpart to PauseSe()).
+        void ResumeSe();
         // Capture, validate, and restore logical BGM transport state.
         bool CaptureBgmState(BgmTransportState& state) const;
         bool ValidateBgmState(const BgmTransportState& state) const;

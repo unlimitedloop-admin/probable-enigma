@@ -5,21 +5,17 @@
 #include <span>
 
 #include "apps/foundation/NES/NESPalette.h"
+#include "apps/rendering/common/DividedGraphLoader.h"
 #include "BGTilePalette.h"
-
-namespace
-{
-    struct RGBA8
-    {
-        unsigned char r{ 0 };
-        unsigned char g{ 0 };
-        unsigned char b{ 0 };
-        unsigned char a{ 255 };
-    };
-}
 
 namespace mm2hack::apps::rendering::bg
 {
+    using common::get_palette_256;
+    using common::make_fade_palette;
+    using common::Palette256;
+    using common::RGBA8;
+    using common::set_palette_256;
+
     BGTileAtlas::BGTileAtlas(std::wstring name,
         DivSettings div,
         int soft_image_handle,
@@ -41,6 +37,7 @@ namespace mm2hack::apps::rendering::bg
         , _div(o._div)
         , _soft_image(o._soft_image)
         , _graphs_by_variant(std::move(o._graphs_by_variant))
+        , _tile_palette_variants(std::move(o._tile_palette_variants))
     {
         o._soft_image = -1;
     }
@@ -54,6 +51,7 @@ namespace mm2hack::apps::rendering::bg
             _div = o._div;
             _soft_image = o._soft_image;
             _graphs_by_variant = std::move(o._graphs_by_variant);
+            _tile_palette_variants = std::move(o._tile_palette_variants);
             o._soft_image = -1;
         }
         return *this;
@@ -93,146 +91,92 @@ namespace mm2hack::apps::rendering::bg
             return -1;
         }
 
-        std::array<RGBA8, 256> base_palette{};
-
-        for (int i = 0; i < 256; ++i)
-        {
-            int r = 0;
-            int g = 0;
-            int b = 0;
-            int a = 255;
-
-            if (::DxLib::GetPaletteSoftImage(
-                _soft_image,
-                i,
-                &r,
-                &g,
-                &b,
-                &a) != 0)
-            {
-                return -1;
-            }
-
-            base_palette[static_cast<std::size_t>(i)] =
-                RGBA8{
-                    static_cast<unsigned char>(r),
-                    static_cast<unsigned char>(g),
-                    static_cast<unsigned char>(b),
-                    static_cast<unsigned char>(a)
-            };
-        }
-
-        auto work_palette = base_palette;
-
-        for (const BGPaletteColorMapping& mapping : mappings)
-        {
-            const auto& nes_color =
-                NESPalette::GetColor(mapping.nesPaletteIndex);
-
-            RGBA8& color =
-                work_palette[
-                    static_cast<std::size_t>(
-                        mapping.pngPaletteIndex)];
-
-            color.r =
-                static_cast<unsigned char>(nes_color.red);
-
-            color.g =
-                static_cast<unsigned char>(nes_color.green);
-
-            color.b =
-                static_cast<unsigned char>(nes_color.blue);
-        }
-
-        for (int i = 0; i < 256; ++i)
-        {
-            const RGBA8& color =
-                work_palette[static_cast<std::size_t>(i)];
-
-            ::DxLib::SetPaletteSoftImage(
-                _soft_image,
-                i,
-                color.r,
-                color.g,
-                color.b,
-                color.a);
-        }
-
-        const int tx = tile_index % _div.tiles_x;
-        const int ty = tile_index / _div.tiles_x;
-
-        const int sx = tx * _div.tile_w;
-        const int sy = ty * _div.tile_h;
-
-        const int graph =
-            ::DxLib::CreateGraphFromRectSoftImage(
-                _soft_image,
-                sx,
-                sy,
-                _div.tile_w,
-                _div.tile_h);
-
-        // Restore original PNG palette.
-        for (int i = 0; i < 256; ++i)
-        {
-            const RGBA8& color =
-                base_palette[static_cast<std::size_t>(i)];
-
-            ::DxLib::SetPaletteSoftImage(
-                _soft_image,
-                i,
-                color.r,
-                color.g,
-                color.b,
-                color.a);
-        }
-
-        if (graph == -1)
+        Palette256 base_palette{};
+        if (!get_palette_256(_soft_image, base_palette))
         {
             return -1;
         }
 
-        auto& variants =
-            _tile_palette_variants[tile_index];
+        Palette256 recolored_palette = base_palette;
+        for (const BGPaletteColorMapping& mapping : mappings)
+        {
+            const auto& nes_color = NESPalette::GetColor(mapping.nesPaletteIndex);
+            RGBA8& color = recolored_palette[static_cast<std::size_t>(mapping.pngPaletteIndex)];
+            color.r = static_cast<unsigned char>(nes_color.red);
+            color.g = static_cast<unsigned char>(nes_color.green);
+            color.b = static_cast<unsigned char>(nes_color.blue);
+        }
 
-        variants.emplace_back(graph);
+        const int sx = (tile_index % _div.tiles_x) * _div.tile_w;
+        const int sy = (tile_index / _div.tiles_x) * _div.tile_h;
 
+        // One graph per fade step, darkened exactly like the atlas's own
+        // _graphs_by_variant (see load_divided_graph()), so DrawMapById() can
+        // pick the step matching the current global fade variant.
+        const int fade_count = VariantCount();
+        std::vector<int> graphs_by_fade;
+        graphs_by_fade.reserve(static_cast<std::size_t>(fade_count));
+
+        Palette256 work_palette{};
+        bool created_all = true;
+        for (int fade = 0; fade < fade_count; ++fade)
+        {
+            make_fade_palette(recolored_palette, fade, fade_count, work_palette);
+            set_palette_256(_soft_image, work_palette);
+
+            const int graph = ::DxLib::CreateGraphFromRectSoftImage(
+                _soft_image, sx, sy, _div.tile_w, _div.tile_h);
+            if (graph == -1)
+            {
+                created_all = false;
+                break;
+            }
+            graphs_by_fade.push_back(graph);
+        }
+
+        // Restore original PNG palette.
+        set_palette_256(_soft_image, base_palette);
+
+        if (!created_all || graphs_by_fade.empty())
+        {
+            for (int graph : graphs_by_fade)
+            {
+                ::DxLib::DeleteGraph(graph);
+            }
+            return -1;
+        }
+
+        auto& variants = _tile_palette_variants[tile_index];
+        variants.emplace_back(std::move(graphs_by_fade));
         return static_cast<int>(variants.size() - 1);
     }
 
-    void BGTileAtlas::DrawTilePaletteVariant(int tile_index, int palette_variant, int x, int y) const noexcept
+    void BGTileAtlas::DrawTilePaletteVariant(int tile_index, int palette_variant, int fade_variant, int x, int y) const noexcept
     {
-        const auto it =
-            _tile_palette_variants.find(tile_index);
-
+        const auto it = _tile_palette_variants.find(tile_index);
         if (it == _tile_palette_variants.end())
         {
-            DrawTile(0, tile_index, x, y);
+            DrawTile(fade_variant, tile_index, x, y);
             return;
         }
 
         const auto& variants = it->second;
-
-        if (palette_variant < 0 ||
-            palette_variant >=
-            static_cast<int>(variants.size()))
+        if (palette_variant < 0 || palette_variant >= static_cast<int>(variants.size()))
         {
-            DrawTile(0, tile_index, x, y);
+            DrawTile(fade_variant, tile_index, x, y);
             return;
         }
 
-        const int graph =
-            variants[
-                static_cast<std::size_t>(
-                    palette_variant)];
+        const auto& graphs_by_fade = variants[static_cast<std::size_t>(palette_variant)];
+        if (fade_variant < 0 || fade_variant >= static_cast<int>(graphs_by_fade.size()))
+        {
+            return;
+        }
 
+        const int graph = graphs_by_fade[static_cast<std::size_t>(fade_variant)];
         if (graph != -1)
         {
-            ::DxLib::DrawGraph(
-                x,
-                y,
-                graph,
-                FALSE);
+            ::DxLib::DrawGraph(x, y, graph, FALSE);
         }
     }
 
@@ -242,11 +186,14 @@ namespace mm2hack::apps::rendering::bg
         {
             (void)tile_index;
 
-            for (int handle : variants)
+            for (auto& graphs_by_fade : variants)
             {
-                if (handle != -1)
+                for (int handle : graphs_by_fade)
                 {
-                    ::DxLib::DeleteGraph(handle);
+                    if (handle != -1)
+                    {
+                        ::DxLib::DeleteGraph(handle);
+                    }
                 }
             }
 

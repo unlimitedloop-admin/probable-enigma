@@ -60,6 +60,27 @@ namespace mm2hack::apps::world::entity::avatar
         PlayerProbes probeOffsets;                  // Player probes offsets
     };
 
+    // Vitality tuning, kept as its own small struct rather than folded into
+    // PlayerTuning -- mirrors states::AttackTuning's precedent of a
+    // dedicated struct for one feature area passed alongside PlayerTuning.
+    // 28 matches the classic Mega Man energy scale (a normal Buster shot
+    // deals 1, so this is "28 hits" worth of vitality).
+    struct PlayerVitalityTuning
+    {
+        int maxHp{ 0x1C };
+    };
+
+    // Head-impact effect drawn alongside the player while in knockback (see
+    // states::SetbackState / PlayerContext::damageEffectTile). Mirrors
+    // states::RockBusterDrawInfo's shape -- a second sprite PlayerEntity
+    // draws itself in Render(), not a spawned effect entity, since it must
+    // track the player's own (moving) position every frame.
+    struct DamageEffectDrawInfo
+    {
+        bool visible{ false };
+        int texture{ 0 };
+    };
+
     // Player physical environment
     enum class PlayerEnvironment : std::uint8_t
     {

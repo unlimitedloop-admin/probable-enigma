@@ -1,0 +1,46 @@
+#include "pch.h"
+
+#include "EnemyDefinitionCatalog.h"
+
+#include <string>
+#include <string_view>
+#include <utility>
+
+#include "AnimationTypes.h"
+#include "apps/world/entity/enemy/lists/EnemyLists.h"
+
+#include "EnemyDefinitionLoader.h"
+
+namespace mm2hack::apps::world::entity::enemy::animation
+{
+    bool EnemyDefinitionCatalog::LoadForKind(EnemyKind kind, const std::wstring& filepath)
+    {
+        EnemyDefinition parsed{};
+        if (!EnemyDefinitionLoader::LoadFromFile(filepath, parsed))
+        {
+            return false;
+        }
+
+        _definitions[kind] = std::move(parsed);
+        return true;
+    }
+
+    const EnemyDefinition* EnemyDefinitionCatalog::Find(EnemyKind kind) const noexcept
+    {
+        const auto it = _definitions.find(kind);
+        return it != _definitions.end() ? &it->second : nullptr;
+    }
+
+    const EnemyDefinition* EnemyDefinitionCatalog::FindById(std::string_view id, EnemyKind& out_kind) const noexcept
+    {
+        for (const auto& [kind, definition] : _definitions)
+        {
+            if (definition.id == id)
+            {
+                out_kind = kind;
+                return &definition;
+            }
+        }
+        return nullptr;
+    }
+}

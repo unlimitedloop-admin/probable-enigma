@@ -12,10 +12,25 @@
 
 #include "apps/foundation/math/CoordinateTypes.h"
 #include "apps/rendering/sprite/SpriteManager.h"
+#include "apps/systems/physics/CollisionLayer.h"
+#include "apps/systems/physics/WeaponId.h"
 #include "apps/systems/view/RenderContext.h"
 
 namespace mm2hack::apps::world::entity::common
 {
+    // Persistent IDs: append only; never renumber or reuse.
+    enum class ProjectileAppearance : std::uint16_t
+    {
+        Invalid = 0,
+        PlayerBuster = 1,
+        EnemyEnergy = 2
+    };
+
+    constexpr bool IsKnownProjectileAppearance(ProjectileAppearance id) noexcept
+    {
+        return id == ProjectileAppearance::PlayerBuster || id == ProjectileAppearance::EnemyEnergy;
+    }
+
     enum class ProjectileVisual : std::uint8_t
     {
         Normal,
@@ -30,12 +45,29 @@ namespace mm2hack::apps::world::entity::common
         foundation::math::Vec2 velocity{};                                  // Initial velocity of the projectile
         systems::view::Layer drawLayer{ systems::view::Layer::Effects };    // Which drawing layer to use
 
-        rendering::sprite::SpriteManager::Id spriteId{};                    // Which sprite-set to use for drawing (same as PlayerEntity::_id etc.)
+        ProjectileAppearance appearance{ ProjectileAppearance::Invalid };                    // Stable sprite-sheet identity; runtime handles are resolved by the stage.
         int baseTexture{ 0 };                                               // Base texture index for the projectile
         ProjectileVisual visual{ ProjectileVisual::Normal };                // Single-tile or composite drawing pattern
         std::int32_t animFrames{ 1 };                                       // Number of animation frames for the projectile
         double animFps{ 0.0 };                                              // Animation speed (frames per second)
 
         double lifeSec{ 1.0 };                                              // Lifetime of the projectile in seconds
+
+        int power{ 0x01 };                                                  // Attack power (damage) carried on contact
+        foundation::math::Vec2 hitHalfSize{ 2.0, 2.0 };                     // Half-size of the attack hit judgement box (independent of the sprite's draw size)
+
+        // Whether this shot despawns on touching a solid/damage tile (see
+        // ProjectileEntity::checkTerrainCollision_()). Off by default: most
+        // existing shots (Rock Buster, Met's energy shot) are meant to fly
+        // through terrain unaffected. A weapon whose shots should die or
+        // deflect on field contact opts in per spawn.
+        bool terrainCollisionEnabled{ false };
+
+        // Which collidable layer this shot belongs to, and which weapon it's
+        // reported as for resistance lookups. Default to the player's own Rock
+        // Buster so every existing spawn call keeps working unchanged; an enemy
+        // shot passes CollisionLayer::ProjectileEnemy + WeaponId::EnemyShot.
+        systems::physics::CollisionLayer collisionLayer{ systems::physics::CollisionLayer::ProjectilePlayer };
+        systems::physics::WeaponId weapon{ systems::physics::WeaponId::Buster };
     };
 }

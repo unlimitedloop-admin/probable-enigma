@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <memory>
+#include <span>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -20,6 +21,11 @@
 #include "apps/systems/view/ViewState.h"
 #include "core/save/StateIO.h"
 #include "IEntity.h"
+
+namespace mm2hack::apps::systems::physics
+{
+    struct ICollider;
+}
 
 namespace mm2hack::apps::world::entity
 {
@@ -71,8 +77,24 @@ namespace mm2hack::apps::world::entity
         // Renders entities for the specified layer
         void RenderLayer(systems::view::RenderContext& ctx, systems::view::Layer layer);
 
+        // Collects raw ICollider* for every currently alive entity that implements it
+        // (via dynamic_cast). Pointers are only valid until the next UpdateAll()/Clear() call.
+        void CollectColliders(std::vector<systems::physics::ICollider*>& out) const;
+
+        // Kills every alive entity whose StateTypeId() is one of `types` (still
+        // removed on the next UpdateAll(), but stops rendering/colliding
+        // immediately). Used to drop transient effects before a page-scroll
+        // transition without disturbing the player or persistent level objects.
+        void KillAllOfTypes(std::span<const EntityTypeId> types) noexcept;
+
         // Removes all entities immediately
         void Clear() noexcept;
+
+        // Finds an entity by its StateInstanceId(), INCLUDING one already
+        // killed but not yet removed (removal happens at the end of the next
+        // UpdateAll()) -- so a caller can still tell how it died. nullptr if
+        // no such entity is held anymore.
+        [[nodiscard]] IEntity* FindByInstanceId(EntityInstanceId id) noexcept;
 
         // Finds the first entity of type T (dynamic_cast). Returns nullptr if not found
         template <typename T>
@@ -80,6 +102,13 @@ namespace mm2hack::apps::world::entity
         // Finds the first entity of type T (dynamic_cast). Returns nullptr if not found
         template <typename T>
         const T* FindFirst() const noexcept;
+
+        // Invokes `fn(T&)` for every currently alive entity of type T (dynamic_cast).
+        // Used for post-restore fixups that every entity of a type needs (e.g.
+        // re-wiring a non-owning ITerrainProbe* that isn't part of saved state --
+        // see AbstractActionPhase::RestoreEntityState()).
+        template <typename T, typename F>
+        void ForEachAlive(F&& fn);
 
         // Counts the number of alive entities of type T (dynamic_cast)
         template <typename T>
@@ -155,6 +184,37 @@ namespace mm2hack::apps::world::entity
             }
         }
         return nullptr;
+    }
+
+    template <typename T, typename F>
+    void EntityManager::ForEachAlive(F&& fn)
+    {
+        static_assert(std::is_base_of_v<IEntity, T>, "T must derive from IEntity.");
+
+        // Matches are snapshotted before any fn() call so that a Spawn() from
+        // within fn (e.g. an enemy queuing a projectile) -- which reallocates
+        // _entities when called outside UpdateAll()'s _is_updating window --
+        // can't invalidate this loop. The raw T* stays valid across that
+        // reallocation since it points at the entity itself, not the
+        // unique_ptr slot that moved.
+        std::vector<T*> matches{};
+        for (auto& e : _entities)
+        {
+            if (!e || !e->IsAlive())
+            {
+                continue;
+            }
+
+            if (auto* p = dynamic_cast<T*>(e.get()); p != nullptr)
+            {
+                matches.push_back(p);
+            }
+        }
+
+        for (T* p : matches)
+        {
+            fn(*p);
+        }
     }
 
     template <typename T>

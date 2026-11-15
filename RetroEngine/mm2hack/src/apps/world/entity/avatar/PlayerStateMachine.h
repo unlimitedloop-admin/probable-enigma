@@ -33,6 +33,9 @@ namespace mm2hack::apps::world::entity::avatar
         std::uint8_t dashing_elapsed_frames{};
         AvatarDirection dashing_direction{ AvatarDirection::Right };
         bool dash_jump_active{};
+        std::uint8_t setback_elapsed_frames{};
+        bool setback_airborne{};
+        bool setback_rising{};
 
         bool Save(core::save::StateWriter& writer) const;
         bool Load(core::save::StateReader& reader);
@@ -55,6 +58,12 @@ namespace mm2hack::apps::world::entity::avatar
         void Update(PlayerContext& cx, core::assembly::StateProvider* input, const PlayerTuning& tuning, double dt);
         // Apply the retained transition after parallel player actions are updated
         void CommitTransition(PlayerContext& cx, core::assembly::StateProvider* input, const PlayerTuning& tuning);
+        // Immediately switches to `target`, bypassing the normal two-phase
+        // Update()/CommitTransition() commit -- for external events (e.g. a
+        // collision reaction) that need a state change to take effect the
+        // same frame it's requested, not on the next Update(). Calls OnExit/
+        // OnEnter right away and syncs both _status and _next_status to target.
+        void ForceTransition(AvatarStatus target, PlayerContext& cx, core::assembly::StateProvider* input, const PlayerTuning& tuning) noexcept;
         // Advance animation without updating locomotion
         void TickAnimation(AnimeContext& ax, core::assembly::StateProvider* input, const PlayerTuning& tuning, double dt);
 

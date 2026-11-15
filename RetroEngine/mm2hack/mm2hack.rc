@@ -152,6 +152,7 @@ BEGIN
             MENUITEM "FPS (&F)",                    ID_HUD_FPS
             MENUITEM "Scrolling sync line",         ID_HUD_SCROLLINGSYNCLINE
             MENUITEM "Player position (local)",     ID_HUD_PLAYERPOSITION
+            MENUITEM "Hit boxes",                   ID_HUD_HITBOXES
         END
         MENUITEM SEPARATOR
         MENUITEM "チートコード... (&C)",              ID_INSERT_CHEATS

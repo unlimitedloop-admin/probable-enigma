@@ -4,14 +4,20 @@
 
 #include <string_view>
 
+#include "apps/rendering/bg/BGTileManager.h"
 #include "apps/rendering/sprite/SpriteManager.h"
+#include "apps/resources/ResourceManager.h"
+#include "apps/runtime/GameContext.h"
 #include "apps/scenes/IStageAssetProvider.h"
 #include "apps/world/entity/avatar/PlayerEntity.h"
 #include "apps/world/entity/avatar/PlayerEntityState.h"
 #include "apps/world/entity/effects/ChargeEffectEntity.h"
 #include "apps/world/entity/effects/ProjectileEntity.h"
 #include "apps/world/entity/effects/SlidingDustEffectEntity.h"
+#include "apps/world/entity/effects/SmallExplosionEffectEntity.h"
 #include "apps/world/entity/effects/SplashEffectEntity.h"
+#include "apps/world/entity/enemy/EnemyEntity.h"
+#include "apps/world/entity/hazards/BreakableBlockEntity.h"
 #include "core/save/StateIO.h"
 #include "EntityBase.h"
 #include "EntityManager.h"
@@ -88,6 +94,37 @@ namespace mm2hack::apps::world::entity
         {
             return id != static_cast<rendering::sprite::SpriteManager::Id>(-1);
         }
+
+        bool IsValidTilesetId(rendering::bg::BGTileManager::Id id) noexcept
+        {
+            return id != static_cast<rendering::bg::BGTileManager::Id>(-1);
+        }
+
+        bool ParseBreakableBlock(const EntityStateRecord& record, hazards::BreakableBlockEntityState& state)
+        {
+            if (record.component_version != hazards::BreakableBlockEntity::kStateVersion)
+            {
+                return false;
+            }
+            return ParseState(record, state,
+                [](hazards::BreakableBlockEntityState& value, core::save::StateReader& reader)
+                {
+                    return value.Load(reader);
+                });
+        }
+
+        bool ParseEnemy(const EntityStateRecord& record, enemy::EnemyEntityState& state)
+        {
+            if (record.component_version != enemy::EnemyEntity::kStateVersion)
+            {
+                return false;
+            }
+            return ParseState(record, state,
+                [](enemy::EnemyEntityState& value, core::save::StateReader& reader)
+                {
+                    return value.Load(reader);
+                });
+        }
     }
 
     bool EntityStateFactory::ValidateRecord(const EntityStateRecord& record)
@@ -129,6 +166,25 @@ namespace mm2hack::apps::world::entity
                 record,
                 effects::SplashEffectEntity::kStateVersion,
                 effects::SplashEffectEntity::kTotalTicks,
+                state);
+        }
+        case EntityTypeId::BreakableBlock:
+        {
+            hazards::BreakableBlockEntityState state{};
+            return ParseBreakableBlock(record, state);
+        }
+        case EntityTypeId::Enemy:
+        {
+            enemy::EnemyEntityState state{};
+            return ParseEnemy(record, state);
+        }
+        case EntityTypeId::SmallExplosionEffect:
+        {
+            TimedEffectEntityState state{};
+            return ParseTimedEffect(
+                record,
+                effects::SmallExplosionEffectEntity::kStateVersion,
+                effects::SmallExplosionEffectEntity::kTotalTicks,
                 state);
         }
         default:
@@ -174,12 +230,12 @@ namespace mm2hack::apps::world::entity
         case EntityTypeId::Projectile:
         {
             effects::ProjectileEntityState state{};
-            const auto sprite_id = _assets.EffectsSprite();
-            if (!ParseProjectile(record, state) || !IsValidSpriteId(sprite_id))
+            if (!ParseProjectile(record, state) ||
+                !IsValidSpriteId(_assets.ProjectileSprite(state.appearance)))
             {
                 return nullptr;
             }
-            return std::make_unique<effects::ProjectileEntity>(state, sprite_id);
+            return std::make_unique<effects::ProjectileEntity>(state, _assets);
         }
         case EntityTypeId::ChargeEffect:
         {
@@ -225,6 +281,60 @@ namespace mm2hack::apps::world::entity
                 return nullptr;
             }
             return std::make_unique<effects::SplashEffectEntity>(state, sprite_id);
+        }
+        case EntityTypeId::BreakableBlock:
+        {
+            hazards::BreakableBlockEntityState state{};
+            // Draws from the stage's own BG tileset so the block matches the
+            // surrounding level art.
+            const auto tileset_id = _assets.BgTilesetId();
+            if (!ParseBreakableBlock(record, state) || !IsValidTilesetId(tileset_id))
+            {
+                return nullptr;
+            }
+            return std::make_unique<hazards::BreakableBlockEntity>(state, tileset_id);
+        }
+        case EntityTypeId::Enemy:
+        {
+            enemy::EnemyEntityState state{};
+            if (!ParseEnemy(record, state))
+            {
+                return nullptr;
+            }
+            rendering::sprite::SpriteManager::Id sprite_id{};
+            if (!_assets.TryEnemySprite(state.kind, state.palette_preset_index, sprite_id) ||
+                !IsValidSpriteId(sprite_id))
+            {
+                return nullptr;
+            }
+            // The animation state graph isn't part of the saved bytes (like a
+            // sprite id, it's re-resolved by kind), so a missing/failed-to-load
+            // definition simply fails the restore rather than corrupting state.
+            const auto* enemy_def =
+                runtime::GameContext::GetInstance().GetResourceManager().GetEnemyDefinitionCatalog().Find(state.kind);
+            if (enemy_def == nullptr)
+            {
+                return nullptr;
+            }
+            auto restored = std::make_unique<enemy::EnemyEntity>(
+                state, sprite_id, enemy_def, _assets.EnemyProjectileSprite());
+            if (!restored->IsAlive()) return nullptr;
+            return restored;
+        }
+        case EntityTypeId::SmallExplosionEffect:
+        {
+            TimedEffectEntityState state{};
+            const auto sprite_id = _assets.SmallExplosionEffectSprite();
+            if (!ParseTimedEffect(
+                    record,
+                    effects::SmallExplosionEffectEntity::kStateVersion,
+                    effects::SmallExplosionEffectEntity::kTotalTicks,
+                    state) ||
+                !IsValidSpriteId(sprite_id))
+            {
+                return nullptr;
+            }
+            return std::make_unique<effects::SmallExplosionEffectEntity>(state, sprite_id);
         }
         default:
             return nullptr;
