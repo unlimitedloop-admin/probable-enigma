@@ -453,4 +453,5 @@ FodyWeavers.xsd
 *.ini
 /RetroEngine/mm2hack/screenshot/
 /RetroEngine/mm2hack/sav/
+/RetroEngine/sites/
 /ignore/
